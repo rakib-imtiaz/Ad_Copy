@@ -56,6 +56,63 @@ function MarkdownContent({ content }: { content: string }) {
   )
 }
 
+// Three Dots Menu Component
+function ThreeDotsMenu({ onShare, onDelete, onRename }: any) {
+  const [isOpen, setIsOpen] = React.useState(false)
+
+  return (
+    <div className="relative">
+      <Button 
+        variant="ghost" 
+        size="icon" 
+        className="h-6 w-6 text-[#929AAB] hover:text-[#393E46] hover:bg-[#F7F7F7]"
+        onClick={() => setIsOpen(!isOpen)}
+      >
+        <MoreHorizontal className="h-3 w-3" />
+      </Button>
+
+      {isOpen && (
+        <>
+          {/* Backdrop */}
+          <div 
+            className="fixed inset-0 z-[90]" 
+            onClick={() => setIsOpen(false)}
+          />
+          
+          {/* Menu */}
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.95 }}
+            className="absolute right-0 top-full mt-1 bg-white border border-[#EEEEEE] rounded-lg shadow-lg z-[100] min-w-[120px]"
+          >
+            <div className="p-1">
+              <button
+                onClick={() => { onShare?.(); setIsOpen(false) }}
+                className="w-full text-left px-3 py-2 text-sm hover:bg-[#F9FAFB] rounded-md transition-colors"
+              >
+                Share
+              </button>
+              <button
+                onClick={() => { onRename?.(); setIsOpen(false) }}
+                className="w-full text-left px-3 py-2 text-sm hover:bg-[#F9FAFB] rounded-md transition-colors"
+              >
+                Rename
+              </button>
+              <button
+                onClick={() => { onDelete?.(); setIsOpen(false) }}
+                className="w-full text-left px-3 py-2 text-sm hover:bg-[#FEF2F2] text-red-600 rounded-md transition-colors"
+              >
+                Delete
+              </button>
+            </div>
+          </motion.div>
+        </>
+      )}
+    </div>
+  )
+}
+
 // Agent Selector Component
 function AgentSelector({ agents, selectedAgent, onSelectAgent, onOpenChange }: any) {
   const [isOpen, setIsOpen] = React.useState(false)
@@ -75,15 +132,15 @@ function AgentSelector({ agents, selectedAgent, onSelectAgent, onOpenChange }: a
         whileHover={{ scale: 1.01 }}
         whileTap={{ scale: 0.99 }}
       >
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-3">
-            <span className="text-lg">{currentAgent?.icon || "🤖"}</span>
+        <div className="flex items-start justify-between">
+          <div className="flex items-start space-x-3 flex-1 min-w-0">
+            <span className="text-lg flex-shrink-0">{currentAgent?.icon || "🤖"}</span>
             <div className="flex-1 min-w-0">
               <div className="font-medium text-sm truncate">{currentAgent?.name || "Select Agent"}</div>
-              <div className="text-xs text-[#929AAB] truncate">{currentAgent?.description || "Choose an AI agent"}</div>
+              <div className="text-xs text-[#929AAB] line-clamp-2 leading-relaxed mt-0.5">{currentAgent?.description || "Choose an AI agent"}</div>
             </div>
           </div>
-          <ChevronRight className={`h-4 w-4 text-[#929AAB] transition-transform ${isOpen ? 'rotate-90' : ''}`} />
+          <ChevronRight className={`h-4 w-4 text-[#929AAB] transition-transform flex-shrink-0 mt-0.5 ${isOpen ? 'rotate-90' : ''}`} />
         </div>
       </motion.button>
 
@@ -340,23 +397,26 @@ function LeftSidebar({ agents, conversations, selectedAgent, onSelectAgent }: an
       </div>
 
       {/* Conversations Section */}
-      <div className={`flex-1 p-4 ${isAgentSelectorOpen ? 'overflow-hidden' : 'overflow-y-auto'}`}>
-        <div className="flex items-center justify-between mb-3">
-          <h3 className="text-xs font-medium text-[#929AAB] uppercase tracking-wider">Conversations</h3>
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-6 w-6 text-[#929AAB] hover:text-[#393E46] hover:bg-white/50">
-                  <Plus className="h-4 w-4" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>New conversation</p>
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-        </div>
-        <div className="space-y-1">
+      <div className="flex-1 flex flex-col">
+        <div className="p-4 pb-2 border-b border-[#EEEEEE]">
+          <div className="flex items-center justify-between">
+            <h3 className="text-xs font-medium text-[#929AAB] uppercase tracking-wider">Conversations</h3>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button variant="ghost" size="icon" className="h-6 w-6 text-[#929AAB] hover:text-[#393E46] hover:bg-white/50">
+                    <Plus className="h-4 w-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>New conversation</p>
+                </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            </div>
+          </div>
+        <div className={`flex-1 p-4 pt-2 ${isAgentSelectorOpen ? 'overflow-hidden' : 'overflow-y-auto'}`}>
+          <div className="space-y-1">
           {conversations.map((conv: any) => (
             <motion.div
               key={conv.id}
@@ -365,7 +425,14 @@ function LeftSidebar({ agents, conversations, selectedAgent, onSelectAgent }: an
             >
               <div className="flex items-start justify-between mb-1">
                 <h4 className="font-medium text-sm truncate pr-2">{conv.title}</h4>
-                <span className="text-xs text-[#929AAB] flex-shrink-0">{conv.time}</span>
+                <div className="flex items-center space-x-2">
+                  <span className="text-xs text-[#929AAB] flex-shrink-0">{conv.time}</span>
+                  <ThreeDotsMenu 
+                    onShare={() => console.log('Share conversation:', conv.title)}
+                    onRename={() => console.log('Rename conversation:', conv.title)}
+                    onDelete={() => console.log('Delete conversation:', conv.title)}
+                  />
+                </div>
               </div>
               <p className="text-xs text-[#929AAB] mb-2 line-clamp-2">{conv.lastMessage}</p>
               <div className="flex items-center justify-between">
@@ -377,6 +444,7 @@ function LeftSidebar({ agents, conversations, selectedAgent, onSelectAgent }: an
               </div>
             </motion.div>
           ))}
+          </div>
         </div>
       </div>
     </div>
@@ -557,8 +625,8 @@ function FilesTab() {
         }`}
       >
         <Upload className="h-6 w-6 text-[#929AAB] mx-auto mb-2" />
-        <FadeInText text="Drop files here" className="text-sm font-medium mb-1" />
-        <FadeInText text="or click to browse" className="text-xs text-[#929AAB]" delay={0.1} />
+        <FadeInText text="Drop files here " className="text-sm font-medium mb-1 text-center" />
+        <FadeInText text="or click to browse" className="text-xs text-[#929AAB] text-center" delay={0.1} />
       </div>
 
       {/* File list */}
@@ -572,9 +640,11 @@ function FilesTab() {
                 {item.size ? `${(item.size / 1024 / 1024).toFixed(1)} MB` : 'Unknown size'} • {formatTimeAgo(item.uploadedAt)}
               </p>
             </div>
-            <Button variant="ghost" size="icon" className="h-6 w-6">
-              <MoreHorizontal className="h-3 w-3" />
-            </Button>
+            <ThreeDotsMenu 
+              onShare={() => console.log('Share file:', item.filename)}
+              onRename={() => console.log('Rename file:', item.filename)}
+              onDelete={() => console.log('Delete file:', item.filename)}
+            />
           </div>
         ))}
       </div>
@@ -588,8 +658,8 @@ function LinksTab() {
   return (
     <div className="space-y-4">
       <div className="flex space-x-2">
-        <Input placeholder="Paste URL here..." className="flex-1 text-sm border-[#EEEEEE] focus:ring-[#393E46] focus:border-[#393E46]" />
-        <Button size="sm" className="bg-[#393E46] hover:bg-[#2C3036]">Add</Button>
+        <Input placeholder="Paste URL here..." className="flex-1 text-sm border-[#D1D5DB] focus:ring-[#393E46] focus:border-[#393E46] bg-[#F9FAFB]" />
+        <Button size="sm" className="bg-[#393E46] hover:bg-[#2C3036] text-white">Add</Button>
       </div>
       
       <div className="space-y-2">
@@ -600,9 +670,11 @@ function LinksTab() {
               <p className="text-sm font-medium truncate">{item.filename}</p>
               <p className="text-xs text-[#929AAB]">Scraped • {formatTimeAgo(item.uploadedAt)}</p>
             </div>
-            <Button variant="ghost" size="icon" className="h-6 w-6">
-              <MoreHorizontal className="h-3 w-3" />
-            </Button>
+            <ThreeDotsMenu 
+              onShare={() => console.log('Share link:', item.filename)}
+              onRename={() => console.log('Rename link:', item.filename)}
+              onDelete={() => console.log('Delete link:', item.filename)}
+            />
           </div>
         ))}
       </div>
@@ -628,9 +700,11 @@ function TranscriptsTab() {
                   {item.metadata?.duration || 'Unknown duration'} • {formatTimeAgo(item.uploadedAt)}
                 </p>
               </div>
-              <Button variant="ghost" size="icon" className="h-6 w-6">
-                <MoreHorizontal className="h-3 w-3" />
-              </Button>
+              <ThreeDotsMenu 
+                onShare={() => console.log('Share transcript:', item.filename)}
+                onRename={() => console.log('Rename transcript:', item.filename)}
+                onDelete={() => console.log('Delete transcript:', item.filename)}
+              />
             </div>
           ))}
         </div>
