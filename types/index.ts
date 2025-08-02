@@ -158,10 +158,10 @@ export interface UserSettings {
   notifications: {
     email: boolean
     push: boolean
-    caseUpdates: boolean
+    copyUpdates: boolean
     systemAlerts: boolean
   }
-  defaultCaseType: Case['caseType']
+  defaultOutputPreset: OutputPreset
   autoSave: boolean
 }
 
