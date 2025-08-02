@@ -176,7 +176,7 @@ export function ChatInterface({
       </div>
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4 pb-40">
+      <div className="flex-1 overflow-y-auto p-4 space-y-4 pb-28">
         {conversation?.messages.map((msg) => (
           <div key={msg.id} className={`flex ${msg.type === 'user' ? 'justify-end' : 'justify-start'}`}>
             <div className={`max-w-[80%] ${msg.type === 'user' ? 'ml-12' : 'mr-12'}`}>
@@ -299,7 +299,7 @@ export function ChatInterface({
 
       {/* Attached Media Preview */}
       {attachedMedia.length > 0 && (
-        <div className="p-4 border-t border-gray-800 bg-gray-900 sticky bottom-0 left-0 right-0 z-10">
+        <div className="p-2 glass sticky bottom-0 left-0 right-0 z-10">
           <div className="flex items-center space-x-2 mb-2">
             <Paperclip className="h-4 w-4 text-gray-400" />
             <span className="text-sm text-gray-400">Attached Media ({attachedMedia.length})</span>
@@ -326,7 +326,7 @@ export function ChatInterface({
       )}
 
       {/* Input Area */}
-      <div className="p-4 border-t border-gray-800 bg-gray-900 sticky bottom-0 left-0 right-0 z-10">
+      <div className="p-2 glass sticky bottom-0 left-0 right-0 z-10">
         <div className="flex items-end space-x-2">
           <div className="flex-1">
             <Input
@@ -335,7 +335,7 @@ export function ChatInterface({
               onKeyPress={handleKeyPress}
               placeholder={currentAgent ? `Ask ${currentAgent.name} to create ad copy...` : "Select an agent to start chatting..."}
               disabled={!currentAgent || isLoading}
-              className="bg-gray-800 border-gray-700 text-white focus:border-[#1ABC9C] focus:ring-[#1ABC9C]"
+              className="bg-transparent border-white/20 text-white placeholder:text-gray-400 focus:border-[#1ABC9C] focus:ring-[#1ABC9C]"
             />
           </div>
           <Button

@@ -37,6 +37,25 @@ function formatTimeAgo(date: Date): string {
   }).format(date)
 }
 
+// Component to render markdown content
+function MarkdownContent({ content }: { content: string }) {
+  // Simple markdown rendering for bold text and basic formatting
+  const renderContent = (text: string) => {
+    return text
+      .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+      .replace(/\*(.*?)\*/g, '<em>$1</em>')
+      .replace(/`(.*?)`/g, '<code class="bg-gray-100 px-1 py-0.5 rounded text-xs">$1</code>')
+  }
+
+  return (
+    <div 
+      dangerouslySetInnerHTML={{ 
+        __html: renderContent(content) 
+      }} 
+    />
+  )
+}
+
 export default function Dashboard() {
   const [leftPanelOpen, setLeftPanelOpen] = React.useState(true)
   const [rightPanelOpen, setRightPanelOpen] = React.useState(true)
@@ -249,7 +268,7 @@ function LeftSidebar({ agents, conversations, selectedAgent, onSelectAgent }: an
                 <span className="text-lg">{agent.icon}</span>
                 <div className="flex-1 min-w-0">
                   <FadeInText text={agent.name} className="font-medium text-sm truncate" delay={agent.id * 0.1} />
-                  <FadeInText text={agent.description} className="text-xs text-[#929AAB] whitespace-normal" delay={agent.id * 0.1 + 0.05} />
+                  <FadeInText text={agent.description} className="text-xs text-[#929AAB] line-clamp-2 leading-relaxed" delay={agent.id * 0.1 + 0.05} />
                 </div>
               </div>
             </motion.button>
@@ -326,9 +345,9 @@ function ChatInterface({ messages, selectedAgent }: any) {
   const [input, setInput] = React.useState("")
 
   return (
-    <div className="h-full relative flex flex-col bg-white" style={{ height: '100vh' }}>
+    <div className="h-full relative flex flex-col bg-white">
       {/* Chat Messages */}
-      <div className="flex-1 overflow-y-auto bg-white pb-40" style={{ height: 'calc(100vh - 300px)', maxHeight: 'calc(100vh - 300px)' }}>
+      <div className="flex-1 overflow-y-auto bg-white pb-6">
         <div className="max-w-4xl mx-auto p-4 space-y-6">
           {messages.map((message: any, index: number) => (
             <motion.div
@@ -350,11 +369,11 @@ function ChatInterface({ messages, selectedAgent }: any) {
                     ) : message.animated ? (
                       <WordByWordText text={message.content} delay={0.1} />
                     ) : (
-                      message.content
+                      <MarkdownContent content={message.content} />
                     )}
                   </div>
                 </div>
-                <div className={`text-xs text-[#929AAB] mt-1 ${message.role === 'user' ? 'text-right' : 'text-left'}`}>
+                <div className={`text-xs text-[#929AAB] mt-2 ${message.role === 'user' ? 'text-right' : 'text-left'}`}>
                   {message.timestamp}
                 </div>
               </div>
@@ -366,20 +385,20 @@ function ChatInterface({ messages, selectedAgent }: any) {
       {/* Composer */}
       <div className="border-t border-[#EEEEEE] bg-white sticky bottom-0 left-0 right-0 z-10">
         <div className="max-w-4xl mx-auto p-4">
-            <div className="max-w-2xl mx-auto">
+            <div className="max-w-3xl mx-auto">
               <div className="relative">
             <textarea
               value={input}
               onChange={(e) => setInput(e.target.value)}
               placeholder="Message your AI agent..."
-              className="w-full min-h-[48px] max-h-40 p-3 pr-12 border border-[#EEEEEE] rounded-xl resize-none focus:ring-2 focus:ring-[#393E46] focus:border-transparent focus:outline-none text-sm"
+              className="w-full min-h-[52px] max-h-32 p-4 pr-16 border border-[#E5E7EB] rounded-3xl resize-none focus:ring-2 focus:ring-[#393E46] focus:border-transparent focus:outline-none text-sm shadow-sm bg-white"
               style={{ fieldSizing: 'content' } as any}
             />
             <div className="absolute bottom-3 right-3 flex items-center space-x-2">
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <Button variant="ghost" size="icon" className="h-8 w-8 text-[#929AAB] hover:text-[#393E46] hover:bg-[#F7F7F7]">
+                    <Button variant="ghost" size="icon" className="h-8 w-8 text-[#929AAB] hover:text-[#393E46] hover:bg-[#F7F7F7] rounded-full">
                       <Paperclip className="h-4 w-4" />
                     </Button>
                   </TooltipTrigger>
@@ -392,7 +411,7 @@ function ChatInterface({ messages, selectedAgent }: any) {
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <Button size="icon" className="h-8 w-8 bg-[#393E46] hover:bg-[#2C3036]">
+                    <Button size="icon" className="h-8 w-8 bg-[#393E46] hover:bg-[#2C3036] rounded-full">
                       <Send className="h-4 w-4 text-white" />
                     </Button>
                   </TooltipTrigger>
@@ -408,21 +427,7 @@ function ChatInterface({ messages, selectedAgent }: any) {
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <Button variant="ghost" size="sm" className="text-xs h-7 px-2 text-[#929AAB] hover:text-[#393E46] hover:bg-[#F7F7F7]">
-                      <Upload className="h-3 w-3 mr-1" />
-                      /upload
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>Upload files to media library</p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-              
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button variant="ghost" size="sm" className="text-xs h-7 px-2 text-[#929AAB] hover:text-[#393E46] hover:bg-[#F7F7F7]">
+                    <Button variant="ghost" size="sm" className="text-xs h-7 px-2 text-[#929AAB] hover:text-[#393E46] hover:bg-[#F7F7F7] rounded-full">
                       <Mic className="h-3 w-3 mr-1" />
                       /transcribe
                     </Button>
