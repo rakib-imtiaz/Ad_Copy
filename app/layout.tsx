@@ -65,7 +65,7 @@ export default function RootLayout({
         <link rel="manifest" href="/site.webmanifest" />
         <meta name="theme-color" content="#393E46" />
       </head>
-      <body className="min-h-screen bg-background font-sans antialiased overflow-hidden" suppressHydrationWarning>
+      <body className="min-h-screen bg-background font-sans antialiased" suppressHydrationWarning>
         <div className="relative flex min-h-screen flex-col">
           <div className="flex-1">
             {children}

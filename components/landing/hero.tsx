@@ -2,6 +2,7 @@
 
 import * as React from "react"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 import { motion } from "motion/react"
 import { Button } from "@/components/ui/button"
 import { FlipWords } from "@/components/ui/flip-words"
@@ -9,6 +10,7 @@ import { FlipWords } from "@/components/ui/flip-words"
 import Iridescence from "@/components/ui/Iridescence"
 
 export function LandingHero() {
+  const router = useRouter();
   const words = ["Facebook Ads", "Google Ads", "Email Campaigns", "LinkedIn Posts", "X (Twitter)"];
   
   const letterColors = {
@@ -127,22 +129,19 @@ export function LandingHero() {
             whileTap={{ scale: 0.95 }}
             className="relative"
           >
-            <Button 
-              size="lg" 
-              asChild 
-              className="rounded-full bg-blue-600 text-white hover:bg-blue-700 shadow-xl font-semibold px-8 py-3 border-0 transition-all duration-200"
+            <a 
+              href="/dashboard"
+              className="inline-flex items-center space-x-2 rounded-full bg-blue-600 text-white hover:bg-blue-700 shadow-xl font-semibold px-8 py-3 border-0 transition-all duration-200"
             >
-              <Link href="/dashboard" className="flex items-center space-x-2">
-                <span>Start Creating</span>
-                <motion.div
-                  animate={{ x: [0, 4, 0] }}
-                  transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
-                  className="text-lg"
-                >
-                  →
-                </motion.div>
-              </Link>
-            </Button>
+              <span>Start Creating</span>
+              <motion.div
+                animate={{ x: [0, 4, 0] }}
+                transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
+                className="text-lg"
+              >
+                →
+              </motion.div>
+            </a>
             {/* Subtle glow effect */}
             <div className="absolute inset-0 rounded-full bg-blue-600 blur-lg opacity-25 -z-10"></div>
           </motion.div>
