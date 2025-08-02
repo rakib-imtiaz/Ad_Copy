@@ -56,6 +56,84 @@ function MarkdownContent({ content }: { content: string }) {
   )
 }
 
+// Agent Selector Component
+function AgentSelector({ agents, selectedAgent, onSelectAgent, onOpenChange }: any) {
+  const [isOpen, setIsOpen] = React.useState(false)
+  const currentAgent = agents.find((agent: any) => agent.name === selectedAgent)
+
+  const handleOpenChange = (newIsOpen: boolean) => {
+    setIsOpen(newIsOpen)
+    onOpenChange?.(newIsOpen)
+  }
+
+  return (
+    <div className="relative">
+      <motion.button
+        onClick={() => handleOpenChange(!isOpen)}
+        onMouseEnter={() => handleOpenChange(true)}
+        className="w-full text-left p-3 rounded-lg border border-[#EEEEEE] bg-white hover:bg-[#F9FAFB] transition-colors"
+        whileHover={{ scale: 1.01 }}
+        whileTap={{ scale: 0.99 }}
+      >
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-3">
+            <span className="text-lg">{currentAgent?.icon || "🤖"}</span>
+            <div className="flex-1 min-w-0">
+              <div className="font-medium text-sm truncate">{currentAgent?.name || "Select Agent"}</div>
+              <div className="text-xs text-[#929AAB] truncate">{currentAgent?.description || "Choose an AI agent"}</div>
+            </div>
+          </div>
+          <ChevronRight className={`h-4 w-4 text-[#929AAB] transition-transform ${isOpen ? 'rotate-90' : ''}`} />
+        </div>
+      </motion.button>
+
+      {/* Agent Dropdown */}
+      {isOpen && (
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -10 }}
+          onMouseLeave={() => handleOpenChange(false)}
+          className="absolute top-full left-0 right-0 mt-1 bg-white border border-[#EEEEEE] rounded-lg shadow-xl z-[100] max-h-72 overflow-y-auto"
+        >
+          <div className="p-2">
+            <div className="text-xs font-medium text-[#929AAB] uppercase tracking-wider px-2 py-1 mb-1">
+              Available Agents
+            </div>
+            {agents.map((agent: any) => (
+              <motion.button
+                key={agent.id}
+                onClick={() => {
+                  onSelectAgent(agent.name)
+                  handleOpenChange(false)
+                }}
+                className={`w-full text-left p-3 rounded-md transition-colors ${
+                  selectedAgent === agent.name 
+                    ? 'bg-[#F0F9FF] border border-[#0EA5E9]' 
+                    : 'hover:bg-[#F9FAFB]'
+                }`}
+                whileHover={{ scale: 1.005 }}
+                whileTap={{ scale: 0.995 }}
+              >
+                <div className="flex items-start space-x-3">
+                  <span className="text-lg flex-shrink-0">{agent.icon}</span>
+                  <div className="flex-1 min-w-0">
+                    <div className="font-medium text-sm truncate">{agent.name}</div>
+                    <div className="text-xs text-[#929AAB] line-clamp-2 leading-relaxed mt-0.5">{agent.description}</div>
+                  </div>
+                  {selectedAgent === agent.name && (
+                    <div className="w-2 h-2 bg-[#0EA5E9] rounded-full flex-shrink-0 mt-1" />
+                  )}
+                </div>
+              </motion.button>
+            ))}
+          </div>
+        </motion.div>
+      )}
+    </div>
+  )
+}
+
 export default function Dashboard() {
   const [leftPanelOpen, setLeftPanelOpen] = React.useState(true)
   const [rightPanelOpen, setRightPanelOpen] = React.useState(true)
@@ -246,38 +324,23 @@ export default function Dashboard() {
 
 // Left Sidebar Component
 function LeftSidebar({ agents, conversations, selectedAgent, onSelectAgent }: any) {
+  const [isAgentSelectorOpen, setIsAgentSelectorOpen] = React.useState(false)
+
   return (
     <div className="h-full flex flex-col">
-      {/* Agents Section */}
+      {/* Agent Selector */}
       <div className="p-4 border-b border-[#EEEEEE]">
-        <h3 className="text-xs font-medium text-[#929AAB] uppercase tracking-wider mb-3">Agents</h3>
-        <div className="space-y-1">
-          {agents.map((agent: any) => (
-            <motion.button
-              key={agent.id}
-              onClick={() => onSelectAgent(agent.name)}
-              className={`w-full text-left p-3 rounded-lg transition-colors ${
-                selectedAgent === agent.name 
-                  ? 'bg-white border border-[#EEEEEE] shadow-sm' 
-                  : 'hover:bg-white/50'
-              }`}
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-            >
-              <div className="flex items-center space-x-3">
-                <span className="text-lg">{agent.icon}</span>
-                <div className="flex-1 min-w-0">
-                  <FadeInText text={agent.name} className="font-medium text-sm truncate" delay={agent.id * 0.1} />
-                  <FadeInText text={agent.description} className="text-xs text-[#929AAB] line-clamp-2 leading-relaxed" delay={agent.id * 0.1 + 0.05} />
-                </div>
-              </div>
-            </motion.button>
-          ))}
-        </div>
+        <h3 className="text-xs font-medium text-[#929AAB] uppercase tracking-wider mb-3">Current Agent</h3>
+        <AgentSelector 
+          agents={agents} 
+          selectedAgent={selectedAgent} 
+          onSelectAgent={onSelectAgent}
+          onOpenChange={setIsAgentSelectorOpen}
+        />
       </div>
 
       {/* Conversations Section */}
-      <div className="flex-1 overflow-y-auto p-4">
+      <div className={`flex-1 p-4 ${isAgentSelectorOpen ? 'overflow-hidden' : 'overflow-y-auto'}`}>
         <div className="flex items-center justify-between mb-3">
           <h3 className="text-xs font-medium text-[#929AAB] uppercase tracking-wider">Conversations</h3>
           <TooltipProvider>
@@ -383,15 +446,15 @@ function ChatInterface({ messages, selectedAgent }: any) {
       </div>
 
       {/* Composer */}
-      <div className="border-t border-[#EEEEEE] bg-white sticky bottom-0 left-0 right-0 z-10">
-        <div className="max-w-4xl mx-auto p-4">
+      <div className="sticky bottom-0 left-0 right-0 z-10 bg-transparent">
+        <div className="max-w-4xl mx-auto p-6">
             <div className="max-w-3xl mx-auto">
               <div className="relative">
             <textarea
               value={input}
               onChange={(e) => setInput(e.target.value)}
               placeholder="Message your AI agent..."
-              className="w-full min-h-[52px] max-h-32 p-4 pr-16 border border-[#E5E7EB] rounded-3xl resize-none focus:ring-2 focus:ring-[#393E46] focus:border-transparent focus:outline-none text-sm shadow-sm bg-white"
+              className="w-full min-h-[52px] max-h-32 p-4 pr-16 border border-[#D1D5DB] rounded-3xl resize-none focus:ring-2 focus:ring-[#393E46] focus:border-transparent focus:outline-none text-sm shadow-lg bg-white"
               style={{ fieldSizing: 'content' } as any}
             />
             <div className="absolute bottom-3 right-3 flex items-center space-x-2">
@@ -422,22 +485,7 @@ function ChatInterface({ messages, selectedAgent }: any) {
               </TooltipProvider>
             </div>
           </div>
-          <div className="flex items-center justify-between mt-2">
-            <div className="flex items-center space-x-2">
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button variant="ghost" size="sm" className="text-xs h-7 px-2 text-[#929AAB] hover:text-[#393E46] hover:bg-[#F7F7F7] rounded-full">
-                      <Mic className="h-3 w-3 mr-1" />
-                      /transcribe
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>Transcribe audio or video files</p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-            </div>
+          <div className="flex items-center justify-center mt-3">
               <div className="text-xs text-[#929AAB]">
                 Press Enter to send
               </div>
