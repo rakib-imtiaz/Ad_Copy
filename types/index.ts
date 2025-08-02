@@ -63,6 +63,7 @@ export interface ChatMessage {
   content: string
   type: 'user' | 'ai' | 'system'
   timestamp: Date
+  citations?: Citation[]
   metadata?: {
     generatedCopy?: GeneratedCopy
     templateVariables?: Record<string, string>
@@ -178,10 +179,12 @@ export interface FileUploadProps {
   multiple?: boolean
 }
 
-export interface ChatMessage {
+// Citation type for references
+export interface Citation {
   id: string
-  content: string
-  type: 'user' | 'ai'
-  timestamp: Date
-  citations?: Citation[]
+  source: string
+  title?: string
+  url?: string
+  page?: number
+  quote?: string
 }

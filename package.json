@@ -1,7 +1,7 @@
 {
-  "name": "nomosai-legal-platform",
+  "name": "copy-ready-ad-platform",
   "version": "1.0.0",
-  "description": "AI-powered legal tech platform for case management and document automation",
+  "description": "AI-powered ad copy platform for email campaigns and social media marketing",
   "private": true,
   "scripts": {
     "dev": "next dev",
