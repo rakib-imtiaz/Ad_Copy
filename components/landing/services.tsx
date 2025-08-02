@@ -21,7 +21,7 @@ export function LandingServices() {
   const isInView = useInView(ref, { once: true, margin: "-100px" })
 
   return (
-    <section className="py-24 sm:py-32 bg-gray-900" ref={ref}>
+    <section id="services" className="py-24 sm:py-32 bg-gray-900" ref={ref}>
       <div className="container text-center">
         <motion.h2 
           className="text-3xl font-bold tracking-tight text-white sm:text-4xl"
@@ -29,7 +29,7 @@ export function LandingServices() {
           animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 30 }}
           transition={{ duration: 0.6, delay: 0.1 }}
         >
-          Comprehensive CopyForge Modules
+          Comprehensive Copy Ready Modules
         </motion.h2>
         <motion.p 
           className="mt-4 text-lg text-gray-300 max-w-2xl mx-auto"

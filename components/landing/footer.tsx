@@ -22,7 +22,7 @@ export function LandingFooter() {
   ];
 
   return (
-    <footer className="bg-gray-900 border-t border-white/10 pt-16 pb-8" ref={ref}>
+    <footer id="contact" className="bg-gray-900 border-t border-white/10 pt-16 pb-8" ref={ref}>
       <div className="container grid md:grid-cols-3 gap-12">
         <motion.div 
           className="space-y-6"
@@ -31,10 +31,16 @@ export function LandingFooter() {
           transition={{ duration: 0.6, delay: 0.1 }}
         >
           <Link href="/" className="flex items-center space-x-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br from-blue-500 to-green-400">
-              <PenTool className="h-6 w-6 text-black" />
+            <div className="flex h-10 w-10 items-center justify-center">
+              <img 
+                src="/logo_whiteBG.png" 
+                alt="Copy Ready logo" 
+                width={40} 
+                height={40}
+                className="rounded-lg"
+              />
             </div>
-            <span className="text-xl font-bold text-white">CopyForge</span>
+            <span className="text-xl font-bold text-white">Copy Ready</span>
           </Link>
           <p className="text-gray-400">
             AI-Powered Ad Copy Platform
@@ -93,7 +99,7 @@ export function LandingFooter() {
         animate={isInView ? { opacity: 1, y: 0 } : {}}
         transition={{ duration: 0.6, delay: 0.8 }}
       >
-        &copy; {new Date().getFullYear()} CopyForge, Inc. All rights reserved.
+        &copy; {new Date().getFullYear()} Copy Ready, Inc. All rights reserved.
       </motion.div>
     </footer>
   )

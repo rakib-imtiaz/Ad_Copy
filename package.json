@@ -5,10 +5,14 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "dev:watch": "nodemon --watch . --ext js,jsx,ts,tsx,json --exec \"next dev\"",
+    "dev:fast": "next dev --turbo",
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "type-check": "tsc --noEmit"
+    "lint:watch": "nodemon --watch . --ext js,jsx,ts,tsx --exec \"next lint\"",
+    "type-check": "tsc --noEmit",
+    "type-check:watch": "tsc --noEmit --watch"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.1",
@@ -68,8 +72,10 @@
     "@typescript-eslint/eslint-plugin": "^8.15.0",
     "@typescript-eslint/parser": "^8.15.0",
     "autoprefixer": "^10.4.20",
+    "concurrently": "^9.2.0",
     "eslint": "^8.57.1",
     "eslint-config-next": "^15.1.8",
+    "nodemon": "^3.1.10",
     "postcss": "^8.4.49",
     "tailwindcss": "^3.4.15"
   },

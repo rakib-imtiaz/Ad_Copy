@@ -10,27 +10,27 @@ const inter = Inter({
 
 export const metadata: Metadata = {
   title: {
-    default: 'CopyForge - AI Ad Copy Platform',
-    template: '%s | CopyForge'
+    default: 'Copy Ready - AI Ad Copy Platform',
+    template: '%s | Copy Ready'
   },
   description: 'Create high-converting ad copy with AI-powered agents. Generate compelling content for Facebook, Google, Email, and more.',
   keywords: ['ad copy', 'AI marketing', 'copywriting', 'advertising', 'content generation', 'social media ads', 'PPC'],
-  authors: [{ name: 'CopyForge Team' }],
-  creator: 'CopyForge',
+  authors: [{ name: 'Copy Ready Team' }],
+  creator: 'Copy Ready',
   metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'),
   openGraph: {
     type: 'website',
     locale: 'en_US',
     url: '/',
-    title: 'CopyForge - AI Ad Copy Platform',
+    title: 'Copy Ready - AI Ad Copy Platform',
     description: 'Create high-converting ad copy with AI-powered agents. Generate compelling content for Facebook, Google, Email, and more.',
-    siteName: 'CopyForge',
+    siteName: 'Copy Ready',
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'CopyForge - AI Ad Copy Platform',
+    title: 'Copy Ready - AI Ad Copy Platform',
     description: 'Create high-converting ad copy with AI-powered agents. Generate compelling content for Facebook, Google, Email, and more.',
-    creator: '@copyforge',
+    creator: '@copyready',
   },
   robots: {
     index: true,
@@ -57,6 +57,7 @@ export default function RootLayout({
     <html lang="en" className={inter.variable} suppressHydrationWarning>
       <head>
         <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <link rel="icon" href="/logo.png" type="image/png" />
         <link rel="icon" href="/favicon.ico" />
         <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
         <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />

@@ -11,13 +11,88 @@ import Iridescence from "@/components/ui/Iridescence"
 export function LandingHero() {
   const words = ["Facebook Ads", "Google Ads", "Email Campaigns", "LinkedIn Posts", "X (Twitter)"];
   
+  const letterColors = {
+    "Facebook Ads": [
+      "text-blue-600", // F
+      "text-blue-600", // a
+      "text-blue-600", // c
+      "text-blue-600", // e
+      "text-blue-600", // b
+      "text-blue-600", // o
+      "text-blue-600", // o
+      "text-blue-600", // k
+      "text-gray-900", // space
+      "text-blue-600", // A
+      "text-blue-600", // d
+      "text-blue-600", // s
+    ],
+    "Google Ads": [
+      "text-blue-600", // G
+      "text-red-500",  // o
+      "text-yellow-500", // o
+      "text-blue-600", // g
+      "text-green-500", // l
+      "text-red-500",  // e
+      "text-gray-900", // space
+      "text-blue-600", // A
+      "text-red-500",  // d
+      "text-yellow-500", // s
+    ],
+    "Email Campaigns": [
+      "text-purple-600", // E
+      "text-purple-600", // m
+      "text-purple-600", // a
+      "text-purple-600", // i
+      "text-purple-600", // l
+      "text-gray-900", // space
+      "text-purple-600", // C
+      "text-purple-600", // a
+      "text-purple-600", // m
+      "text-purple-600", // p
+      "text-purple-600", // a
+      "text-purple-600", // i
+      "text-purple-600", // g
+      "text-purple-600", // n
+      "text-purple-600", // s
+    ],
+    "LinkedIn Posts": [
+      "text-blue-700", // L
+      "text-blue-700", // i
+      "text-blue-700", // n
+      "text-blue-700", // k
+      "text-blue-700", // e
+      "text-blue-700", // d
+      "text-blue-700", // I
+      "text-blue-700", // n
+      "text-gray-900", // space
+      "text-blue-700", // P
+      "text-blue-700", // o
+      "text-blue-700", // s
+      "text-blue-700", // t
+      "text-blue-700", // s
+    ],
+    "X (Twitter)": [
+      "text-white", // X
+      "text-gray-900", // space
+      "text-white", // (
+      "text-white", // T
+      "text-white", // w
+      "text-white", // i
+      "text-white", // t
+      "text-white", // t
+      "text-white", // e
+      "text-white", // r
+      "text-white", // )
+    ]
+  };
+  
   return (
-    <main className="relative flex flex-col h-[100vh] items-center justify-center bg-gradient-to-b from-blue-100 via-blue-50 to-white overflow-hidden">
+    <main id="home" className="relative flex flex-col h-[100vh] items-center justify-center bg-gradient-to-b from-blue-100 via-blue-50 to-white">
       {/* Iridescence animation layer */}
-      <div className="absolute inset-0 w-full h-full -z-5">
+      <div className="absolute inset-0 w-full h-full -z-5 pointer-events-none">
         <Iridescence
           color={[0.6, 0.8, 1.0]} // Light blue/cyan colors
-          mouseReact={true}
+          mouseReact={false}
           amplitude={0.15}
           speed={0.8}
         />
@@ -33,7 +108,7 @@ export function LandingHero() {
         >
           <h1 className="text-4xl font-bold tracking-tight text-gray-900 sm:text-6xl">
             AI-Powered Ad Copy Platform for{" "}
-            <FlipWords words={words} className="text-blue-600" />
+            <FlipWords words={words} className="text-blue-600" letterColors={letterColors} />
           </h1>
           <p className="mt-6 text-lg leading-8 text-gray-600">
             Generate high-converting ad copy using your personalized knowledge base, AI agents, and comprehensive media library. Create compelling campaigns in minutes with intelligent templates and brand customization.

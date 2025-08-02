@@ -264,10 +264,16 @@ export default function Dashboard() {
 
           {/* Logo */}
           <div className="flex items-center space-x-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded bg-[#393E46]">
-              <span className="text-sm font-bold text-white">C</span>
+            <div className="flex h-8 w-8 items-center justify-center">
+              <img 
+                src="/logo.png" 
+                alt="Copy Ready logo" 
+                width={32} 
+                height={32}
+                className="rounded-lg"
+              />
             </div>
-            <span className="font-semibold text-lg hidden sm:block">CopyForge</span>
+            <span className="font-semibold text-lg hidden sm:block">Copy Ready</span>
           </div>
 
           {/* Active Agent Chip */}
@@ -324,6 +330,24 @@ export default function Dashboard() {
               </TooltipTrigger>
               <TooltipContent>
                 <p>Settings</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className="h-8 px-3 text-[#929AAB] hover:text-[#393E46] hover:bg-[#F7F7F7] text-xs"
+                  onClick={() => window.location.href = '/'}
+                >
+                  Logout
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Return to landing page</p>
               </TooltipContent>
             </Tooltip>
           </TooltipProvider>
@@ -457,11 +481,17 @@ function MobileSidebar({ agents, conversations }: any) {
     <div className="h-full relative flex flex-col bg-white">
       <div className="p-4 border-b border-[#EEEEEE]">
         <div className="flex items-center space-x-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded bg-[#393E46]">
-            <span className="text-sm font-bold text-white">C</span>
+          <div className="flex h-8 w-8 items-center justify-center">
+            <img 
+              src="/logo.png" 
+              alt="Copy Ready logo" 
+              width={32} 
+              height={32}
+              className="rounded-lg"
+            />
           </div>
           <div>
-            <div className="font-semibold">CopyForge</div>
+            <div className="font-semibold">Copy Ready</div>
             <div className="text-xs text-[#929AAB]">AI Ad Copy Platform</div>
           </div>
         </div>

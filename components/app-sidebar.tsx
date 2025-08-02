@@ -56,7 +56,7 @@ export function AppSidebar() {
               <span className="text-lg font-bold text-black">C</span>
             </div>
             <div className="flex flex-col">
-              <span className="text-lg font-bold">CopyForge</span>
+              <span className="text-lg font-bold">Copy Ready</span>
               <span className="text-xs text-muted-foreground">AI Ad Copy Platform</span>
             </div>
           </div>
@@ -116,7 +116,7 @@ export function AppSidebar() {
             <span className="text-sm font-bold text-black">CF</span>
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium truncate">CopyForge Pro</p>
+            <p className="text-sm font-medium truncate">Copy Ready Pro</p>
             <p className="text-xs text-muted-foreground truncate">Active License</p>
           </div>
         </div>

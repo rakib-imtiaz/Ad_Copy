@@ -1,0 +1,26 @@
+{
+  "watch": [
+    "app/**/*",
+    "components/**/*",
+    "lib/**/*",
+    "hooks/**/*",
+    "types/**/*",
+    "public/**/*",
+    "tailwind.config.ts",
+    "next.config.js",
+    "tsconfig.json"
+  ],
+  "ext": "js,jsx,ts,tsx,json,css,md",
+  "ignore": [
+    "node_modules/**/*",
+    ".next/**/*",
+    "out/**/*",
+    "dist/**/*",
+    "*.log",
+    "package-lock.json"
+  ],
+  "exec": "next dev",
+  "env": {
+    "NODE_ENV": "development"
+  }
+} 

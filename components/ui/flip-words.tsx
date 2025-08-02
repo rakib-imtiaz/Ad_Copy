@@ -7,10 +7,18 @@ export const FlipWords = ({
   words,
   duration = 3000,
   className,
+  specialWord,
+  specialClassName,
+  brandColors,
+  letterColors,
 }: {
   words: string[];
   duration?: number;
   className?: string;
+  specialWord?: string;
+  specialClassName?: string;
+  brandColors?: Record<string, string>;
+  letterColors?: Record<string, string[]>;
 }) => {
   const [currentWord, setCurrentWord] = useState(words[0]);
   const [isAnimating, setIsAnimating] = useState<boolean>(false);
@@ -58,24 +66,29 @@ export const FlipWords = ({
         }}
         className={cn(
           "z-10 inline-block relative text-left text-neutral-900 dark:text-neutral-100 px-2",
-          className
+          brandColors?.[currentWord] || (currentWord === specialWord ? specialClassName : className)
         )}
         key={currentWord}
       >
-        {currentWord.split("").map((letter, index) => (
-          <motion.span
-            key={currentWord + index}
-            initial={{ opacity: 0, y: 10, filter: "blur(8px)" }}
-            animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-            transition={{
-              delay: index * 0.08,
-              duration: 0.4,
-            }}
-            className="inline-block"
-          >
-            {letter}
-          </motion.span>
-        ))}
+        {currentWord.split("").map((letter, index) => {
+          const letterColorArray = letterColors?.[currentWord];
+          const letterColor = letterColorArray && letterColorArray[index];
+          
+          return (
+            <motion.span
+              key={currentWord + index}
+              initial={{ opacity: 0, y: 10, filter: "blur(8px)" }}
+              animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+              transition={{
+                delay: index * 0.08,
+                duration: 0.4,
+              }}
+              className={cn("inline-block", letterColor)}
+            >
+              {letter}
+            </motion.span>
+          );
+        })}
       </motion.div>
     </AnimatePresence>
   );

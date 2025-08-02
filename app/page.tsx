@@ -6,9 +6,9 @@ import { LandingFooter } from "@/components/landing/footer";
 
 export default function Home() {
   return (
-    <div className="bg-gray-900 text-white">
+    <div className="bg-gray-900 text-white min-h-screen">
       <LandingHeader />
-      <main>
+      <main className="relative">
         <LandingHero />
         <div className="h-px w-full bg-gradient-to-r from-transparent via-white/10 to-transparent" />
         <LandingFeatures />

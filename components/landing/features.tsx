@@ -71,7 +71,7 @@ export function LandingFeatures() {
             animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
             transition={{ duration: 0.6, delay: 0.3 }}
           >
-            CopyForge Platform Features
+            Copy Ready Platform Features
           </motion.h2>
           <motion.p 
             className="text-lg text-gray-300"
