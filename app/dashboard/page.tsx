@@ -249,7 +249,7 @@ function LeftSidebar({ agents, conversations, selectedAgent, onSelectAgent }: an
                 <span className="text-lg">{agent.icon}</span>
                 <div className="flex-1 min-w-0">
                   <FadeInText text={agent.name} className="font-medium text-sm truncate" delay={agent.id * 0.1} />
-                  <FadeInText text={agent.description} className="text-xs text-[#929AAB] truncate" delay={agent.id * 0.1 + 0.05} />
+                  <FadeInText text={agent.description} className="text-xs text-[#929AAB] whitespace-normal" delay={agent.id * 0.1 + 0.05} />
                 </div>
               </div>
             </motion.button>
