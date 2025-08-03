@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Shield, LayoutDashboard, Bot, FileText, Palette, Users, BarChart2, PlusCircle, Edit, UserPlus } from 'lucide-react';
+import { Shield, LayoutDashboard, Bot, FileText, Palette, Users, BarChart2, PlusCircle, Edit, UserPlus, LogOut } from 'lucide-react';
 
 const navItems = [
   { href: '/admin/dashboard', label: 'Overview', icon: LayoutDashboard },
@@ -38,12 +38,12 @@ export const LeftSidebar = () => {
           {navItems.map((item) => (
             <li key={item.label}>
               <Link href={item.href} className={`flex items-center space-x-3 p-3 rounded-lg transition-colors ${
-                  pathname === item.href
-                    ? 'bg-indigo-50 text-indigo-600 font-semibold'
-                    : 'text-gray-600 hover:bg-gray-100'
-                }`}>
-                  <item.icon size={20} />
-                  <span>{item.label}</span>
+                pathname === item.href
+                  ? 'bg-indigo-50 text-indigo-600 font-semibold'
+                  : 'text-gray-600 hover:bg-gray-100'
+              }`}>
+                <item.icon size={20} />
+                <span>{item.label}</span>
               </Link>
             </li>
           ))}
@@ -56,21 +56,28 @@ export const LeftSidebar = () => {
           {quickActions.map((action) => (
             <li key={action.label}>
               <Link href={action.href} className="flex items-center space-x-3 p-3 rounded-lg transition-colors text-gray-600 hover:bg-gray-100">
-                  <action.icon size={20} />
-                  <span>{action.label}</span>
+                <action.icon size={20} />
+                <span>{action.label}</span>
               </Link>
             </li>
           ))}
         </ul>
       </div>
 
-       <div className="mt-10 pt-6 border-t border-gray-200 flex items-center space-x-3">
-         <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center text-lg font-bold text-gray-600">A</div>
-         <div>
-           <p className="font-semibold text-gray-800">Admin User</p>
-           <p className="text-sm text-gray-500">admin@example.com</p>
-         </div>
-       </div>
+      <div className="mt-6 pt-6 border-t border-gray-200">
+        <div className="flex items-center space-x-3 mb-4">
+          <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center text-lg font-bold text-gray-600">A</div>
+          <div>
+            <p className="font-semibold text-gray-800">Admin User</p>
+            <p className="text-sm text-gray-500">admin@example.com</p>
+          </div>
+        </div>
+        
+        <Link href="/" className="flex items-center space-x-3 p-3 rounded-lg transition-colors text-gray-600 hover:bg-gray-100 hover:text-red-600">
+          <LogOut size={20} />
+          <span>Logout</span>
+        </Link>
+      </div>
     </aside>
   );
 };
