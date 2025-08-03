@@ -62,6 +62,9 @@ export function LandingHeader() {
             );
           })}
         </nav>
+        <Button asChild className="hidden md:inline-flex rounded-full bg-indigo-600 text-white hover:bg-indigo-700 font-semibold shadow-lg hover:shadow-xl transition-all duration-200 px-6 ml-2">
+          <Link href="/admin/dashboard">Admin</Link>
+        </Button>
         <Button asChild className="hidden md:inline-flex rounded-full bg-blue-600 text-white hover:bg-blue-700 font-semibold shadow-lg hover:shadow-xl transition-all duration-200 px-6">
           <Link href="/login">Sign In</Link>
         </Button>
