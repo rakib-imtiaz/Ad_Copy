@@ -73,7 +73,7 @@ const NewPromptPage = () => {
                   id="template-description"
                   rows={3}
                   value={description}
-                  onChange={(e) => setDescription(e.targe.value)}
+                  onChange={(e) => setDescription(e.target.value)}
                   placeholder="A short description of what this agent does."
                   className="w-full mt-2 bg-gray-50 border border-gray-300 rounded-lg p-3 text-gray-800 focus:ring-2 focus:ring-indigo-500"
                   required
@@ -83,7 +83,7 @@ const NewPromptPage = () => {
               <div>
                 <label htmlFor="template-body" className="text-sm font-medium text-gray-700">Template Body</label>
                 <p className="text-sm text-gray-500 mb-2">
-                  Use placeholders like `{{productName}}` or `{{targetAudience}}` for dynamic content.
+                  Use placeholders like `{'{'}{'{'}productName{'}'}{'}'}` or `{'{'}{'{'}targetAudience{'}'}{'}'}` for dynamic content.
                 </p>
                 <textarea
                   id="template-body"
