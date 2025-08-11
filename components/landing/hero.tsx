@@ -89,11 +89,11 @@ export function LandingHero() {
   };
   
   return (
-    <main id="home" className="relative flex flex-col h-[100vh] items-center justify-center bg-gradient-to-b from-blue-100 via-blue-50 to-white">
+    <main id="home" className="relative flex flex-col h-[100vh] items-center justify-center bg-hero-gradient">
       {/* Iridescence animation layer */}
       <div className="absolute inset-0 w-full h-full -z-5 pointer-events-none">
         <Iridescence
-          color={[0.6, 0.8, 1.0]} // Light blue/cyan colors
+          color={[0.95, 0.81, 0.25]} // RFA yellow colors
           mouseReact={false}
           amplitude={0.15}
           speed={0.8}
@@ -108,17 +108,17 @@ export function LandingHero() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.2 }}
         >
-          <h1 className="text-4xl font-bold tracking-tight text-gray-900 sm:text-6xl">
+          <h1 className="text-4xl font-bold tracking-tight text-ink sm:text-6xl drop-shadow-lg">
             AI-Powered Ad Copy Platform for{" "}
-            <FlipWords words={words} className="text-blue-600" letterColors={letterColors} />
+            <FlipWords words={words} className="text-ink drop-shadow-lg" letterColors={letterColors} />
           </h1>
-          <p className="mt-6 text-lg leading-8 text-gray-600">
+          <p className="mt-6 text-lg leading-8 text-ink/80 drop-shadow-md font-medium">
             Generate high-converting ad copy using your personalized knowledge base, AI agents, and comprehensive media library. Create compelling campaigns in minutes with intelligent templates and brand customization.
           </p>
         </motion.div>
         
         <motion.div 
-          className="mt-10 flex flex-col sm:flex-row gap-4 justify-center items-center"
+          className="mt-10 flex justify-center items-center"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.4 }}
@@ -131,7 +131,7 @@ export function LandingHero() {
           >
             <a 
               href="/dashboard"
-              className="inline-flex items-center space-x-2 rounded-full bg-blue-600 text-white hover:bg-blue-700 shadow-xl font-semibold px-8 py-3 border-0 transition-all duration-200"
+              className="inline-flex items-center space-x-2 rounded-full bg-rfa-white text-brand hover:bg-surface hover:text-brand-dark shadow-med font-semibold px-8 py-3 border-2 border-brand transition-all duration-200"
             >
               <span>Start Creating</span>
               <motion.div
@@ -143,23 +143,10 @@ export function LandingHero() {
               </motion.div>
             </a>
             {/* Subtle glow effect */}
-            <div className="absolute inset-0 rounded-full bg-blue-600 blur-lg opacity-25 -z-10"></div>
+            <div className="absolute inset-0 rounded-full bg-rfa-white blur-lg opacity-25 -z-10"></div>
           </motion.div>
 
-          {/* Secondary CTA - Contact Us */}
-          <motion.div
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-          >
-            <Button 
-              size="lg" 
-              asChild 
-              variant="outline"
-              className="rounded-full bg-white/80 border-2 border-gray-300 text-gray-700 hover:bg-white hover:border-gray-400 shadow-lg font-semibold px-8 py-3 backdrop-blur-sm transition-all duration-200"
-            >
-              <Link href="/contact">Contact Us</Link>
-            </Button>
-          </motion.div>
+
         </motion.div>
       </div>
     </main>

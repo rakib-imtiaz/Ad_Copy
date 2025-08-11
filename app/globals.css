@@ -6,6 +6,7 @@
 
 @layer base {
   :root {
+    /* Existing shadcn/ui variables */
     --background: 224 71.4% 4.1%;
     --foreground: 210 20% 98%;
     --card: 224 71.4% 4.1%;
@@ -27,6 +28,7 @@
     --ring: 142.1 76.2% 36.3%;
     --radius: 0.8rem;
 
+    /* Existing color variables */
     --blue-300: #93c5fd;
     --blue-400: #60a5fa;
     --blue-500: #3b82f6;
@@ -34,6 +36,41 @@
     --violet-200: #ddd6fe;
     --black: #000;
     --white: #fff;
+
+    /* ===========================
+       RFA Palette (from screenshot)
+       =========================== */
+    /* Brand Yellows */
+    --yellow-500: #F3CF3F;   /* main brand yellow */
+    --yellow-300: #FCE37E;   /* light yellow */
+    --yellow-800: #A17B35;   /* deep golden/brown shadow */
+
+    /* Neutrals */
+    --rfa-white:      #FFFFFF;
+    --off-white:      #E2E1DA;   /* subtle warm surface */
+    --gray-400:       #B5B1AF;   /* borders, subtle text */
+    --gray-600:       #666C83;   /* secondary text */
+    --black-900:      #2A2319;   /* near-black used on site */
+    --rfa-black:      #111111;   /* general text black */
+
+    /* Semantic aliases */
+    --brand:            var(--yellow-500);
+    --brand-light:      var(--yellow-300);
+    --brand-dark:       var(--yellow-800);
+    --bg:               var(--rfa-white);
+    --surface:          var(--off-white);
+    --text:             var(--rfa-black);
+    --text-muted:       var(--gray-600);
+    --rfa-border:       var(--gray-400);
+    --ink:              var(--black-900);
+
+    /* Gradients */
+    --hero-gradient: linear-gradient(180deg, var(--yellow-300) 0%, var(--yellow-500) 100%);
+    --tilt-gradient: linear-gradient(135deg, var(--yellow-300) 0%, var(--yellow-500) 60%, var(--yellow-800) 100%);
+
+    /* Shadows that sit well on the yellow */
+    --shadow-soft: 0 8px 24px rgba(42, 35, 25, 0.08);
+    --shadow-med:  0 12px 32px rgba(42, 35, 25, 0.15);
   }
 
   .dark {
@@ -80,5 +117,116 @@
   }
   to {
     background-position: 350% 50%, 350% 50%;
+  }
+}
+
+/* ===========================
+   RFA Components & Utilities
+   =========================== */
+
+@layer components {
+  /* Backgrounds */
+  .bg-brand       { background-color: var(--brand); }
+  .bg-brand-light { background-color: var(--brand-light); }
+  .bg-surface     { background-color: var(--surface); }
+  .bg-ink         { background-color: var(--ink); }
+
+  /* Text colors */
+  .text-brand  { color: var(--brand); }
+  .text-ink    { color: var(--ink); }
+  .text-muted  { color: var(--text-muted); }
+  .text-invert { color: var(--rfa-white); }
+
+  /* Borders */
+  .border-default { border: 1px solid var(--rfa-border); }
+  .border-ink     { border: 1px solid var(--ink); }
+  .rounded-xl     { border-radius: 14px; }
+
+  /* Buttons (match the screenshot styles) */
+  .btn {
+    appearance: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: .5rem;
+    padding: .9rem 1.25rem;
+    border-radius: 999px;
+    font-weight: 700;
+    line-height: 1;
+    text-decoration: none;
+    transition: transform .08s ease, box-shadow .2s ease, background-color .2s ease, color .2s ease, border-color .2s ease;
+    cursor: pointer;
+  }
+
+  .btn-primary {
+    background: var(--brand);       /* yellow brand color */
+    color: var(--rfa-white);
+    border: 1px solid var(--brand);
+    box-shadow: var(--shadow-soft);
+  }
+  .btn-primary:hover { 
+    background: var(--brand-dark);
+    border-color: var(--brand-dark);
+    transform: translateY(-1px); 
+    box-shadow: var(--shadow-med); 
+  }
+
+  .btn-outline {
+    background: var(--rfa-white);
+    color: var(--ink);
+    border: 2px solid var(--ink);
+  }
+  .btn-outline:hover { 
+    background: var(--surface); 
+  }
+
+  /* Gradient hero / bands like the screenshot */
+  .section-hero {
+    background: var(--hero-gradient);
+  }
+  .section-tilt {
+    background: var(--tilt-gradient);
+  }
+
+  /* Cards / surfaces */
+  .card {
+    background: var(--rfa-white);
+    border: 1px solid var(--rfa-border);
+    border-radius: 16px;
+    box-shadow: var(--shadow-soft);
+  }
+
+  /* Badges / rating stars (warm yellow) */
+  .badge, .star {
+    color: var(--yellow-500);
+    fill:  var(--yellow-500);
+  }
+}
+
+@layer base {
+  /* RFA Base Styles */
+  body.rfa-theme {
+    background: var(--bg);
+    color: var(--text);
+  }
+  
+  .rfa-theme h1, 
+  .rfa-theme h2, 
+  .rfa-theme h3 { 
+    color: var(--ink); 
+  }
+
+  /* Links (the page uses dark links) */
+  .rfa-theme a { 
+    color: var(--ink); 
+    text-decoration: none; 
+  }
+  .rfa-theme a:hover { 
+    opacity: .85; 
+  }
+  
+  /* Specific no-underline class */
+  .no-underline {
+    text-decoration: none !important;
   }
 }

@@ -22,7 +22,7 @@ export function LandingFooter() {
   ];
 
   return (
-    <footer id="contact" className="bg-gray-900 border-t border-white/10 pt-16 pb-8" ref={ref}>
+    <footer id="contact" className="bg-rfa-white border-t border-rfa-border pt-16 pb-8" ref={ref}>
       <div className="container grid md:grid-cols-3 gap-12">
         <motion.div 
           className="space-y-6"
@@ -40,9 +40,9 @@ export function LandingFooter() {
                 className="rounded-lg"
               />
             </div>
-            <span className="text-xl font-bold text-white">Copy Ready</span>
+            <span className="text-xl font-bold text-brand">Copy Ready</span>
           </Link>
-          <p className="text-gray-400">
+          <p className="text-brand font-medium">
             AI-Powered Ad Copy Platform
           </p>
           <div className="flex space-x-4">
@@ -50,7 +50,7 @@ export function LandingFooter() {
               <motion.a
                 key={index}
                 href={social.href}
-                className="text-gray-400 hover:text-white transition-colors"
+                className="text-brand hover:text-brand-dark transition-colors"
                 initial={{ opacity: 0, scale: 0 }}
                 animate={isInView ? { opacity: 1, scale: 1 } : {}}
                 transition={{ duration: 0.4, delay: 0.2 + index * 0.1 }}
@@ -71,7 +71,7 @@ export function LandingFooter() {
               animate={isInView ? { opacity: 1, y: 0 } : {}}
               transition={{ duration: 0.6, delay: 0.2 + sectionIndex * 0.1 }}
             >
-              <h4 className="font-semibold text-white mb-4">{section.title}</h4>
+              <h4 className="font-semibold text-brand mb-4">{section.title}</h4>
               <ul className="space-y-3">
                 {section.links.map((link, linkIndex) => (
                   <motion.li
@@ -81,7 +81,7 @@ export function LandingFooter() {
                     transition={{ duration: 0.4, delay: 0.3 + sectionIndex * 0.1 + linkIndex * 0.05 }}
                   >
                     <motion.div whileHover={{ x: 4 }} transition={{ duration: 0.2 }}>
-                      <Link href="#" className="text-gray-400 hover:text-white transition-colors">
+                      <Link href="#" className="text-brand hover:text-brand-dark transition-colors font-medium">
                         {link}
                       </Link>
                     </motion.div>
@@ -94,7 +94,7 @@ export function LandingFooter() {
       </div>
       
       <motion.div 
-        className="container mt-12 pt-8 border-t border-white/10 text-center text-sm text-gray-500"
+        className="container mt-12 pt-8 border-t border-rfa-border text-center text-sm text-brand font-medium"
         initial={{ opacity: 0, y: 20 }}
         animate={isInView ? { opacity: 1, y: 0 } : {}}
         transition={{ duration: 0.6, delay: 0.8 }}

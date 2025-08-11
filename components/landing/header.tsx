@@ -15,7 +15,7 @@ export function LandingHeader() {
       animate={{ y: 0, opacity: 1 }}
       transition={{ duration: 0.8, delay: 0.2, type: "spring", stiffness: 100 }}
     >
-      <div className="flex w-full max-w-4xl items-center justify-between bg-black/60 backdrop-blur-xl border border-white/20 shadow-2xl shadow-black/30 rounded-full px-4 py-2">
+      <div className="flex w-full max-w-4xl items-center justify-between bg-rfa-white/90 backdrop-blur-xl border border-rfa-border shadow-med rounded-full px-4 py-2">
         <Link href="/" className="flex items-center space-x-2.5 pr-2">
           <motion.div 
             className="flex h-10 w-10 items-center justify-center"
@@ -30,7 +30,7 @@ export function LandingHeader() {
               className="rounded-lg"
             />
           </motion.div>
-          <span className="text-lg font-bold text-white drop-shadow-sm">
+          <span className="text-lg font-bold text-ink drop-shadow-sm no-underline">
             Copy Ready
           </span>
         </Link>
@@ -54,7 +54,7 @@ export function LandingHeader() {
               <Button 
                 key={item} 
                 variant="ghost" 
-                className="rounded-full text-white/90 hover:text-white hover:bg-white/10 font-medium transition-all duration-200 drop-shadow-sm" 
+                className="rounded-full text-ink hover:text-brand hover:bg-surface font-medium transition-all duration-200 drop-shadow-sm no-underline" 
                 onClick={handleClick}
               >
                 {item}
@@ -62,22 +62,22 @@ export function LandingHeader() {
             );
           })}
         </nav>
-        <Button asChild className="hidden md:inline-flex rounded-full bg-indigo-600 text-white hover:bg-indigo-700 font-semibold shadow-lg hover:shadow-xl transition-all duration-200 px-6 ml-2">
+        <Button asChild className="hidden md:inline-flex rounded-full bg-rfa-white border-2 border-ink text-ink hover:bg-surface font-semibold px-6 py-2 transition-all duration-200 ml-2 no-underline">
           <Link href="/admin/dashboard">Admin</Link>
         </Button>
-        <Button asChild className="hidden md:inline-flex rounded-full bg-blue-600 text-white hover:bg-blue-700 font-semibold shadow-lg hover:shadow-xl transition-all duration-200 px-6">
+        <Button asChild className="hidden md:inline-flex rounded-full bg-brand text-rfa-white hover:bg-brand-dark font-semibold px-6 py-2 shadow-soft transition-all duration-200 no-underline">
           <Link href="/login">Sign In</Link>
         </Button>
 
         {/* Mobile Menu */}
         <Sheet>
           <SheetTrigger asChild>
-            <Button variant="ghost" size="icon" className="md:hidden hover:bg-white/10 transition-colors">
-              <Menu className="h-6 w-6 text-white drop-shadow-sm" />
+            <Button variant="ghost" size="icon" className="md:hidden hover:bg-surface transition-colors">
+              <Menu className="h-6 w-6 text-ink drop-shadow-sm" />
               <span className="sr-only">Open Menu</span>
             </Button>
           </SheetTrigger>
-          <SheetContent side="right" className="bg-gray-900/95 backdrop-blur-xl text-white w-64 md:hidden border-l border-white/10">
+          <SheetContent side="right" className="bg-rfa-white/95 backdrop-blur-xl text-ink w-64 md:hidden border-l border-rfa-border">
             <nav className="mt-8 flex flex-col space-y-2">
               {[
                 { label: "Home", action: () => document.getElementById('home')?.scrollIntoView({ behavior: 'smooth' }) },
@@ -88,17 +88,17 @@ export function LandingHeader() {
                 <SheetClose asChild key={label}>
                   <button 
                     onClick={action} 
-                    className="w-full text-left py-3 px-4 text-white/90 hover:text-white hover:bg-white/10 transition-all duration-200 rounded-lg font-medium"
+                    className="w-full text-left py-3 px-4 text-text-muted hover:text-ink hover:bg-surface transition-all duration-200 rounded-lg font-medium"
                   >
                     {label}
                   </button>
                 </SheetClose>
               ))}
-              <div className="pt-4 mt-4 border-t border-white/10">
+              <div className="pt-4 mt-4 border-t border-rfa-border">
                 <SheetClose asChild>
                   <Link 
                     href="/login" 
-                    className="w-full inline-flex justify-center py-3 px-4 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition-all duration-200 shadow-lg"
+                    className="w-full inline-flex justify-center py-3 px-4 bg-brand hover:bg-brand-dark text-rfa-white font-semibold rounded-lg transition-all duration-200 shadow-soft"
                   >
                     Sign In
                   </Link>

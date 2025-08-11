@@ -52,6 +52,32 @@ const config: Config = {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
+        // RFA Color Palette
+        yellow: {
+          300: "var(--yellow-300)",
+          500: "var(--yellow-500)",
+          800: "var(--yellow-800)",
+        },
+        brand: {
+          DEFAULT: "var(--brand)",
+          light: "var(--brand-light)",
+          dark: "var(--brand-dark)",
+        },
+        gray: {
+          400: "var(--gray-400)",
+          600: "var(--gray-600)",
+        },
+        rfa: {
+          white: "var(--rfa-white)",
+          black: "var(--rfa-black)",
+          surface: "var(--surface)",
+          ink: "var(--ink)",
+          border: "var(--rfa-border)",
+        },
+        text: {
+          DEFAULT: "var(--text)",
+          muted: "var(--text-muted)",
+        },
       },
       borderRadius: {
         lg: "var(--radius)",
@@ -98,9 +124,13 @@ const config: Config = {
       },
       backgroundImage: {
         'glass-gradient': 'linear-gradient(to right bottom, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05))',
+        'hero-gradient': 'var(--hero-gradient)',
+        'tilt-gradient': 'var(--tilt-gradient)',
       },
       boxShadow: {
         'glass': '0 4px 30px rgba(0, 0, 0, 0.1)',
+        'soft': 'var(--shadow-soft)',
+        'med': 'var(--shadow-med)',
       },
       backdropFilter: {
         'blur': 'blur(5px)',

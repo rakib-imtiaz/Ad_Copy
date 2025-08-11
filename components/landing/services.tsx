@@ -21,10 +21,10 @@ export function LandingServices() {
   const isInView = useInView(ref, { once: true, margin: "-100px" })
 
   return (
-    <section id="services" className="py-24 sm:py-32 bg-gray-900" ref={ref}>
+    <section id="services" className="py-24 sm:py-32 bg-brand" ref={ref}>
       <div className="container text-center">
         <motion.h2 
-          className="text-3xl font-bold tracking-tight text-white sm:text-4xl"
+          className="text-3xl font-bold tracking-tight text-ink sm:text-4xl"
           initial={{ opacity: 0, y: 30 }}
           animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 30 }}
           transition={{ duration: 0.6, delay: 0.1 }}
@@ -32,7 +32,7 @@ export function LandingServices() {
           Comprehensive Copy Ready Modules
         </motion.h2>
         <motion.p 
-          className="mt-4 text-lg text-gray-300 max-w-2xl mx-auto"
+          className="mt-4 text-lg text-ink max-w-2xl mx-auto font-medium"
           initial={{ opacity: 0, y: 20 }}
           animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
           transition={{ duration: 0.6, delay: 0.2 }}
@@ -54,14 +54,14 @@ export function LandingServices() {
               transition={{ duration: 0.5, delay: 0.4 + index * 0.1, type: "spring", stiffness: 100 }}
               whileHover={{ scale: 1.05, z: 20 }}
             >
-              <div className="absolute inset-0 bg-gradient-to-br from-gray-800 to-gray-900 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-              <div className="relative flex flex-col items-center justify-center text-center space-y-4 p-8 rounded-xl bg-gray-900/50 border border-white/10 transition-all duration-300 group-hover:bg-transparent group-hover:border-blue-500/50 group-hover:shadow-2xl group-hover:shadow-blue-500/10 h-full">
+              <div className="absolute inset-0 bg-gradient-to-br from-ink to-brand-dark rounded-xl opacity-0 group-hover:opacity-20 transition-opacity duration-300"></div>
+              <div className="relative flex flex-col items-center justify-center text-center space-y-4 p-8 rounded-xl bg-rfa-white border border-ink transition-all duration-300 group-hover:bg-transparent group-hover:border-ink group-hover:shadow-med h-full">
                 <motion.div 
-                  className="flex h-12 w-12 items-center justify-center rounded-full bg-gray-800 border border-white/10 group-hover:bg-blue-500/10 group-hover:border-blue-500 transition-all duration-300"
+                  className="flex h-12 w-12 items-center justify-center rounded-full bg-brand border border-ink group-hover:bg-ink group-hover:border-brand transition-all duration-300"
                 >
-                  <service.icon className="h-6 w-6 text-gray-400 group-hover:text-blue-400 transition-colors duration-300" />
+                  <service.icon className="h-6 w-6 text-ink group-hover:text-brand transition-colors duration-300" />
                 </motion.div>
-                <span className="font-medium text-white group-hover:text-blue-300 transition-colors duration-300">
+                <span className="font-medium text-ink group-hover:text-rfa-white transition-colors duration-300">
                   {service.title}
                 </span>
               </div>
