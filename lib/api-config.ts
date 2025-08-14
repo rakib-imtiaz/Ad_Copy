@@ -60,6 +60,15 @@ export const API_ENDPOINTS = {
     LOGIN: '/auth/login',
     OAUTH: '/auth/oauth',
     REFRESH: '/auth/refresh',
+    REGISTER: '/auth/register',
+    VERIFY: '/auth/verify',
+  },
+  
+  // n8n webhooks
+  N8N_WEBHOOKS: {
+    REGISTRATION: 'https://n8n.srv934833.hstgr.cloud/webhook-test/user-registration',
+    LOGIN: 'https://n8n.srv934833.hstgr.cloud/webhook-test/user-log-in',
+    VERIFY_CODE: 'https://n8n.srv934833.hstgr.cloud/webhook-test/verification-code-validate',
   },
   
   // User Management

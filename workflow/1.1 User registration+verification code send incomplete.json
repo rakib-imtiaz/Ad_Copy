@@ -1,0 +1,542 @@
+{
+  "name": "1.1 User registration+verification code send incomplete",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "user-registration",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -608,
+        -128
+      ],
+      "id": "7299975f-1fae-4af8-8d3e-db32681719d0",
+      "name": "Receive user info when registration",
+      "webhookId": "85d1a929-67fa-4d7c-9522-7b1ab0ea2699"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT EXISTS (\n    SELECT 1 FROM users WHERE email = '{{ $json.body.email }}'\n);\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        -384,
+        -128
+      ],
+      "id": "b4b18bca-90a0-416a-9b55-1679af0f86c1",
+      "name": "check user account already have or not",
+      "credentials": {
+        "postgres": {
+          "id": "m2APcCsiEk6ShrhP",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.exists }}",
+                    "rightValue": false,
+                    "operator": {
+                      "type": "boolean",
+                      "operation": "equals"
+                    },
+                    "id": "3c798fc3-4a02-42ad-b49e-022a2455996c"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "No account found"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "dbef9ae1-5053-4d52-80be-bf57a156c62d",
+                    "leftValue": "={{ $json.exists }}",
+                    "rightValue": true,
+                    "operator": {
+                      "type": "boolean",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Already have an account"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        -160,
+        -128
+      ],
+      "id": "1c50f1d6-7d36-4e78-ac6b-2e8c21ed7897",
+      "name": "Switch"
+    },
+    {
+      "parameters": {
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "temp_user_info",
+          "mode": "list",
+          "cachedResultName": "temp_user_info"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "email": "={{ $('Receive user info when registration').item.json.body.email }}",
+            "password": "={{ $('Receive user info when registration').item.json.body.password }}",
+            "verification_code": "={{ $('generate verification code').item.json.verificationCode }}"
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "name",
+              "displayName": "name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "email",
+              "displayName": "email",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "username",
+              "displayName": "username",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "password",
+              "displayName": "password",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "verification_code",
+              "displayName": "verification_code",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "created_at",
+              "displayName": "created_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        736,
+        -128
+      ],
+      "id": "67c6b8d4-abce-4780-a5e4-90c5b0bcaf8f",
+      "name": "Insert rows in table  temp_user_info",
+      "credentials": {
+        "postgres": {
+          "id": "m2APcCsiEk6ShrhP",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "user existance",
+                "value": "true"
+              }
+            ]
+          }
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        64,
+        -32
+      ],
+      "id": "a5a6aa7a-f212-435c-8c8e-dc6d59971496",
+      "name": "email already registered"
+    },
+    {
+      "parameters": {
+        "jsCode": "// This is the function to generate the code. You can keep it as-is.\nfunction generateAlphanumericCode(length = 8) {\n  const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';\n  let code = '';\n  for (let i = 0; i < length; i++) {\n    const randomIndex = Math.floor(Math.random() * characters.length);\n    code += characters[randomIndex];\n  }\n  return code;\n}\n\n// Generate the code and create the output object for n8n.\nconst verificationCode = generateAlphanumericCode(10); // Generate a 10-character code\n\n// The Code node expects an array of objects.\n// Each object represents an item that will be passed to the next node.\nreturn [{\n  json: {\n    verificationCode: verificationCode\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        64,
+        -224
+      ],
+      "id": "ef3d724d-fbfa-4979-8f83-ce1ee17bc649",
+      "name": "generate verification code"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT EXISTS (\n    SELECT 1 FROM temp_user_info WHERE email = '{{ $('Receive user info when registration').item.json.body.email }}'\n);",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        288,
+        -224
+      ],
+      "id": "a5bc85f8-e078-4dbc-9498-0eb72de5a12d",
+      "name": "check email alredy tried to create accout or not",
+      "credentials": {
+        "postgres": {
+          "id": "m2APcCsiEk6ShrhP",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.exists }}",
+                    "rightValue": true,
+                    "operator": {
+                      "type": "boolean",
+                      "operation": "equals"
+                    },
+                    "id": "7550834a-07b5-4b9d-92d5-d9635ac91377"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "verification not completed"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "a27e7deb-86c3-41cf-a03e-0ea8f21b00d0",
+                    "leftValue": "={{ $json.exists }}",
+                    "rightValue": false,
+                    "operator": {
+                      "type": "boolean",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Completely new user"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        512,
+        -224
+      ],
+      "id": "7bb0361a-dfcd-490f-8565-f8d65de10a30",
+      "name": "if alredy tried to create account with this email"
+    },
+    {
+      "parameters": {
+        "operation": "upsert",
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "temp_user_info",
+          "mode": "list",
+          "cachedResultName": "temp_user_info"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "verification_code": "={{ $('generate verification code').item.json.verificationCode }}",
+            "email": "={{ $('Receive user info when registration').item.json.body.email }}"
+          },
+          "matchingColumns": [
+            "email"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "email",
+              "displayName": "email",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "password",
+              "displayName": "password",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false,
+              "removed": true
+            },
+            {
+              "id": "verification_code",
+              "displayName": "verification_code",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "created_at",
+              "displayName": "created_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        736,
+        -352
+      ],
+      "id": "5f133b60-6b98-4fa8-9068-701f5c58de08",
+      "name": "replace the old verification code with a new one",
+      "credentials": {
+        "postgres": {
+          "id": "m2APcCsiEk6ShrhP",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "Add: gmail node to send verification code.\nAdd: respond to webhook node.\nExtra: add function to change email template. ",
+        "height": 176,
+        "color": 3
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        112,
+        -464
+      ],
+      "typeVersion": 1,
+      "id": "3073537c-f0cb-40cf-b9c0-a0488277f8c9",
+      "name": "Sticky Note"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Receive user info when registration": {
+      "main": [
+        [
+          {
+            "node": "check user account already have or not",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "check user account already have or not": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "generate verification code",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "email already registered",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "generate verification code": {
+      "main": [
+        [
+          {
+            "node": "check email alredy tried to create accout or not",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "check email alredy tried to create accout or not": {
+      "main": [
+        [
+          {
+            "node": "if alredy tried to create account with this email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "if alredy tried to create account with this email": {
+      "main": [
+        [
+          {
+            "node": "replace the old verification code with a new one",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Insert rows in table  temp_user_info",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "57f1d0fc-3ea2-4c08-849f-643e85d79811",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "0c870d00beae7b9dc8033e4fefcb7039fad7108dda0799946b0e9175b401671e"
+  },
+  "id": "g6xzZIAa9MVluLEy",
+  "tags": []
+}

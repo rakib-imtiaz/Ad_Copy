@@ -62,12 +62,14 @@ export function LandingHeader() {
             );
           })}
         </nav>
-        <Button asChild className="hidden md:inline-flex rounded-full bg-rfa-white border-2 border-ink text-ink hover:bg-surface font-semibold px-6 py-2 transition-all duration-200 ml-2 no-underline">
-          <Link href="/admin/dashboard">Admin</Link>
-        </Button>
-        <Button asChild className="hidden md:inline-flex rounded-full bg-brand text-rfa-white hover:bg-brand-dark font-semibold px-6 py-2 shadow-soft transition-all duration-200 no-underline">
-          <Link href="/login">Sign In</Link>
-        </Button>
+        <div className="hidden md:flex items-center space-x-2">
+          <Button asChild className="rounded-full bg-rfa-white border-2 border-ink text-ink hover:bg-surface font-semibold px-6 py-2 transition-all duration-200 no-underline">
+            <Link href="/auth/signup">Sign Up</Link>
+          </Button>
+          <Button asChild className="rounded-full bg-brand text-rfa-white hover:bg-brand-dark font-semibold px-6 py-2 shadow-soft transition-all duration-200 no-underline">
+            <Link href="/auth/signin">Sign In</Link>
+          </Button>
+        </div>
 
         {/* Mobile Menu */}
         <Sheet>
@@ -94,10 +96,18 @@ export function LandingHeader() {
                   </button>
                 </SheetClose>
               ))}
-              <div className="pt-4 mt-4 border-t border-rfa-border">
+              <div className="pt-4 mt-4 border-t border-rfa-border space-y-2">
                 <SheetClose asChild>
                   <Link 
-                    href="/login" 
+                    href="/auth/signup" 
+                    className="w-full inline-flex justify-center py-3 px-4 bg-rfa-white border-2 border-ink text-ink hover:bg-surface font-semibold rounded-lg transition-all duration-200"
+                  >
+                    Sign Up
+                  </Link>
+                </SheetClose>
+                <SheetClose asChild>
+                  <Link 
+                    href="/auth/signin" 
                     className="w-full inline-flex justify-center py-3 px-4 bg-brand hover:bg-brand-dark text-rfa-white font-semibold rounded-lg transition-all duration-200 shadow-soft"
                   >
                     Sign In

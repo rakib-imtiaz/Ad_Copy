@@ -12,7 +12,8 @@
     "lint": "next lint",
     "lint:watch": "nodemon --watch . --ext js,jsx,ts,tsx --exec \"next lint\"",
     "type-check": "tsc --noEmit",
-    "type-check:watch": "tsc --noEmit --watch"
+    "type-check:watch": "tsc --noEmit --watch",
+    "setup:dev": "node scripts/setup-dev-env.js"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.1",

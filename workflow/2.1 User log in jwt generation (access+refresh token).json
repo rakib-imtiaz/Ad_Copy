@@ -1,0 +1,570 @@
+{
+  "name": "2.1 User log in jwt generation (access+refresh token)",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "user-log-in",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -528,
+        -288
+      ],
+      "id": "a3ed2ecf-5252-41e7-a6be-85244672cb3b",
+      "name": "receive email pass from frontend",
+      "webhookId": "8385d93d-0afe-405e-8bea-eb3036a86530"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT EXISTS (\n    SELECT 1\n    FROM users\n    WHERE email = '{{ $json.body.email }}'\n);",
+        "options": {
+          "replaceEmptyStrings": false
+        }
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        -304,
+        -288
+      ],
+      "id": "2a75f064-bf99-41df-ae75-390c02c7dc88",
+      "name": "check user existance",
+      "alwaysOutputData": false,
+      "credentials": {
+        "postgres": {
+          "id": "m2APcCsiEk6ShrhP",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {
+          "responseCode": "=404",
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "X-User-Status",
+                "value": "User not found"
+              }
+            ]
+          }
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        144,
+        -192
+      ],
+      "id": "65962e1d-3bcf-471c-8382-42fff7db61cb",
+      "name": "user not exits"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "bddf34d8-28de-4077-af19-5d191574f942",
+              "leftValue": "={{ $json.exists }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -80,
+        -288
+      ],
+      "id": "1e89d883-bd3b-4df1-89be-cbaf15e6ad6f",
+      "name": "If user exist"
+    },
+    {
+      "parameters": {
+        "options": {
+          "responseCode": 401,
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "X-User-Status",
+                "value": "authentication failed"
+              }
+            ]
+          }
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        1488,
+        -192
+      ],
+      "id": "8b743d54-a452-4cb1-99f3-f969366eb9de",
+      "name": "wrong password"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "3116d6b5-1498-4b2d-9fc8-7cd1724fe623",
+              "leftValue": "={{ $json.status }}",
+              "rightValue": "password matched",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1264,
+        -384
+      ],
+      "id": "af43eac7-1182-4a07-bfc5-d217e0aa7608",
+      "name": "If wrong password"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT id,email,role FROM users\nWHERE email = $1 AND password = $2\nLIMIT 1;",
+        "options": {
+          "queryReplacement": "={{ $('receive email pass from frontend').item.json.body.email }},{{ $('receive email pass from frontend').item.json.body.password }}"
+        }
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        592,
+        -576
+      ],
+      "id": "aefc9915-4b72-4709-870d-0350e069244f",
+      "name": "check password",
+      "alwaysOutputData": false,
+      "credentials": {
+        "postgres": {
+          "id": "m2APcCsiEk6ShrhP",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        816,
+        -384
+      ],
+      "id": "cacd0ad6-ed5b-49c1-a5af-b67a8d07ca01",
+      "name": "Merge Results"
+    },
+    {
+      "parameters": {
+        "jsCode": "const email =$('receive email pass from frontend').first().json.body.email\nconst password = $('receive email pass from frontend').first().json.body.password\n\nreturn [\n  { json: { path: \"try-login\", email, password } },\n  { json: { path: \"fallback\" } }\n];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        144,
+        -384
+      ],
+      "id": "d7204daf-41e0-4399-97e4-8cc8d04c6288",
+      "name": "Create Branches for handle no response"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "40973948-51dd-4654-b4e3-f09bb4f9f357",
+              "leftValue": "={{ $json.path }}",
+              "rightValue": "try-login",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        368,
+        -384
+      ],
+      "id": "f3579039-596a-4bc5-be75-3fb651907359",
+      "name": "run two brach paralally"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "d1aab764-fecb-4b0b-bd29-d241bb524a50",
+              "name": "found ",
+              "value": "false",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        592,
+        -384
+      ],
+      "id": "1946d9aa-18b4-4bab-b551-957349ca124e",
+      "name": "backup for no output from db"
+    },
+    {
+      "parameters": {
+        "jsCode": "const itemsCount = items.length;\n\n// Case: two items returned\nif (itemsCount === 2) {\n  const userItem = items[0].json;\n  if (userItem.email) {\n    return [{ json: { status: \"password matched\", user: userItem } }];\n  } else {\n    return [{ json: { status: \"wrong password\" } }];\n  }\n}\n\n// Case: only one item\nif (itemsCount === 1) {\n  const singleItem = items[0].json;\n  if (singleItem.email) {\n    return [{ json: { status: \"password matched\", user: singleItem } }];\n  } else {\n    return [{ json: { status: \"wrong password\" } }];\n  }\n}\n\n// Fallback (no items at all)\nreturn [{ json: { status: \"no data\" } }];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1040,
+        -384
+      ],
+      "id": "ec6035a2-9b48-48d0-8011-56bed3f9684c",
+      "name": "password validate confirm"
+    },
+    {
+      "parameters": {
+        "useJson": true,
+        "claimsJson": "={\n  \"email\": \"{{ $json.user.email }}\",\n  \"role\": \"{{ $json.user.role }}\"\n} ",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.jwt",
+      "typeVersion": 1,
+      "position": [
+        1488,
+        -384
+      ],
+      "id": "fccf9b2f-2863-4df1-9f11-6a3c995b802b",
+      "name": "Access token",
+      "credentials": {
+        "jwtAuth": {
+          "id": "R5gvZ6z6acWjqxNj",
+          "name": "dummy jwt. secret:my_dummy_secret"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "useJson": true,
+        "claimsJson": "={\n  \"sub\": \"{{ $json.user.id }}\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.jwt",
+      "typeVersion": 1,
+      "position": [
+        1488,
+        -576
+      ],
+      "id": "b20db75d-11c8-4d7f-8902-f1344758ad4a",
+      "name": "Refresh token",
+      "credentials": {
+        "jwtAuth": {
+          "id": "R5gvZ6z6acWjqxNj",
+          "name": "dummy jwt. secret:my_dummy_secret"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineAll",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        1712,
+        -576
+      ],
+      "id": "daf2450e-42fe-497b-a542-9561f7dde2ab",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"success\": true,\n  \"data\": {\n    \"user\": {\n      \"email\": \"{{ $('If wrong password').item.json.user.email }}\",\n      \"role\": \"{{ $('If wrong password').item.json.user.role }}\"\n    },\n    \"accessToken\": \"{{ $('Access token').item.json.token }}\"\n  }\n}",
+        "options": {
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Set-Cookie",
+                "value": "=refreshToken={{ $('Refresh token').item.json.token }}; HttpOnly; Secure; Path=/; SameSite=Strict; Max-Age=604800"
+              }
+            ]
+          }
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        1936,
+        -576
+      ],
+      "id": "4e554002-1c9f-44fa-8273-3e7bf3da33e5",
+      "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "82865e3e-dad1-4860-9a72-fe176bbdb0eb",
+              "name": "curl",
+              "value": "curl -X POST -H \"Content-Type: application/json\" -d \"{\\\"email\\\": \\\"shahed@gmail.com\\\", \\\"password\\\": \\\"hashed_pass_1\\\"}\" https://n8n.srv934833.hstgr.cloud/webhook-test/user-log-in",
+              "type": "string"
+            },
+            {
+              "id": "d91ec30c-25e1-4a22-81ed-e4382a95e45f",
+              "name": "body",
+              "value": "email,password",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -272,
+        -560
+      ],
+      "id": "647bd31d-5a73-4afa-99e2-cdf04b65f40a",
+      "name": "instruction"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "receive email pass from frontend": {
+      "main": [
+        [
+          {
+            "node": "check user existance",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "check user existance": {
+      "main": [
+        [
+          {
+            "node": "If user exist",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If user exist": {
+      "main": [
+        [
+          {
+            "node": "Create Branches for handle no response",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "user not exits",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If wrong password": {
+      "main": [
+        [
+          {
+            "node": "Access token",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Refresh token",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "wrong password",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "check password": {
+      "main": [
+        [
+          {
+            "node": "Merge Results",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge Results": {
+      "main": [
+        [
+          {
+            "node": "password validate confirm",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Branches for handle no response": {
+      "main": [
+        [
+          {
+            "node": "run two brach paralally",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "run two brach paralally": {
+      "main": [
+        [
+          {
+            "node": "check password",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "backup for no output from db",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "backup for no output from db": {
+      "main": [
+        [
+          {
+            "node": "Merge Results",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "password validate confirm": {
+      "main": [
+        [
+          {
+            "node": "If wrong password",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Access token": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Refresh token": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "64e4acaa-0bec-4624-a393-50aa281b4d75",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "0c870d00beae7b9dc8033e4fefcb7039fad7108dda0799946b0e9175b401671e"
+  },
+  "id": "6YfzeqgARUdjovLX",
+  "tags": []
+}
