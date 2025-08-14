@@ -20,7 +20,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Forward the request to n8n webhook
-    const n8nEndpoint = 'https://n8n.srv934833.hstgr.cloud/webhook-test/verification-code-validate';
+    const n8nEndpoint = 'https://n8n.srv934833.hstgr.cloud/webhook/verification-code-validate';
     
     const n8nResponse = await fetch(n8nEndpoint, {
       method: 'POST',
