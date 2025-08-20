@@ -1,11 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import { motion } from "motion/react";
 import { authService } from "@/lib/auth-service";
+import { useAuth } from "@/lib/auth-context";
 import { 
   Card, 
   CardHeader, 
@@ -19,12 +20,20 @@ import { Button } from "@/components/ui/button";
 import { AuroraBackground } from "@/components/ui/aurora-background";
 
 export default function SignInPage() {
+  const { login, isAuthenticated } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const [debugInfo, setDebugInfo] = useState("");
   const router = useRouter();
+
+  // Redirect if already authenticated
+  useEffect(() => {
+    if (isAuthenticated) {
+      router.push("/dashboard");
+    }
+  }, [isAuthenticated, router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -33,19 +42,16 @@ export default function SignInPage() {
     setIsLoading(true);
     
     try {
-      // Use auth service for sign in
-      const result = await authService.signIn({ email, password });
+      // Use auth context for sign in
+      const success = await login(email, password);
       
-      // Debug information
-      setDebugInfo(`Sign In Response: ${JSON.stringify(result, null, 2)}`);
-
-      if (!result.success) {
-        throw new Error(result.error?.message || 'Sign in failed');
+      if (success) {
+        // Successful sign in - redirect to dashboard
+        console.log('Sign in successful');
+        router.push("/dashboard");
+      } else {
+        setError('Invalid email or password. Please check your credentials and try again.');
       }
-
-      // Successful sign in - JWT token is automatically stored
-      console.log('Sign in successful:', result.data?.user);
-      router.push("/dashboard");
       
     } catch (error: any) {
       console.error("Sign in failed", error);
@@ -108,7 +114,17 @@ export default function SignInPage() {
                     animate={{ opacity: 1, scale: 1 }}
                     transition={{ duration: 0.3 }}
                   >
-                    {error}
+                    <div className="flex flex-col space-y-2">
+                      <span>{error}</span>
+                      {error.includes('No account found') && (
+                        <Link 
+                          href="/auth/signup" 
+                          className="text-blue-600 hover:text-blue-800 underline text-xs"
+                        >
+                          Click here to create a new account
+                        </Link>
+                      )}
+                    </div>
                   </motion.div>
                 )}
 
@@ -150,7 +166,7 @@ export default function SignInPage() {
                   >
                     <div className="flex items-center justify-between">
                       <label className="text-sm font-medium text-ink" htmlFor="password">Password</label>
-                      <Link href="/auth/forgot-password" className="text-xs text-brand hover:text-brand-dark hover:underline transition-colors">
+                      <Link href="/auth/forgot-password" className="text-xs text-black hover:text-gray-700 hover:underline transition-colors">
                         Forgot password?
                       </Link>
                     </div>

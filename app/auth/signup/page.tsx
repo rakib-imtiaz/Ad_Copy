@@ -55,6 +55,14 @@ export default function SignUpPage() {
       setDebugInfo(`Registration Response: ${JSON.stringify(result, null, 2)}`);
 
       if (!result.success) {
+        // Handle specific error cases
+        if (result.error?.code === 'USER_EXISTS' || result.error?.code === 'USER_ALREADY_VERIFIED') {
+          const message = result.error?.code === 'USER_ALREADY_VERIFIED' 
+            ? 'This email is already registered and verified. Please sign in instead.'
+            : 'An account with this email already exists. Please sign in instead or use a different email address.';
+          setError(message);
+          return; // Don't throw error, just show message
+        }
         throw new Error(result.error?.message || 'Registration failed');
       }
 
@@ -83,7 +91,19 @@ export default function SignUpPage() {
       setDebugInfo(prev => prev + `\nVerification Response: ${JSON.stringify(result, null, 2)}`);
 
       if (!result.success) {
-        throw new Error(result.error?.message || 'Verification failed');
+        // Handle specific n8n configuration error
+        if (result.error?.code === 'N8N_CONFIG_ERROR') {
+          setError('The verification service is currently experiencing technical difficulties. Please try again in a few minutes or contact support if the issue persists.');
+        } else if (result.error?.code === 'ALREADY_VERIFIED') {
+          setError('This email is already verified. You can sign in directly.');
+        } else if (result.error?.code === 'VERIFICATION_FAILED') {
+          setError('The verification code is invalid or has expired. Please check your email and try again.');
+        } else if (result.error?.code === 'NETWORK_ERROR') {
+          setError('Unable to connect to the verification service. Please check your internet connection and try again.');
+        } else {
+          setError(result.error?.message || 'Verification failed. Please try again.');
+        }
+        return; // Don't redirect on error
       }
 
       // Verification successful, redirect to dashboard
@@ -155,7 +175,17 @@ export default function SignUpPage() {
                      animate={{ opacity: 1, scale: 1 }}
                      transition={{ duration: 0.3 }}
                    >
-                     {error}
+                     <div className="flex flex-col space-y-2">
+                       <span>{error}</span>
+                       {(error.includes('already exists') || error.includes('already verified')) && (
+                         <Link 
+                           href="/auth/signin" 
+                           className="text-blue-600 hover:text-blue-800 underline text-xs"
+                         >
+                           Click here to sign in instead
+                         </Link>
+                       )}
+                     </div>
                    </motion.div>
                  )}
 
@@ -214,7 +244,12 @@ export default function SignUpPage() {
                        animate={{ opacity: 1, x: 0 }}
                        transition={{ duration: 0.3, delay: 0.8 }}
                      >
-                       <label className="text-sm font-medium text-black" htmlFor="password">Password</label>
+                       <div className="flex items-center justify-between">
+                         <label className="text-sm font-medium text-black" htmlFor="password">Password</label>
+                         <Link href="/auth/forgot-password" className="text-xs text-black hover:text-gray-700 hover:underline transition-colors">
+                           Forgot password?
+                         </Link>
+                       </div>
                        <Input
                          id="password"
                          type="password"

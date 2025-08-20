@@ -25,6 +25,15 @@ interface ChatInterfaceProps {
   onPinMessage?: (messageId: string) => void
   onDeleteMessage?: (messageId: string) => void
   isLoading?: boolean
+  // New props for dashboard integration
+  messages?: Array<{
+    id: string
+    role: 'user' | 'assistant'
+    content: string
+    timestamp: string
+    animated?: boolean
+  }>
+  selectedAgent?: string
 }
 
 export function ChatInterface({ 
@@ -36,7 +45,9 @@ export function ChatInterface({
   onExportCopy,
   onPinMessage,
   onDeleteMessage,
-  isLoading 
+  isLoading,
+  messages,
+  selectedAgent
 }: ChatInterfaceProps) {
   const [message, setMessage] = React.useState("")
   const [attachedMedia, setAttachedMedia] = React.useState<string[]>([])
@@ -57,7 +68,7 @@ export function ChatInterface({
 
   React.useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
-  }, [conversation?.messages])
+  }, [conversation?.messages, messages])
 
   const handleSend = () => {
     if (message.trim() && onSendMessage) {
@@ -79,12 +90,17 @@ export function ChatInterface({
     // TODO: Show toast notification
   }
 
-  const formatTimestamp = (timestamp: Date) => {
+  const formatTimestamp = (timestamp: Date | string) => {
+    // If it's already a string, return it as is
+    if (typeof timestamp === 'string') {
+      return timestamp
+    }
+    // If it's a Date object, format it
     return new Intl.DateTimeFormat('en-US', {
       hour: '2-digit',
       minute: '2-digit',
       hour12: true
-    }).format(new Date(timestamp))
+    }).format(timestamp)
   }
 
   return (
@@ -109,7 +125,7 @@ export function ChatInterface({
               </div>
               <div className="flex items-center space-x-2">
                 <p className="text-sm text-gray-400">
-                  Agent: {currentAgent?.name || "No agent selected"}
+                  Agent: {currentAgent?.name || selectedAgent || "No agent selected"}
                 </p>
                 <Button
                   variant="ghost"
@@ -177,28 +193,31 @@ export function ChatInterface({
 
       {/* Messages */}
       <div className="flex-1 overflow-y-auto p-4 space-y-4 pb-28">
-        {conversation?.messages.map((msg) => (
-          <div key={msg.id} className={`flex ${msg.type === 'user' ? 'justify-end' : 'justify-start'}`}>
-            <div className={`max-w-[80%] ${msg.type === 'user' ? 'ml-12' : 'mr-12'}`}>
-              <div className={`flex items-start space-x-2 ${msg.type === 'user' ? 'flex-row-reverse space-x-reverse' : ''}`}>
+        {(messages || conversation?.messages || []).map((msg) => {
+          // Handle both ChatMessage (with type) and dashboard messages (with role)
+          const isUser = 'role' in msg ? msg.role === 'user' : msg.type === 'user'
+          return (
+          <div key={msg.id} className={`flex ${isUser ? 'justify-end' : 'justify-start'}`}>
+            <div className={`max-w-[80%] ${isUser ? 'ml-12' : 'mr-12'}`}>
+              <div className={`flex items-start space-x-2 ${isUser ? 'flex-row-reverse space-x-reverse' : ''}`}>
                 <Avatar className="h-8 w-8 flex-shrink-0">
-                  {msg.type === 'user' ? (
+                  {isUser ? (
                     <AvatarFallback className="bg-blue-500">U</AvatarFallback>
                   ) : (
                     <AvatarFallback className="bg-[#1ABC9C] text-black">AI</AvatarFallback>
                   )}
                 </Avatar>
                 
-                <div className={`flex-1 ${msg.type === 'user' ? 'text-right' : ''}`}>
+                <div className={`flex-1 ${isUser ? 'text-right' : ''}`}>
                   <div className={`inline-block p-3 rounded-lg ${
-                    msg.type === 'user' 
+                    isUser 
                       ? 'bg-blue-600 text-white' 
                       : 'bg-gray-800 text-gray-100'
                   }`}>
                     <p className="whitespace-pre-wrap">{msg.content}</p>
                     
                     {/* Generated Copy Preview */}
-                    {msg.metadata?.generatedCopy && (
+                    {'metadata' in msg && msg.metadata?.generatedCopy && (
                       <div className="mt-3 p-2 bg-gray-700 rounded border-l-2 border-[#1ABC9C]">
                         <div className="flex items-center justify-between mb-2">
                           <Badge variant="secondary" className="text-xs">
@@ -223,18 +242,18 @@ export function ChatInterface({
                             </Button>
                           </div>
                         </div>
-                        <p className="text-sm">{msg.metadata.generatedCopy.content}</p>
+                        <p className="text-sm">{msg.metadata?.generatedCopy?.content}</p>
                       </div>
                     )}
                   </div>
                   
                   <div className={`flex items-center mt-1 space-x-2 text-xs text-gray-400 ${
-                    msg.type === 'user' ? 'justify-end' : 'justify-start'
+                    isUser ? 'justify-end' : 'justify-start'
                   }`}>
                     <span>{formatTimestamp(msg.timestamp)}</span>
                     
                     {/* Message Actions */}
-                    {msg.type === 'ai' && (
+                    {!isUser && (
                       <div className="flex space-x-1">
                         <Button
                           variant="ghost"
@@ -273,7 +292,7 @@ export function ChatInterface({
               </div>
             </div>
           </div>
-        ))}
+        )})}
         
         {isLoading && (
           <div className="flex justify-start">
@@ -333,8 +352,8 @@ export function ChatInterface({
               value={message}
               onChange={(e) => setMessage(e.target.value)}
               onKeyPress={handleKeyPress}
-              placeholder={currentAgent ? `Ask ${currentAgent.name} to create ad copy...` : "Select an agent to start chatting..."}
-              disabled={!currentAgent || isLoading}
+              placeholder={currentAgent || selectedAgent ? `Ask ${currentAgent?.name || selectedAgent} to create ad copy...` : "Select an agent to start chatting..."}
+              disabled={!currentAgent && !selectedAgent || isLoading}
               className="bg-transparent border-white/20 text-white placeholder:text-gray-400 focus:border-[#1ABC9C] focus:ring-[#1ABC9C]"
             />
           </div>
@@ -347,14 +366,14 @@ export function ChatInterface({
           </Button>
           <Button
             onClick={handleSend}
-            disabled={!message.trim() || !currentAgent || isLoading}
+            disabled={!message.trim() || (!currentAgent && !selectedAgent) || isLoading}
             className="bg-[#1ABC9C] hover:bg-[#1ABC9C]/90 text-black"
           >
             <Send className="h-4 w-4" />
           </Button>
         </div>
         
-        {!currentAgent && (
+        {!currentAgent && !selectedAgent && (
           <p className="text-xs text-gray-400 mt-2">
             Please select an AI agent to start generating ad copy
           </p>

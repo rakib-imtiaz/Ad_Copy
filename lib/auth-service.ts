@@ -51,6 +51,8 @@ class AuthService {
     registration: string;
     login: string;
     verifyCode: string;
+    refreshToken: string;
+    chat: string;
   };
 
   constructor() {
@@ -63,7 +65,9 @@ class AuthService {
     this.apiEndpoints = {
       registration: `${this.baseUrl}/auth/register`,
       login: `${this.baseUrl}/auth/signin`,
-      verifyCode: `${this.baseUrl}/auth/verify`
+      verifyCode: `${this.baseUrl}/auth/verify`,
+      refreshToken: `${this.baseUrl}/auth/refresh`,
+      chat: `${this.baseUrl}/chat`
     };
   }
 
@@ -89,14 +93,27 @@ class AuthService {
         }),
       });
 
-      // Check headers for user existence
-      const userExistHeader = response.headers.get('user-existance');
-      if (userExistHeader === 'true') {
+      const data = await response.json();
+      
+      // Check if registration failed due to user already existing
+      if (!response.ok) {
+        if (response.status === 409) {
+          if (data.error?.code === 'USER_EXISTS' || data.error?.code === 'USER_ALREADY_VERIFIED') {
+            return {
+              success: false,
+              error: {
+                code: data.error.code,
+                message: data.error.message || 'A user with this email already exists.'
+              }
+            };
+          }
+        }
+        
         return {
           success: false,
           error: {
-            code: 'USER_EXISTS',
-            message: 'A user with this email already exists.'
+            code: data.error?.code || 'REGISTRATION_FAILED',
+            message: data.error?.message || 'Registration failed'
           }
         };
       }
@@ -162,11 +179,12 @@ class AuthService {
 
       // Check for authentication failure (401 status)
       if (response.status === 401) {
+        const data = await response.json();
         return {
           success: false,
           error: {
-            code: 'INVALID_CREDENTIALS',
-            message: 'Invalid email or password. Please try again.'
+            code: data.error?.code || 'INVALID_CREDENTIALS',
+            message: data.error?.message || 'Invalid email or password. Please try again.'
           }
         };
       }
@@ -227,17 +245,202 @@ class AuthService {
   }
   
   /**
+   * Refresh Access Token
+   */
+  async refreshToken(refreshToken: string): Promise<AuthResponse> {
+    if (this.useMockApi) {
+      // Mock refresh token for testing
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      return {
+        success: true,
+        data: {
+          user: {
+            id: 'user_mock_123',
+            email: 'test@example.com',
+            name: 'Test User',
+            role: 'user'
+          },
+          token: this.generateMockJWT('test@example.com', 'Test User')
+        }
+      };
+    }
+
+    try {
+      // Get current access token to send with refresh request
+      const currentAccessToken = this.getAuthToken();
+      
+      const response = await fetch(this.apiEndpoints.refreshToken, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(currentAccessToken && { 'Authorization': `Bearer ${currentAccessToken}` })
+        },
+        body: JSON.stringify({ 
+          refreshToken,
+          accessToken: currentAccessToken // Send access token to n8n
+        }),
+        credentials: 'include', // Important for cookies
+      });
+
+      if (!response.ok) {
+        if (response.status === 401) {
+          return {
+            success: false,
+            error: {
+              code: 'INVALID_REFRESH_TOKEN',
+              message: 'Invalid or expired refresh token'
+            }
+          };
+        }
+        
+        return {
+          success: false,
+          error: {
+            code: 'REFRESH_FAILED',
+            message: 'Failed to refresh token'
+          }
+        };
+      }
+
+      const data = await response.json();
+      
+      if (data.success && data.data?.accessToken) {
+        this.storeAuthToken(data.data.accessToken);
+      }
+
+      return {
+        success: true,
+        data: {
+          user: data.data?.user,
+          token: data.data?.accessToken
+        }
+      };
+    } catch (error: any) {
+      return {
+        success: false,
+        error: {
+          code: 'NETWORK_ERROR',
+          message: 'Failed to refresh token',
+          details: error.message
+        }
+      };
+    }
+  }
+
+  /**
+   * Send chat message to n8n
+   */
+  async sendChatMessage(chatData: {
+    email: string;
+    sessionId: number;
+    agentId: string;
+    userPrompt: string;
+  }): Promise<any> {
+    if (this.useMockApi) {
+      // Mock chat response for testing
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      return {
+        success: true,
+        data: {
+          response: `Mock response to: "${chatData.userPrompt}"`,
+          timestamp: new Date().toISOString()
+        }
+      };
+    }
+
+    try {
+      const accessToken = this.getAuthToken();
+      
+      if (!accessToken) {
+        return {
+          success: false,
+          error: {
+            code: 'NO_TOKEN',
+            message: 'No access token available. Please login again.'
+          }
+        };
+      }
+
+      const response = await fetch(this.apiEndpoints.chat, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${accessToken}`
+        },
+        body: JSON.stringify({
+          email: chatData.email,
+          sessionId: chatData.sessionId,
+          agentId: chatData.agentId,
+          userPrompt: chatData.userPrompt
+        }),
+      });
+
+      if (!response.ok) {
+        if (response.status === 401) {
+          // Token might be expired, try to refresh
+          const refreshToken = this.getRefreshToken();
+          if (refreshToken) {
+            const refreshResult = await this.refreshToken(refreshToken);
+            if (refreshResult.success) {
+              // Retry the chat request with new token
+              return this.sendChatMessage(chatData);
+            }
+          }
+          
+          return {
+            success: false,
+            error: {
+              code: 'INVALID_TOKEN',
+              message: 'Invalid or expired access token'
+            }
+          };
+        }
+        
+        return {
+          success: false,
+          error: {
+            code: 'CHAT_FAILED',
+            message: 'Failed to send chat message'
+          }
+        };
+      }
+
+      const data = await response.json();
+      return data;
+    } catch (error: any) {
+      return {
+        success: false,
+        error: {
+          code: 'NETWORK_ERROR',
+          message: 'Failed to connect to chat service',
+          details: error.message
+        }
+      };
+    }
+  }
+
+  /**
    * Verify the code sent to user's email
    */
   async verifyCode(email: string, code: string): Promise<AuthResponse> {
+    console.log('=== AUTH SERVICE VERIFY CODE START ===');
+    console.log('Email:', email);
+    console.log('Code:', code);
+    console.log('Use Mock API:', this.useMockApi);
+    
     if (this.useMockApi) {
+      console.log('Using mock verification...');
       // Use the mock verification for testing
       const mockVerification = await this.mockVerifyEmail(email);
       
       if (mockVerification.verification_code === code) {
+        console.log('Mock verification successful');
         return this.mockSignIn({ email, password: 'verified' });
       }
       
+      console.log('Mock verification failed - invalid code');
       return {
         success: false,
         error: {
@@ -248,6 +451,7 @@ class AuthService {
     }
 
     try {
+      console.log('Calling verification API endpoint:', this.apiEndpoints.verifyCode);
       const response = await fetch(this.apiEndpoints.verifyCode, {
         method: 'POST',
         headers: {
@@ -259,25 +463,57 @@ class AuthService {
         }),
       });
 
+      console.log('=== AUTH SERVICE RESPONSE ===');
+      console.log('Response Status:', response.status);
+      console.log('Response OK:', response.ok);
+      console.log('Response Headers:', Object.fromEntries(response.headers.entries()));
+      
       if (!response.ok) {
-        return {
-          success: false,
-          error: {
-            code: 'VERIFICATION_FAILED',
-            message: 'Failed to verify code. Please try again.'
-          }
-        };
+        console.log('Response not OK, handling error...');
+        // Try to get the specific error from the response
+        try {
+          const errorData = await response.json();
+          console.log('Error Data:', JSON.stringify(errorData, null, 2));
+          console.log('Error Code:', errorData.error?.code);
+          console.log('Error Message:', errorData.error?.message);
+          
+          const result = {
+            success: false,
+            error: {
+              code: errorData.error?.code || 'VERIFICATION_FAILED',
+              message: errorData.error?.message || 'Failed to verify code. Please try again.'
+            }
+          };
+          console.log('Returning error result:', JSON.stringify(result, null, 2));
+          return result;
+        } catch (e) {
+          console.log('Failed to parse error response:', e);
+          // If we can't parse the error response, return a generic error
+          const result = {
+            success: false,
+            error: {
+              code: 'VERIFICATION_FAILED',
+              message: 'Failed to verify code. Please try again.'
+            }
+          };
+          console.log('Returning generic error result:', JSON.stringify(result, null, 2));
+          return result;
+        }
       }
 
+      console.log('Response OK, parsing success data...');
       const data = await response.json();
+      console.log('Success Data:', JSON.stringify(data, null, 2));
       
       // If verification is successful, data should contain user info and tokens
       if (data.success) {
+        console.log('Verification successful, storing token...');
         if (data.token) {
           this.storeAuthToken(data.token);
+          console.log('Token stored successfully');
         }
         
-        return {
+        const result = {
           success: true,
           data: {
             user: data.user || {
@@ -289,17 +525,27 @@ class AuthService {
             token: data.token || ''
           }
         };
+        console.log('Returning success result:', JSON.stringify(result, null, 2));
+        return result;
       }
       
-      return {
+      console.log('Verification failed - invalid code');
+      const result = {
         success: false,
         error: {
           code: 'INVALID_CODE',
           message: data.message || 'Invalid verification code'
         }
       };
+      console.log('Returning invalid code result:', JSON.stringify(result, null, 2));
+      return result;
     } catch (error: any) {
-      return {
+      console.error('=== AUTH SERVICE CATCH ERROR ===');
+      console.error('Error:', error);
+      console.error('Error message:', error.message);
+      console.error('Error stack:', error.stack);
+      
+      const result = {
         success: false,
         error: {
           code: 'NETWORK_ERROR',
@@ -307,6 +553,8 @@ class AuthService {
           details: error.message
         }
       };
+      console.log('Returning network error result:', JSON.stringify(result, null, 2));
+      return result;
     }
   }
 
@@ -315,12 +563,16 @@ class AuthService {
    */
   storeAuthToken(token: string): void {
     if (typeof window !== 'undefined') {
+      // For production, consider using in-memory storage or HTTP-only cookies
+      // For development, localStorage is fine
       localStorage.setItem('auth_token', token);
     }
   }
 
   storeRefreshToken(refreshToken: string): void {
     if (typeof window !== 'undefined') {
+      // For production, this should be stored in HTTP-only cookies
+      // For development, localStorage is fine
       localStorage.setItem('refresh_token', refreshToken);
     }
   }
@@ -346,19 +598,57 @@ class AuthService {
     }
   }
 
+  // Alternative secure storage methods for production
+  private storeTokenSecurely(token: string, tokenType: 'access' | 'refresh'): void {
+    if (typeof window !== 'undefined') {
+      // Option 1: In-memory storage (cleared on page refresh)
+      if (tokenType === 'access') {
+        // Store in a closure variable or React state
+        this._accessToken = token;
+      }
+      
+      // Option 2: HTTP-only cookies (requires server-side implementation)
+      // This would be set by the server in the response headers
+      
+      // Option 3: sessionStorage (cleared when tab closes)
+      sessionStorage.setItem(`${tokenType}_token`, token);
+    }
+  }
+
+  private _accessToken: string | null = null; // In-memory storage for access token
+
   /**
    * Check if user is authenticated
    */
   isAuthenticated(): boolean {
     const token = this.getAuthToken();
+    console.log('🔍 isAuthenticated check - token exists:', !!token);
     if (!token) return false;
 
-    // Basic JWT expiration check (you can enhance this)
+    // Basic JWT validation check
     try {
       const payload = JSON.parse(atob(token.split('.')[1]));
-      const currentTime = Date.now() / 1000;
-      return payload.exp > currentTime;
-    } catch {
+      console.log('🔍 isAuthenticated check - JWT payload:', payload);
+      
+      // Check if token has expiration time
+      if (payload.exp) {
+        const currentTime = Date.now() / 1000;
+        console.log('🔍 isAuthenticated check - exp:', payload.exp, 'current:', currentTime);
+        if (payload.exp <= currentTime) {
+          // Token has expired, clear it
+          console.log('🔍 Token expired, clearing tokens');
+          this.clearTokens();
+          return false;
+        }
+      }
+      
+      // Token is valid (either no expiration or not expired)
+      console.log('🔍 Token is valid');
+      return true;
+    } catch (error) {
+      console.error('Error parsing JWT token:', error);
+      // Clear invalid token
+      this.clearTokens();
       return false;
     }
   }

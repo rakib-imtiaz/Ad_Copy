@@ -6,9 +6,11 @@ import { Search, Bell, Settings, User, LogOut, Moon, Sun } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { SidebarTrigger } from "@/components/ui/sidebar"
+import { useAuth } from "@/lib/auth-context"
 
 export function Header() {
   const [isDark, setIsDark] = React.useState(true)
+  const { logout } = useAuth()
 
   React.useEffect(() => {
     document.documentElement.classList.add('dark')
@@ -17,6 +19,10 @@ export function Header() {
   const toggleTheme = () => {
     setIsDark(!isDark)
     document.documentElement.classList.toggle('dark')
+  }
+
+  const handleLogout = () => {
+    logout()
   }
 
   return (
@@ -66,7 +72,7 @@ export function Header() {
             </div>
           </div>
           
-          <Button variant="ghost" size="icon" className="hover:bg-secondary">
+          <Button variant="ghost" size="icon" className="hover:bg-secondary" onClick={handleLogout}>
             <LogOut className="h-4 w-4" />
           </Button>
         </div>

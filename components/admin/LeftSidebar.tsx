@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Shield, LayoutDashboard, Bot, FileText, Palette, Users, BarChart2, PlusCircle, Edit, UserPlus, LogOut } from 'lucide-react';
+import { useAuth } from '@/lib/auth-context';
 
 const navItems = [
   { href: '/admin/dashboard', label: 'Overview', icon: LayoutDashboard },
@@ -21,6 +22,11 @@ const quickActions = [
 
 export const LeftSidebar = () => {
   const pathname = usePathname();
+  const { logout } = useAuth();
+
+  const handleLogout = () => {
+    logout();
+  };
 
   return (
     <aside className="w-64 flex flex-col bg-white p-6 shadow-md">
@@ -73,10 +79,13 @@ export const LeftSidebar = () => {
           </div>
         </div>
         
-        <Link href="/" className="flex items-center space-x-3 p-3 rounded-lg transition-colors text-gray-600 hover:bg-gray-100 hover:text-red-600">
+        <button 
+          onClick={handleLogout}
+          className="flex items-center space-x-3 p-3 rounded-lg transition-colors text-gray-600 hover:bg-gray-100 hover:text-red-600 w-full text-left"
+        >
           <LogOut size={20} />
           <span>Logout</span>
-        </Link>
+        </button>
       </div>
     </aside>
   );

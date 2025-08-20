@@ -69,6 +69,9 @@ export const API_ENDPOINTS = {
     REGISTRATION: 'https://n8n.srv934833.hstgr.cloud/webhook/user-registration',
     LOGIN: 'https://n8n.srv934833.hstgr.cloud/webhook/user-log-in',
     VERIFY_CODE: 'https://n8n.srv934833.hstgr.cloud/webhook/verification-code-validate',
+    REFRESH_TOKEN: 'https://n8n.srv934833.hstgr.cloud/webhook/refresh-token',
+    CHAT: 'https://n8n.srv934833.hstgr.cloud/webhook/chat-window',
+    FETCH_USER_PROFILE: 'https://n8n.srv934833.hstgr.cloud/webhook/fetch-user-profile',
   },
   
   // User Management
