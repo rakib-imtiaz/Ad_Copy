@@ -4,7 +4,7 @@ import * as React from "react"
 import { 
   Upload, FileText, Video, Headphones, Link, Tag, Search, 
   Filter, Download, Trash2, Play, Pause, ExternalLink,
-  Plus, Mic, Globe, File, Image, Clock, User
+  Plus, Mic, Globe, File, Image, Clock, User, RefreshCw
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -19,7 +19,8 @@ interface MediaLibraryProps {
   onUpload?: (files: File[]) => void
   onTranscribe?: (mediaId: string) => void
   onScrapeUrl?: (url: string) => void
-  onDelete?: (mediaId: string) => void
+  onDelete?: (mediaId: string, filename: string) => void
+  onRefresh?: () => void
   isLoading?: boolean
 }
 
@@ -29,6 +30,7 @@ export function MediaLibrary({
   onTranscribe, 
   onScrapeUrl, 
   onDelete, 
+  onRefresh, 
   isLoading 
 }: MediaLibraryProps) {
   const [searchQuery, setSearchQuery] = React.useState("")
@@ -100,6 +102,8 @@ export function MediaLibrary({
         return Headphones
       case 'video':
         return Video
+      case 'image':
+        return Image
       case 'url':
         return Link
       case 'transcript':
@@ -126,8 +130,20 @@ export function MediaLibrary({
             Central repository for files, links, and transcripts
           </p>
         </div>
-        <div className="flex items-center space-x-2">
-          <Badge variant="secondary">{mediaItems.length} items</Badge>
+        <div className="flex items-center space-x-3">
+          <Button
+            variant="default"
+            size="sm"
+            onClick={onRefresh}
+            disabled={isLoading}
+            className="flex items-center space-x-2 bg-[#1ABC9C] hover:bg-[#1ABC9C]/90 text-white border-0 shadow-md hover:shadow-lg transition-all duration-200"
+          >
+            <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
+            <span className="font-medium">Refresh</span>
+          </Button>
+          <Badge variant="secondary" className="bg-gray-800 text-gray-300 border-gray-700">
+            {mediaItems.length} items
+          </Badge>
         </div>
       </div>
 
@@ -289,18 +305,20 @@ export function MediaLibrary({
                     <div className="flex-1 min-w-0">
                       <h4 className="font-medium truncate">{item.filename}</h4>
                       <p className="text-xs text-gray-400">
-                        {formatFileSize(item.size)} • {new Date(item.uploadedAt).toLocaleDateString()}
+                        {formatFileSize(item.size)}
                       </p>
                     </div>
                   </div>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => onDelete?.(item.id)}
-                    className="text-gray-400 hover:text-red-400"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
+                  <div className="relative">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => onDelete?.(item.id, item.filename)}
+                      className="text-gray-400 hover:text-red-400"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
                 </div>
 
                 {/* Tags */}
@@ -381,19 +399,29 @@ export function MediaLibrary({
                 <h3 className="text-lg font-medium mb-2">
                   {searchQuery || selectedType !== "all" || selectedTags.length > 0 
                     ? "No matching media found" 
-                    : "No media uploaded yet"
+                    : isLoading 
+                      ? "Loading media library..."
+                      : "No media found"
                   }
                 </h3>
                 <p className="text-gray-400 mb-4">
                   {searchQuery || selectedType !== "all" || selectedTags.length > 0
                     ? "Try adjusting your search criteria or filters"
-                    : "Upload files, transcribe media, or scrape web content to get started"
+                    : isLoading
+                      ? "Please wait while we fetch your media files..."
+                      : "Click the refresh button to load your media files or upload new content"
                   }
                 </p>
-                {!searchQuery && selectedType === "all" && selectedTags.length === 0 && (
-                  <Button onClick={() => fileInputRef.current?.click()}>
-                    Upload Your First File
-                  </Button>
+                {!searchQuery && selectedType === "all" && selectedTags.length === 0 && !isLoading && (
+                  <div className="flex space-x-2">
+                    <Button onClick={onRefresh}>
+                      <RefreshCw className="h-4 w-4 mr-2" />
+                      Refresh
+                    </Button>
+                    <Button onClick={() => fileInputRef.current?.click()}>
+                      Upload Files
+                    </Button>
+                  </div>
                 )}
               </div>
             </div>

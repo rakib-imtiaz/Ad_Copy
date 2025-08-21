@@ -6,7 +6,7 @@ import {
   Menu, Search, Bell, User, MessageSquare, Plus, 
   Bot, Settings, Upload, FileText, Link2, Mic, 
   PanelLeftClose, PanelRightClose, Send, Paperclip,
-  ChevronRight, MoreHorizontal, Star, Clock, Zap
+  ChevronRight, MoreHorizontal, Star, Clock, Zap, RefreshCw
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
@@ -17,11 +17,12 @@ import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
 import { Separator } from "@/components/ui/separator"
 import { AnimatedText, FadeInText, SlideInText, WordByWordText } from "@/components/ui/animated-text"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
-import { sampleAgents, sampleConversations, sampleMediaItems } from "@/lib/sample-data"
+import { sampleAgents, sampleConversations } from "@/lib/sample-data"
 import { authService } from "@/lib/auth-service"
 import { ChatInterface } from "@/components/chat-interface"
 import { useAuth } from "@/lib/auth-context"
 import { ProtectedRoute } from "@/components/protected-route"
+import { API_ENDPOINTS } from "@/lib/api-config"
 
 // Helper function to format time ago
 function formatTimeAgo(date: Date): string {
@@ -61,7 +62,7 @@ function MarkdownContent({ content }: { content: string }) {
 }
 
 // Three Dots Menu Component
-function ThreeDotsMenu({ onShare, onDelete, onRename }: any) {
+function ThreeDotsMenu({ onDelete }: any) {
   const [isOpen, setIsOpen] = React.useState(false)
 
   return (
@@ -92,20 +93,8 @@ function ThreeDotsMenu({ onShare, onDelete, onRename }: any) {
           >
             <div className="p-1">
               <button
-                onClick={() => { onShare?.(); setIsOpen(false) }}
-                className="w-full text-left px-3 py-2 text-sm hover:bg-[#F9FAFB] rounded-md transition-colors"
-              >
-                Share
-              </button>
-              <button
-                onClick={() => { onRename?.(); setIsOpen(false) }}
-                className="w-full text-left px-3 py-2 text-sm hover:bg-[#F9FAFB] rounded-md transition-colors"
-              >
-                Rename
-              </button>
-              <button
                 onClick={() => { onDelete?.(); setIsOpen(false) }}
-                className="w-full text-left px-3 py-2 text-sm hover:bg-[#FEF2F2] text-red-600 rounded-md transition-colors"
+                className="w-full text-left px-3 py-2 text-sm hover:bg-[#F9FAFB] rounded-md transition-colors text-red-600 hover:text-red-700"
               >
                 Delete
               </button>
@@ -118,7 +107,7 @@ function ThreeDotsMenu({ onShare, onDelete, onRename }: any) {
 }
 
 // Agent Selector Component
-function AgentSelector({ agents, selectedAgent, onSelectAgent, onOpenChange }: any) {
+function AgentSelector({ agents, selectedAgent, onSelectAgent, onOpenChange, isLoading, onRefresh }: any) {
   const [isOpen, setIsOpen] = React.useState(false)
   const currentAgent = agents.find((agent: any) => agent.name === selectedAgent)
 
@@ -201,14 +190,144 @@ export default function Dashboard() {
   const [rightPanelOpen, setRightPanelOpen] = React.useState(true)
   const [activeTab, setActiveTab] = React.useState<'files' | 'links' | 'transcripts'>('files')
   const [selectedAgent, setSelectedAgent] = React.useState("CopyMaster Pro")
+  const [agents, setAgents] = React.useState<any[]>([])
+  const [isLoadingAgents, setIsLoadingAgents] = React.useState(false)
 
-  // Enhanced sample data
-  const agents = sampleAgents.map((agent, index) => ({
-    id: agent.id,
-    name: agent.name,
-    description: agent.description,
-    icon: ["📱", "📧", "🎯", "✍️", "🎨"][index] || "🤖"
-  }))
+  // Fetch agents from n8n webhook
+  const fetchAgents = async () => {
+    try {
+      setIsLoadingAgents(true)
+      const accessToken = authService.getAuthToken()
+      
+      if (!accessToken) {
+        console.error("No access token available")
+        return
+      }
+
+      console.log('Fetching agents from n8n webhook...')
+      console.log('Request URL:', '/api/agents/list')
+      console.log('Request headers:', {
+        'Authorization': `Bearer ${accessToken}`,
+        'Content-Type': 'application/json',
+      })
+
+      const response = await fetch('/api/agents/list', {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+          'Content-Type': 'application/json',
+        },
+        signal: AbortSignal.timeout(10000), // 10 second timeout
+      })
+
+      console.log('Response received:', {
+        status: response.status,
+        statusText: response.statusText,
+        ok: response.ok,
+        headers: Object.fromEntries(response.headers.entries())
+      })
+
+      if (!response.ok) {
+        console.error('Failed to fetch agents. Status:', response.status)
+        console.error('Response headers:', response.headers)
+        const errorData = await response.json().catch(() => ({}))
+        console.error('Error details:', errorData)
+        return
+      }
+
+      const data = await response.json()
+      console.log('Agents API response:', data)
+      console.log('Response data type:', typeof data)
+      console.log('Is array?', Array.isArray(data))
+      console.log('Data length:', Array.isArray(data) ? data.length : 'Not an array')
+      
+      // Handle case where data might be empty or null
+      if (!data) {
+        console.log('No valid agents data received, data is:', data)
+        setAgents([])
+        return
+      }
+      
+      // Convert single agent object to array if needed
+      const agentsArray = Array.isArray(data) ? data : [data]
+      console.log('Processing', agentsArray.length, 'agents from API response')
+      
+      // Transform the API response to match our agent interface
+      const transformedAgents = agentsArray.map((agent: any, index: number) => {
+        console.log(`Processing agent ${index}:`, agent)
+        console.log(`Agent ${index} type:`, typeof agent)
+        console.log(`Agent ${index} keys:`, Object.keys(agent))
+        
+        const transformedAgent = {
+          id: agent.agent_id || `agent_${index}`,
+          name: agent.agent_id ? agent.agent_id.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase()) : `Agent ${index + 1}`,
+          description: agent.short_description || (agent.agent_id ? `AI Agent: ${agent.agent_id.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}` : 'AI Agent for ad copy generation'),
+          icon: ["📱", "📧", "🎯", "✍️", "🎨"][index] || "🤖"
+        }
+        
+        console.log(`Transformed agent ${index}:`, transformedAgent)
+        return transformedAgent
+      })
+
+      console.log('Transformed agents:', transformedAgents)
+      console.log(`Total agents loaded: ${transformedAgents.length}`)
+      console.log('Agent details:', transformedAgents.map(agent => ({
+        id: agent.id,
+        name: agent.name,
+        description: agent.description,
+        hasDescription: !!agent.description && agent.description !== `AI Agent: ${agent.name}`
+      })))
+      
+      setAgents(transformedAgents)
+      
+      // Set the first agent as selected if none is selected
+      if (transformedAgents.length > 0 && !selectedAgent) {
+        setSelectedAgent(transformedAgents[0].name)
+      } else if (transformedAgents.length === 0) {
+        // Fallback: If no agents loaded, show default agents
+        console.log('No agents loaded, showing fallback agents')
+        const fallbackAgents = [
+          {
+            id: 'default-agent',
+            name: 'Default Agent',
+            description: 'Default AI agent for ad copy generation',
+            icon: '🤖'
+          }
+        ]
+        setAgents(fallbackAgents)
+        if (!selectedAgent) {
+          setSelectedAgent('Default Agent')
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching agents:', error)
+      console.error('Error name:', error.name)
+      console.error('Error message:', error.message)
+      
+      if (error.name === 'AbortError') {
+        console.error('Request timed out after 10 seconds')
+      } else if (error.name === 'TypeError' && error.message.includes('Failed to fetch')) {
+        console.error('Network error - possible causes:')
+        console.error('- CORS issue')
+        console.error('- Network connectivity problem')
+        console.error('- Invalid URL')
+        console.error('- Server not responding')
+      }
+      
+      setAgents([])
+    } finally {
+      setIsLoadingAgents(false)
+      
+      // Fallback: If no agents loaded, show default agents
+      // Note: This fallback is now handled in the main logic above
+    }
+  }
+
+  // Refresh agents function
+  const refreshAgents = async () => {
+    console.log('Refreshing agents...')
+    await fetchAgents()
+  }
 
   const conversations = sampleConversations.map(conv => ({
     id: conv.id,
@@ -237,9 +356,20 @@ export default function Dashboard() {
   const [isLoading, setIsLoading] = React.useState(false)
   const [sessionId, setSessionId] = React.useState(1)
   const [showCreditPopup, setShowCreditPopup] = React.useState(false)
+  const [mediaItems, setMediaItems] = React.useState<any[]>([])
+  const [isRefreshing, setIsRefreshing] = React.useState(false)
 
   // Get current user info from auth context
   const currentUser = user
+
+  // Fetch agents and media library on component mount
+  React.useEffect(() => {
+    if (isAuthenticated && currentUser) {
+      console.log('Dashboard mounted - fetching agents and media library...')
+      fetchAgents()
+      fetchMediaLibrary()
+    }
+  }, [isAuthenticated, currentUser])
 
   // Handle sending messages
   const handleSendMessage = async (content: string) => {
@@ -342,6 +472,248 @@ export default function Dashboard() {
       setMessages(prev => [...prev, errorMessage])
     } finally {
       setIsLoading(false)
+    }
+  }
+
+  // Fetch media library data
+  const fetchMediaLibrary = async () => {
+    try {
+      setIsRefreshing(true)
+      const accessToken = authService.getAuthToken()
+      
+      if (!accessToken) {
+        console.error("No access token available")
+        return
+      }
+
+      const response = await fetch('/api/mock/media/list', {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+          'Content-Type': 'application/json',
+        },
+      })
+
+      if (!response.ok) {
+        if (response.status === 401) {
+          console.error("Unauthorized - token may be expired")
+          return
+        }
+        if (response.status === 404) {
+          console.log("No media items found (404) - setting empty array")
+          setMediaItems([])
+          return
+        }
+        throw new Error('Failed to fetch media library')
+      }
+
+      const data = await response.json()
+      console.log('Media library API response:', data)
+      
+      // Handle case where data might be empty or null
+      if (!data || !Array.isArray(data)) {
+        console.log('No valid data received, setting empty array')
+        setMediaItems([])
+        return
+      }
+      
+      // Transform the API response to match our MediaItem interface
+      const transformedItems = data.map((item: any) => ({
+        id: item.media_id.toString(),
+        userId: 'current_user',
+        filename: item.file_name,
+        type: getFileType(item.file_type || item.file_name),
+        size: parseFloat(item.media_size) * 1024 * 1024, // Convert MB to bytes
+        uploadedAt: new Date(),
+        tags: [],
+        metadata: {
+          storageStatus: item.storage_status
+        }
+      }))
+
+      console.log('Transformed media items:', transformedItems)
+      setMediaItems(transformedItems)
+    } catch (error) {
+      console.error('Error fetching media library:', error)
+    } finally {
+      setIsRefreshing(false)
+    }
+  }
+
+  const getFileType = (fileType: string | null): any => {
+    if (!fileType) return 'doc'
+    
+    if (fileType.startsWith('image/')) return 'doc'
+    if (fileType.startsWith('video/')) return 'video'
+    if (fileType.startsWith('audio/')) return 'audio'
+    if (fileType.includes('pdf')) return 'pdf'
+    if (fileType.includes('doc')) return 'doc'
+    if (fileType.includes('txt')) return 'txt'
+    
+    return 'doc'
+  }
+
+  // Upload media files
+  const uploadMediaFiles = async (files: File[]) => {
+    try {
+      const accessToken = authService.getAuthToken()
+      
+      if (!accessToken) {
+        console.error("No access token available")
+        return
+      }
+
+      console.log(`Starting upload of ${files.length} files...`)
+
+      for (const file of files) {
+        console.log('Uploading file:', file.name, 'Size:', file.size, 'Type:', file.type)
+        
+        const formData = new FormData()
+        formData.append('file', file)
+
+        const response = await fetch('/api/mock/media/upload', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${accessToken}`,
+          },
+          body: formData,
+        })
+
+        if (!response.ok) {
+          console.error('Upload failed for file:', file.name, 'Status:', response.status)
+          const errorData = await response.json().catch(() => ({}))
+          console.error('Error details:', errorData)
+          continue
+        }
+
+        const data = await response.json()
+        console.log('Upload successful for file:', file.name, data)
+        
+        // Handle different response formats
+        let newMediaItem = null
+        
+        if (data.success && data.data) {
+          // Standard response format
+          newMediaItem = {
+            id: data.data.media_id,
+            userId: 'current_user',
+            filename: data.data.file_name,
+            type: getFileType(data.data.file_type),
+            size: parseFloat(data.data.media_size) * 1024 * 1024, // Convert MB to bytes
+            uploadedAt: new Date(),
+            tags: [],
+            metadata: {
+              storageStatus: data.data.storage_status
+            }
+          }
+        } else if (data.status === 'successful' && data.file_name) {
+          // Direct n8n response format
+          newMediaItem = {
+            id: `media_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+            userId: 'current_user',
+            filename: data.file_name,
+            type: getFileType(file.type),
+            size: file.size,
+            uploadedAt: new Date(),
+            tags: [],
+            metadata: {
+              storageStatus: 'enough space'
+            }
+          }
+        } else if (data.success) {
+          // Generic success response
+          newMediaItem = {
+            id: `media_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+            userId: 'current_user',
+            filename: file.name,
+            type: getFileType(file.type),
+            size: file.size,
+            uploadedAt: new Date(),
+            tags: [],
+            metadata: {
+              storageStatus: 'enough space'
+            }
+          }
+        }
+        
+        // Add the new file to the media items list if we have valid data
+        if (newMediaItem) {
+          setMediaItems(prev => [newMediaItem, ...prev])
+          console.log('Added new file to media items:', newMediaItem)
+        } else {
+          console.warn('Could not create media item from upload response:', data)
+        }
+      }
+
+      console.log('All uploads completed')
+      
+      // Fallback: Refresh the media library to ensure all files are visible
+      // This ensures that even if the immediate state update fails, the files will appear
+      setTimeout(() => {
+        console.log('Performing fallback refresh of media library...')
+        fetchMediaLibrary()
+      }, 1000)
+      
+    } catch (error) {
+      console.error('Error uploading files:', error)
+    }
+  }
+
+  // Delete media file via n8n webhook
+  const deleteMediaFile = async (mediaId: string, filename: string) => {
+    try {
+      const accessToken = authService.getAuthToken()
+      
+      if (!accessToken) {
+        console.error("No access token available")
+        return
+      }
+
+      console.log('Deleting file:', filename, 'with media ID:', mediaId)
+      console.log('Request URL:', 'https://n8n.srv934833.hstgr.cloud/webhook/delete-media-file')
+      console.log('Request headers:', {
+        'Authorization': `Bearer ${accessToken}`,
+        'Content-Type': 'application/json',
+      })
+      console.log('Request body:', {
+        access_token: accessToken,
+        file_name: filename
+      })
+
+      const response = await fetch('https://n8n.srv934833.hstgr.cloud/webhook/delete-media-file', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          access_token: accessToken,
+          file_name: filename
+        }),
+      })
+
+      if (!response.ok) {
+        console.error('Delete failed for file:', filename, 'Status:', response.status)
+        console.error('Response headers:', response.headers)
+        const errorData = await response.json().catch(() => ({}))
+        console.error('Error details:', errorData)
+        console.error('Request body sent:', {
+          access_token: accessToken,
+          file_name: filename
+        })
+        return false
+      }
+
+      const data = await response.json()
+      console.log('Delete successful for file:', filename, data)
+      
+      // Remove the file from the local state
+      setMediaItems(prev => prev.filter(item => item.id !== mediaId))
+      
+      return true
+    } catch (error) {
+      console.error('Error deleting file:', error)
+      return false
     }
   }
 
@@ -476,7 +848,7 @@ export default function Dashboard() {
           animate={{ width: leftPanelOpen ? 320 : 0 }}
         >
           <div className="flex-1 overflow-y-auto">
-            <LeftSidebar agents={agents} conversations={conversations} selectedAgent={selectedAgent} onSelectAgent={setSelectedAgent} />
+            <LeftSidebar agents={agents} conversations={conversations} selectedAgent={selectedAgent} onSelectAgent={setSelectedAgent} isLoadingAgents={isLoadingAgents} onRefreshAgents={refreshAgents} />
           </div>
         </motion.div>
 
@@ -500,9 +872,17 @@ export default function Dashboard() {
           initial={false}
           animate={{ width: rightPanelOpen ? 384 : 0 }}
         >
-          <div className="flex-1 overflow-y-auto">
-            <MediaDrawer activeTab={activeTab} onTabChange={setActiveTab} />
-          </div>
+                  <div className="flex-1 overflow-y-auto">
+          <MediaDrawer 
+            activeTab={activeTab} 
+            onTabChange={setActiveTab} 
+            mediaItems={mediaItems}
+            onRefresh={fetchMediaLibrary}
+            onUpload={uploadMediaFiles}
+            onDelete={deleteMediaFile}
+            isRefreshing={isRefreshing}
+          />
+        </div>
         </motion.div>
       </div>
 
@@ -559,19 +939,33 @@ export default function Dashboard() {
 }
 
 // Left Sidebar Component
-function LeftSidebar({ agents, conversations, selectedAgent, onSelectAgent }: any) {
+function LeftSidebar({ agents, conversations, selectedAgent, onSelectAgent, isLoadingAgents, onRefreshAgents }: any) {
   const [isAgentSelectorOpen, setIsAgentSelectorOpen] = React.useState(false)
 
   return (
     <div className="h-full flex flex-col">
       {/* Agent Selector */}
       <div className="p-4 border-b border-[#EEEEEE]">
-        <h3 className="text-xs font-medium text-[#929AAB] uppercase tracking-wider mb-3">Current Agent</h3>
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="text-xs font-medium text-[#929AAB] uppercase tracking-wider">Current Agent</h3>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={onRefreshAgents}
+            disabled={isLoadingAgents}
+            className="flex items-center space-x-2 bg-[#1ABC9C] hover:bg-[#1ABC9C]/90 text-white border-0 shadow-md hover:shadow-lg transition-all duration-200"
+          >
+            <RefreshCw className={`h-3 w-3 ${isLoadingAgents ? 'animate-spin' : ''}`} />
+            <span className="text-xs font-medium">Refresh</span>
+          </Button>
+        </div>
         <AgentSelector 
-          agents={agents} 
-          selectedAgent={selectedAgent} 
+          agents={agents}
+          selectedAgent={selectedAgent}
           onSelectAgent={onSelectAgent}
           onOpenChange={setIsAgentSelectorOpen}
+          isLoading={isLoadingAgents}
+          onRefresh={onRefreshAgents}
         />
       </div>
 
@@ -607,8 +1001,6 @@ function LeftSidebar({ agents, conversations, selectedAgent, onSelectAgent }: an
                 <div className="flex items-center space-x-2">
                   <span className="text-xs text-[#929AAB] flex-shrink-0">{conv.time}</span>
                   <ThreeDotsMenu 
-                    onShare={() => console.log('Share conversation:', conv.title)}
-                    onRename={() => console.log('Rename conversation:', conv.title)}
                     onDelete={() => console.log('Delete conversation:', conv.title)}
                   />
                 </div>
@@ -656,10 +1048,8 @@ function MobileSidebar({ agents, conversations }: any) {
   )
 }
 
-
-
 // Media Drawer Component  
-function MediaDrawer({ activeTab, onTabChange }: any) {
+function MediaDrawer({ activeTab, onTabChange, mediaItems, onRefresh, onUpload, onDelete, isRefreshing }: any) {
   const tabs = [
     { id: 'files' as const, label: 'Files', icon: FileText },
     { id: 'links' as const, label: 'Links', icon: Link2 },
@@ -670,7 +1060,19 @@ function MediaDrawer({ activeTab, onTabChange }: any) {
     <div className="h-full flex flex-col">
       {/* Header with tabs */}
       <div className="border-b border-[#EEEEEE] p-4">
-        <SlideInText text="Media Library" className="font-medium mb-3" />
+        <div className="flex items-center justify-between mb-3">
+          <SlideInText text="Media Library" className="font-medium" />
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={onRefresh}
+            disabled={isRefreshing}
+            className="flex items-center space-x-2 bg-[#1ABC9C] hover:bg-[#1ABC9C]/90 text-white border-0 shadow-md hover:shadow-lg transition-all duration-200"
+          >
+            <RefreshCw className={`h-3 w-3 ${isRefreshing ? 'animate-spin' : ''}`} />
+            <span className="text-xs font-medium">Refresh</span>
+          </Button>
+        </div>
         <div className="flex space-x-1 bg-[#EEEEEE] p-1 rounded-lg">
           {tabs.map((tab) => (
             <button
@@ -691,62 +1093,122 @@ function MediaDrawer({ activeTab, onTabChange }: any) {
 
       {/* Content */}
       <div className="flex-1 overflow-y-auto p-4">
-        {activeTab === 'files' && <FilesTab />}
-        {activeTab === 'links' && <LinksTab />}
-        {activeTab === 'transcripts' && <TranscriptsTab />}
+        {activeTab === 'files' && <FilesTab mediaItems={mediaItems} onUpload={onUpload} onDelete={onDelete} />}
+        {activeTab === 'links' && <LinksTab mediaItems={mediaItems} onDelete={onDelete} />}
+        {activeTab === 'transcripts' && <TranscriptsTab mediaItems={mediaItems} onDelete={onDelete} />}
       </div>
     </div>
   )
 }
 
 // Media Tab Components
-function FilesTab() {
+function FilesTab({ mediaItems, onUpload, onDelete }: any) {
   const [dragActive, setDragActive] = React.useState(false)
+  const [isUploading, setIsUploading] = React.useState(false)
+  const fileInputRef = React.useRef<HTMLInputElement>(null)
   
-  const fileItems = sampleMediaItems.filter(item => 
+  const fileItems = mediaItems.filter((item: any) => 
     ['pdf', 'doc', 'txt', 'audio', 'video'].includes(item.type)
   )
+
+  const handleDrag = (e: React.DragEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    if (e.type === "dragenter" || e.type === "dragover") {
+      setDragActive(true)
+    } else if (e.type === "dragleave") {
+      setDragActive(false)
+    }
+  }
+
+  const handleDrop = async (e: React.DragEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setDragActive(false)
+    
+    const files = Array.from(e.dataTransfer.files)
+    if (files.length > 0 && onUpload) {
+      setIsUploading(true)
+      await onUpload(files)
+      setIsUploading(false)
+    }
+  }
+
+  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || [])
+    if (files.length > 0 && onUpload) {
+      setIsUploading(true)
+      await onUpload(files)
+      setIsUploading(false)
+    }
+  }
 
   return (
     <div className="space-y-4">
       {/* Dropzone */}
       <div 
-        className={`border-2 border-dashed rounded-lg p-6 text-center transition-colors ${
+        className={`border-2 border-dashed rounded-lg p-6 text-center transition-colors cursor-pointer ${
           dragActive 
-            ? 'border-[#393E46] bg-[#F4F5F7]' 
-            : 'border-[#EEEEEE] hover:border-[#393E46] hover:bg-[#F4F5F7]'
+            ? 'border-[#1ABC9C] bg-[#1ABC9C]/10' 
+            : 'border-[#EEEEEE] hover:border-[#1ABC9C] hover:bg-[#1ABC9C]/5'
         }`}
+        onDragEnter={handleDrag}
+        onDragLeave={handleDrag}
+        onDragOver={handleDrag}
+        onDrop={handleDrop}
+        onClick={() => fileInputRef.current?.click()}
       >
-        <Upload className="h-6 w-6 text-[#929AAB] mx-auto mb-2" />
-        <FadeInText text="Drop files here " className="text-sm font-medium mb-1 text-center" />
-        <FadeInText text="or click to browse" className="text-xs text-[#929AAB] text-center" delay={0.1} />
+        <Upload className={`h-6 w-6 mx-auto mb-2 ${isUploading ? 'animate-bounce' : ''} ${dragActive ? 'text-[#1ABC9C]' : 'text-[#929AAB]'}`} />
+        <FadeInText 
+          text={isUploading ? "Uploading files..." : "Drop files here"} 
+          className={`text-sm font-medium mb-1 text-center ${isUploading ? 'text-[#1ABC9C]' : ''}`} 
+        />
+        <FadeInText 
+          text={isUploading ? "Please wait..." : "or click to browse"} 
+          className="text-xs text-[#929AAB] text-center" 
+          delay={0.1} 
+        />
+        <input
+          ref={fileInputRef}
+          type="file"
+          multiple
+          accept=".pdf,.doc,.docx,.txt,.mp3,.mp4,.wav,.m4a,.jpg,.jpeg,.png,.gif"
+          onChange={handleFileSelect}
+          className="hidden"
+        />
       </div>
 
       {/* File list */}
       <div className="space-y-2">
-        {fileItems.slice(0, 8).map((item, index) => (
-          <div key={item.id} className="flex items-center space-x-3 p-2 rounded-lg hover:bg-white border border-transparent hover:border-[#EEEEEE]">
-            <FileText className="h-4 w-4 text-[#929AAB]" />
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium truncate">{item.filename}</p>
-              <p className="text-xs text-[#929AAB]">
-                {item.size ? `${(item.size / 1024 / 1024).toFixed(1)} MB` : 'Unknown size'} • {formatTimeAgo(item.uploadedAt)}
-              </p>
+        {fileItems.length > 0 ? (
+          fileItems.slice(0, 8).map((item: any, index: number) => (
+            <div key={item.id} className="flex items-center space-x-3 p-2 rounded-lg hover:bg-white border border-transparent hover:border-[#EEEEEE]">
+              <FileText className="h-4 w-4 text-[#929AAB]" />
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium truncate">{item.filename}</p>
+                <p className="text-xs text-[#929AAB]">
+                  {item.size ? `${(item.size / 1024 / 1024).toFixed(1)} MB` : 'Unknown size'}
+                </p>
+              </div>
+              <ThreeDotsMenu 
+                onDelete={() => onDelete(item.id, item.filename)}
+              />
             </div>
-            <ThreeDotsMenu 
-              onShare={() => console.log('Share file:', item.filename)}
-              onRename={() => console.log('Rename file:', item.filename)}
-              onDelete={() => console.log('Delete file:', item.filename)}
-            />
+          ))
+        ) : (
+          <div className="text-center py-8">
+            <FileText className="h-8 w-8 text-[#929AAB] mx-auto mb-2" />
+            <p className="text-sm text-[#929AAB]">No files uploaded yet</p>
+            <p className="text-xs text-[#929AAB] mt-1">Upload your first file to get started</p>
           </div>
-        ))}
+        )}
       </div>
     </div>
   )
 }
 
-function LinksTab() {
-  const urlItems = sampleMediaItems.filter(item => item.type === 'url')
+function LinksTab({ mediaItems, onDelete }: any) {
+  const urlItems = mediaItems.filter((item: any) => item.type === 'url')
   
   return (
     <div className="space-y-4">
@@ -756,27 +1218,33 @@ function LinksTab() {
       </div>
       
       <div className="space-y-2">
-        {urlItems.map((item, index) => (
-          <div key={item.id} className="flex items-center space-x-3 p-2 rounded-lg hover:bg-white border border-transparent hover:border-[#EEEEEE]">
-            <Link2 className="h-4 w-4 text-[#929AAB]" />
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium truncate">{item.filename}</p>
-              <p className="text-xs text-[#929AAB]">Scraped • {formatTimeAgo(item.uploadedAt)}</p>
+        {urlItems.length > 0 ? (
+          urlItems.map((item: any, index: number) => (
+            <div key={item.id} className="flex items-center space-x-3 p-2 rounded-lg hover:bg-white border border-transparent hover:border-[#EEEEEE]">
+              <Link2 className="h-4 w-4 text-[#929AAB]" />
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium truncate">{item.filename}</p>
+                <p className="text-xs text-[#929AAB]">Scraped</p>
+              </div>
+              <ThreeDotsMenu 
+                onDelete={() => onDelete(item.id, item.filename)}
+              />
             </div>
-            <ThreeDotsMenu 
-              onShare={() => console.log('Share link:', item.filename)}
-              onRename={() => console.log('Rename link:', item.filename)}
-              onDelete={() => console.log('Delete link:', item.filename)}
-            />
+          ))
+        ) : (
+          <div className="text-center py-8">
+            <Link2 className="h-8 w-8 text-[#929AAB] mx-auto mb-2" />
+            <p className="text-sm text-[#929AAB]">No links added yet</p>
+            <p className="text-xs text-[#929AAB] mt-1">Add a URL to scrape content</p>
           </div>
-        ))}
+        )}
       </div>
     </div>
   )
 }
 
-function TranscriptsTab() {
-  const audioVideoItems = sampleMediaItems.filter(item => 
+function TranscriptsTab({ mediaItems, onDelete }: any) {
+  const audioVideoItems = mediaItems.filter((item: any) => 
     ['audio', 'video'].includes(item.type)
   )
   
@@ -784,19 +1252,17 @@ function TranscriptsTab() {
     <div className="space-y-4">
       {audioVideoItems.length > 0 ? (
         <div className="space-y-2">
-          {audioVideoItems.map((item, index) => (
+          {audioVideoItems.map((item: any, index: number) => (
             <div key={item.id} className="flex items-center space-x-3 p-2 rounded-lg hover:bg-white border border-transparent hover:border-[#EEEEEE]">
               <Mic className="h-4 w-4 text-[#929AAB]" />
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium truncate">{item.filename}</p>
                 <p className="text-xs text-[#929AAB]">
-                  {item.metadata?.duration || 'Unknown duration'} • {formatTimeAgo(item.uploadedAt)}
+                  {item.metadata?.duration || 'Unknown duration'}
                 </p>
               </div>
               <ThreeDotsMenu 
-                onShare={() => console.log('Share transcript:', item.filename)}
-                onRename={() => console.log('Rename transcript:', item.filename)}
-                onDelete={() => console.log('Delete transcript:', item.filename)}
+                onDelete={() => onDelete(item.id, item.filename)}
               />
             </div>
           ))}

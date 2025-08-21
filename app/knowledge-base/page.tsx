@@ -196,8 +196,19 @@ export default function KnowledgeBasePage() {
         formData.append('file', file)
         formData.append('content', content)
 
+        // Get access token for authorization
+        const accessToken = authService.getAuthToken()
+        if (!accessToken) {
+          console.error('No access token available for file upload')
+          setUploadProgress(prev => ({ ...prev, [file.name]: -1 }))
+          continue
+        }
+
         const response = await fetch('/api/upload-knowledge-base', {
           method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${accessToken}`,
+          },
           body: formData
         })
 

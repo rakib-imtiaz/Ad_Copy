@@ -1,75 +1,60 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { sampleMediaItems } from '@/lib/sample-data'
 
 export async function GET(request: NextRequest) {
   try {
-    const { searchParams } = new URL(request.url)
-    const userId = searchParams.get('user_id')
-    const type = searchParams.get('type')
-    const page = parseInt(searchParams.get('page') || '1')
-    const limit = parseInt(searchParams.get('limit') || '20')
-
-    if (!userId) {
+    console.log('Media library API endpoint called')
+    
+    // Get the authorization header
+    const authHeader = request.headers.get('authorization')
+    
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      console.log('No authorization header provided')
       return NextResponse.json(
-        {
-          success: false,
-          error: {
-            code: "VALIDATION_ERROR",
-            message: "User ID is required"
-          }
-        },
-        { status: 400 }
+        { error: 'Authorization header required' },
+        { status: 401 }
       )
     }
 
-    // Convert sample media items to API format
-    let items = sampleMediaItems.map(item => ({
-      id: item.id,
-      user_id: item.userId,
-      filename: item.filename,
-      type: item.type,
-      size: item.size,
-      uploaded_at: item.uploadedAt.toISOString(),
-      content: item.content,
-      tags: item.tags,
-      metadata: item.metadata
-    }))
+    const accessToken = authHeader.substring(7) // Remove 'Bearer ' prefix
+    console.log('Making request to n8n webhook with access token')
 
-    // Filter by type if specified
-    if (type) {
-      items = items.filter(item => item.type === type)
-    }
-
-    // Mock pagination
-    const total = items.length
-    const totalPages = Math.ceil(total / limit)
-    const startIndex = (page - 1) * limit
-    const endIndex = startIndex + limit
-    const paginatedItems = items.slice(startIndex, endIndex)
-
-    const mockResponse = {
-      success: true,
-      data: {
-        items: paginatedItems,
-        pagination: {
-          page,
-          limit,
-          total,
-          total_pages: totalPages
-        }
-      }
-    }
-
-    return NextResponse.json(mockResponse)
-  } catch (error) {
-    return NextResponse.json(
+    // Make request to n8n webhook
+    const response = await fetch(
+      'https://n8n.srv934833.hstgr.cloud/webhook/view-media-library',
       {
-        success: false,
-        error: {
-          code: "INTERNAL_ERROR",
-          message: "An unexpected error occurred"
-        }
-      },
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+          'Content-Type': 'application/json',
+        },
+      }
+    )
+
+    console.log('N8N webhook response status:', response.status)
+
+    if (!response.ok) {
+      console.log('N8N webhook request failed with status:', response.status)
+      
+      // If it's a 404, return empty array instead of error
+      if (response.status === 404) {
+        console.log('Returning empty array for 404 response')
+        return NextResponse.json([])
+      }
+      
+      return NextResponse.json(
+        { error: 'Failed to fetch media library data' },
+        { status: response.status }
+      )
+    }
+
+    const data = await response.json()
+    console.log('N8N webhook response data:', data)
+    
+    return NextResponse.json(data)
+  } catch (error) {
+    console.error('Error fetching media library:', error)
+    return NextResponse.json(
+      { error: 'Internal server error' },
       { status: 500 }
     )
   }

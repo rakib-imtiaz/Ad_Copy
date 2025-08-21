@@ -24,7 +24,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Prepare the request to n8n webhook
-    const n8nUrl = 'https://n8n.srv934833.hstgr.cloud/webhook-test/referrel-apply'
+    const n8nUrl = 'https://n8n.srv934833.hstgr.cloud/webhook/referrel-apply'
     
     console.log('🌐 Calling n8n endpoint:', n8nUrl)
     console.log('📤 Request headers:', {

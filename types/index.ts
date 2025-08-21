@@ -18,7 +18,7 @@ export interface MediaItem {
   id: string
   userId: string
   filename: string
-  type: 'pdf' | 'doc' | 'txt' | 'audio' | 'video' | 'url' | 'transcript'
+  type: 'pdf' | 'doc' | 'txt' | 'audio' | 'video' | 'url' | 'transcript' | 'image'
   size?: number
   uploadedAt: Date
   content?: string
