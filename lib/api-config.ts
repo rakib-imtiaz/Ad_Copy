@@ -73,7 +73,9 @@ export const API_ENDPOINTS = {
     CHAT: 'https://n8n.srv934833.hstgr.cloud/webhook/chat-window',
     FETCH_USER_PROFILE: 'https://n8n.srv934833.hstgr.cloud/webhook/fetch-user-profile',
     AGENT_LIST: 'https://n8n.srv934833.hstgr.cloud/webhook/agent-list',
-    UPLOAD_KNOWLEDGE_BASE: 'https://n8n.srv934833.hstgr.cloud/webhook-test/upload-knowledge-base',
+    UPLOAD_KNOWLEDGE_BASE: 'https://n8n.srv934833.hstgr.cloud/webhook/upload-knowledge-base',
+    SEE_KNOWLEDGE_BASE: 'https://n8n.srv934833.hstgr.cloud/webhook/see-knowledgebase-data',
+    MODIFY_KNOWLEDGE_BASE: 'https://n8n.srv934833.hstgr.cloud/webhook/modify-knowledge-base',
   },
   
   // User Management

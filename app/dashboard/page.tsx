@@ -260,8 +260,8 @@ export default function Dashboard() {
         
         const transformedAgent = {
           id: agent.agent_id || `agent_${index}`,
-          name: agent.agent_id ? agent.agent_id.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase()) : `Agent ${index + 1}`,
-          description: agent.short_description || (agent.agent_id ? `AI Agent: ${agent.agent_id.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}` : 'AI Agent for ad copy generation'),
+          name: agent.agent_id ? agent.agent_id.replace(/-/g, ' ').replace(/\b\w/g, (l: string) => l.toUpperCase()) : `Agent ${index + 1}`,
+          description: agent.short_description || (agent.agent_id ? `AI Agent: ${agent.agent_id.replace(/-/g, ' ').replace(/\b\w/g, (l: string) => l.toUpperCase())}` : 'AI Agent for ad copy generation'),
           icon: ["📱", "📧", "🎯", "✍️", "🎨"][index] || "🤖"
         }
         
@@ -301,17 +301,21 @@ export default function Dashboard() {
       }
     } catch (error) {
       console.error('Error fetching agents:', error)
-      console.error('Error name:', error.name)
-      console.error('Error message:', error.message)
       
-      if (error.name === 'AbortError') {
-        console.error('Request timed out after 10 seconds')
-      } else if (error.name === 'TypeError' && error.message.includes('Failed to fetch')) {
-        console.error('Network error - possible causes:')
-        console.error('- CORS issue')
-        console.error('- Network connectivity problem')
-        console.error('- Invalid URL')
-        console.error('- Server not responding')
+      // Type guard to check if error is an Error object
+      if (error instanceof Error) {
+        console.error('Error name:', error.name)
+        console.error('Error message:', error.message)
+        
+        if (error.name === 'AbortError') {
+          console.error('Request timed out after 10 seconds')
+        } else if (error.name === 'TypeError' && error.message.includes('Failed to fetch')) {
+          console.error('Network error - possible causes:')
+          console.error('- CORS issue')
+          console.error('- Network connectivity problem')
+          console.error('- Invalid URL')
+          console.error('- Server not responding')
+        }
       }
       
       setAgents([])

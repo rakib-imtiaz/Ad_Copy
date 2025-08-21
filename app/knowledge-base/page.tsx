@@ -4,6 +4,8 @@ import * as React from "react"
 import { authService } from "@/lib/auth-service"
 import { useAuth } from "@/lib/auth-context"
 import { ProtectedRoute } from "@/components/protected-route"
+import { KnowledgeBaseViewer } from "@/components/knowledge-base-viewer"
+import { API_ENDPOINTS } from "@/lib/api-config"
 
 export default function KnowledgeBasePage() {
   const { user, isAuthenticated } = useAuth()
@@ -16,6 +18,7 @@ export default function KnowledgeBasePage() {
   const [isLoadingProfile, setIsLoadingProfile] = React.useState(false)
   const [referralCode, setReferralCode] = React.useState('')
   const [isApplyingReferral, setIsApplyingReferral] = React.useState(false)
+  const [isKnowledgeViewerOpen, setIsKnowledgeViewerOpen] = React.useState(false)
   
   // Change password state
   const [currentPassword, setCurrentPassword] = React.useState('')
@@ -104,18 +107,28 @@ export default function KnowledgeBasePage() {
 
       if (response.ok) {
         console.log('✅ STEP 5: Parsing success response...')
-        const result = await response.json()
-        console.log('Raw response:', JSON.stringify(result, null, 2))
-        
-        if (result.success) {
-          console.log('🎉 STEP 6: Profile fetch successful!')
-          console.log('Profile data:', JSON.stringify(result.data, null, 2))
-          console.log('💰 Current credit in profile:', result.data?.total_credit)
-          setUserProfile(result.data)
-          console.log('✅ User profile state updated with data:', result.data)
-        } else {
-          console.log('❌ STEP 6: Profile fetch failed - API returned error')
-          console.log('Error details:', JSON.stringify(result.error, null, 2))
+        try {
+          const result = await response.json()
+          console.log('Raw response:', JSON.stringify(result, null, 2))
+          
+          if (result.success) {
+            console.log('🎉 STEP 6: Profile fetch successful!')
+            console.log('Profile data:', JSON.stringify(result.data, null, 2))
+            console.log('💰 Current credit in profile:', result.data?.total_credit)
+            setUserProfile(result.data)
+            console.log('✅ User profile state updated with data:', result.data)
+          } else {
+            console.log('❌ STEP 6: Profile fetch failed - API returned error')
+            console.log('Error details:', JSON.stringify(result.error, null, 2))
+          }
+        } catch (jsonError) {
+          console.error('❌ Failed to parse JSON response:', jsonError)
+          try {
+            const errorText = await response.text()
+            console.error('Response text:', errorText)
+          } catch (textError) {
+            console.error('Could not read response text:', textError)
+          }
         }
       } else {
         console.log('❌ STEP 5: HTTP error response')
@@ -142,9 +155,20 @@ export default function KnowledgeBasePage() {
       })
 
       if (response.ok) {
-        const result = await response.json()
-        console.log('Test API response:', result)
-        alert('API test successful! Check console for details.')
+        try {
+          const result = await response.json()
+          console.log('Test API response:', result)
+          alert('API test successful! Check console for details.')
+        } catch (jsonError) {
+          console.error('Failed to parse JSON response:', jsonError)
+          try {
+            const errorText = await response.text()
+            console.error('Response text:', errorText)
+          } catch (textError) {
+            console.error('Could not read response text:', textError)
+          }
+          alert('API test failed - invalid JSON response! Check console for details.')
+        }
       } else {
         console.error('Test API failed:', response.status, response.statusText)
         alert('API test failed! Check console for details.')
@@ -155,56 +179,152 @@ export default function KnowledgeBasePage() {
     }
   }
 
-  // Handle file upload
-  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(event.target.files || [])
-    if (files.length === 0) return
+  // Test n8n webhook connectivity
+  const testN8nWebhook = async () => {
+    console.log('🧪 Testing n8n webhook connectivity...')
+    try {
+      const accessToken = authService.getAuthToken()
+      if (!accessToken) {
+        console.error('❌ No access token available for webhook test')
+        alert('No access token available. Please log in first.')
+        return
+      }
 
+      console.log('🌐 Making test request to n8n webhook...')
+      const response = await fetch(API_ENDPOINTS.N8N_WEBHOOKS.UPLOAD_KNOWLEDGE_BASE, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+        }
+      })
+
+      console.log('📡 Test response status:', response.status)
+      console.log('📡 Test response status text:', response.statusText)
+      console.log('📡 Test response headers:', Object.fromEntries(response.headers.entries()))
+
+      try {
+        const responseText = await response.text()
+        console.log('📄 Test response text:', responseText)
+        console.log('📄 Test response text length:', responseText.length)
+        
+        if (response.ok) {
+          alert(`Webhook test successful! Status: ${response.status}\nResponse: ${responseText.substring(0, 100)}...`)
+        } else {
+          alert(`Webhook test failed! Status: ${response.status}\nResponse: ${responseText.substring(0, 100)}...`)
+        }
+      } catch (textError) {
+        console.error('❌ Could not read response text:', textError)
+        alert(`Webhook test completed with status ${response.status} but could not read response.`)
+      }
+    } catch (error) {
+      console.error('❌ Webhook test error:', error)
+      if (error instanceof Error) {
+        alert(`Webhook test error: ${error.message}`)
+      } else {
+        alert(`Webhook test error: ${String(error)}`)
+      }
+    }
+  }
+
+  // Test with a simple text file
+  const testWithTextFile = async () => {
+    console.log('🧪 Creating and uploading test text file...')
+    try {
+      const accessToken = authService.getAuthToken()
+      if (!accessToken) {
+        console.error('❌ No access token available')
+        alert('No access token available. Please log in first.')
+        return
+      }
+
+      // Create a simple text file
+      const testContent = 'This is a test file for n8n webhook testing.\nIt contains some sample text content.\nThis should trigger the text processing workflow.'
+      const testFile = new File([testContent], 'test-file.txt', { type: 'text/plain' })
+
+      console.log('📄 Created test file:', testFile.name, testFile.size, 'bytes')
+      console.log('📄 File content:', testContent)
+
+      const formData = new FormData()
+      formData.append('file', testFile)
+
+      console.log('🌐 Uploading test file to n8n webhook...')
+      const response = await fetch(API_ENDPOINTS.N8N_WEBHOOKS.UPLOAD_KNOWLEDGE_BASE, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+        },
+        body: formData
+      })
+
+      console.log('📡 Test file response status:', response.status)
+      console.log('📡 Test file response ok:', response.ok)
+
+      try {
+        const result = await response.json()
+        console.log('✅ Test file upload response:', result)
+        alert(`Test file uploaded successfully!\nResponse: ${JSON.stringify(result, null, 2)}`)
+      } catch (jsonError) {
+        const responseText = await response.text()
+        console.log('📄 Test file response text:', responseText)
+        alert(`Test file uploaded! Response: ${responseText}`)
+      }
+
+    } catch (error) {
+      console.error('❌ Test file upload error:', error)
+      if (error instanceof Error) {
+        alert(`Test file upload error: ${error.message}`)
+      } else {
+        alert(`Test file upload error: ${String(error)}`)
+      }
+    }
+  }
+
+  // Simple file upload function
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    console.log('🚀 File upload started!')
+    
+    const files = Array.from(event.target.files || [])
+    if (files.length === 0) {
+      console.log('❌ No files selected')
+      return
+    }
+
+    console.log(`📁 Selected ${files.length} file(s):`, files.map(f => f.name))
     setUploadedFiles(prev => [...prev, ...files])
     
+    // Get access token
+    const accessToken = authService.getAuthToken()
+    if (!accessToken) {
+      console.error('❌ No access token available')
+      alert('Please log in first')
+      return
+    }
+
     // Process each file
     for (const file of files) {
+      console.log(`📤 Uploading: ${file.name}`)
+      setUploadProgress(prev => ({ ...prev, [file.name]: 0 }))
+
       try {
-        // Read file content
-        const content = await new Promise<string>((resolve) => {
-          const reader = new FileReader()
-          reader.onload = (e) => {
-            if (file.type === 'text/plain' || file.type === 'text/csv') {
-              resolve(e.target?.result as string)
-            } else if (file.type === 'application/pdf') {
-              resolve(`[PDF Content from ${file.name} - PDF parsing requires additional library setup]`)
-            } else if (file.type.includes('word') || file.type.includes('document')) {
-              resolve(`[Word Document Content from ${file.name} - DOCX parsing requires additional library setup]`)
-            } else {
-              resolve(`[File Content from ${file.name}]`)
-            }
-          }
-          reader.readAsText(file)
-        })
-
-        // Initialize progress
-        setUploadProgress(prev => ({ ...prev, [file.name]: 0 }))
-
-        // Simulate upload progress
-        for (let i = 0; i <= 100; i += 10) {
-          await new Promise(resolve => setTimeout(resolve, 100))
-          setUploadProgress(prev => ({ ...prev, [file.name]: i }))
-        }
-
-        console.log(`Uploading file: ${file.name}`)
+        // Create FormData
         const formData = new FormData()
         formData.append('file', file)
-        formData.append('content', content)
 
-        // Get access token for authorization
-        const accessToken = authService.getAuthToken()
-        if (!accessToken) {
-          console.error('No access token available for file upload')
-          setUploadProgress(prev => ({ ...prev, [file.name]: -1 }))
-          continue
+        console.log('🌐 Sending to n8n webhook...')
+        console.log('URL:', API_ENDPOINTS.N8N_WEBHOOKS.UPLOAD_KNOWLEDGE_BASE)
+        console.log('File:', file.name, file.size, 'bytes')
+        console.log('File type:', file.type)
+        console.log('FormData contents:')
+        for (let [key, value] of formData.entries()) {
+          if (value instanceof File) {
+            console.log(`  - ${key}: File(${value.name}, ${value.size} bytes, ${value.type})`)
+          } else {
+            console.log(`  - ${key}: ${value}`)
+          }
         }
 
-        const response = await fetch('/api/upload-knowledge-base', {
+        // Make the request
+        const response = await fetch(API_ENDPOINTS.N8N_WEBHOOKS.UPLOAD_KNOWLEDGE_BASE, {
           method: 'POST',
           headers: {
             'Authorization': `Bearer ${accessToken}`,
@@ -212,27 +332,59 @@ export default function KnowledgeBasePage() {
           body: formData
         })
 
-        console.log(`Response status for ${file.name}:`, response.status)
+        console.log(`📡 Response status: ${response.status}`)
+        console.log(`📡 Response ok: ${response.ok}`)
 
         if (response.ok) {
-          const result = await response.json()
-          if (result.success) {
-            console.log(`File ${file.name} uploaded and parsed successfully`)
+          console.log('🎉 Response is OK! Reading response...')
+          try {
+            const result = await response.json()
+            console.log('📄 JSON Response received:')
+            console.log('📄 Response object:', result)
+            console.log('📄 Response status:', result.status)
+            console.log('📄 Response message:', result.message)
+            console.log('📄 Full response JSON:', JSON.stringify(result, null, 2))
             setUploadProgress(prev => ({ ...prev, [file.name]: 100 }))
-          } else {
-            console.error(`Failed to upload file ${file.name}:`, result.error)
-            setUploadProgress(prev => ({ ...prev, [file.name]: -1 })) // -1 indicates error
+            alert(`File ${file.name} uploaded successfully!\nResponse: ${result.message}`)
+          } catch (jsonError) {
+            console.log('📄 Response is not JSON, reading as text...')
+            const responseText = await response.text()
+            console.log('📄 Raw response text:', responseText)
+            console.log('📄 Response text length:', responseText.length)
+            console.log('📄 Response text (quoted):', JSON.stringify(responseText))
+            
+            if (responseText.trim() === '') {
+              console.log('✅ Empty response - treating as success')
+              setUploadProgress(prev => ({ ...prev, [file.name]: 100 }))
+              alert(`File ${file.name} uploaded successfully! (Empty response)`)
+            } else {
+              console.log('✅ Non-empty response - treating as success')
+              console.log('📄 Response content:', responseText)
+              setUploadProgress(prev => ({ ...prev, [file.name]: 100 }))
+              alert(`File ${file.name} uploaded successfully!\nResponse: ${responseText}`)
+            }
           }
         } else {
+          console.log('❌ Response is not OK, reading error response...')
           const errorText = await response.text()
-          console.error(`Failed to upload file ${file.name}:`, response.status, response.statusText, errorText)
-          setUploadProgress(prev => ({ ...prev, [file.name]: -1 })) // -1 indicates error
+          console.error('❌ Upload failed!')
+          console.error('❌ Status:', response.status)
+          console.error('❌ Status text:', response.statusText)
+          console.error('❌ Error response text:', errorText)
+          console.error('❌ Error response length:', errorText.length)
+          setUploadProgress(prev => ({ ...prev, [file.name]: -1 }))
+          alert(`Failed to upload ${file.name}: ${response.status}\nError: ${errorText}`)
         }
-      } catch (fetchError) {
-        console.error(`Network error uploading file ${file.name}:`, fetchError)
+
+      } catch (error) {
+        console.error('❌ Network error:', error)
         setUploadProgress(prev => ({ ...prev, [file.name]: -1 }))
+        alert(`Network error uploading ${file.name}`)
       }
     }
+
+    // Clear the input
+    event.target.value = ''
   }
 
   // Remove file from list
@@ -300,22 +452,33 @@ export default function KnowledgeBasePage() {
       console.log('Response ok:', response.ok)
 
       if (response.ok) {
-        const result = await response.json()
-        console.log('✅ STEP 4: Referral code applied successfully!')
-        console.log('Response data:', JSON.stringify(result, null, 2))
-        
-        if (result.success || result.message === "credit has been added" || result.message === "Workflow was started") {
-          alert('Referral code applied successfully! The workflow has been started and credit will be added to your account.')
-          setReferralCode('') // Clear the input
-          // Refresh user profile to show updated credits with a small delay
-          if (activeTab === 'profile') {
-            setTimeout(() => {
-              console.log('🔄 Refreshing user profile after referral code application...')
-              fetchUserProfile()
-            }, 2000) // Wait 2 seconds for the credit to be updated in the database
+        try {
+          const result = await response.json()
+          console.log('✅ STEP 4: Referral code applied successfully!')
+          console.log('Response data:', JSON.stringify(result, null, 2))
+          
+          if (result.success || result.message === "credit has been added" || result.message === "Workflow was started") {
+            alert('Referral code applied successfully! The workflow has been started and credit will be added to your account.')
+            setReferralCode('') // Clear the input
+            // Refresh user profile to show updated credits with a small delay
+            if (activeTab === 'profile') {
+              setTimeout(() => {
+                console.log('🔄 Refreshing user profile after referral code application...')
+                fetchUserProfile()
+              }, 2000) // Wait 2 seconds for the credit to be updated in the database
+            }
+          } else {
+            alert(`Failed to apply referral code: ${result.error?.message || 'Unknown error'}`)
           }
-        } else {
-          alert(`Failed to apply referral code: ${result.error?.message || 'Unknown error'}`)
+        } catch (jsonError) {
+          console.error('Failed to parse JSON response:', jsonError)
+          try {
+            const errorText = await response.text()
+            console.error('Response text:', errorText)
+          } catch (textError) {
+            console.error('Could not read response text:', textError)
+          }
+          alert('Failed to apply referral code - invalid response format')
         }
       } else {
         const errorText = await response.text()
@@ -366,15 +529,26 @@ export default function KnowledgeBasePage() {
         })
       })
       
-      const data = await response.json()
-      
-      if (data.success) {
-        setPasswordSuccess('Password changed successfully!')
-        // Reset form
-        setCurrentPassword('')
-        setNewPassword('')
-      } else {
-        setPasswordError(data.error?.message || 'Failed to change password')
+      try {
+        const data = await response.json()
+        
+        if (data.success) {
+          setPasswordSuccess('Password changed successfully!')
+          // Reset form
+          setCurrentPassword('')
+          setNewPassword('')
+        } else {
+          setPasswordError(data.error?.message || 'Failed to change password')
+        }
+      } catch (jsonError) {
+        console.error('Failed to parse JSON response:', jsonError)
+        try {
+          const errorText = await response.text()
+          console.error('Response text:', errorText)
+        } catch (textError) {
+          console.error('Could not read response text:', textError)
+        }
+        setPasswordError('Failed to change password - invalid response format')
       }
     } catch (error: any) {
       setPasswordError('Network error. Please try again.')
@@ -383,6 +557,11 @@ export default function KnowledgeBasePage() {
     }
   }
 
+  console.log('🔄 Knowledge base component rendering...')
+  console.log('🔄 Active tab:', activeTab)
+  console.log('🔄 Uploaded files count:', uploadedFiles.length)
+  console.log('🔄 Is uploading:', isUploading)
+  
   return (
     <ProtectedRoute>
       <div className="min-h-screen bg-gray-50">
@@ -441,6 +620,20 @@ export default function KnowledgeBasePage() {
                     <p className="text-gray-600 mt-1">Upload and manage your business-related documents</p>
                   </div>
                   <div className="p-6">
+                    {/* View Knowledge Button */}
+                    <div className="mb-6">
+                      <button
+                        onClick={() => setIsKnowledgeViewerOpen(true)}
+                        className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg font-medium transition-colors flex items-center space-x-2"
+                      >
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                        </svg>
+                        <span>View Knowledge</span>
+                      </button>
+                    </div>
+
                     <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-purple-400 transition-colors">
                       <div className="w-12 h-12 bg-gray-400 rounded-full mx-auto mb-3 flex items-center justify-center">
                         <span className="text-white text-lg">📁</span>
@@ -471,6 +664,27 @@ export default function KnowledgeBasePage() {
                           className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg text-sm"
                         >
                           Test API
+                        </button>
+                        <button
+                          onClick={() => {
+                            console.log('🧪 Test button clicked!')
+                            console.log('🧪 handleFileUpload function exists:', typeof handleFileUpload)
+                          }}
+                          className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm"
+                        >
+                          Test Function
+                        </button>
+                        <button
+                          onClick={testN8nWebhook}
+                          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm"
+                        >
+                          Test Webhook
+                        </button>
+                        <button
+                          onClick={testWithTextFile}
+                          className="bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 rounded-lg text-sm"
+                        >
+                          Test Text File
                         </button>
                       </div>
                     </div>
@@ -745,6 +959,12 @@ export default function KnowledgeBasePage() {
         </div>
       </div>
       </div>
+
+      {/* Knowledge Base Viewer Modal */}
+      <KnowledgeBaseViewer
+        isOpen={isKnowledgeViewerOpen}
+        onClose={() => setIsKnowledgeViewerOpen(false)}
+      />
     </ProtectedRoute>
   )
 }
