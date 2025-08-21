@@ -340,6 +340,8 @@ export default function Dashboard() {
   const [isLoadingAgents, setIsLoadingAgents] = React.useState(false)
   const [chatStarted, setChatStarted] = React.useState(false)
   const [hasInitializedChat, setHasInitializedChat] = React.useState(false)
+  const [previousAgent, setPreviousAgent] = React.useState<string | null>(null)
+  const [isInitialLoad, setIsInitialLoad] = React.useState(true)
 
   // Load session data from localStorage on component mount
   React.useEffect(() => {
@@ -393,7 +395,40 @@ export default function Dashboard() {
         }
       }
     }
+    
+    // Mark initial load as complete
+    setIsInitialLoad(false)
   }, [])
+
+  // Watch for agent changes and clear session when agent is changed
+  React.useEffect(() => {
+    // Skip on initial load to avoid unnecessary actions
+    if (isInitialLoad) {
+      return
+    }
+    
+    if (selectedAgent && agents.length > 0 && previousAgent && previousAgent !== selectedAgent) {
+      console.log('🔄 Agent changed from', previousAgent, 'to:', selectedAgent)
+      
+      // Only clear chat state when agent changes (don't create new session yet)
+      // Session will be created when user sends their first message
+      setChatStarted(false)
+      setMessages([])
+      setSessionId('')
+      
+      // Clear localStorage
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('chat_session_id')
+        localStorage.removeItem('chat_started')
+        localStorage.removeItem('chat_messages')
+      }
+      
+      console.log('💡 Chat state cleared. New session will be created when user sends first message.')
+    }
+    
+    // Update previous agent
+    setPreviousAgent(selectedAgent)
+  }, [selectedAgent, agents, isInitialLoad])
 
   // Fetch agents from n8n webhook
   const fetchAgents = async () => {
@@ -536,7 +571,7 @@ export default function Dashboard() {
   }
 
   // Start new conversation function
-  const startNewConversation = async () => {
+  const startNewConversation = () => {
     console.log('🔄 Starting new conversation...')
     setSessionId('') // Clear existing session
     setHasInitializedChat(false) // Reset initialization flag
@@ -550,10 +585,7 @@ export default function Dashboard() {
       localStorage.removeItem('chat_messages')
     }
     
-    // Wait a bit then initialize new chat
-    setTimeout(async () => {
-      await initiateNewChat(true) // Force new session
-    }, 100)
+    console.log('💡 Chat state cleared. New session will be created when user sends first message.')
   }
 
   // Start fresh dashboard function (clear everything)
@@ -1491,17 +1523,20 @@ function LeftSidebar({ agents, conversations, selectedAgent, onSelectAgent, isLo
               <Tooltip>
                 <TooltipTrigger asChild>
                   <Button 
-                    onClick={async () => {
+                    onClick={() => {
                       console.log('🔄 Starting new chat (sidebar) - clearing session ID')
                       setChatStarted(false)
                       setMessages([])
                       setSessionId('') // Clear session ID for new chat
                       
-                      // Call new chat webhook when user clicks sidebar new chat button
-                      const webhookSuccess = await initiateNewChat()
-                      if (!webhookSuccess) {
-                        console.warn('New chat webhook failed, but continuing with new chat')
+                      // Clear localStorage
+                      if (typeof window !== 'undefined') {
+                        localStorage.removeItem('chat_session_id')
+                        localStorage.removeItem('chat_started')
+                        localStorage.removeItem('chat_messages')
                       }
+                      
+                      console.log('💡 Chat state cleared. New session will be created when user sends first message.')
                     }}
                     variant="ghost" 
                     size="icon" 
