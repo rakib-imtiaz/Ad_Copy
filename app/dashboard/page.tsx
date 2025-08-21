@@ -22,7 +22,7 @@ import { authService } from "@/lib/auth-service"
 import { ChatInterface } from "@/components/chat-interface"
 import { useAuth } from "@/lib/auth-context"
 import { ProtectedRoute } from "@/components/protected-route"
-import { API_ENDPOINTS } from "@/lib/api-config"
+import { API_ENDPOINTS, getAuthHeaders } from "@/lib/api-config"
 
 // Helper function to format time ago
 function formatTimeAgo(date: Date): string {
@@ -58,6 +58,152 @@ function MarkdownContent({ content }: { content: string }) {
         __html: renderContent(content) 
       }} 
     />
+  )
+}
+
+// Initial ChatGPT-like Interface
+function InitialInterface({ agents, selectedAgent, onSelectAgent, onSendMessage, onRefreshAgents, isLoadingAgents }: any) {
+  const [message, setMessage] = React.useState("")
+
+  const handleSend = () => {
+    if (message.trim() && onSendMessage) {
+      onSendMessage(message.trim())
+      setMessage("")
+    }
+  }
+
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault()
+      handleSend()
+    }
+  }
+
+  const quickPrompts = [
+    "Create an Instagram ad for a new fitness app",
+    "Write a Facebook ad for a local restaurant",
+    "Generate email subject lines for a sale",
+    "Draft LinkedIn ad copy for B2B software"
+  ]
+
+  return (
+    <motion.div 
+      className="flex flex-col items-center justify-center min-h-screen p-8 bg-gradient-to-br from-slate-50 via-white to-blue-50/30"
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.6 }}
+    >
+      <div className="w-full max-w-2xl mx-auto">
+        {/* Logo and Title */}
+        <motion.div 
+          className="text-center mb-8"
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.1 }}
+        >
+          <div className="flex justify-center mb-4">
+            <img 
+              src="/logo.png" 
+              alt="Copy Ready logo" 
+              width={64} 
+              height={64}
+              className="rounded-lg"
+            />
+          </div>
+          <h1 className="text-4xl font-bold text-[#393E46] mb-2">What can I help with?</h1>
+          <p className="text-lg text-[#929AAB]">Choose an AI agent and start creating high-converting ad copy</p>
+        </motion.div>
+
+        {/* Agent Selector */}
+        <motion.div 
+          className="mb-8"
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.2 }}
+        >
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="text-sm font-medium text-[#929AAB] uppercase tracking-wider">Select AI Agent</h3>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={onRefreshAgents}
+              disabled={isLoadingAgents}
+              className="flex items-center space-x-2 bg-[#1ABC9C] hover:bg-[#1ABC9C]/90 text-white border-0 shadow-md hover:shadow-lg transition-all duration-200"
+            >
+              <RefreshCw className={`h-3 w-3 ${isLoadingAgents ? 'animate-spin' : ''}`} />
+              <span className="text-xs font-medium">Refresh</span>
+            </Button>
+          </div>
+          <AgentSelector 
+            agents={agents}
+            selectedAgent={selectedAgent}
+            onSelectAgent={onSelectAgent}
+            onOpenChange={() => {}}
+            isLoading={isLoadingAgents}
+            onRefresh={onRefreshAgents}
+          />
+        </motion.div>
+
+        {/* Input Area */}
+        <motion.div 
+          className="mb-6"
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.3 }}
+        >
+          <div className="flex items-center space-x-2 p-4 border border-[#EEEEEE] rounded-2xl bg-white shadow-sm hover:shadow-md transition-shadow">
+            <Input
+              value={message}
+              onChange={(e) => setMessage(e.target.value)}
+              onKeyPress={handleKeyPress}
+              placeholder={selectedAgent ? `Ask ${selectedAgent} to create ad copy...` : "Select an agent to start chatting..."}
+              disabled={!selectedAgent}
+              className="flex-1 border-0 text-lg placeholder:text-[#929AAB] focus:ring-0 focus:outline-none bg-transparent"
+            />
+            <Button
+              onClick={handleSend}
+              disabled={!message.trim() || !selectedAgent}
+              size="sm"
+              className="bg-[#1ABC9C] hover:bg-[#1ABC9C]/90 text-black px-4 py-2 rounded-xl"
+            >
+              <Send className="h-4 w-4" />
+            </Button>
+          </div>
+        </motion.div>
+
+        {/* Quick Prompts */}
+        <motion.div 
+          className="grid grid-cols-1 md:grid-cols-2 gap-3"
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.4 }}
+        >
+          {quickPrompts.map((prompt, index) => (
+            <motion.button
+              key={index}
+              onClick={() => setMessage(prompt)}
+              className="p-4 text-left border border-[#EEEEEE] rounded-xl hover:border-[#1ABC9C] hover:bg-[#1ABC9C]/5 transition-all duration-200 group"
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+            >
+              <p className="text-sm text-[#393E46] group-hover:text-[#1ABC9C]">{prompt}</p>
+            </motion.button>
+          ))}
+        </motion.div>
+
+        {/* Footer Text */}
+        <motion.div 
+          className="text-center mt-8"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.6, delay: 0.5 }}
+        >
+          <p className="text-xs text-[#929AAB]">
+            AI can make mistakes. Verify important information and review all generated content.
+          </p>
+        </motion.div>
+      </div>
+    </motion.div>
   )
 }
 
@@ -192,6 +338,62 @@ export default function Dashboard() {
   const [selectedAgent, setSelectedAgent] = React.useState("CopyMaster Pro")
   const [agents, setAgents] = React.useState<any[]>([])
   const [isLoadingAgents, setIsLoadingAgents] = React.useState(false)
+  const [chatStarted, setChatStarted] = React.useState(false)
+  const [hasInitializedChat, setHasInitializedChat] = React.useState(false)
+
+  // Load session data from localStorage on component mount
+  React.useEffect(() => {
+    if (typeof window !== 'undefined') {
+      // Check if user wants a fresh start (URL parameter or localStorage flag)
+      const urlParams = new URLSearchParams(window.location.search)
+      const freshStart = urlParams.get('fresh') === 'true' || localStorage.getItem('fresh_start') === 'true'
+      
+      if (freshStart) {
+        console.log('🔄 Fresh start requested - clearing localStorage')
+        localStorage.removeItem('chat_session_id')
+        localStorage.removeItem('chat_started')
+        localStorage.removeItem('chat_messages')
+        localStorage.removeItem('fresh_start')
+        // Clear URL parameter
+        window.history.replaceState({}, document.title, window.location.pathname)
+        return
+      }
+      
+      const savedSessionId = localStorage.getItem('chat_session_id')
+      const savedChatStarted = localStorage.getItem('chat_started') === 'true'
+      const savedMessages = localStorage.getItem('chat_messages')
+      
+      if (savedSessionId) {
+        setSessionId(savedSessionId)
+        console.log('📱 Loaded saved session ID from localStorage:', savedSessionId)
+      }
+      
+      if (savedChatStarted && savedMessages) {
+        // Only restore chat state if there are actual messages
+        try {
+          const parsedMessages = JSON.parse(savedMessages)
+          if (parsedMessages.length > 0) {
+            setChatStarted(true)
+            console.log('📱 Loaded saved chat state from localStorage')
+          } else {
+            console.log('📱 No saved messages found - starting fresh dashboard')
+          }
+        } catch (error) {
+          console.log('📱 Error parsing saved messages - starting fresh dashboard')
+        }
+      }
+      
+      if (savedMessages) {
+        try {
+          const parsedMessages = JSON.parse(savedMessages)
+          setMessages(parsedMessages)
+          console.log('📱 Loaded saved messages from localStorage:', parsedMessages.length, 'messages')
+        } catch (error) {
+          console.error('Error parsing saved messages:', error)
+        }
+      }
+    }
+  }, [])
 
   // Fetch agents from n8n webhook
   const fetchAgents = async () => {
@@ -333,14 +535,48 @@ export default function Dashboard() {
     await fetchAgents()
   }
 
-  const conversations = sampleConversations.map(conv => ({
-    id: conv.id,
-    title: conv.title,
-    agent: agents.find(a => a.id === conv.agentId)?.name || "Unknown Agent",
-    lastMessage: conv.messages[conv.messages.length - 1]?.content.substring(0, 50) + "...",
-    time: formatTimeAgo(conv.updatedAt),
-    status: "active"
-  }))
+  // Start new conversation function
+  const startNewConversation = async () => {
+    console.log('🔄 Starting new conversation...')
+    setSessionId('') // Clear existing session
+    setHasInitializedChat(false) // Reset initialization flag
+    setChatStarted(false) // Reset chat state
+    setMessages([]) // Clear messages
+    
+    // Clear localStorage
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('chat_session_id')
+      localStorage.removeItem('chat_started')
+      localStorage.removeItem('chat_messages')
+    }
+    
+    // Wait a bit then initialize new chat
+    setTimeout(async () => {
+      await initiateNewChat(true) // Force new session
+    }, 100)
+  }
+
+  // Start fresh dashboard function (clear everything)
+  const startFreshDashboard = () => {
+    console.log('🔄 Starting fresh dashboard...')
+    setSessionId('') // Clear existing session
+    setHasInitializedChat(false) // Reset initialization flag
+    setChatStarted(false) // Reset chat state
+    setMessages([]) // Clear messages
+    
+    // Clear localStorage
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('chat_session_id')
+      localStorage.removeItem('chat_started')
+      localStorage.removeItem('chat_messages')
+    }
+    
+    // Redirect to fresh dashboard
+    window.location.href = '/dashboard?fresh=true'
+  }
+
+  // Empty conversations array - no mock data
+  const conversations: any[] = []
 
   const [messages, setMessages] = React.useState<Array<{
     id: string
@@ -348,17 +584,11 @@ export default function Dashboard() {
     content: string
     timestamp: string
     animated?: boolean
-  }>>([
-    { 
-      id: '1',
-      role: 'assistant' as const, 
-      content: "Hi! I'm your AI agent. I can help you create high-converting ad copy and marketing content. What would you like to work on today?", 
-      timestamp: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true }),
-      animated: false 
-    }
-  ])
+  }>>([])
+
+
   const [isLoading, setIsLoading] = React.useState(false)
-  const [sessionId, setSessionId] = React.useState(1)
+  const [sessionId, setSessionId] = React.useState<string>('')
   const [showCreditPopup, setShowCreditPopup] = React.useState(false)
   const [mediaItems, setMediaItems] = React.useState<any[]>([])
   const [isRefreshing, setIsRefreshing] = React.useState(false)
@@ -375,9 +605,208 @@ export default function Dashboard() {
     }
   }, [isAuthenticated, currentUser])
 
+  // Only restore existing chat session, don't create new ones automatically
+  React.useEffect(() => {
+    if (agents.length > 0 && !sessionId && isAuthenticated && !hasInitializedChat) {
+      // Only restore existing session, don't create new one automatically
+      if (chatStarted && messages.length > 0) {
+        console.log('📱 Restoring existing chat session from localStorage')
+        setHasInitializedChat(true)
+      } else {
+        console.log('🔄 Fresh dashboard - no webhook call needed until user starts chatting')
+        setHasInitializedChat(true) // Mark as initialized to prevent future calls
+      }
+    }
+  }, [agents, sessionId, isAuthenticated, hasInitializedChat, chatStarted, messages.length])
+
+  // Reset initialization flag when session is cleared
+  React.useEffect(() => {
+    if (!sessionId) {
+      setHasInitializedChat(false)
+    }
+  }, [sessionId])
+
+
+
+  // Handle new chat webhook - just get session ID
+  const initiateNewChat = async (forceNew = false) => {
+    try {
+      const accessToken = authService.getAuthToken()
+      
+      if (!accessToken) {
+        console.error("No access token available")
+        return false
+      }
+
+      // Don't create new session if one already exists and we're not forcing
+      if (sessionId && !forceNew) {
+        console.log('🎯 Session ID already exists, skipping new chat webhook:', sessionId)
+        return true
+      }
+
+      // Don't create new session if chat is already active (has messages)
+      if (chatStarted && messages.length > 0 && !forceNew) {
+        console.log('🎯 Chat already active with messages, skipping new chat webhook')
+        return true
+      }
+
+      // Find the selected agent's ID from the agents array
+      const selectedAgentData = agents.find(agent => agent.name === selectedAgent)
+      const agentId = selectedAgentData?.id || selectedAgent
+
+      console.log('🎯 Initiating new chat to get session ID...')
+      console.log('Request URL:', '/api/webhook/new-chat')
+      console.log('Selected Agent Name:', selectedAgent)
+      console.log('Selected Agent ID:', agentId)
+
+      const response = await fetch('/api/webhook/new-chat', {
+        method: 'POST',
+        headers: getAuthHeaders(accessToken),
+        body: JSON.stringify({
+          agent_id: agentId
+        }),
+        signal: AbortSignal.timeout(10000), // 10 second timeout
+      })
+
+      console.log('New chat webhook response:', {
+        status: response.status,
+        statusText: response.statusText,
+        ok: response.ok,
+      })
+
+      if (!response.ok) {
+        console.error('Failed to initiate new chat. Status:', response.status)
+        const errorData = await response.json().catch(() => ({}))
+        console.error('Error details:', errorData)
+        
+        // If webhook is not registered (404), create a fallback session ID
+        if (response.status === 404) {
+          console.log('⚠️ Webhook not registered, creating fallback session ID')
+          const fallbackSessionId = `fallback_${Date.now()}`
+          setSessionId(fallbackSessionId)
+          console.log('🎯 FALLBACK SESSION ID STORED:', fallbackSessionId)
+          return true
+        }
+        
+        return false
+      }
+
+      const data = await response.json()
+      console.log('✅ New chat webhook success:', data)
+      
+      // Store session ID from webhook response
+      if (data.session_id) {
+        setSessionId(data.session_id)
+        // Save to localStorage
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('chat_session_id', data.session_id)
+        }
+        console.log('🎯 SESSION ID STORED:', data.session_id)
+        console.log('📋 Full webhook response:', data)
+      } else {
+        console.warn('⚠️ No session_id in webhook response')
+        console.log('📋 Full webhook response:', data)
+      }
+      
+      return true
+    } catch (error) {
+      console.error('Error initiating new chat:', error)
+      return false
+    }
+  }
+
+  // Send message to chat window webhook
+  const sendMessageToChatWindow = async (userPrompt: string) => {
+    try {
+      const accessToken = authService.getAuthToken()
+      
+      if (!accessToken) {
+        console.error("No access token available")
+        return null
+      }
+
+      if (!sessionId) {
+        console.error("No session ID available")
+        return null
+      }
+
+      // Find the selected agent's ID from the agents array
+      const selectedAgentData = agents.find(agent => agent.name === selectedAgent)
+      const agentId = selectedAgentData?.id || selectedAgent
+
+      console.log('💬 Sending message to chat window...')
+      console.log('Request URL:', '/api/webhook/chat-window')
+      console.log('Session ID:', sessionId)
+      console.log('User Prompt:', userPrompt)
+      console.log('Selected Agent Name:', selectedAgent)
+      console.log('Selected Agent ID:', agentId)
+
+      const response = await fetch('/api/webhook/chat-window', {
+        method: 'POST',
+        headers: getAuthHeaders(accessToken),
+        body: JSON.stringify({
+          session_id: sessionId,
+          user_prompt: userPrompt,
+          agent_id: agentId
+        }),
+        signal: AbortSignal.timeout(30000), // 30 second timeout for chat
+      })
+
+      console.log('Chat window webhook response:', {
+        status: response.status,
+        statusText: response.statusText,
+        ok: response.ok,
+      })
+
+      if (!response.ok) {
+        console.error('Failed to send message to chat window. Status:', response.status)
+        const errorData = await response.json().catch(() => ({}))
+        console.error('Error details:', errorData)
+        
+        // If webhook is not registered (404), return a fallback response
+        if (response.status === 404) {
+          console.log('⚠️ Chat window webhook not registered, returning fallback response')
+          return {
+            response: "I'm currently in test mode. The webhook needs to be activated in n8n. Please click 'Execute workflow' in your n8n canvas to activate the webhook.",
+            fallback: true
+          }
+        }
+        
+        return null
+      }
+
+      const data = await response.json()
+      console.log('✅ Chat window webhook success:', data)
+      return data
+    } catch (error) {
+      console.error('Error sending message to chat window:', error)
+      return null
+    }
+  }
+
   // Handle sending messages
   const handleSendMessage = async (content: string) => {
     if (!content.trim() || !currentUser) return
+
+        // Mark chat as started on first message
+    if (!chatStarted) {
+      setChatStarted(true)
+      // Save chat state to localStorage
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('chat_started', 'true')
+      }
+      
+      // Call webhook to get session ID only when user actually starts chatting
+      if (!sessionId) {
+        console.log('🎯 User started first conversation - calling new chat webhook...')
+        const webhookSuccess = await initiateNewChat()
+        if (!webhookSuccess) {
+          console.warn('New chat webhook failed, but continuing with conversation')
+        }
+      } else {
+        console.log('🎯 Using existing session ID for new conversation:', sessionId)
+      }
+    }
 
     const userMessage = {
       id: Date.now().toString(),
@@ -388,53 +817,56 @@ export default function Dashboard() {
     }
 
     // Add user message to chat
-    setMessages(prev => [...prev, userMessage])
+    setMessages(prev => {
+      const newMessages = [...prev, userMessage]
+      // Save messages to localStorage
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('chat_messages', JSON.stringify(newMessages))
+      }
+      return newMessages
+    })
     setIsLoading(true)
 
     try {
-      // Send message to n8n via auth service
-      const response = await authService.sendChatMessage({
-        email: currentUser.email,
-        sessionId: sessionId,
-        agentId: selectedAgent || 'adcopyaishahed@gmail.com',
-        userPrompt: content.trim()
-      })
+      // Send message to chat window webhook
+      console.log('💬 Sending message with Session ID:', sessionId || 'new-session')
+      const response = await sendMessageToChatWindow(content.trim())
 
-      if (response.success) {
+      if (response) {
         // Add AI response to chat
         let content = 'I received your message but couldn\'t generate a response.';
         
-        if (response.data?.response) {
-          if (response.data.type === 'credit_error') {
-            // Handle credit limit error
-            content = response.data.response;
-            setShowCreditPopup(true); // Show credit popup
-          } else if (response.data.type === 'empty_response' || response.data.type === 'json_error') {
-            // Handle empty or invalid responses
-            content = response.data.response;
-          } else if (response.data.type === 'html') {
-            // Handle HTML response - extract text content
-            const htmlContent = response.data.response;
-            // Simple HTML to text conversion
-            content = htmlContent
-              .replace(/<[^>]*>/g, '') // Remove HTML tags
-              .replace(/&nbsp;/g, ' ') // Replace &nbsp; with space
-              .replace(/&amp;/g, '&') // Replace &amp; with &
-              .replace(/&lt;/g, '<') // Replace &lt; with <
-              .replace(/&gt;/g, '>') // Replace &gt; with >
-              .trim();
-            
-            // If content is empty after HTML stripping, use a fallback
-            if (!content) {
-              content = 'Received HTML response from AI agent.';
-            }
+        // Handle different response formats from chat window webhook
+        if (response.fallback) {
+          content = response.response;
+        } else if (response.empty_response) {
+          content = response.response;
+        } else if (response.raw_response) {
+          content = response.response;
+        } else if (response.response) {
+          content = response.response;
+        } else if (response.content) {
+          content = response.content;
+        } else if (response.message) {
+          content = response.message;
+        } else if (response.ai_response) {
+          content = response.ai_response;
+        } else if (response.pageContent) {
+          // Handle n8n response with pageContent field (direct response)
+          const pageContent = response.pageContent;
+          // Extract AI response from the conversation format
+          if (pageContent.includes('ai :')) {
+            const aiResponse = pageContent.split('ai :')[1]?.trim();
+            content = aiResponse || pageContent;
           } else {
-            content = response.data.response;
+            content = pageContent;
           }
+        } else if (response.data?.response) {
+          content = response.data.response;
         } else if (response.data?.content) {
           content = response.data.content;
         } else if (response.data?.pageContent) {
-          // Handle n8n response with pageContent field
+          // Handle n8n response with pageContent field (nested in data)
           const pageContent = response.data.pageContent;
           // Extract AI response from the conversation format
           if (pageContent.includes('ai :')) {
@@ -452,17 +884,31 @@ export default function Dashboard() {
           timestamp: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true }),
           animated: false
         }
-        setMessages(prev => [...prev, aiMessage])
+        setMessages(prev => {
+          const newMessages = [...prev, aiMessage]
+          // Save messages to localStorage
+          if (typeof window !== 'undefined') {
+            localStorage.setItem('chat_messages', JSON.stringify(newMessages))
+          }
+          return newMessages
+        })
       } else {
         // Add error message
         const errorMessage = {
           id: (Date.now() + 1).toString(),
           role: 'assistant' as const,
-          content: `Error: ${response.error?.message || 'Failed to send message'}`,
+          content: `Error: Failed to send message to chat window`,
           timestamp: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true }),
           animated: false
         }
-        setMessages(prev => [...prev, errorMessage])
+        setMessages(prev => {
+          const newMessages = [...prev, errorMessage]
+          // Save messages to localStorage
+          if (typeof window !== 'undefined') {
+            localStorage.setItem('chat_messages', JSON.stringify(newMessages))
+          }
+          return newMessages
+        })
       }
     } catch (error) {
       console.error('Chat error:', error)
@@ -473,7 +919,14 @@ export default function Dashboard() {
         timestamp: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true }),
         animated: false
       }
-      setMessages(prev => [...prev, errorMessage])
+      setMessages(prev => {
+        const newMessages = [...prev, errorMessage]
+        // Save messages to localStorage
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('chat_messages', JSON.stringify(newMessages))
+        }
+        return newMessages
+      })
     } finally {
       setIsLoading(false)
     }
@@ -723,9 +1176,27 @@ export default function Dashboard() {
 
   return (
     <ProtectedRoute>
-      <div className="min-h-screen bg-white text-[#393E46] font-sans">
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50/20 text-slate-800 font-sans">
+      {!chatStarted ? (
+        // Initial ChatGPT-like interface
+        <InitialInterface 
+          agents={agents}
+          selectedAgent={selectedAgent}
+          onSelectAgent={setSelectedAgent}
+          onSendMessage={handleSendMessage}
+          onRefreshAgents={refreshAgents}
+          isLoadingAgents={isLoadingAgents}
+        />
+      ) : (
+        // Full dashboard with chat interface
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.5, ease: "easeOut" }}
+          className="h-full"
+        >
       {/* Header */}
-      <header className="h-14 border-b border-[#EEEEEE] bg-white px-4 flex items-center justify-between sticky top-0 z-40">
+      <header className="h-16 border-b border-slate-200/60 bg-white/90 backdrop-blur-sm px-6 flex items-center justify-between sticky top-0 z-40 shadow-sm">
         <div className="flex items-center space-x-4">
           {/* Mobile menu button */}
           <div className="lg:hidden">
@@ -760,6 +1231,28 @@ export default function Dashboard() {
             <Bot className="h-4 w-4 text-[#393E46]" />
             <span className="text-sm font-medium">{selectedAgent}</span>
           </div>
+
+          {/* New Chat Button */}
+          <Button
+            onClick={startNewConversation}
+            variant="outline"
+            size="sm"
+            className="hidden sm:flex items-center space-x-2 text-[#393E46] border-[#EEEEEE] hover:bg-[#F7F7F7]"
+          >
+            <Plus className="h-4 w-4" />
+            <span>New Chat</span>
+          </Button>
+
+          {/* Fresh Start Button */}
+          <Button
+            onClick={startFreshDashboard}
+            variant="ghost"
+            size="sm"
+            className="hidden sm:flex items-center space-x-2 text-[#929AAB] hover:text-[#393E46] hover:bg-[#F7F7F7]"
+          >
+            <RefreshCw className="h-4 w-4" />
+            <span>Fresh Start</span>
+          </Button>
         </div>
 
         <div className="flex items-center space-x-2">
@@ -842,23 +1335,34 @@ export default function Dashboard() {
         </div>
       </header>
 
-      <div className="flex h-[calc(100vh-3.5rem)]">
+      <div className="flex h-[calc(100vh-4rem)]">
         {/* Left Sidebar - Agents & Conversations */}
         <motion.div 
-          className={`hidden lg:flex flex-col bg-[#F7F7F7] border-r border-[#EEEEEE] transition-all duration-300 ${
+          className={`hidden lg:flex flex-col bg-gradient-to-b from-white via-slate-50 to-white border-r border-slate-200/60 transition-all duration-300 shadow-sm ${
             leftPanelOpen ? 'w-80' : 'w-0'
           }`}
           initial={false}
           animate={{ width: leftPanelOpen ? 320 : 0 }}
         >
           <div className="flex-1 overflow-y-auto">
-            <LeftSidebar agents={agents} conversations={conversations} selectedAgent={selectedAgent} onSelectAgent={setSelectedAgent} isLoadingAgents={isLoadingAgents} onRefreshAgents={refreshAgents} />
+            <LeftSidebar 
+          agents={agents} 
+          conversations={conversations} 
+          selectedAgent={selectedAgent} 
+          onSelectAgent={setSelectedAgent} 
+          isLoadingAgents={isLoadingAgents} 
+          onRefreshAgents={refreshAgents}
+          setChatStarted={setChatStarted}
+          setMessages={setMessages}
+          setSessionId={setSessionId}
+          initiateNewChat={initiateNewChat}
+        />
           </div>
         </motion.div>
 
         {/* Main Chat Area */}
-        <div className="flex-1 flex flex-col min-w-0 bg-white h-full">
-          <div className="flex-1 w-full bg-white h-full">
+        <div className="flex-1 flex flex-col min-w-0 bg-gradient-to-br from-slate-50 via-white to-blue-50/30 h-full">
+          <div className="flex-1 w-full h-full">
             <ChatInterface 
               messages={messages} 
               selectedAgent={selectedAgent}
@@ -870,7 +1374,7 @@ export default function Dashboard() {
 
         {/* Right Media Drawer */}
         <motion.div 
-          className={`hidden xl:flex flex-col bg-[#F7F7F7] border-l border-[#EEEEEE] transition-all duration-300 ${
+          className={`hidden xl:flex flex-col bg-gradient-to-b from-white via-slate-50 to-white border-l border-slate-200/60 transition-all duration-300 shadow-sm ${
             rightPanelOpen ? 'w-96' : 'w-0'
           }`}
           initial={false}
@@ -892,7 +1396,10 @@ export default function Dashboard() {
 
       {/* Mobile New Chat FAB */}
       <div className="lg:hidden fixed bottom-6 right-6 z-50">
-        <Button className="h-14 w-14 rounded-full bg-[#393E46] hover:bg-[#2C3036] shadow-lg">
+        <Button 
+          onClick={startNewConversation}
+          className="h-16 w-16 rounded-full bg-gradient-to-r from-[#1ABC9C] to-emerald-500 hover:from-[#1ABC9C]/90 hover:to-emerald-500/90 shadow-xl hover:shadow-2xl transition-all duration-200"
+        >
           <Plus className="h-6 w-6 text-white" />
         </Button>
       </div>
@@ -937,27 +1444,29 @@ export default function Dashboard() {
           </div>
         </div>
       )}
+        </motion.div>
+      )}
     </div>
     </ProtectedRoute>
   )
 }
 
 // Left Sidebar Component
-function LeftSidebar({ agents, conversations, selectedAgent, onSelectAgent, isLoadingAgents, onRefreshAgents }: any) {
+function LeftSidebar({ agents, conversations, selectedAgent, onSelectAgent, isLoadingAgents, onRefreshAgents, setChatStarted, setMessages, setSessionId, initiateNewChat }: any) {
   const [isAgentSelectorOpen, setIsAgentSelectorOpen] = React.useState(false)
 
   return (
     <div className="h-full flex flex-col">
       {/* Agent Selector */}
-      <div className="p-4 border-b border-[#EEEEEE]">
-        <div className="flex items-center justify-between mb-3">
-          <h3 className="text-xs font-medium text-[#929AAB] uppercase tracking-wider">Current Agent</h3>
+      <div className="p-5 border-b border-slate-200/60">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-xs font-semibold text-slate-600 uppercase tracking-wider">Current Agent</h3>
           <Button
             variant="outline"
             size="sm"
             onClick={onRefreshAgents}
             disabled={isLoadingAgents}
-            className="flex items-center space-x-2 bg-[#1ABC9C] hover:bg-[#1ABC9C]/90 text-white border-0 shadow-md hover:shadow-lg transition-all duration-200"
+            className="flex items-center space-x-2 bg-gradient-to-r from-[#1ABC9C] to-emerald-500 hover:from-[#1ABC9C]/90 hover:to-emerald-500/90 text-white border-0 shadow-lg hover:shadow-xl transition-all duration-200 rounded-xl"
           >
             <RefreshCw className={`h-3 w-3 ${isLoadingAgents ? 'animate-spin' : ''}`} />
             <span className="text-xs font-medium">Refresh</span>
@@ -975,13 +1484,29 @@ function LeftSidebar({ agents, conversations, selectedAgent, onSelectAgent, isLo
 
       {/* Conversations Section */}
       <div className="flex-1 flex flex-col">
-        <div className="p-4 pb-2 border-b border-[#EEEEEE]">
+        <div className="p-5 pb-3 border-b border-slate-200/60">
           <div className="flex items-center justify-between">
-            <h3 className="text-xs font-medium text-[#929AAB] uppercase tracking-wider">Conversations</h3>
+            <h3 className="text-xs font-semibold text-slate-600 uppercase tracking-wider">Conversations</h3>
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <Button variant="ghost" size="icon" className="h-6 w-6 text-[#929AAB] hover:text-[#393E46] hover:bg-white/50">
+                  <Button 
+                    onClick={async () => {
+                      console.log('🔄 Starting new chat (sidebar) - clearing session ID')
+                      setChatStarted(false)
+                      setMessages([])
+                      setSessionId('') // Clear session ID for new chat
+                      
+                      // Call new chat webhook when user clicks sidebar new chat button
+                      const webhookSuccess = await initiateNewChat()
+                      if (!webhookSuccess) {
+                        console.warn('New chat webhook failed, but continuing with new chat')
+                      }
+                    }}
+                    variant="ghost" 
+                    size="icon" 
+                    className="h-8 w-8 text-slate-600 hover:text-slate-800 hover:bg-slate-100 rounded-lg"
+                  >
                     <Plus className="h-4 w-4" />
                   </Button>
                 </TooltipTrigger>
@@ -992,33 +1517,43 @@ function LeftSidebar({ agents, conversations, selectedAgent, onSelectAgent, isLo
               </TooltipProvider>
             </div>
           </div>
-        <div className={`flex-1 p-4 pt-2 ${isAgentSelectorOpen ? 'overflow-hidden' : 'overflow-y-auto'}`}>
-          <div className="space-y-1">
-          {conversations.map((conv: any) => (
-            <motion.div
-              key={conv.id}
-              className="p-3 rounded-lg hover:bg-white/50 cursor-pointer border border-transparent hover:border-[#EEEEEE]"
-              whileHover={{ scale: 1.01 }}
-            >
-              <div className="flex items-start justify-between mb-1">
-                <h4 className="font-medium text-sm truncate pr-2">{conv.title}</h4>
-                <div className="flex items-center space-x-2">
-                  <span className="text-xs text-[#929AAB] flex-shrink-0">{conv.time}</span>
-                  <ThreeDotsMenu 
-                    onDelete={() => console.log('Delete conversation:', conv.title)}
-                  />
+        <div className={`flex-1 p-5 pt-3 ${isAgentSelectorOpen ? 'overflow-hidden' : 'overflow-y-auto'}`}>
+          <div className="space-y-2">
+          {conversations.length > 0 ? (
+            conversations.map((conv: any) => (
+              <motion.div
+                key={conv.id}
+                className="p-4 rounded-xl hover:bg-white/80 cursor-pointer border border-slate-200/60 hover:border-slate-300 bg-white/40 hover:shadow-sm transition-all duration-200"
+                whileHover={{ scale: 1.01 }}
+              >
+                <div className="flex items-start justify-between mb-2">
+                  <h4 className="font-semibold text-sm truncate pr-2 text-slate-800">{conv.title}</h4>
+                  <div className="flex items-center space-x-2">
+                    <span className="text-xs text-slate-500 flex-shrink-0 font-medium">{conv.time}</span>
+                    <ThreeDotsMenu 
+                      onDelete={() => console.log('Delete conversation:', conv.title)}
+                    />
+                  </div>
                 </div>
+                <p className="text-xs text-slate-600 mb-3 line-clamp-2 leading-relaxed">{conv.lastMessage}</p>
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-slate-600 font-medium">{conv.agent}</span>
+                  <div className={`w-2.5 h-2.5 rounded-full shadow-sm ${
+                    conv.status === 'active' ? 'bg-emerald-400' : 
+                    conv.status === 'review' ? 'bg-amber-400' : 'bg-slate-400'
+                  }`} />
+                </div>
+              </motion.div>
+            ))
+          ) : (
+            <div className="text-center py-8">
+              <div className="w-16 h-16 mx-auto mb-4 bg-slate-100 rounded-full flex items-center justify-center">
+                <MessageSquare className="h-8 w-8 text-slate-400" />
               </div>
-              <p className="text-xs text-[#929AAB] mb-2 line-clamp-2">{conv.lastMessage}</p>
-              <div className="flex items-center justify-between">
-                <span className="text-xs text-[#929AAB]">{conv.agent}</span>
-                <div className={`w-2 h-2 rounded-full ${
-                  conv.status === 'active' ? 'bg-green-400' : 
-                  conv.status === 'review' ? 'bg-yellow-400' : 'bg-gray-400'
-                }`} />
-              </div>
-            </motion.div>
-          ))}
+              <p className="text-sm text-slate-600 mb-2">No conversations yet</p>
+              <p className="text-xs text-slate-500">Start a new chat to begin</p>
+            </div>
+          )}
           </div>
         </div>
       </div>
@@ -1047,7 +1582,18 @@ function MobileSidebar({ agents, conversations }: any) {
           </div>
         </div>
       </div>
-      <LeftSidebar agents={agents} conversations={conversations} selectedAgent="Social Media Agent" onSelectAgent={() => {}} />
+      <LeftSidebar 
+        agents={agents} 
+        conversations={conversations} 
+        selectedAgent="Social Media Agent" 
+        onSelectAgent={() => {}} 
+        isLoadingAgents={false}
+        onRefreshAgents={() => {}}
+        setChatStarted={() => {}}
+        setMessages={() => {}}
+        setSessionId={() => {}}
+        initiateNewChat={async () => true}
+      />
     </div>
   )
 }
