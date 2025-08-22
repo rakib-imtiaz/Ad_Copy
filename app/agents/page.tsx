@@ -1,11 +1,10 @@
 "use client"
 
 import { AgentManager } from "@/components/agent-manager"
-import { sampleAgents } from "@/lib/sample-data"
 
 export default function AgentsPage() {
-  // Enhanced sample data
-  const mockAgents = sampleAgents
+  // Empty agents array - will be populated from API
+  const mockAgents: any[] = []
 
   const handleSelectAgent = (agentId: string) => {
     console.log("Selected agent:", agentId)

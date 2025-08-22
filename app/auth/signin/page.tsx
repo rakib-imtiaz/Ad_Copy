@@ -20,7 +20,7 @@ import { Button } from "@/components/ui/button";
 import { AuroraBackground } from "@/components/ui/aurora-background";
 
 export default function SignInPage() {
-  const { login, isAuthenticated } = useAuth();
+  const { login, isAuthenticated, loading } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -28,12 +28,54 @@ export default function SignInPage() {
   const [debugInfo, setDebugInfo] = useState("");
   const router = useRouter();
 
-  // Redirect if already authenticated
+  // Debug authentication state and check for error parameters
   useEffect(() => {
-    if (isAuthenticated) {
-      router.push("/dashboard");
+    console.log('🔐 SignIn page - isAuthenticated:', isAuthenticated, 'loading:', loading);
+    const token = authService.getAuthToken();
+    console.log('🔐 SignIn page - token exists:', !!token);
+    if (token) {
+      console.log('🔐 SignIn page - token preview:', token.substring(0, 50) + '...');
     }
-  }, [isAuthenticated, router]);
+    
+    // Check for error parameter in URL
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      const errorParam = params.get('error');
+      
+      if (errorParam === 'invalid_token') {
+        console.log('🔐 SignIn page - invalid_token error parameter detected');
+        setError('Your session has expired. Please sign in again.');
+        
+        // Clear any potentially invalid auth state
+        authService.clearTokens();
+        
+        // Remove the error parameter from URL
+        window.history.replaceState({}, document.title, window.location.pathname);
+      }
+    }
+  }, [isAuthenticated, loading]);
+
+  // Redirect if already authenticated, but only after explicit login
+  useEffect(() => {
+    if (isAuthenticated && !loading) {
+      // Double-check that we have a valid token before redirecting
+      const token = authService.getAuthToken();
+      const explicitLogin = sessionStorage.getItem('explicit_login');
+      
+      // Only redirect if we have a valid token AND user explicitly logged in during this session
+      if (token && authService.isAuthenticated() && explicitLogin === 'true') {
+        console.log('🔐 SignIn page - Redirecting to dashboard because user explicitly authenticated with valid token');
+        router.push("/dashboard");
+      } else {
+        console.log('🔐 SignIn page - User appears authenticated but either token is invalid or not from explicit login');
+        // Clear any potentially invalid authentication state
+        if (!explicitLogin) {
+          console.log('🔐 SignIn page - No explicit login detected, clearing tokens');
+          authService.clearTokens();
+        }
+      }
+    }
+  }, [isAuthenticated, loading, router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -42,14 +84,25 @@ export default function SignInPage() {
     setIsLoading(true);
     
     try {
+      console.log('🔐 Starting sign in process...');
       // Use auth context for sign in
       const success = await login(email, password);
       
       if (success) {
-        // Successful sign in - redirect to dashboard
-        console.log('Sign in successful');
-        router.push("/dashboard");
+        // Mark this as an explicit user login
+        sessionStorage.setItem('explicit_login', 'true');
+        
+        // Successful sign in - show success message and redirect
+        console.log('✅ Sign in successful - webhook responded with success');
+        setError(""); // Clear any previous errors
+        setDebugInfo("✅ Authentication successful! Redirecting to dashboard...");
+        
+        // Wait a moment to show the success message, then redirect
+        setTimeout(() => {
+          router.push("/dashboard");
+        }, 1500);
       } else {
+        console.log('❌ Sign in failed - webhook did not return success');
         setError('Invalid email or password. Please check your credentials and try again.');
       }
       
@@ -128,8 +181,22 @@ export default function SignInPage() {
                   </motion.div>
                 )}
 
+                {/* Success Display */}
+                {debugInfo && debugInfo.includes('✅') && (
+                  <motion.div 
+                    className="p-3 text-sm bg-green-500/10 border border-green-500/20 rounded-lg text-green-600 mb-4"
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ duration: 0.3 }}
+                  >
+                    <div className="flex flex-col space-y-2">
+                      <span>{debugInfo}</span>
+                    </div>
+                  </motion.div>
+                )}
+
                 {/* Debug Information */}
-                {debugInfo && (
+                {debugInfo && !debugInfo.includes('✅') && (
                   <motion.div 
                     className="p-3 text-xs bg-blue-50 border border-blue-200 rounded-lg text-blue-700 mb-4 max-h-32 overflow-y-auto"
                     initial={{ opacity: 0, scale: 0.95 }}
@@ -208,17 +275,85 @@ export default function SignInPage() {
                   </Link>
                 </motion.div>
 
-                {/* Development Mode Info */}
-                {process.env.NEXT_PUBLIC_USE_MOCK_API === 'true' && (
-                  <motion.div 
-                    className="text-xs text-center bg-yellow-50 border border-yellow-200 rounded-lg p-2 mt-4"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ duration: 0.3, delay: 1.0 }}
+                {/* Debug: Current State */}
+                <motion.div 
+                  className="text-center space-y-2"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ duration: 0.3, delay: 0.9 }}
+                >
+                  <div className="text-xs text-gray-500 p-2 bg-gray-100 rounded">
+                    <div>Auth State: {isAuthenticated ? 'Authenticated' : 'Not Authenticated'}</div>
+                    <div>Loading: {loading ? 'Yes' : 'No'}</div>
+                    <div>Token: {authService.getAuthToken() ? 'Exists' : 'None'}</div>
+                  </div>
+                </motion.div>
+
+                {/* Debug: Clear Cache Button */}
+                <motion.div 
+                  className="text-center space-y-2"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ duration: 0.3, delay: 1.0 }}
+                >
+                  <button
+                    onClick={() => {
+                      console.log('🔍 === CURRENT STORAGE STATE ===');
+                      console.log('localStorage.auth_token:', localStorage.getItem('auth_token'));
+                      console.log('localStorage.refresh_token:', localStorage.getItem('refresh_token'));
+                      console.log('authService.getAuthToken():', authService.getAuthToken());
+                      console.log('authService.isAuthenticated():', authService.isAuthenticated());
+                      console.log('=== END STORAGE STATE ===');
+                    }}
+                    className="text-xs text-blue-600 hover:text-blue-800 underline transition-colors block"
                   >
-                    <strong>Development Mode:</strong> Use test@example.com / password123
-                  </motion.div>
-                )}
+                    Check Current Storage State
+                  </button>
+                  <button
+                    onClick={() => {
+                      console.log('🧹 Clearing all tokens and cache...');
+                      
+                      // Clear auth service tokens
+                      authService.clearTokens();
+                      
+                      // Clear localStorage completely
+                      if (typeof window !== 'undefined') {
+                        localStorage.removeItem('auth_token');
+                        localStorage.removeItem('refresh_token');
+                        localStorage.removeItem('chat_session_id');
+                        localStorage.removeItem('chat_started');
+                        localStorage.removeItem('chat_messages');
+                        console.log('🧹 localStorage cleared');
+                      }
+                      
+                      // Clear sessionStorage
+                      if (typeof window !== 'undefined') {
+                        sessionStorage.removeItem('explicit_login');
+                        sessionStorage.clear();
+                        console.log('🧹 sessionStorage cleared (including explicit_login flag)');
+                      }
+                      
+                      console.log('🧹 Reloading page...');
+                      window.location.reload();
+                    }}
+                    className="text-xs text-red-600 hover:text-red-800 underline transition-colors"
+                  >
+                    Clear All Cache & Reload
+                  </button>
+                  
+                  <button
+                    onClick={() => {
+                      console.log('🔧 Force loading to false...');
+                      // Force reload to reset auth state
+                      window.location.reload();
+                    }}
+                    className="text-xs text-blue-600 hover:text-blue-800 underline transition-colors"
+                  >
+                    Force Reset Auth State
+                  </button>
+                </motion.div>
+
+
               </CardFooter>
             </Card>
           </motion.div>

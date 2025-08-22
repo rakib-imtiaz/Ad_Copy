@@ -17,7 +17,7 @@ import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
 import { Separator } from "@/components/ui/separator"
 import { AnimatedText, FadeInText, SlideInText, WordByWordText } from "@/components/ui/animated-text"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
-import { sampleAgents, sampleConversations } from "@/lib/sample-data"
+
 import { authService } from "@/lib/auth-service"
 import { ChatInterface } from "@/components/chat-interface"
 import { useAuth } from "@/lib/auth-context"
@@ -62,20 +62,10 @@ function MarkdownContent({ content }: { content: string }) {
 }
 
 // Initial ChatGPT-like Interface
-function InitialInterface({ agents, selectedAgent, onSelectAgent, onSendMessage, onRefreshAgents, isLoadingAgents }: any) {
-  const [message, setMessage] = React.useState("")
-
-  const handleSend = () => {
-    if (message.trim() && onSendMessage) {
-      onSendMessage(message.trim())
-      setMessage("")
-    }
-  }
-
-  const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault()
-      handleSend()
+function InitialInterface({ agents, selectedAgent, onSelectAgent, onStartChatting, onRefreshAgents, isLoadingAgents }: any) {
+  const handleStartChatting = () => {
+    if (selectedAgent && onStartChatting) {
+      onStartChatting()
     }
   }
 
@@ -144,31 +134,22 @@ function InitialInterface({ agents, selectedAgent, onSelectAgent, onSendMessage,
           />
         </motion.div>
 
-        {/* Input Area */}
+        {/* Start Chatting Button */}
         <motion.div 
           className="mb-6"
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.3 }}
         >
-          <div className="flex items-center space-x-2 p-4 border border-[#EEEEEE] rounded-2xl bg-white shadow-sm hover:shadow-md transition-shadow">
-            <Input
-              value={message}
-              onChange={(e) => setMessage(e.target.value)}
-              onKeyPress={handleKeyPress}
-              placeholder={selectedAgent ? `Ask ${selectedAgent} to create ad copy...` : "Select an agent to start chatting..."}
-              disabled={!selectedAgent}
-              className="flex-1 border-0 text-lg placeholder:text-[#929AAB] focus:ring-0 focus:outline-none bg-transparent"
-            />
-            <Button
-              onClick={handleSend}
-              disabled={!message.trim() || !selectedAgent}
-              size="sm"
-              className="bg-[#1ABC9C] hover:bg-[#1ABC9C]/90 text-black px-4 py-2 rounded-xl"
-            >
-              <Send className="h-4 w-4" />
-            </Button>
-          </div>
+          <Button
+            onClick={handleStartChatting}
+            disabled={!selectedAgent}
+            size="lg"
+            className="w-full bg-[#1ABC9C] hover:bg-[#1ABC9C]/90 text-black px-8 py-4 rounded-2xl text-lg font-semibold shadow-lg hover:shadow-xl transition-all duration-200"
+          >
+            <MessageSquare className="h-5 w-5 mr-2" />
+            Start Chatting with {selectedAgent || 'Selected Agent'}
+          </Button>
         </motion.div>
 
         {/* Quick Prompts */}
@@ -181,7 +162,12 @@ function InitialInterface({ agents, selectedAgent, onSelectAgent, onSendMessage,
           {quickPrompts.map((prompt, index) => (
             <motion.button
               key={index}
-              onClick={() => setMessage(prompt)}
+              onClick={() => {
+                // Store the prompt for when chat starts
+                if (typeof window !== 'undefined') {
+                  localStorage.setItem('pending_prompt', prompt)
+                }
+              }}
               className="p-4 text-left border border-[#EEEEEE] rounded-xl hover:border-[#1ABC9C] hover:bg-[#1ABC9C]/5 transition-all duration-200 group"
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
@@ -331,11 +317,11 @@ function AgentSelector({ agents, selectedAgent, onSelectAgent, onOpenChange, isL
 }
 
 export default function Dashboard() {
-  const { user, isAuthenticated, logout } = useAuth();
+  const { user, isAuthenticated, loading, logout } = useAuth();
   const [leftPanelOpen, setLeftPanelOpen] = React.useState(true)
   const [rightPanelOpen, setRightPanelOpen] = React.useState(true)
   const [activeTab, setActiveTab] = React.useState<'files' | 'links' | 'transcripts'>('files')
-  const [selectedAgent, setSelectedAgent] = React.useState("CopyMaster Pro")
+  const [selectedAgent, setSelectedAgent] = React.useState("")
   const [agents, setAgents] = React.useState<any[]>([])
   const [isLoadingAgents, setIsLoadingAgents] = React.useState(false)
   const [chatStarted, setChatStarted] = React.useState(false)
@@ -411,7 +397,7 @@ export default function Dashboard() {
       console.log('🔄 Agent changed from', previousAgent, 'to:', selectedAgent)
       
       // Only clear chat state when agent changes (don't create new session yet)
-      // Session will be created when user sends their first message
+      // Session will be created when user clicks "Start Chatting"
       setChatStarted(false)
       setMessages([])
       setSessionId('')
@@ -423,7 +409,7 @@ export default function Dashboard() {
         localStorage.removeItem('chat_messages')
       }
       
-      console.log('💡 Chat state cleared. New session will be created when user sends first message.')
+      console.log('💡 Chat state cleared. New session will be created when user starts chatting.')
     }
     
     // Update previous agent
@@ -438,6 +424,20 @@ export default function Dashboard() {
       
       if (!accessToken) {
         console.error("No access token available")
+        // Show a fallback agent if no token is available
+        setAgents([{
+          id: 'default-agent',
+          name: 'Default Agent',
+          description: 'Default AI agent for ad copy generation',
+          icon: '🤖'
+        }])
+        setSelectedAgent('Default Agent')
+        
+        // Redirect to login page if we've lost our token
+        setTimeout(() => {
+          console.log('No valid token found, redirecting to login')
+          window.location.href = '/auth/signin?error=invalid_token'
+        }, 100)
         return
       }
 
@@ -585,7 +585,34 @@ export default function Dashboard() {
       localStorage.removeItem('chat_messages')
     }
     
-    console.log('💡 Chat state cleared. New session will be created when user sends first message.')
+    console.log('💡 Chat state cleared. User can now select agent and start chatting.')
+  }
+
+  // Handle starting chat from initial interface
+  const handleStartChatting = async () => {
+    console.log('🚀 Starting chat with agent:', selectedAgent)
+    
+    // Create new session for the selected agent
+    const success = await initiateNewChat(true)
+    
+    if (success) {
+      setChatStarted(true)
+      console.log('✅ Chat started successfully')
+      
+      // Check if there's a pending prompt from quick prompts
+      if (typeof window !== 'undefined') {
+        const pendingPrompt = localStorage.getItem('pending_prompt')
+        if (pendingPrompt) {
+          localStorage.removeItem('pending_prompt')
+          // Send the pending prompt
+          setTimeout(() => {
+            handleSendMessage(pendingPrompt)
+          }, 500)
+        }
+      }
+    } else {
+      console.error('❌ Failed to start chat')
+    }
   }
 
   // Start fresh dashboard function (clear everything)
@@ -607,7 +634,7 @@ export default function Dashboard() {
     window.location.href = '/dashboard?fresh=true'
   }
 
-  // Empty conversations array - no mock data
+  // Empty conversations array
   const conversations: any[] = []
 
   const [messages, setMessages] = React.useState<Array<{
@@ -632,10 +659,23 @@ export default function Dashboard() {
   React.useEffect(() => {
     if (isAuthenticated && currentUser) {
       console.log('Dashboard mounted - fetching agents and media library...')
-      fetchAgents()
-      fetchMediaLibrary()
+      
+      // Check for access token before fetching
+      const accessToken = authService.getAuthToken()
+      if (!accessToken) {
+        console.log('No access token available - redirecting to login page')
+        // If we don't have an access token, clear authentication state and redirect to login
+        logout()
+        return
+      }
+      
+      // Set a small delay to ensure token is properly loaded from storage
+      setTimeout(() => {
+        fetchAgents()
+        fetchMediaLibrary()
+      }, 300)
     }
-  }, [isAuthenticated, currentUser])
+  }, [isAuthenticated, currentUser, logout])
 
   // Only restore existing chat session, don't create new ones automatically
   React.useEffect(() => {
@@ -972,6 +1012,7 @@ export default function Dashboard() {
       
       if (!accessToken) {
         console.error("No access token available")
+        setMediaItems([]) // Set empty media items
         return
       }
 
@@ -1206,16 +1247,51 @@ export default function Dashboard() {
     }
   }
 
+  // Show loading state while authentication is being checked
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 via-white to-blue-50/20">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
+        <span className="ml-3 text-gray-600">Loading...</span>
+      </div>
+    );
+  }
+
+  // Show error if not authenticated
+  if (!isAuthenticated) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 via-white to-blue-50/20">
+        <div className="text-center">
+          <h2 className="text-xl font-semibold text-gray-800 mb-2">Authentication Required</h2>
+          <p className="text-gray-600 mb-4">Please sign in to access the dashboard.</p>
+          <button 
+            onClick={() => window.location.href = '/auth/signin'}
+            className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+          >
+            Go to Sign In
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // Additional authentication check - if somehow we get here without being authenticated, redirect
+  React.useEffect(() => {
+    if (!loading && !isAuthenticated) {
+      console.log('🔒 Dashboard - User not authenticated, redirecting to sign-in')
+      window.location.href = '/auth/signin'
+    }
+  }, [isAuthenticated, loading])
+
   return (
-    <ProtectedRoute>
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50/20 text-slate-800 font-sans">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50/20 text-slate-800 font-sans">
       {!chatStarted ? (
         // Initial ChatGPT-like interface
         <InitialInterface 
           agents={agents}
           selectedAgent={selectedAgent}
           onSelectAgent={setSelectedAgent}
-          onSendMessage={handleSendMessage}
+          onStartChatting={handleStartChatting}
           onRefreshAgents={refreshAgents}
           isLoadingAgents={isLoadingAgents}
         />
@@ -1388,6 +1464,8 @@ export default function Dashboard() {
           setMessages={setMessages}
           setSessionId={setSessionId}
           initiateNewChat={initiateNewChat}
+          messages={messages}
+          chatStarted={chatStarted}
         />
           </div>
         </motion.div>
@@ -1479,12 +1557,11 @@ export default function Dashboard() {
         </motion.div>
       )}
     </div>
-    </ProtectedRoute>
   )
 }
 
 // Left Sidebar Component
-function LeftSidebar({ agents, conversations, selectedAgent, onSelectAgent, isLoadingAgents, onRefreshAgents, setChatStarted, setMessages, setSessionId, initiateNewChat }: any) {
+function LeftSidebar({ agents, conversations, selectedAgent, onSelectAgent, isLoadingAgents, onRefreshAgents, setChatStarted, setMessages, setSessionId, initiateNewChat, messages, chatStarted }: any) {
   const [isAgentSelectorOpen, setIsAgentSelectorOpen] = React.useState(false)
 
   return (
@@ -1524,7 +1601,7 @@ function LeftSidebar({ agents, conversations, selectedAgent, onSelectAgent, isLo
                 <TooltipTrigger asChild>
                   <Button 
                     onClick={() => {
-                      console.log('🔄 Starting new chat (sidebar) - clearing session ID')
+                      console.log('🔄 Starting new chat (sidebar) - clearing chat state')
                       setChatStarted(false)
                       setMessages([])
                       setSessionId('') // Clear session ID for new chat
@@ -1536,7 +1613,7 @@ function LeftSidebar({ agents, conversations, selectedAgent, onSelectAgent, isLo
                         localStorage.removeItem('chat_messages')
                       }
                       
-                      console.log('💡 Chat state cleared. New session will be created when user sends first message.')
+                      console.log('💡 Chat state cleared. User can now select agent and start chatting.')
                     }}
                     variant="ghost" 
                     size="icon" 
@@ -1554,7 +1631,37 @@ function LeftSidebar({ agents, conversations, selectedAgent, onSelectAgent, isLo
           </div>
         <div className={`flex-1 p-5 pt-3 ${isAgentSelectorOpen ? 'overflow-hidden' : 'overflow-y-auto'}`}>
           <div className="space-y-2">
-          {conversations.length > 0 ? (
+          {chatStarted && messages.length > 0 ? (
+            // Show current chat messages
+            <div className="space-y-3">
+              <div className="text-xs font-medium text-slate-500 uppercase tracking-wider mb-3">
+                Current Chat
+              </div>
+              {messages.slice(-5).map((msg: any, index: number) => (
+                <motion.div
+                  key={msg.id || index}
+                  className="p-3 rounded-lg bg-white/60 border border-slate-200/40 hover:bg-white/80 transition-colors"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.1 }}
+                >
+                  <div className="flex items-start space-x-2">
+                    <div className={`w-2 h-2 rounded-full mt-2 flex-shrink-0 ${
+                      msg.role === 'user' ? 'bg-blue-400' : 'bg-[#1ABC9C]'
+                    }`} />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs font-medium text-slate-700 mb-1">
+                        {msg.role === 'user' ? 'You' : selectedAgent}
+                      </p>
+                      <p className="text-xs text-slate-600 line-clamp-2 leading-relaxed">
+                        {msg.content}
+                      </p>
+                    </div>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          ) : conversations.length > 0 ? (
             conversations.map((conv: any) => (
               <motion.div
                 key={conv.id}
@@ -1628,6 +1735,8 @@ function MobileSidebar({ agents, conversations }: any) {
         setMessages={() => {}}
         setSessionId={() => {}}
         initiateNewChat={async () => true}
+        messages={[]}
+        chatStarted={false}
       />
     </div>
   )

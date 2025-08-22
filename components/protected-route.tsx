@@ -13,8 +13,13 @@ export function ProtectedRoute({ children, fallback }: ProtectedRouteProps) {
   const { isAuthenticated, loading } = useAuth()
   const router = useRouter()
 
+  console.log('🔒 ProtectedRoute rendered - loading:', loading, 'isAuthenticated:', isAuthenticated)
+
   useEffect(() => {
+    console.log('🔒 ProtectedRoute useEffect - loading:', loading, 'isAuthenticated:', isAuthenticated)
+    
     if (!loading && !isAuthenticated) {
+      console.log('🔒 Redirecting to signin page')
       router.push('/auth/signin')
     }
   }, [isAuthenticated, loading, router])

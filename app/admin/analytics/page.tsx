@@ -3,27 +3,11 @@
 import { motion } from 'framer-motion';
 import { BarChart2, Download, Calendar, Users, Activity, Zap } from 'lucide-react';
 
-const usageByAgent = [
-  { name: 'CopyMaster Pro', usage: 742, percentage: 85 },
-  { name: 'Social Media Specialist', usage: 226, percentage: 26 },
-  { name: 'Email Marketing Expert', usage: 486, percentage: 56 },
-  { name: 'Google Ads Specialist', usage: 961, percentage: 100 },
-  { name: 'Brand Voice Architect', usage: 761, percentage: 88 },
-];
+const usageByAgent: any[] = [];
 
-const userActivity = [
-  { metric: 'Active Users', value: '892', icon: Users },
-  { metric: 'New Users', value: '45', icon: Users },
-  { metric: 'Conversations', value: '1,247', icon: Activity },
-  { metric: 'Avg. Session', value: '12m 34s', icon: Zap },
-];
+const userActivity: any[] = [];
 
-const performance = [
-  { metric: 'Response Time', value: '2.3s', status: 'good' },
-  { metric: 'Success Rate', value: '99.2%', status: 'good' },
-  { metric: 'Error Rate', value: '0.8%', status: 'warning' },
-  { metric: 'Uptime', value: '99.9%', status: 'good' },
-];
+const performance: any[] = [];
 
 const AnalyticsPage = () => {
   return (

@@ -397,17 +397,7 @@ export default function ForgotPasswordPage() {
                   </Link>
                 </motion.div>
 
-                {/* Development Mode Info */}
-                {process.env.NEXT_PUBLIC_USE_MOCK_API === 'true' && step === "verify" && (
-                  <motion.div 
-                    className="text-xs text-center bg-yellow-50 border border-yellow-200 rounded-lg p-2 mt-4"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ duration: 0.3, delay: 1.0 }}
-                  >
-                    <strong>Development Mode:</strong> Use code "123456" to verify
-                  </motion.div>
-                )}
+
               </CardFooter>
             </Card>
           </motion.div>

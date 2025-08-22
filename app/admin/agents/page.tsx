@@ -3,63 +3,7 @@
 import { motion } from 'framer-motion';
 import { Bot, PlusCircle, MoreHorizontal, Edit, Eye, Star, Globe } from 'lucide-react';
 
-const agents = [
-  {
-    id: '1',
-    name: 'CopyMaster Pro',
-    description: 'Expert in creating high-converting ad copy for all platforms',
-    version: '1',
-    usage: '26',
-    status: 'active',
-    scope: 'global',
-    created: '1/1/2024',
-    lastModified: '2h ago'
-  },
-  {
-    id: '2',
-    name: 'Social Media Specialist',
-    description: 'Focused on engaging social media content and captions',
-    version: '1',
-    usage: '10',
-    status: 'active',
-    scope: 'global',
-    created: '1/1/2024',
-    lastModified: '1d ago'
-  },
-  {
-    id: '3',
-    name: 'Email Marketing Expert',
-    description: 'Crafting compelling email subject lines and body copy',
-    version: '1',
-    usage: '32',
-    status: 'active',
-    scope: 'global',
-    created: '1/1/2024',
-    lastModified: '3h ago'
-  },
-  {
-    id: '4',
-    name: 'Google Ads Specialist',
-    description: 'Optimized Google Ads copy for maximum ROI',
-    version: '1',
-    usage: '83',
-    status: 'active',
-    scope: 'global',
-    created: '1/1/2024',
-    lastModified: '5h ago'
-  },
-  {
-    id: '5',
-    name: 'Brand Voice Architect',
-    description: 'Develops consistent brand voice across all channels',
-    version: '1',
-    usage: '76',
-    status: 'active',
-    scope: 'global',
-    created: '1/1/2024',
-    lastModified: '1d ago'
-  }
-];
+const agents: any[] = [];
 
 const AgentsPage = () => {
   const container = {

@@ -46,7 +46,6 @@ interface VerificationResponse {
 
 class AuthService {
   private baseUrl: string;
-  private useMockApi: boolean;
   private apiEndpoints: {
     registration: string;
     login: string;
@@ -57,7 +56,6 @@ class AuthService {
 
   constructor() {
     this.baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || '/api';
-    this.useMockApi = process.env.NEXT_PUBLIC_USE_MOCK_API === 'true';
     
     // Define API endpoints to use
     // Use proxied API endpoints instead of directly accessing n8n webhooks
@@ -75,9 +73,6 @@ class AuthService {
    * Sign Up User
    */
   async signUp(userData: SignupData): Promise<AuthResponse> {
-    if (this.useMockApi) {
-      return this.mockSignUp(userData);
-    }
 
     try {
       // Use our API endpoint which forwards to n8n webhook
@@ -148,9 +143,6 @@ class AuthService {
    * Backend returns: JWT token to be stored
    */
   async signIn(credentials: LoginCredentials): Promise<AuthResponse> {
-    if (this.useMockApi) {
-      return this.mockSignIn(credentials);
-    }
 
     try {
       // Use our API endpoint which forwards to n8n webhook
@@ -193,17 +185,23 @@ class AuthService {
       
       // Store JWT token if successful
       if (data.success && data.data?.accessToken) {
+        console.log('🔐 Storing access token from successful login')
         this.storeAuthToken(data.data.accessToken);
         
         // The refresh token is in the cookies, handled by the browser
         // We don't need to manually extract it
+      } else if (data.success && data.data?.token) {
+        console.log('🔐 Storing token from successful login')
+        this.storeAuthToken(data.data.token);
+      } else {
+        console.log('🔐 No token found in successful login response')
       }
 
       return {
         success: true,
         data: {
           user: data.data.user,
-          token: data.data.accessToken
+          token: data.data.accessToken || data.data.token
         }
       };
     } catch (error: any) {
@@ -222,9 +220,6 @@ class AuthService {
    * Verify Email
    */
   async verifyEmail(email: string): Promise<VerificationResponse> {
-    if (this.useMockApi) {
-      return this.mockVerifyEmail(email);
-    }
 
     try {
       // We're not actually sending the code in this case, just checking existence
@@ -248,23 +243,7 @@ class AuthService {
    * Refresh Access Token
    */
   async refreshToken(refreshToken: string): Promise<AuthResponse> {
-    if (this.useMockApi) {
-      // Mock refresh token for testing
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
-      return {
-        success: true,
-        data: {
-          user: {
-            id: 'user_mock_123',
-            email: 'test@example.com',
-            name: 'Test User',
-            role: 'user'
-          },
-          token: this.generateMockJWT('test@example.com', 'Test User')
-        }
-      };
-    }
+
 
     try {
       // Get current access token to send with refresh request
@@ -337,18 +316,6 @@ class AuthService {
     agentId: string;
     userPrompt: string;
   }): Promise<any> {
-    if (this.useMockApi) {
-      // Mock chat response for testing
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      return {
-        success: true,
-        data: {
-          response: `Mock response to: "${chatData.userPrompt}"`,
-          timestamp: new Date().toISOString()
-        }
-      };
-    }
 
     try {
       const accessToken = this.getAuthToken();
@@ -428,27 +395,6 @@ class AuthService {
     console.log('=== AUTH SERVICE VERIFY CODE START ===');
     console.log('Email:', email);
     console.log('Code:', code);
-    console.log('Use Mock API:', this.useMockApi);
-    
-    if (this.useMockApi) {
-      console.log('Using mock verification...');
-      // Use the mock verification for testing
-      const mockVerification = await this.mockVerifyEmail(email);
-      
-      if (mockVerification.verification_code === code) {
-        console.log('Mock verification successful');
-        return this.mockSignIn({ email, password: 'verified' });
-      }
-      
-      console.log('Mock verification failed - invalid code');
-      return {
-        success: false,
-        error: {
-          code: 'INVALID_CODE',
-          message: 'Invalid verification code'
-        }
-      };
-    }
 
     try {
       console.log('Calling verification API endpoint:', this.apiEndpoints.verifyCode);
@@ -618,7 +564,8 @@ class AuthService {
   private _accessToken: string | null = null; // In-memory storage for access token
 
   /**
-   * Check if user is authenticated
+   * Check if user is authenticated with client-side validation
+   * Note: Full security also requires server-side validation via the AuthContext
    */
   isAuthenticated(): boolean {
     const token = this.getAuthToken();
@@ -627,22 +574,57 @@ class AuthService {
 
     // Basic JWT validation check
     try {
-      const payload = JSON.parse(atob(token.split('.')[1]));
+      // Check for valid JWT format (three parts separated by dots)
+      const tokenParts = token.split('.');
+      if (tokenParts.length !== 3) {
+        console.log('🔍 Invalid token format - not a valid JWT');
+        this.clearTokens();
+        return false;
+      }
+      
+      // Decode payload
+      const payload = JSON.parse(atob(tokenParts[1]));
       console.log('🔍 isAuthenticated check - JWT payload:', payload);
+      
+      // Required fields validation
+      if (!payload.email || !payload.role) {
+        console.log('🔍 Token missing required fields (email/role)');
+        this.clearTokens();
+        return false;
+      }
       
       // Check if token has expiration time
       if (payload.exp) {
         const currentTime = Date.now() / 1000;
         console.log('🔍 isAuthenticated check - exp:', payload.exp, 'current:', currentTime);
-        if (payload.exp <= currentTime) {
-          // Token has expired, clear it
-          console.log('🔍 Token expired, clearing tokens');
+        
+        // Validate expiration with buffer period (30 seconds) to avoid edge cases
+        if (payload.exp <= (currentTime + 30)) {
+          console.log('🔍 Token expired or about to expire, clearing tokens');
           this.clearTokens();
           return false;
         }
+      } else {
+        // No expiration time - this is suspicious
+        console.log('🔍 Token has no expiration - security concern');
+        // Clear token as it's a security concern
+        this.clearTokens();
+        return false;
       }
       
-      // Token is valid (either no expiration or not expired)
+      // Validate explicit login flag to ensure this isn't a stale/invalid login
+      const explicitLogin = typeof window !== 'undefined' ? 
+        sessionStorage.getItem('explicit_login') : null;
+        
+      if (!explicitLogin && typeof window !== 'undefined' && window.location.pathname.includes('/auth/')) {
+        // If we're on an auth page and there's no explicit login,
+        // we should clear the tokens for extra safety
+        console.log('🔍 No explicit login detected on auth page - clearing tokens');
+        this.clearTokens();
+        return false;
+      }
+      
+      // Token passed basic validation
       console.log('🔍 Token is valid');
       return true;
     } catch (error) {
@@ -684,102 +666,7 @@ class AuthService {
     }
   }
 
-  // ===================
-  // MOCK API METHODS
-  // ===================
 
-  private async mockSignUp(userData: SignupData): Promise<AuthResponse> {
-    // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 1000));
-
-    // Basic validation
-    if (!userData.email || !userData.password || !userData.fullName) {
-      return {
-        success: false,
-        error: {
-          code: 'VALIDATION_ERROR',
-          message: 'All fields are required'
-        }
-      };
-    }
-
-    return {
-      success: true,
-      data: {
-        user: {
-          id: `user_${Date.now()}`,
-          email: userData.email,
-          name: userData.fullName,
-          role: 'user'
-        },
-        token: this.generateMockJWT(userData.email, userData.fullName)
-      }
-    };
-  }
-
-  private async mockSignIn(credentials: LoginCredentials): Promise<AuthResponse> {
-    // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 800));
-
-    // Mock validation
-    if (credentials.email === 'test@example.com' && credentials.password === 'password123') {
-      const token = this.generateMockJWT(credentials.email, 'Test User');
-      this.storeAuthToken(token);
-      
-      return {
-        success: true,
-        data: {
-          user: {
-            id: 'user_mock_123',
-            email: credentials.email,
-            name: 'Test User',
-            role: 'user'
-          },
-          token
-        }
-      };
-    }
-
-    return {
-      success: false,
-      error: {
-        code: 'INVALID_CREDENTIALS',
-        message: 'Invalid email or password'
-      }
-    };
-  }
-
-  private async mockVerifyEmail(email: string): Promise<VerificationResponse> {
-    // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 500));
-
-    // Generate consistent verification code based on email
-    const emailHash = email.split('').reduce((a, b) => {
-      a = ((a << 5) - a) + b.charCodeAt(0);
-      return a & a;
-    }, 0);
-    const verificationCode = Math.abs(emailHash % 900000) + 100000;
-
-    return {
-      success: true,
-      verification_code: verificationCode.toString()
-    };
-  }
-
-  private generateMockJWT(email: string, name: string): string {
-    const header = btoa(JSON.stringify({ alg: 'HS256', typ: 'JWT' }));
-    const payload = btoa(JSON.stringify({
-      user_id: `user_${Date.now()}`,
-      email,
-      name,
-      role: 'user',
-      iat: Math.floor(Date.now() / 1000),
-      exp: Math.floor(Date.now() / 1000) + (24 * 60 * 60) // 24 hours
-    }));
-    const signature = btoa('mock_signature');
-    
-    return `${header}.${payload}.${signature}`;
-  }
 }
 
 // Export singleton instance

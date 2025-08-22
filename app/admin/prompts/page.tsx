@@ -3,19 +3,9 @@
 import { motion } from 'framer-motion';
 import { FileText, PlusCircle, Edit, Eye, Briefcase } from 'lucide-react';
 
-const agents = [
-  { id: '1', name: 'CopyMaster Pro', version: 'Version 1' },
-  { id: '2', name: 'Social Media Specialist', version: 'Version 1' },
-  { id: '3', name: 'Email Marketing Expert', version: 'Version 1' },
-  { id: '4', name: 'Google Ads Specialist', version: 'Version 1' },
-  { id: '5', name: 'Brand Voice Architect', version: 'Version 1' },
-];
+const agents: any[] = [];
 
-const versionHistory = [
-  { id: '1', version: 'Version 1.0', time: '2 hours ago', active: true },
-  { id: '2', version: 'Version 0.9', time: '1 day ago', active: false },
-  { id: '3', version: 'Version 0.8', time: '1 week ago', active: false },
-];
+const versionHistory: any[] = [];
 
 const PromptsPage = () => {
   return (

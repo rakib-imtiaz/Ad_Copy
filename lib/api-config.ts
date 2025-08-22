@@ -1,9 +1,9 @@
 // API Configuration for AdCopy
-// This file manages the API base URL and allows switching between mock and real endpoints
+// This file manages the API base URL for real endpoints
 
 export const API_CONFIG = {
   // Base URL for API calls
-  BASE_URL: process.env.NEXT_PUBLIC_API_BASE_URL || '/api/mock',
+  BASE_URL: process.env.NEXT_PUBLIC_API_BASE_URL || '/api',
   
   // API version
   VERSION: 'v1',
@@ -35,9 +35,9 @@ export function getApiUrl(endpoint: string): string {
   return `${baseUrl}/${cleanEndpoint}`
 }
 
-// Helper function to check if we're using mock API
+// Helper function to check if we're using mock API (deprecated)
 export function isMockApi(): boolean {
-  return API_CONFIG.BASE_URL.includes('/api/mock')
+  return false // No longer using mock API
 }
 
 // Helper function to get auth headers
