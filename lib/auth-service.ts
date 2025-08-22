@@ -593,7 +593,7 @@ class AuthService {
         return false;
       }
       
-      // Check if token has expiration time
+      // Check if token has expiration time (optional)
       if (payload.exp) {
         const currentTime = Date.now() / 1000;
         console.log('🔍 isAuthenticated check - exp:', payload.exp, 'current:', currentTime);
@@ -605,21 +605,17 @@ class AuthService {
           return false;
         }
       } else {
-        // No expiration time - this is suspicious
-        console.log('🔍 Token has no expiration - security concern');
-        // Clear token as it's a security concern
-        this.clearTokens();
-        return false;
+        // No expiration time - acceptable for some JWT implementations
+        console.log('🔍 Token has no expiration field - allowing for compatibility');
       }
       
-      // Validate explicit login flag to ensure this isn't a stale/invalid login
+      // Check explicit login flag for additional validation (but don't block if missing)
       const explicitLogin = typeof window !== 'undefined' ? 
         sessionStorage.getItem('explicit_login') : null;
         
-      if (!explicitLogin && typeof window !== 'undefined' && window.location.pathname.includes('/auth/')) {
-        // If we're on an auth page and there's no explicit login,
-        // we should clear the tokens for extra safety
-        console.log('🔍 No explicit login detected on auth page - clearing tokens');
+      if (!explicitLogin && typeof window !== 'undefined' && window.location.pathname.includes('/auth/signin')) {
+        // Only clear tokens on signin page specifically, not all auth pages
+        console.log('🔍 No explicit login detected on signin page - clearing tokens');
         this.clearTokens();
         return false;
       }

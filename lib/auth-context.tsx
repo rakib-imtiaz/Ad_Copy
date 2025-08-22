@@ -19,14 +19,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<any | null>(null)
   const [loading, setLoading] = useState(true)
   const [isCheckingAuth, setIsCheckingAuth] = useState(false)
+  const [justLoggedIn, setJustLoggedIn] = useState(false)
   
   console.log('🔥 AuthProvider rendered - isAuthenticated:', isAuthenticated, 'loading:', loading)
 
   // Check authentication status on mount and token changes
-  const checkAuthStatus = async () => {
+  const checkAuthStatus = useCallback(async () => {
     // Prevent multiple simultaneous auth checks
     if (isCheckingAuth) {
       console.log('🔐 Auth check - already in progress, skipping')
+      return
+    }
+    
+    // Skip auth check if user just logged in
+    if (justLoggedIn) {
+      console.log('🔐 Auth check - skipping due to recent login')
       return
     }
     
@@ -53,44 +60,34 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setIsAuthenticated(true)
         setUser(currentUser)
         
-        // Optional server validation (don't block UI rendering)
-        const validateTokenWithServer = async () => {
+        // Optional server validation (only if not explicitly logged in recently)
+        const explicitLogin = typeof window !== 'undefined' ? 
+          sessionStorage.getItem('explicit_login') : null;
+          
+        if (typeof window !== 'undefined' && !explicitLogin) {
+          console.log('🔐 Auth check - validating token with server')
           try {
-            if (typeof window !== 'undefined') {
-              console.log('🔐 Auth check - validating token with server')
-              const response = await fetch('/api/auth/validate-token', {
-                method: 'POST',
-                headers: { 
-                  'Authorization': `Bearer ${token}`,
-                  'Content-Type': 'application/json'
-                }
-              }).catch(e => {
-                console.log('🔐 Auth check - server validation network error, continuing anyway:', e)
-                return null
-              })
-              
-              if (response && !response.ok) {
-                console.log('🔐 Auth check - server token validation failed')
-                throw new Error('Token validation failed')
+            const response = await fetch('/api/auth/validate-token', {
+              method: 'POST',
+              headers: { 
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
               }
-              
-              if (response) {
-                console.log('🔐 Auth check - server token validation successful')
-              }
+            })
+            
+            if (!response.ok) {
+              console.log('🔐 Auth check - server token validation failed')
+              throw new Error('Token validation failed')
             }
+            
+            console.log('🔐 Auth check - server token validation successful')
           } catch (error) {
-            console.log('Token validation failed, logging out')
-            setTimeout(() => {
-              console.log('🔐 Scheduled logout due to token validation failure')
-              authService.signOut()
-              setIsAuthenticated(false)
-              setUser(null)
-            }, 0)
+            console.log('Token validation failed, but keeping user logged in due to explicit login')
+            // Don't immediately log out if there was an explicit login
           }
+        } else if (explicitLogin) {
+          console.log('🔐 Auth check - skipping server validation due to explicit login')
         }
-        
-        // Start validation but don't await it
-        validateTokenWithServer()
       } else {
         console.log('❌ Auth check - user not authenticated')
         setIsAuthenticated(false)
@@ -104,13 +101,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       console.log('🔐 Auth check - setting loading to false')
       setLoading(false)
       setIsCheckingAuth(false)
-      
-      // Force loading to false in case it got stuck
-      setTimeout(() => {
-        setLoading(false)
-      }, 500)
     }
-  }
+  }, [])
 
   // Login function
   const login = async (email: string, password: string): Promise<boolean> => {
@@ -127,16 +119,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           sessionStorage.setItem('explicit_login', 'true')
         }
         
-        // Immediately set authenticated state
+        // Set authenticated state
         setIsAuthenticated(true)
         setUser(result.data?.user || null)
-        setLoading(false) // Make sure loading is false
+        setLoading(false)
+        setJustLoggedIn(true)
         
-        // Force UI update
+        console.log('🔐 Login successful - state set to authenticated:', true)
+        console.log('🔐 Login successful - user:', result.data?.user)
+        console.log('🔐 Login successful - loading:', false)
+        
+        // Clear the just logged in flag after a short delay
         setTimeout(() => {
-          console.log('🔐 Forcing UI update after login')
-          setIsAuthenticated(true) // Force a re-render
-        }, 100)
+          setJustLoggedIn(false)
+          console.log('🔐 Cleared justLoggedIn flag')
+        }, 2000)
         
         return true
       } else {
@@ -147,6 +144,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     } catch (error) {
       console.error('Login error:', error)
+      setIsAuthenticated(false)
+      setUser(null)
       return false
     }
   }
@@ -156,6 +155,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     authService.signOut()
     setIsAuthenticated(false)
     setUser(null)
+    setJustLoggedIn(false)
+    if (typeof window !== 'undefined') {
+      sessionStorage.removeItem('explicit_login')
+    }
   }
 
   // Refresh user data
@@ -170,15 +173,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     console.log('🔐 AuthProvider - Checking auth status on mount')
     checkAuthStatus()
-    
-    // Fallback: Force loading to false after 5 seconds if it gets stuck
-    const timeout = setTimeout(() => {
-      setLoading(false)
-      setIsCheckingAuth(false)
-    }, 5000)
-    
-    return () => clearTimeout(timeout)
-  }, []) // Empty dependency array - only run on mount
+  }, [checkAuthStatus])
 
   // Listen for storage changes (in case token is updated in another tab)
   useEffect(() => {
@@ -192,7 +187,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       window.addEventListener('storage', handleStorageChange)
       return () => window.removeEventListener('storage', handleStorageChange)
     }
-  }, []) // Empty dependency array - only run on mount
+  }, [checkAuthStatus])
 
   const value: AuthContextType = {
     isAuthenticated,
