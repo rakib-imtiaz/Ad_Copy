@@ -328,6 +328,19 @@ export default function Dashboard() {
   const [hasInitializedChat, setHasInitializedChat] = React.useState(false)
   const [previousAgent, setPreviousAgent] = React.useState<string | null>(null)
   const [isInitialLoad, setIsInitialLoad] = React.useState(true)
+  const [messages, setMessages] = React.useState<Array<{
+    id: string
+    role: 'user' | 'assistant'
+    content: string
+    timestamp: string
+    animated?: boolean
+  }>>([])
+  const [isLoading, setIsLoading] = React.useState(false)
+  const [sessionId, setSessionId] = React.useState<string>('')
+  const [showCreditPopup, setShowCreditPopup] = React.useState(false)
+  const [mediaItems, setMediaItems] = React.useState<any[]>([])
+  const [isRefreshing, setIsRefreshing] = React.useState(false)
+  const [isAgentSelectorOpen, setIsAgentSelectorOpen] = React.useState(false)
 
   // Load session data from localStorage on component mount
   React.useEffect(() => {
@@ -636,21 +649,6 @@ export default function Dashboard() {
 
   // Empty conversations array
   const conversations: any[] = []
-
-  const [messages, setMessages] = React.useState<Array<{
-    id: string
-    role: 'user' | 'assistant'
-    content: string
-    timestamp: string
-    animated?: boolean
-  }>>([])
-
-
-  const [isLoading, setIsLoading] = React.useState(false)
-  const [sessionId, setSessionId] = React.useState<string>('')
-  const [showCreditPopup, setShowCreditPopup] = React.useState(false)
-  const [mediaItems, setMediaItems] = React.useState<any[]>([])
-  const [isRefreshing, setIsRefreshing] = React.useState(false)
 
   // Get current user info from auth context
   const currentUser = user
@@ -1016,7 +1014,10 @@ export default function Dashboard() {
         return
       }
 
-      const response = await fetch('/api/mock/media/list', {
+      console.log('🔍 Fetching media library from: /api/media/list (proxied to n8n)')
+      console.log('🔍 Access token:', accessToken ? 'Present' : 'Missing')
+
+      const response = await fetch('/api/media/list', {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${accessToken}`,
@@ -1024,6 +1025,8 @@ export default function Dashboard() {
         },
       })
 
+      console.log('🔍 Response status:', response.status, response.statusText)
+      
       if (!response.ok) {
         if (response.status === 401) {
           console.error("Unauthorized - token may be expired")
@@ -1034,7 +1037,10 @@ export default function Dashboard() {
           setMediaItems([])
           return
         }
-        throw new Error('Failed to fetch media library')
+        console.error('🔍 Response not OK:', response.status, response.statusText)
+        const errorText = await response.text().catch(() => 'Unable to read error response')
+        console.error('🔍 Error response body:', errorText)
+        throw new Error(`Failed to fetch media library: ${response.status} ${response.statusText}`)
       }
 
       const data = await response.json()
@@ -1064,7 +1070,14 @@ export default function Dashboard() {
       console.log('Transformed media items:', transformedItems)
       setMediaItems(transformedItems)
     } catch (error) {
-      console.error('Error fetching media library:', error)
+      console.error('❌ Error fetching media library:', error)
+      console.error('❌ Error details:', {
+        message: error instanceof Error ? error.message : 'Unknown error',
+        stack: error instanceof Error ? error.stack : 'No stack trace',
+        name: error instanceof Error ? error.name : 'Unknown'
+      })
+      // Set empty array on error to prevent UI issues
+      setMediaItems([])
     } finally {
       setIsRefreshing(false)
     }
@@ -1101,7 +1114,7 @@ export default function Dashboard() {
         const formData = new FormData()
         formData.append('file', file)
 
-        const response = await fetch('/api/mock/media/upload', {
+        const response = await fetch('/api/media/upload', {
           method: 'POST',
           headers: {
             'Authorization': `Bearer ${accessToken}`,

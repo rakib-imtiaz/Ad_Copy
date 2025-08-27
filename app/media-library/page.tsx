@@ -4,6 +4,7 @@ import { useState, useEffect } from "react"
 import { MediaLibrary } from "@/components/media-library"
 import { MediaItem } from "@/types"
 import { authService } from "@/lib/auth-service"
+import { API_ENDPOINTS } from "@/lib/api-config"
 
 export default function MediaLibraryPage() {
   const [mediaItems, setMediaItems] = useState<MediaItem[]>([])
@@ -20,7 +21,7 @@ export default function MediaLibraryPage() {
         return
       }
 
-      const response = await fetch('/api/mock/media/list', {
+      const response = await fetch('/api/media/list', {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${accessToken}`,
@@ -82,7 +83,45 @@ export default function MediaLibraryPage() {
 
   const handleUpload = async (files: File[]) => {
     console.log("Uploading files:", files)
-    // In a real app, you would upload to your backend here
+    
+    const accessToken = authService.getAuthToken()
+    if (!accessToken) {
+      console.error("No access token available")
+      return
+    }
+
+    for (const file of files) {
+      try {
+        console.log('Uploading file:', file.name)
+        
+        const formData = new FormData()
+        formData.append('file', file)
+        
+        const response = await fetch('/api/media/upload', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${accessToken}`,
+          },
+          body: formData,
+        })
+
+        if (!response.ok) {
+          console.error('Upload failed for file:', file.name, 'Status:', response.status)
+          const errorData = await response.json().catch(() => ({}))
+          console.error('Error details:', errorData)
+          continue
+        }
+
+        const data = await response.json()
+        console.log('Upload successful for file:', file.name, data)
+        
+        // Refresh the media library to show the new file
+        await fetchMediaLibrary()
+        
+      } catch (error) {
+        console.error('Error uploading file:', file.name, error)
+      }
+    }
   }
 
   const handleTranscribe = async (mediaId: string) => {
@@ -111,7 +150,7 @@ export default function MediaLibraryPage() {
       }
 
       console.log('Deleting file:', filename, 'with media ID:', mediaId)
-      console.log('Request URL:', 'https://n8n.srv934833.hstgr.cloud/webhook/delete-media-file')
+      console.log('Request URL:', API_ENDPOINTS.N8N_WEBHOOKS.DELETE_MEDIA_FILE)
       console.log('Request headers:', {
         'Authorization': `Bearer ${accessToken}`,
         'Content-Type': 'application/json',
@@ -121,7 +160,7 @@ export default function MediaLibraryPage() {
         file_name: filename
       })
 
-      const response = await fetch('https://n8n.srv934833.hstgr.cloud/webhook/delete-media-file', {
+      const response = await fetch(API_ENDPOINTS.N8N_WEBHOOKS.DELETE_MEDIA_FILE, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${accessToken}`,

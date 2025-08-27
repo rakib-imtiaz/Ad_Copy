@@ -78,7 +78,10 @@ export const API_ENDPOINTS = {
     UPLOAD_KNOWLEDGE_BASE: 'https://n8n.srv934833.hstgr.cloud/webhook/upload-knowledge-base',
     SEE_KNOWLEDGE_BASE: 'https://n8n.srv934833.hstgr.cloud/webhook/see-knowledgebase-data',
     MODIFY_KNOWLEDGE_BASE: 'https://n8n.srv934833.hstgr.cloud/webhook/modify-knowledge-base',
-  },
+    UPLOAD_MEDIA_FILE: 'https://n8n.srv934833.hstgr.cloud/webhook/upload-media-file',
+    LIST_MEDIA_FILES: 'https://n8n.srv934833.hstgr.cloud/webhook/view-media-library',
+    DELETE_MEDIA_FILE: 'https://n8n.srv934833.hstgr.cloud/webhook/delete-media-file',
+      },
   
   // User Management
   USER: {
