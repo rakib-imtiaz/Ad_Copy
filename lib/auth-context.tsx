@@ -129,6 +129,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         console.log('🔐 Login successful - user:', result.data?.user)
         console.log('🔐 Login successful - loading:', false)
         
+        // Role-based redirect after successful login
+        if (result.data?.user?.role) {
+          console.log('🔐 Login successful - user role:', result.data.user.role)
+          
+          if (result.data.user.role === 'Superking') {
+            console.log('👑 Admin user detected, redirecting to admin dashboard')
+            if (typeof window !== 'undefined') {
+              window.location.href = '/admin'
+            }
+          } else if (result.data.user.role === 'paid-user') {
+            console.log('✅ Paid user detected, redirecting to user dashboard')
+            if (typeof window !== 'undefined') {
+              window.location.href = '/dashboard'
+            }
+          } else {
+            console.log('❌ Unauthorized role detected:', result.data.user.role)
+            // Don't redirect - let the user see an error or handle appropriately
+          }
+        }
+        
         // Clear the just logged in flag after a short delay
         setTimeout(() => {
           setJustLoggedIn(false)

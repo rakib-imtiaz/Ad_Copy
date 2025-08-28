@@ -13,24 +13,24 @@ const statsCards = [
     color: 'indigo'
   },
   {
-    title: 'Approved Drafts',
-    value: '8,942',
-    change: '+20%',
+    title: 'Active Agents',
+    value: '58',
+    change: '+5%',
+    trend: 'up',
+    icon: Bot,
+    color: 'green'
+  },
+  {
+    title: 'Referral Codes',
+    value: '24',
+    change: '+12%',
     trend: 'up',
     icon: FileText,
     color: 'blue'
   },
   {
-    title: 'Active Agents',
-    value: '58',
-    change: '-2%',
-    trend: 'down',
-    icon: Bot,
-    color: 'green'
-  },
-  {
-    title: 'API Usage',
-    value: '1.2M',
+    title: 'Token Price',
+    value: '$0.05',
     change: '+8%',
     trend: 'up',
     icon: BarChart,
@@ -108,10 +108,40 @@ const AdminDashboardPage = () => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4, delay: 0.3 }}
         >
-          <h2 className="text-xl font-semibold text-gray-900 mb-4">Usage Overview</h2>
-          <div className="h-80 bg-gray-50 rounded-lg border border-gray-200 flex items-center justify-center">
-            <BarChart size={40} className="text-gray-400"/>
-            <p className="ml-4 text-gray-400">Usage chart placeholder</p>
+          <h2 className="text-xl font-semibold text-gray-900 mb-4">Admin Features Overview</h2>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="p-4 border border-gray-200 rounded-lg">
+              <h3 className="font-semibold text-gray-900 mb-2">Agent Management</h3>
+              <ul className="text-sm text-gray-600 space-y-1">
+                <li>• Create new agents</li>
+                <li>• Modify agent system prompts</li>
+                <li>• Manage agent configurations</li>
+              </ul>
+            </div>
+            <div className="p-4 border border-gray-200 rounded-lg">
+              <h3 className="font-semibold text-gray-900 mb-2">User Management</h3>
+              <ul className="text-sm text-gray-600 space-y-1">
+                <li>• View user records with filters</li>
+                <li>• Create admin users</li>
+                <li>• Delete users</li>
+              </ul>
+            </div>
+            <div className="p-4 border border-gray-200 rounded-lg">
+              <h3 className="font-semibold text-gray-900 mb-2">Referral System</h3>
+              <ul className="text-sm text-gray-600 space-y-1">
+                <li>• Create referral codes</li>
+                <li>• Track referral usage</li>
+                <li>• Manage referral rewards</li>
+              </ul>
+            </div>
+            <div className="p-4 border border-gray-200 rounded-lg">
+              <h3 className="font-semibold text-gray-900 mb-2">Token Pricing</h3>
+              <ul className="text-sm text-gray-600 space-y-1">
+                <li>• Set token prices</li>
+                <li>• View current pricing</li>
+                <li>• Monitor token usage</li>
+              </ul>
+            </div>
           </div>
         </motion.div>
 
@@ -121,40 +151,24 @@ const AdminDashboardPage = () => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4, delay: 0.4 }}
         >
-          <h2 className="text-xl font-semibold text-gray-900 mb-4">Quick Stats</h2>
-          <div className="space-y-6">
-            <div>
-              <p className="text-sm text-gray-500 mb-1">System Uptime</p>
-              <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
-                <div className="h-full bg-green-500 rounded-full" style={{ width: '99.9%' }}></div>
-              </div>
-              <div className="flex justify-between mt-1">
-                <span className="text-xs text-gray-500">99.9%</span>
-                <span className="text-xs text-gray-500">Target: 99.5%</span>
-              </div>
-            </div>
-            
-            <div>
-              <p className="text-sm text-gray-500 mb-1">Response Latency</p>
-              <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
-                <div className="h-full bg-blue-500 rounded-full" style={{ width: '85%' }}></div>
-              </div>
-              <div className="flex justify-between mt-1">
-                <span className="text-xs text-gray-500">2.3s</span>
-                <span className="text-xs text-gray-500">Target: &lt;3.0s</span>
-              </div>
-            </div>
-            
-            <div>
-              <p className="text-sm text-gray-500 mb-1">Error Rate</p>
-              <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
-                <div className="h-full bg-yellow-500 rounded-full" style={{ width: '30%' }}></div>
-              </div>
-              <div className="flex justify-between mt-1">
-                <span className="text-xs text-gray-500">0.3%</span>
-                <span className="text-xs text-gray-500">Target: &lt;1.0%</span>
-              </div>
-            </div>
+          <h2 className="text-xl font-semibold text-gray-900 mb-4">Quick Actions</h2>
+          <div className="space-y-4">
+            <a href="/admin/agents/create" className="block p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
+              <h3 className="font-semibold text-gray-900">Create Agent</h3>
+              <p className="text-sm text-gray-600">Add new AI agent to the system</p>
+            </a>
+            <a href="/admin/users" className="block p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
+              <h3 className="font-semibold text-gray-900">Manage Users</h3>
+              <p className="text-sm text-gray-600">View and manage user accounts</p>
+            </a>
+            <a href="/admin/referrals/create" className="block p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
+              <h3 className="font-semibold text-gray-900">Create Referral</h3>
+              <p className="text-sm text-gray-600">Generate new referral codes</p>
+            </a>
+            <a href="/admin/tokens" className="block p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
+              <h3 className="font-semibold text-gray-900">Token Pricing</h3>
+              <p className="text-sm text-gray-600">Set and view token prices</p>
+            </a>
           </div>
         </motion.div>
       </div>

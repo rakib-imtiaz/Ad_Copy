@@ -64,7 +64,7 @@ function MarkdownContent({ content }: { content: string }) {
 }
 
 // Initial ChatGPT-like Interface
-function InitialInterface({ agents, selectedAgent, onSelectAgent, onStartChatting, onRefreshAgents, isLoadingAgents }: any) {
+function InitialInterface({ agents, selectedAgent, onSelectAgent, onStartChatting, onRefreshAgents, isLoadingAgents, isStartingChat }: any) {
   const handleStartChatting = () => {
     if (selectedAgent && onStartChatting) {
       onStartChatting()
@@ -119,7 +119,7 @@ function InitialInterface({ agents, selectedAgent, onSelectAgent, onStartChattin
               variant="outline"
               size="sm"
               onClick={onRefreshAgents}
-              disabled={isLoadingAgents}
+              disabled={isLoadingAgents || isStartingChat}
               className="flex items-center space-x-2 bg-[#1ABC9C] hover:bg-[#1ABC9C]/90 text-white border-0 shadow-md hover:shadow-lg transition-all duration-200"
             >
               <RefreshCw className={`h-3 w-3 ${isLoadingAgents ? 'animate-spin' : ''}`} />
@@ -131,7 +131,7 @@ function InitialInterface({ agents, selectedAgent, onSelectAgent, onStartChattin
             selectedAgent={selectedAgent}
             onSelectAgent={onSelectAgent}
             onOpenChange={() => {}}
-            isLoading={isLoadingAgents}
+            isLoading={isLoadingAgents || isStartingChat}
             onRefresh={onRefreshAgents}
           />
         </motion.div>
@@ -145,12 +145,21 @@ function InitialInterface({ agents, selectedAgent, onSelectAgent, onStartChattin
         >
           <Button
             onClick={handleStartChatting}
-            disabled={!selectedAgent}
+            disabled={!selectedAgent || isStartingChat}
             size="lg"
             className="w-full bg-[#1ABC9C] hover:bg-[#1ABC9C]/90 text-black px-8 py-4 rounded-2xl text-lg font-semibold shadow-lg hover:shadow-xl transition-all duration-200"
           >
-            <MessageSquare className="h-5 w-5 mr-2" />
-            Start Chatting with {selectedAgent || 'Selected Agent'}
+            {isStartingChat ? (
+              <>
+                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-black mr-2"></div>
+                Starting Chat...
+              </>
+            ) : (
+              <>
+                <MessageSquare className="h-5 w-5 mr-2" />
+                Start Chatting with {selectedAgent || 'Selected Agent'}
+              </>
+            )}
           </Button>
         </motion.div>
 
@@ -170,11 +179,20 @@ function InitialInterface({ agents, selectedAgent, onSelectAgent, onStartChattin
                   localStorage.setItem('pending_prompt', prompt)
                 }
               }}
-              className="p-4 text-left border border-[#EEEEEE] rounded-xl hover:border-[#1ABC9C] hover:bg-[#1ABC9C]/5 transition-all duration-200 group"
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
+              disabled={isStartingChat}
+              className={`p-4 text-left border border-[#EEEEEE] rounded-xl transition-all duration-200 group ${
+                isStartingChat 
+                  ? 'opacity-50 cursor-not-allowed' 
+                  : 'hover:border-[#1ABC9C] hover:bg-[#1ABC9C]/5'
+              }`}
+              whileHover={isStartingChat ? {} : { scale: 1.02 }}
+              whileTap={isStartingChat ? {} : { scale: 0.98 }}
             >
-              <p className="text-sm text-[#393E46] group-hover:text-[#1ABC9C]">{prompt}</p>
+              <p className={`text-sm ${
+                isStartingChat 
+                  ? 'text-[#929AAB]' 
+                  : 'text-[#393E46] group-hover:text-[#1ABC9C]'
+              }`}>{prompt}</p>
             </motion.button>
           ))}
         </motion.div>
@@ -359,6 +377,7 @@ export default function Dashboard() {
   }>>([])
   const [isLoadingChatHistory, setIsLoadingChatHistory] = React.useState(false)
   const [currentChatSession, setCurrentChatSession] = React.useState<string | null>(null)
+  const [isStartingChat, setIsStartingChat] = React.useState(false)
 
   const showToast = (message: string, type: 'success' | 'error' | 'info') => {
     setToast({
@@ -630,6 +649,11 @@ export default function Dashboard() {
       localStorage.removeItem('chat_session_id')
       localStorage.removeItem('chat_started')
       localStorage.removeItem('chat_messages')
+      
+      // Clear URL parameter
+      const url = new URL(window.location.href)
+      url.searchParams.delete('chatid')
+      window.history.replaceState({}, document.title, url.toString())
     }
     
     console.log('💡 Chat state cleared. User can now select agent and start chatting.')
@@ -880,26 +904,49 @@ export default function Dashboard() {
   const handleStartChatting = async () => {
     console.log('🚀 Starting chat with agent:', selectedAgent)
     
-    // Create new session for the selected agent
-    const success = await initiateNewChat(true)
+    setIsStartingChat(true)
     
-    if (success) {
-      setChatStarted(true)
-      console.log('✅ Chat started successfully')
+    try {
+      // Create new session for the selected agent
+      const success = await initiateNewChat(true)
       
-      // Check if there's a pending prompt from quick prompts
-      if (typeof window !== 'undefined') {
-        const pendingPrompt = localStorage.getItem('pending_prompt')
-        if (pendingPrompt) {
-          localStorage.removeItem('pending_prompt')
-          // Send the pending prompt
-          setTimeout(() => {
-            handleSendMessage(pendingPrompt)
-          }, 500)
+      if (success) {
+        setChatStarted(true)
+        
+        // Set the current chat session to the newly created session
+        if (sessionId) {
+          setCurrentChatSession(sessionId)
+          
+          // Update URL with the new chat ID
+          if (typeof window !== 'undefined') {
+            const url = new URL(window.location.href)
+            url.searchParams.set('chatid', sessionId)
+            window.history.replaceState({}, document.title, url.toString())
+          }
         }
+        
+        console.log('✅ Chat started successfully with session:', sessionId)
+        
+        // Check if there's a pending prompt from quick prompts
+        if (typeof window !== 'undefined') {
+          const pendingPrompt = localStorage.getItem('pending_prompt')
+          if (pendingPrompt) {
+            localStorage.removeItem('pending_prompt')
+            // Send the pending prompt
+            setTimeout(() => {
+              handleSendMessage(pendingPrompt)
+            }, 500)
+          }
+        }
+      } else {
+        console.error('❌ Failed to start chat')
+        showToast('Failed to start chat. Please try again.', 'error')
       }
-    } else {
-      console.error('❌ Failed to start chat')
+    } catch (error) {
+      console.error('❌ Error starting chat:', error)
+      showToast('Error starting chat. Please try again.', 'error')
+    } finally {
+      setIsStartingChat(false)
     }
   }
 
@@ -988,7 +1035,7 @@ export default function Dashboard() {
 
   // Load chat session from URL on page load
   React.useEffect(() => {
-    if (typeof window !== 'undefined' && !currentChatSession) {
+    if (typeof window !== 'undefined' && !currentChatSession && !isStartingChat) {
       const urlParams = new URLSearchParams(window.location.search)
       const chatId = urlParams.get('chatid')
       if (chatId && chatHistory.length > 0) {
@@ -998,7 +1045,27 @@ export default function Dashboard() {
         }
       }
     }
-  }, [chatHistory, currentChatSession])
+  }, [chatHistory, currentChatSession, isStartingChat])
+
+  // Role-based routing check
+  React.useEffect(() => {
+    if (!loading && isAuthenticated && user) {
+      console.log('🔐 Role-based routing check - User role:', user.role)
+      
+      // Redirect based on user role
+      if (user.role === 'Superking') {
+        console.log('👑 Admin user detected, redirecting to admin dashboard')
+        window.location.href = '/admin'
+        return
+      } else if (user.role !== 'paid-user') {
+        console.log('❌ Unauthorized role detected, redirecting to sign-in')
+        window.location.href = '/auth/signin'
+        return
+      }
+      
+      console.log('✅ User authorized for dashboard access')
+    }
+  }, [isAuthenticated, loading, user])
 
   // Additional authentication check - if somehow we get here without being authenticated, redirect
   React.useEffect(() => {
@@ -1835,7 +1902,7 @@ export default function Dashboard() {
       }
 
       console.log('Deleting file:', filename, 'with media ID:', mediaId)
-      console.log('Request URL:', 'https://n8n.srv934833.hstgr.cloud/webhook/delete-media-file')
+      console.log('Request URL:', API_ENDPOINTS.N8N_WEBHOOKS.DELETE_MEDIA_FILE)
       console.log('Request headers:', {
         'Authorization': `Bearer ${accessToken}`,
         'Content-Type': 'application/json',
@@ -1845,7 +1912,7 @@ export default function Dashboard() {
         file_name: filename
       })
 
-      const response = await fetch('https://n8n.srv934833.hstgr.cloud/webhook/delete-media-file', {
+      const response = await fetch(API_ENDPOINTS.N8N_WEBHOOKS.DELETE_MEDIA_FILE, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${accessToken}`,
@@ -2227,10 +2294,11 @@ export default function Dashboard() {
               <InitialInterface 
                 agents={agents}
                 selectedAgent={selectedAgent}
-                                 onSelectAgent={setSelectedAgent}
+                onSelectAgent={setSelectedAgent}
                 onStartChatting={handleStartChatting}
                 onRefreshAgents={refreshAgents}
                 isLoadingAgents={isLoadingAgents}
+                isStartingChat={isStartingChat}
               />
             </div>
           </div>

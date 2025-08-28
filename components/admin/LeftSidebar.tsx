@@ -7,17 +7,17 @@ import { useAuth } from '@/lib/auth-context';
 
 const navItems = [
   { href: '/admin/dashboard', label: 'Overview', icon: LayoutDashboard },
-  { href: '/admin/agents', label: 'Agents', icon: Bot },
-  { href: '/admin/prompts', label: 'Prompts', icon: FileText },
-  { href: '/admin/branding', label: 'Branding', icon: Palette },
-  { href: '/admin/users', label: 'Users', icon: Users },
-  { href: '/admin/analytics', label: 'Analytics', icon: BarChart2 },
+  { href: '/admin/agents', label: 'Agent Management', icon: Bot },
+  { href: '/admin/users', label: 'User Management', icon: Users },
+  { href: '/admin/referrals', label: 'Referral Codes', icon: FileText },
+  { href: '/admin/tokens', label: 'Token Pricing', icon: BarChart2 },
 ];
 
 const quickActions = [
-  { href: '/admin/agents/new', label: 'Create Agent', icon: PlusCircle },
-  { href: '/admin/prompts/edit/1', label: 'Edit Prompts', icon: Edit },
-  { href: '/admin/users/invite', label: 'Invite User', icon: UserPlus },
+  { href: '/admin/agents/create', label: 'Create Agent', icon: PlusCircle },
+  { href: '/admin/agents/prompts', label: 'Agent Prompts', icon: Edit },
+  { href: '/admin/users/create', label: 'Create Admin User', icon: UserPlus },
+  { href: '/admin/referrals/create', label: 'Create Referral Code', icon: PlusCircle },
 ]
 
 export const LeftSidebar = () => {

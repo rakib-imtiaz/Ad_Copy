@@ -64,8 +64,20 @@ export default function SignInPage() {
       
       // Only redirect if we have a valid token AND user explicitly logged in during this session
       if (token && authService.isAuthenticated() && explicitLogin === 'true') {
-        console.log('🔐 SignIn page - Redirecting to dashboard because user explicitly authenticated with valid token');
-        router.push("/dashboard");
+        // Get user role for proper redirect
+        const user = authService.getCurrentUser();
+        console.log('🔐 SignIn page - User already authenticated, role:', user?.role);
+        
+        if (user?.role === 'Superking') {
+          console.log('🔐 SignIn page - Redirecting admin user to admin dashboard');
+          router.push("/admin");
+        } else if (user?.role === 'paid-user') {
+          console.log('🔐 SignIn page - Redirecting paid user to dashboard');
+          router.push("/dashboard");
+        } else {
+          console.log('🔐 SignIn page - Unauthorized role, clearing tokens');
+          authService.clearTokens();
+        }
       } else {
         console.log('🔐 SignIn page - User appears authenticated but either token is invalid or not from explicit login');
         // Clear any potentially invalid authentication state
@@ -95,7 +107,7 @@ export default function SignInPage() {
         // Successful sign in - show success message and redirect
         console.log('✅ Sign in successful - webhook responded with success');
         setError(""); // Clear any previous errors
-        setDebugInfo("✅ Authentication successful! Redirecting to dashboard...");
+        setDebugInfo("✅ Authentication successful! Redirecting...");
         
         // Wait a moment to show the success message, then redirect
         setTimeout(() => {

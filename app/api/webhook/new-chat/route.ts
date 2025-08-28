@@ -36,7 +36,7 @@ export async function POST(request: NextRequest) {
         agent_id,
         access_token: accessToken
       }),
-      signal: AbortSignal.timeout(10000), // 10 second timeout
+      signal: AbortSignal.timeout(30000), // 30 second timeout
     })
 
     console.log('n8n response status:', response.status)

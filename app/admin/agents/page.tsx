@@ -3,7 +3,38 @@
 import { motion } from 'framer-motion';
 import { Bot, PlusCircle, MoreHorizontal, Edit, Eye, Star, Globe } from 'lucide-react';
 
-const agents: any[] = [];
+const agents = [
+  {
+    id: '1',
+    name: 'Copywriting Agent',
+    description: 'Specialized in creating compelling ad copy and marketing content',
+    version: '2.1.0',
+    usage: '1,234',
+    status: 'active',
+    scope: 'Marketing',
+    systemPrompt: 'You are a professional copywriter specializing in creating high-converting ad copy...'
+  },
+  {
+    id: '2',
+    name: 'Social Media Agent',
+    description: 'Creates engaging social media posts and captions',
+    version: '1.8.2',
+    usage: '856',
+    status: 'active',
+    scope: 'Social',
+    systemPrompt: 'You are a social media expert who creates viral-worthy content...'
+  },
+  {
+    id: '3',
+    name: 'Email Marketing Agent',
+    description: 'Generates email campaigns and subject lines',
+    version: '1.5.0',
+    usage: '432',
+    status: 'inactive',
+    scope: 'Email',
+    systemPrompt: 'You are an email marketing specialist focused on high open rates...'
+  }
+];
 
 const AgentsPage = () => {
   const container = {
@@ -39,7 +70,7 @@ const AgentsPage = () => {
             animate={{ opacity: 1 }}
             transition={{ duration: 0.3, delay: 0.1 }}
           >
-            Manage AI agents
+            Create agents and modify agent system prompts
           </motion.p>
         </div>
         <motion.button 
@@ -99,23 +130,27 @@ const AgentsPage = () => {
               </div>
             </div>
 
-            <div className="flex items-center justify-between mb-4">
+            <div className="mb-4">
+              <div className="bg-gray-50 p-3 rounded-lg">
+                <p className="text-xs text-gray-500 mb-1">System Prompt</p>
+                <p className="text-sm text-gray-700 line-clamp-2">{agent.systemPrompt}</p>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between">
               <button className="flex items-center space-x-1 text-gray-600 hover:text-indigo-600 transition-colors">
                 <Edit size={16} />
-                <span className="text-sm">Edit</span>
+                <span className="text-sm">Edit Prompt</span>
               </button>
               <button className="flex items-center space-x-1 text-gray-600 hover:text-indigo-600 transition-colors">
                 <Eye size={16} />
-                <span className="text-sm">Preview</span>
+                <span className="text-sm">View Details</span>
               </button>
-              <button className="text-gray-400 hover:text-yellow-500 transition-colors">
-                <Star size={16} />
-              </button>
-            </div>
-
-            <div className="text-xs text-gray-500 space-y-1">
-              <p>Created {agent.created}</p>
-              <p>Last modified {agent.lastModified}</p>
+              <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                agent.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
+              }`}>
+                {agent.status}
+              </span>
             </div>
           </motion.div>
         ))}
