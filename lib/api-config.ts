@@ -81,6 +81,11 @@ export const API_ENDPOINTS = {
     UPLOAD_MEDIA_FILE: 'https://n8n.srv934833.hstgr.cloud/webhook/upload-media-file',
     LIST_MEDIA_FILES: 'https://n8n.srv934833.hstgr.cloud/webhook/view-media-library',
     DELETE_MEDIA_FILE: 'https://n8n.srv934833.hstgr.cloud/webhook/delete-media-file',
+          WEBPAGE_SCRAPE: 'https://n8n.srv934833.hstgr.cloud/webhook/webpage-scrape',
+      SAVE_SCRAPED_CONTENT: 'https://n8n.srv934833.hstgr.cloud/webhook/save-scraped-content',
+      GET_SCRAPED_CONTENTS: 'https://n8n.srv934833.hstgr.cloud/webhook/show-extra-resources-list',
+      DELETE_SCRAPED_CONTENT: 'https://n8n.srv934833.hstgr.cloud/webhook/delete-extra-resource-file',
+      ANALYZE_IMAGE: 'https://n8n.srv934833.hstgr.cloud/webhook/image-content-extract',
       },
   
   // User Management

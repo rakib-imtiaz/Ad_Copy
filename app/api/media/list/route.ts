@@ -35,8 +35,24 @@ export async function GET(request: NextRequest) {
 
     const data = await response.json()
     console.log('✅ n8n webhook success:', data)
+    console.log('📊 Raw data structure:', JSON.stringify(data, null, 2))
 
-    return NextResponse.json(data)
+    // Extract the actual media items from the n8n response
+    let mediaItems = []
+    if (data && Array.isArray(data) && data.length > 0) {
+      // Handle the structure: [ { all_records: [...] } ]
+      if (data[0] && data[0].all_records && Array.isArray(data[0].all_records)) {
+        mediaItems = data[0].all_records
+        console.log('📊 Extracted media items:', mediaItems.length)
+      } else {
+        // Fallback: try to use the data directly
+        mediaItems = data
+        console.log('📊 Using data directly as media items:', mediaItems.length)
+      }
+    }
+
+    console.log('📊 Final media items to return:', mediaItems.length)
+    return NextResponse.json({ data: mediaItems })
   } catch (error) {
     console.error('❌ Error in media list proxy:', error)
     return NextResponse.json(

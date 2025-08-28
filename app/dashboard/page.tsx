@@ -6,7 +6,7 @@ import {
   Menu, Search, Bell, User, MessageSquare, Plus, 
   Bot, Settings, Upload, FileText, Link2, Mic, 
   PanelLeftClose, PanelRightClose, Send, Paperclip,
-  ChevronRight, MoreHorizontal, Star, Clock, Zap, RefreshCw
+  ChevronRight, MoreHorizontal, Star, Clock, Zap, RefreshCw, Image
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
@@ -23,6 +23,8 @@ import { ChatInterface } from "@/components/chat-interface"
 import { useAuth } from "@/lib/auth-context"
 import { ProtectedRoute } from "@/components/protected-route"
 import { API_ENDPOINTS, getAuthHeaders } from "@/lib/api-config"
+import { Toast } from "@/components/ui/toast"
+import { ContentViewer } from "@/components/content-viewer"
 
 // Helper function to format time ago
 function formatTimeAgo(date: Date): string {
@@ -696,6 +698,14 @@ export default function Dashboard() {
     }
   }, [sessionId])
 
+  // Additional authentication check - if somehow we get here without being authenticated, redirect
+  React.useEffect(() => {
+    if (!loading && !isAuthenticated) {
+      console.log('🔒 Dashboard - User not authenticated, redirecting to sign-in')
+      window.location.href = '/auth/signin'
+    }
+  }, [isAuthenticated, loading])
+
 
 
   // Handle new chat webhook - just get session ID
@@ -1017,13 +1027,28 @@ export default function Dashboard() {
       console.log('🔍 Fetching media library from: /api/media/list (proxied to n8n)')
       console.log('🔍 Access token:', accessToken ? 'Present' : 'Missing')
 
-      const response = await fetch('/api/media/list', {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${accessToken}`,
-          'Content-Type': 'application/json',
-        },
-      })
+      // Fetch both media library and scraped contents
+      const [mediaResponse, scrapedResponse] = await Promise.all([
+        fetch('/api/media/list', {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${accessToken}`,
+            'Content-Type': 'application/json',
+          },
+        }),
+        fetch('/api/scraped-contents', {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${accessToken}`,
+            'Content-Type': 'application/json',
+          },
+        }).catch(err => {
+          console.log('Could not fetch scraped contents:', err)
+          return null
+        })
+      ])
+
+      const response = mediaResponse
 
       console.log('🔍 Response status:', response.status, response.statusText)
       
@@ -1043,8 +1068,12 @@ export default function Dashboard() {
         throw new Error(`Failed to fetch media library: ${response.status} ${response.statusText}`)
       }
 
-      const data = await response.json()
-      console.log('Media library API response:', data)
+      const result = await response.json()
+      console.log('Media library API response:', result)
+      
+      // Extract the data array from the response
+      const data = result.data || result
+      console.log('Extracted data:', data)
       
       // Handle case where data might be empty or null
       if (!data || !Array.isArray(data)) {
@@ -1053,22 +1082,59 @@ export default function Dashboard() {
         return
       }
       
-      // Transform the API response to match our MediaItem interface
-      const transformedItems = data.map((item: any) => ({
-        id: item.media_id.toString(),
-        userId: 'current_user',
-        filename: item.file_name,
-        type: getFileType(item.file_type || item.file_name),
-        size: parseFloat(item.media_size) * 1024 * 1024, // Convert MB to bytes
-        uploadedAt: new Date(),
-        tags: [],
-        metadata: {
-          storageStatus: item.storage_status
+      // Get scraped content data
+      let scrapedItems: any[] = []
+      if (scrapedResponse && scrapedResponse.ok) {
+        try {
+          const scrapedData = await scrapedResponse.json()
+          console.log('📊 Scraped content data:', scrapedData)
+          if (scrapedData && scrapedData.data && Array.isArray(scrapedData.data)) {
+            scrapedItems = scrapedData.data
+            console.log('📊 Found scraped items:', scrapedItems.length)
+          }
+        } catch (err) {
+          console.log('Error parsing scraped content:', err)
         }
-      }))
+      }
+
+      // Transform the API response to match our MediaItem interface
+      const transformedItems = data.map((item: any) => {
+        // Find matching scraped content by filename
+        const matchingScraped = scrapedItems.find(scraped => 
+          scraped.resource_name === (item.file_name || item.filename || item.name)
+        )
+        
+        return {
+          id: item.media_id?.toString() || item.id?.toString() || `item-${Math.random()}`,
+          userId: 'current_user',
+          filename: item.file_name || item.filename || item.name || 'Unknown file',
+          type: getFileType(item.file_type || item.file_name || item.filename),
+          size: parseFloat(item.media_size || item.size || 0) * 1024, // Convert KB to bytes
+          uploadedAt: item.timestamp ? new Date(item.timestamp) : new Date(),
+          tags: [],
+          // Add content from scraped data if available
+          content: matchingScraped?.content || undefined,
+          resource_id: matchingScraped?.resource_id || undefined,
+          created_at: matchingScraped?.created_at || item.timestamp,
+          metadata: {
+            storageStatus: item.storage_status || 'unknown',
+            // Only include essential metadata, exclude drive_link, media_drive_id, owner
+            fileType: item.file_type,
+            originalSize: item.media_size
+          }
+        }
+      })
 
       console.log('Transformed media items:', transformedItems)
+      console.log('📊 Items with content:', transformedItems.filter(item => item.content).length)
+      console.log('📊 File items to display:', transformedItems.filter(item => ['pdf', 'doc', 'txt', 'audio', 'video', 'image'].includes(item.type)))
       setMediaItems(transformedItems)
+
+      // If Links tab is active, also fetch scraped contents
+      if (activeTab === 'links') {
+        console.log('🔄 Links tab is active, fetching scraped contents...')
+        await fetchScrapedContentsForTab()
+      }
     } catch (error) {
       console.error('❌ Error fetching media library:', error)
       console.error('❌ Error details:', {
@@ -1086,14 +1152,151 @@ export default function Dashboard() {
   const getFileType = (fileType: string | null): any => {
     if (!fileType) return 'doc'
     
-    if (fileType.startsWith('image/')) return 'doc'
+    // Handle specific file types from the API
+    if (fileType === 'pdf') return 'pdf'
+    if (fileType === 'image') return 'image'
+    if (fileType === 'video') return 'video'
+    if (fileType === 'audio') return 'audio'
+    
+    // Handle MIME types
+    if (fileType.startsWith('image/')) return 'image'
     if (fileType.startsWith('video/')) return 'video'
     if (fileType.startsWith('audio/')) return 'audio'
+    
+    // Handle file extensions
     if (fileType.includes('pdf')) return 'pdf'
     if (fileType.includes('doc')) return 'doc'
     if (fileType.includes('txt')) return 'txt'
+    if (fileType.includes('png') || fileType.includes('jpg') || fileType.includes('jpeg') || fileType.includes('gif')) return 'image'
+    if (fileType.includes('mp4') || fileType.includes('avi') || fileType.includes('mov')) return 'video'
+    if (fileType.includes('mp3') || fileType.includes('wav') || fileType.includes('m4a')) return 'audio'
     
     return 'doc'
+  }
+
+  // Fetch scraped contents for the Links tab
+  const fetchScrapedContentsForTab = async () => {
+    try {
+      console.log('🔄 Fetching scraped contents for Links tab...')
+      const accessToken = authService.getAuthToken()
+      
+      if (!accessToken) {
+        console.error('❌ No access token available for scraped contents')
+        return
+      }
+
+      console.log('🔍 Making request to: /api/scraped-contents')
+      console.log('🔍 Access token present:', !!accessToken)
+
+      const response = await fetch('/api/scraped-contents', {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+          'Content-Type': 'application/json',
+        },
+      })
+
+      console.log('📡 Scraped contents response status:', response.status)
+      console.log('📡 Scraped contents response headers:', Object.fromEntries(response.headers.entries()))
+
+      if (!response.ok) {
+        console.error('❌ Failed to fetch scraped contents:', response.status, response.statusText)
+        const errorText = await response.text().catch(() => 'Unable to read error response')
+        console.error('❌ Error response:', errorText)
+        return
+      }
+
+      const result = await response.json()
+      console.log('✅ Scraped contents data received:')
+      console.log('📊 Result type:', typeof result)
+      console.log('📊 Result keys:', Object.keys(result || {}))
+      console.log('📊 Full result:', JSON.stringify(result, null, 2))
+      console.log('📊 Number of scraped items:', result.data?.length || 0)
+      
+      // Debug the data structure
+      if (result.data) {
+        console.log('📊 Data array details:')
+        console.log('📊 Data type:', typeof result.data)
+        console.log('📊 Is array:', Array.isArray(result.data))
+        console.log('📊 Data length:', Array.isArray(result.data) ? result.data.length : 'N/A')
+        
+        if (Array.isArray(result.data)) {
+          result.data.forEach((item: any, index: number) => {
+            console.log(`📄 Scraped item ${index + 1}:`)
+            console.log(`   Type: ${typeof item}`)
+            console.log(`   Keys: ${Object.keys(item || {}).join(', ')}`)
+            console.log(`   Content:`, JSON.stringify(item, null, 2))
+          })
+        }
+      }
+      
+      // Update the media items with scraped contents
+      console.log('🔍 Frontend data analysis:')
+      console.log('🔍 Result data type:', typeof result.data)
+      console.log('🔍 Result data is array:', Array.isArray(result.data))
+      console.log('🔍 Result data length:', Array.isArray(result.data) ? result.data.length : 'N/A')
+      console.log('🔍 Result data sample:', result.data ? result.data.slice(0, 2) : 'No data')
+      
+      if (result.data && Array.isArray(result.data)) {
+        // Convert scraped contents to media items format
+        const scrapedItems = result.data.map((item: any, index: number) => {
+          // Format the created_at date for filename
+          const createdDate = item.created_at ? new Date(item.created_at) : new Date()
+          const formattedDate = createdDate.toLocaleString('en-US', {
+            month: 'short',
+            day: '2-digit',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: true
+          }).replace(/[,\s]/g, '_').replace(/:/g, '.').replace(/\s/g, '')
+          
+          // Create filename in the format: sample_content_created_at.txt
+          const filename = `sample_content_${formattedDate}.txt`
+          
+          return {
+            id: `scraped-${item.resource_id || index}`,
+            filename: filename,
+            type: 'scraped', // Use 'scraped' type instead of 'url' to avoid filtering
+            url: item.url || '',
+            uploadedAt: createdDate,
+            size: 0, // Scraped content doesn't have file size
+            // Add scraped content specific properties
+            content: item.content,
+            resourceId: item.resource_id,
+            contentType: item.type,
+            resourceName: item.resource_name,
+                       // Add any other properties from the scraped content (but preserve our type override)
+               owner: item.owner,
+               created_at: item.created_at,
+               originalApiType: item.type
+             }
+        })
+        
+        console.log('🔄 Updating media items with scraped contents...')
+        console.log('📊 Scraped items to add:', scrapedItems)
+        
+        // Update the media items state
+        setMediaItems((prevItems: any[]) => {
+          // Remove existing scraped items and add new ones
+          const nonScrapedItems = prevItems.filter((item: any) => !item.id.startsWith('scraped-'))
+          const updatedItems = [...nonScrapedItems, ...scrapedItems]
+          console.log('📊 Total items after update:', updatedItems.length)
+          console.log('📊 Non-scraped items:', nonScrapedItems.length)
+          console.log('📊 Scraped items added:', scrapedItems.length)
+          return updatedItems
+        })
+      } else {
+        console.log('⚠️ No scraped contents data or invalid format')
+      }
+    } catch (error) {
+      console.error('❌ Error fetching scraped contents:', error)
+      console.error('❌ Error details:', {
+        message: error instanceof Error ? error.message : 'Unknown error',
+        stack: error instanceof Error ? error.stack : 'No stack trace',
+        name: error instanceof Error ? error.name : 'Unknown'
+      })
+    }
   }
 
   // Upload media files
@@ -1260,6 +1463,140 @@ export default function Dashboard() {
     }
   }
 
+  // Delete scraped content via n8n webhook
+  const deleteScrapedContent = async (resourceId: string, resourceName: string) => {
+    try {
+      const accessToken = authService.getAuthToken()
+      
+      if (!accessToken) {
+        console.error("No access token available")
+        return
+      }
+
+      console.log('Deleting scraped content:', resourceName, 'with resource ID:', resourceId)
+      console.log('Request URL:', API_ENDPOINTS.N8N_WEBHOOKS.DELETE_SCRAPED_CONTENT)
+      console.log('Request headers:', {
+        'Authorization': `Bearer ${accessToken}`,
+        'Content-Type': 'application/json',
+      })
+      console.log('Request body:', {
+        access_token: accessToken,
+        resource_id: resourceId
+      })
+
+      const response = await fetch(API_ENDPOINTS.N8N_WEBHOOKS.DELETE_SCRAPED_CONTENT, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          access_token: accessToken,
+          resource_id: resourceId
+        }),
+      })
+
+      if (!response.ok) {
+        console.error('Delete failed for scraped content:', resourceName, 'Status:', response.status)
+        console.error('Response headers:', response.headers)
+        const errorData = await response.json().catch(() => ({}))
+        console.error('Error details:', errorData)
+        console.error('Request body sent:', {
+          access_token: accessToken,
+          resource_id: resourceId
+        })
+        return false
+      }
+
+      const data = await response.json()
+      console.log('Delete successful for scraped content:', resourceName, data)
+      
+      // Remove the scraped content from the local state
+      setMediaItems(prev => prev.filter(item => item.id !== resourceId))
+      
+      // Refresh the scraped contents list after successful deletion
+      console.log('🔄 Refreshing scraped contents after deletion...')
+      try {
+        const refreshResponse = await fetch('/api/scraped-contents', {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${accessToken}`,
+            'Content-Type': 'application/json',
+          },
+        })
+
+        if (refreshResponse.ok) {
+          const refreshResult = await refreshResponse.json()
+          console.log('✅ Scraped contents refreshed after deletion:', refreshResult.data?.length || 0, 'items')
+          
+          if (refreshResult.data && Array.isArray(refreshResult.data)) {
+            const scrapedItems = refreshResult.data.map((item: any, index: number) => {
+              const createdDate = item.created_at ? new Date(item.created_at) : new Date()
+              const formattedDate = createdDate.toLocaleString('en-US', {
+                month: 'short',
+                day: '2-digit',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+                hour12: true
+              }).replace(/[,\s]/g, '_').replace(/:/g, '.').replace(/\s/g, '')
+              
+              const filename = `sample_content_${formattedDate}.txt`
+              
+              return {
+                id: `scraped-${item.resource_id || index}`,
+                filename: filename,
+                type: 'scraped',
+                url: item.url || '',
+                uploadedAt: createdDate,
+                size: 0,
+                content: item.content,
+                resourceId: item.resource_id,
+                contentType: item.type,
+                resourceName: item.resource_name,
+                originalApiType: item.type,
+                owner: item.owner,
+                created_at: item.created_at
+              }
+            })
+            
+            setMediaItems((prevItems: any[]) => {
+              const nonScrapedItems = prevItems.filter((item: any) => !item.id.startsWith('scraped-'))
+              const updatedItems = [...nonScrapedItems, ...scrapedItems]
+              console.log('📊 Total items after deletion refresh:', updatedItems.length)
+              console.log('📊 Scraped items after deletion:', scrapedItems.length)
+              return updatedItems
+            })
+          }
+        }
+      } catch (refreshError) {
+        console.error('❌ Error refreshing scraped contents after deletion:', refreshError)
+      }
+      
+      return true
+    } catch (error) {
+      console.error('Error deleting scraped content:', error)
+      return false
+    }
+  }
+
+  // Unified delete function that handles both media files and scraped content
+  const handleDeleteItem = async (itemId: string, itemName: string) => {
+    // Check if this is a scraped content item by looking for resource_id
+    const item = mediaItems.find(item => item.id === itemId)
+    
+    if (item && item.type === 'scraped') {
+      // For scraped content, we need to use the resource_id from the item
+      const resourceId = item.resourceId || itemId
+      console.log('🗑️ Deleting scraped content with resource ID:', resourceId, 'and name:', itemName)
+      return await deleteScrapedContent(resourceId, itemName)
+    } else {
+      // For regular media files, use the existing delete function
+      console.log('🗑️ Deleting media file with ID:', itemId, 'and name:', itemName)
+      return await deleteMediaFile(itemId, itemName)
+    }
+  }
+
   // Show loading state while authentication is being checked
   if (loading) {
     return (
@@ -1287,14 +1624,6 @@ export default function Dashboard() {
       </div>
     );
   }
-
-  // Additional authentication check - if somehow we get here without being authenticated, redirect
-  React.useEffect(() => {
-    if (!loading && !isAuthenticated) {
-      console.log('🔒 Dashboard - User not authenticated, redirecting to sign-in')
-      window.location.href = '/auth/signin'
-    }
-  }, [isAuthenticated, loading])
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50/20 text-slate-800 font-sans">
@@ -1508,9 +1837,11 @@ export default function Dashboard() {
             activeTab={activeTab} 
             onTabChange={setActiveTab} 
             mediaItems={mediaItems}
+            setMediaItems={setMediaItems}
             onRefresh={fetchMediaLibrary}
             onUpload={uploadMediaFiles}
             onDelete={deleteMediaFile}
+            handleDeleteItem={handleDeleteItem}
             isRefreshing={isRefreshing}
           />
         </div>
@@ -1756,10 +2087,11 @@ function MobileSidebar({ agents, conversations }: any) {
 }
 
 // Media Drawer Component  
-function MediaDrawer({ activeTab, onTabChange, mediaItems, onRefresh, onUpload, onDelete, isRefreshing }: any) {
+function MediaDrawer({ activeTab, onTabChange, mediaItems, setMediaItems, onRefresh, onUpload, onDelete, handleDeleteItem, isRefreshing }: any) {
   const tabs = [
     { id: 'files' as const, label: 'Files', icon: FileText },
     { id: 'links' as const, label: 'Links', icon: Link2 },
+    { id: 'image-analyzer' as const, label: 'Images', icon: Image },
     { id: 'transcripts' as const, label: 'Transcripts', icon: Mic },
   ]
 
@@ -1785,14 +2117,14 @@ function MediaDrawer({ activeTab, onTabChange, mediaItems, onRefresh, onUpload, 
             <button
               key={tab.id}
               onClick={() => onTabChange(tab.id)}
-              className={`flex-1 flex items-center justify-center space-x-1 px-3 py-2 rounded-md text-xs font-medium transition-colors ${
+              className={`flex-1 flex items-center justify-center space-x-1.5 py-2.5 px-3 rounded-md text-sm font-medium transition-colors ${
                 activeTab === tab.id 
                   ? 'bg-white text-[#393E46] shadow-sm' 
                   : 'text-[#929AAB] hover:text-[#393E46]'
               }`}
             >
-              <tab.icon className="h-3 w-3" />
-              <span>{tab.label}</span>
+              <tab.icon className="h-4 w-4 flex-shrink-0" />
+              <span className="whitespace-nowrap">{tab.label}</span>
             </button>
           ))}
         </div>
@@ -1801,7 +2133,8 @@ function MediaDrawer({ activeTab, onTabChange, mediaItems, onRefresh, onUpload, 
       {/* Content */}
       <div className="flex-1 overflow-y-auto p-4">
         {activeTab === 'files' && <FilesTab mediaItems={mediaItems} onUpload={onUpload} onDelete={onDelete} />}
-        {activeTab === 'links' && <LinksTab mediaItems={mediaItems} onDelete={onDelete} />}
+        {activeTab === 'links' && <LinksTab mediaItems={mediaItems} onDelete={handleDeleteItem} onRefresh={onRefresh} setMediaItems={setMediaItems} />}
+        {activeTab === 'image-analyzer' && <ImageAnalyzerTab mediaItems={mediaItems} onUpload={onUpload} onDelete={onDelete} />}
         {activeTab === 'transcripts' && <TranscriptsTab mediaItems={mediaItems} onDelete={onDelete} />}
       </div>
     </div>
@@ -1888,20 +2221,82 @@ function FilesTab({ mediaItems, onUpload, onDelete }: any) {
       {/* File list */}
       <div className="space-y-2">
         {fileItems.length > 0 ? (
-          fileItems.slice(0, 8).map((item: any, index: number) => (
-            <div key={item.id} className="flex items-center space-x-3 p-2 rounded-lg hover:bg-white border border-transparent hover:border-[#EEEEEE]">
-              <FileText className="h-4 w-4 text-[#929AAB]" />
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium truncate">{item.filename}</p>
-                <p className="text-xs text-[#929AAB]">
-                  {item.size ? `${(item.size / 1024 / 1024).toFixed(1)} MB` : 'Unknown size'}
-                </p>
+          fileItems.slice(0, 8).map((item: any, index: number) => {
+            // Get appropriate icon based on file type
+            const getFileIcon = (type: string) => {
+              switch (type) {
+                case 'pdf':
+                  return (
+                    <svg className="h-4 w-4 text-red-500" fill="currentColor" viewBox="0 0 20 20">
+                      <path d="M4 18h12V6l-4-4H4v16zm2-2V4h6v2H6v12z"/>
+                    </svg>
+                  )
+                case 'image':
+                  return (
+                    <svg className="h-4 w-4 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                      <path d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z"/>
+                    </svg>
+                  )
+                case 'video':
+                  return (
+                    <svg className="h-4 w-4 text-blue-500" fill="currentColor" viewBox="0 0 20 20">
+                      <path d="M2 6a2 2 0 012-2h6l2 2h6a2 2 0 012 2v6a2 2 0 01-2 2H4a2 2 0 01-2-2V6z"/>
+                    </svg>
+                  )
+                case 'audio':
+                  return (
+                    <svg className="h-4 w-4 text-purple-500" fill="currentColor" viewBox="0 0 20 20">
+                      <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                  )
+                default:
+                  return <FileText className="h-4 w-4 text-[#929AAB]" />
+              }
+            }
+
+            // Format file size
+            const formatFileSize = (sizeInBytes: number) => {
+              const sizeInMB = sizeInBytes / (1024 * 1024)
+              if (sizeInMB >= 1) {
+                return `${sizeInMB.toFixed(1)} MB`
+              } else {
+                const sizeInKB = sizeInBytes / 1024
+                return `${sizeInKB.toFixed(1)} KB`
+              }
+            }
+
+            // Format upload date
+            const formatDate = (date: Date) => {
+              return date.toLocaleDateString('en-US', { 
+                month: 'short', 
+                day: 'numeric',
+                year: 'numeric'
+              })
+            }
+
+            return (
+              <div key={item.id} className="flex items-center space-x-3 p-3 rounded-lg hover:bg-white border border-transparent hover:border-[#EEEEEE] transition-colors">
+                {getFileIcon(item.type)}
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium truncate text-gray-900">{item.filename}</p>
+                  <div className="flex items-center space-x-2 text-xs text-[#929AAB]">
+                    <span>{formatFileSize(item.size)}</span>
+                    <span>•</span>
+                    <span>{formatDate(item.uploadedAt)}</span>
+                    {item.metadata?.fileType && (
+                      <>
+                        <span>•</span>
+                        <span className="capitalize">{item.metadata.fileType}</span>
+                      </>
+                    )}
+                  </div>
+                </div>
+                <ThreeDotsMenu 
+                  onDelete={() => onDelete(item.id, item.filename)}
+                />
               </div>
-              <ThreeDotsMenu 
-                onDelete={() => onDelete(item.id, item.filename)}
-              />
-            </div>
-          ))
+            )
+          })
         ) : (
           <div className="text-center py-8">
             <FileText className="h-8 w-8 text-[#929AAB] mx-auto mb-2" />
@@ -1914,38 +2309,976 @@ function FilesTab({ mediaItems, onUpload, onDelete }: any) {
   )
 }
 
-function LinksTab({ mediaItems, onDelete }: any) {
+function LinksTab({ mediaItems, onDelete, onRefresh, setMediaItems }: any) {
   const urlItems = mediaItems.filter((item: any) => item.type === 'url')
+  const scrapedItems = mediaItems.filter((item: any) => 
+    item.type === 'scraped' && item.url && item.url !== 'Not available'
+  )
+  const allLinkItems = [...urlItems, ...scrapedItems]
+  const [urlInput, setUrlInput] = React.useState("")
+  const [isScraping, setIsScraping] = React.useState(false)
+  const [isLoadingContents, setIsLoadingContents] = React.useState(false)
+  const [toast, setToast] = React.useState<{
+    message: string
+    type: 'success' | 'error' | 'info'
+    isVisible: boolean
+  }>({
+    message: '',
+    type: 'info',
+    isVisible: false
+  })
+  
+  const [viewerContent, setViewerContent] = React.useState<{
+    title: string
+    content: string
+    sourceUrl?: string
+    scrapedAt?: string
+    filename?: string
+  } | null>(null)
+  
+  const [isViewerOpen, setIsViewerOpen] = React.useState(false)
+  
+  // Fetch scraped contents when component mounts
+  React.useEffect(() => {
+    console.log('🔄 LinksTab useEffect - fetching scraped contents...')
+    const fetchScrapedContents = async () => {
+      try {
+        const accessToken = authService.getAuthToken()
+        
+        if (!accessToken) {
+          console.error('❌ No access token available for scraped contents')
+          return
+        }
+
+        console.log('🔍 Making request to: /api/scraped-contents')
+        console.log('🔍 Access token present:', !!accessToken)
+
+        const response = await fetch('/api/scraped-contents', {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${accessToken}`,
+            'Content-Type': 'application/json',
+          },
+        })
+
+        console.log('📡 Scraped contents response status:', response.status)
+
+        if (!response.ok) {
+          console.error('❌ Failed to fetch scraped contents:', response.status, response.statusText)
+          return
+        }
+
+        const result = await response.json()
+        console.log('✅ Scraped contents data received:', result.data?.length || 0, 'items')
+        
+        if (result.data && Array.isArray(result.data)) {
+          // Convert scraped contents to media items format
+          const scrapedItems = result.data.map((item: any, index: number) => {
+            // Format the created_at date for filename
+            const createdDate = item.created_at ? new Date(item.created_at) : new Date()
+            const formattedDate = createdDate.toLocaleString('en-US', {
+              month: 'short',
+              day: '2-digit',
+              year: 'numeric',
+              hour: '2-digit',
+              minute: '2-digit',
+              hour12: true
+            }).replace(/[,\s]/g, '_').replace(/:/g, '.').replace(/\s/g, '')
+            
+            // Create filename in the format: sample_content_created_at.txt
+            const filename = `sample_content_${formattedDate}.txt`
+            
+            return {
+              id: `scraped-${item.resource_id || index}`,
+              filename: filename,
+              type: 'scraped', // Use 'scraped' type instead of 'url' to avoid filtering
+              url: item.url || '',
+              uploadedAt: createdDate,
+              size: 0, // Scraped content doesn't have file size
+              // Add scraped content specific properties
+              content: item.content,
+              resourceId: item.resource_id,
+              contentType: item.type,
+              resourceName: item.resource_name,
+                         // Add any other properties from the scraped content (but preserve our type override)
+               owner: item.owner,
+               created_at: item.created_at,
+               originalApiType: item.type
+             }
+          })
+          
+                     console.log('🔄 LinksTab - Updating media items with scraped contents...')
+           console.log('📊 Scraped items to add:', scrapedItems.length)
+           console.log('📊 Scraped items details:', scrapedItems)
+           
+           // Update the media items state
+           setMediaItems((prevItems: any[]) => {
+             // Remove existing scraped items and add new ones
+             const nonScrapedItems = prevItems.filter((item: any) => !item.id.startsWith('scraped-'))
+             const updatedItems = [...nonScrapedItems, ...scrapedItems]
+             console.log('📊 Total items after update:', updatedItems.length)
+             console.log('📊 Non-scraped items:', nonScrapedItems.length)
+             console.log('📊 Scraped items added:', scrapedItems.length)
+             console.log('📊 Updated items details:', updatedItems)
+             
+             // Force a re-render by returning a completely new array
+             return [...updatedItems]
+           })
+        }
+      } catch (error) {
+        console.error('❌ Error fetching scraped contents:', error)
+      }
+    }
+    
+    fetchScrapedContents()
+  }, [])
+  
+  const showToast = (message: string, type: 'success' | 'error' | 'info') => {
+    setToast({
+      message,
+      type,
+      isVisible: true
+    })
+  }
+  
+  const hideToast = () => {
+    setToast(prev => ({ ...prev, isVisible: false }))
+  }
+  
+
+
+  const handleViewContent = (item: any) => {
+    // Check if this is scraped content with actual content
+    if (item.content) {
+      setViewerContent({
+        title: item.resourceName || item.filename || 'Scraped Content',
+        content: item.content,
+        sourceUrl: item.url,
+        scrapedAt: item.uploadedAt?.toISOString(),
+        filename: item.filename
+      })
+    } else {
+      // Fallback for items without content
+      setViewerContent({
+        title: item.resourceName || item.filename || 'Scraped Content',
+        content: 'Content not available...',
+        sourceUrl: item.url,
+        scrapedAt: item.uploadedAt?.toISOString(),
+        filename: item.filename
+      })
+    }
+    setIsViewerOpen(true)
+  }
+  
+  const handleScrapeUrl = async () => {
+    console.log('🔍 handleScrapeUrl called with URL:', urlInput)
+    
+    if (!urlInput.trim()) {
+      console.log('❌ URL input is empty, returning early')
+      showToast('Please enter a URL to scrape', 'error')
+      return
+    }
+    
+    try {
+      setIsScraping(true)
+      console.log('🔍 Getting access token...')
+      const accessToken = authService.getAuthToken()
+      
+      if (!accessToken) {
+        console.error("❌ No access token available")
+        showToast('Authentication required. Please sign in again.', 'error')
+        return
+      }
+
+      console.log('✅ Access token found:', accessToken ? 'Present' : 'Missing')
+      console.log('🔍 Scraping URL:', urlInput)
+      
+      const apiUrl = `/api/webpage-scrape?url=${encodeURIComponent(urlInput.trim())}`
+      console.log('🔍 Making request to:', apiUrl)
+      
+      const response = await fetch(apiUrl, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+          'Content-Type': 'application/json',
+        },
+      })
+
+      console.log('🔍 Response received:', response.status, response.statusText)
+
+      if (!response.ok) {
+        console.error('❌ Scraping failed:', response.status, response.statusText)
+        const errorData = await response.json().catch(() => ({}))
+        console.error('❌ Error details:', errorData)
+        
+        // Show user-friendly error message
+        if (response.status === 404) {
+          showToast('Webpage scraping service is currently unavailable. Please try again later.', 'error')
+        } else if (response.status === 401) {
+          showToast('Authentication failed. Please sign in again.', 'error')
+        } else if (response.status === 400) {
+          showToast('Invalid URL. Please check the URL and try again.', 'error')
+        } else {
+          showToast(`Failed to scrape webpage. Error: ${response.status} ${response.statusText}`, 'error')
+        }
+        return
+      }
+
+      const data = await response.json()
+      console.log('✅ URL scraped successfully:', data)
+      
+      // Show success message
+      showToast('Webpage scraped and saved successfully!', 'success')
+      
+      // Clear the input after successful scraping
+      setUrlInput("")
+      
+      // Refresh the scraped contents list
+      try {
+        const refreshResponse = await fetch('/api/scraped-contents', {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${accessToken}`,
+            'Content-Type': 'application/json',
+          },
+        })
+
+        if (refreshResponse.ok) {
+          const refreshResult = await refreshResponse.json()
+          console.log('✅ Scraped contents refreshed after scraping:', refreshResult.data?.length || 0, 'items')
+          
+          if (refreshResult.data && Array.isArray(refreshResult.data)) {
+            const scrapedItems = refreshResult.data.map((item: any, index: number) => {
+              const createdDate = item.created_at ? new Date(item.created_at) : new Date()
+              const formattedDate = createdDate.toLocaleString('en-US', {
+                month: 'short',
+                day: '2-digit',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+                hour12: true
+              }).replace(/[,\s]/g, '_').replace(/:/g, '.').replace(/\s/g, '')
+              
+              const filename = `sample_content_${formattedDate}.txt`
+              
+              return {
+                id: `scraped-${item.resource_id || index}`,
+                filename: filename,
+                type: 'scraped',
+                url: item.url || '',
+                uploadedAt: createdDate,
+                size: 0,
+                content: item.content,
+                resourceId: item.resource_id,
+                contentType: item.type,
+                resourceName: item.resource_name,
+                ...item
+              }
+            })
+            
+            setMediaItems((prevItems: any[]) => {
+              const nonScrapedItems = prevItems.filter((item: any) => !item.id.startsWith('scraped-'))
+              const updatedItems = [...nonScrapedItems, ...scrapedItems]
+              console.log('📊 Total items after scraping refresh:', updatedItems.length)
+              console.log('📊 Scraped items after scraping:', scrapedItems.length)
+              return updatedItems
+            })
+          }
+        }
+      } catch (refreshError) {
+        console.error('❌ Error refreshing scraped contents after scraping:', refreshError)
+      }
+      
+    } catch (error) {
+      console.error('❌ Error scraping URL:', error)
+      console.error('❌ Error details:', {
+        message: error instanceof Error ? error.message : 'Unknown error',
+        stack: error instanceof Error ? error.stack : 'No stack trace',
+        name: error instanceof Error ? error.name : 'Unknown'
+      })
+      
+      // Show user-friendly error message
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred'
+      showToast(`Failed to scrape webpage: ${errorMessage}`, 'error')
+    } finally {
+      console.log('🔍 Setting isScraping to false')
+      setIsScraping(false)
+    }
+  }
   
   return (
     <div className="space-y-4">
+      <Toast 
+        message={toast.message}
+        type={toast.type}
+        isVisible={toast.isVisible}
+        onClose={hideToast}
+      />
+      
+      {viewerContent && (
+        <ContentViewer
+          isOpen={isViewerOpen}
+          onClose={() => setIsViewerOpen(false)}
+          content={viewerContent}
+        />
+      )}
       <div className="flex space-x-2">
-        <Input placeholder="Paste URL here..." className="flex-1 text-sm border-[#D1D5DB] focus:ring-[#393E46] focus:border-[#393E46] bg-[#F9FAFB]" />
-        <Button size="sm" className="bg-[#393E46] hover:bg-[#2C3036] text-white">Add</Button>
+        <Input 
+          placeholder="Paste URL here..." 
+          value={urlInput}
+          onChange={(e) => setUrlInput(e.target.value)}
+          onKeyPress={(e) => e.key === 'Enter' && handleScrapeUrl()}
+          className="flex-1 text-sm border-[#D1D5DB] focus:ring-[#393E46] focus:border-[#393E46] bg-[#F9FAFB]" 
+        />
+        <Button 
+          size="sm" 
+          onClick={() => {
+            console.log('🔍 Add button clicked!')
+            console.log('🔍 URL input value:', urlInput)
+            console.log('🔍 isScraping:', isScraping)
+            console.log('🔍 urlInput.trim():', urlInput.trim())
+            handleScrapeUrl()
+          }}
+          disabled={isScraping || !urlInput.trim()}
+          className="bg-[#393E46] hover:bg-[#2C3036] text-white disabled:opacity-50"
+        >
+          {isScraping ? 'Scraping...' : 'Add'}
+        </Button>
+
       </div>
       
       <div className="space-y-2">
-        {urlItems.length > 0 ? (
-          urlItems.map((item: any, index: number) => (
-            <div key={item.id} className="flex items-center space-x-3 p-2 rounded-lg hover:bg-white border border-transparent hover:border-[#EEEEEE]">
+        {allLinkItems.length > 0 ? (
+          allLinkItems.map((item: any, index: number) => (
+            <div 
+              key={item.id} 
+              className="flex items-center space-x-3 p-2 rounded-lg hover:bg-white border border-transparent hover:border-[#EEEEEE] cursor-pointer transition-colors"
+              onClick={() => handleViewContent(item)}
+            >
               <Link2 className="h-4 w-4 text-[#929AAB]" />
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium truncate">{item.filename}</p>
-                <p className="text-xs text-[#929AAB]">Scraped</p>
+                <p className="text-xs text-[#929AAB]">
+                  {item.type === 'scraped' ? 'Scraped Content' : 'URL Link'}
+                </p>
               </div>
-              <ThreeDotsMenu 
-                onDelete={() => onDelete(item.id, item.filename)}
-              />
+              <div className="flex items-center space-x-2">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    onDelete(item.id, item.filename)
+                  }}
+                  className="h-6 w-6 p-0 hover:bg-red-50 hover:text-red-600"
+                >
+                  <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                  </svg>
+                </Button>
+              </div>
             </div>
           ))
         ) : (
           <div className="text-center py-8">
             <Link2 className="h-8 w-8 text-[#929AAB] mx-auto mb-2" />
-            <p className="text-sm text-[#929AAB]">No links added yet</p>
+            <p className="text-sm text-[#929AAB]">No links or scraped content yet</p>
             <p className="text-xs text-[#929AAB] mt-1">Add a URL to scrape content</p>
           </div>
         )}
       </div>
+    </div>
+  )
+}
+
+function ImageAnalyzerTab({ mediaItems, onUpload, onDelete }: any) {
+  const [dragActive, setDragActive] = React.useState(false)
+  const [isUploading, setIsUploading] = React.useState(false)
+  const [isAnalyzing, setIsAnalyzing] = React.useState(false)
+  const [analyzingImageId, setAnalyzingImageId] = React.useState<string | null>(null)
+  const [analysisResults, setAnalysisResults] = React.useState<{[key: string]: any}>({})
+  const [selectedImageAnalysis, setSelectedImageAnalysis] = React.useState<any>(null)
+  const [showAnalysisPopup, setShowAnalysisPopup] = React.useState<any>(null)
+  const [toast, setToast] = React.useState<{ message: string; type: 'success' | 'error' | 'info'; isVisible: boolean }>({
+    message: '',
+    type: 'info',
+    isVisible: false
+  })
+  const fileInputRef = React.useRef<HTMLInputElement>(null)
+  
+  const imageItems = mediaItems.filter((item: any) => 
+    ['image', 'jpg', 'jpeg', 'png', 'gif', 'webp'].includes(item.type)
+  )
+  
+  // Check for existing analysis content when component mounts
+  React.useEffect(() => {
+    const checkExistingAnalysis = async () => {
+      const imageItemsWithContent = imageItems.filter((item: any) => item.content)
+      
+      if (imageItemsWithContent.length > 0) {
+        const existingAnalysis: Record<string, any> = {}
+        
+        imageItemsWithContent.forEach((item: any) => {
+          existingAnalysis[item.id] = {
+            id: item.id,
+            filename: item.filename,
+            analysis: {
+              textContent: item.content,
+              description: item.content,
+              objects: [],
+              colors: [],
+              suggestions: []
+            },
+            analyzedAt: item.created_at || new Date().toISOString()
+          }
+        })
+        
+        setAnalysisResults(prev => ({
+          ...prev,
+          ...existingAnalysis
+        }))
+      }
+    }
+    
+    checkExistingAnalysis()
+  }, [imageItems])
+  
+  const showToast = (message: string, type: 'success' | 'error' | 'info') => {
+    setToast({
+      message,
+      type,
+      isVisible: true
+    })
+    setTimeout(() => {
+      setToast(prev => ({ ...prev, isVisible: false }))
+    }, 3000)
+  }
+
+  const hideToast = () => {
+    setToast(prev => ({ ...prev, isVisible: false }))
+  }
+
+  const handleDrag = (e: React.DragEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    if (e.type === "dragenter" || e.type === "dragover") {
+      setDragActive(true)
+    } else if (e.type === "dragleave") {
+      setDragActive(false)
+    }
+  }
+
+  const handleDrop = async (e: React.DragEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setDragActive(false)
+    
+    const files = Array.from(e.dataTransfer.files).filter(file => 
+      file.type.startsWith('image/')
+    )
+    if (files.length > 0 && onUpload) {
+      setIsUploading(true)
+      await onUpload(files)
+      setIsUploading(false)
+    }
+  }
+
+  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []).filter(file => 
+      file.type.startsWith('image/')
+    )
+    if (files.length > 0 && onUpload) {
+      setIsUploading(true)
+      await onUpload(files)
+      setIsUploading(false)
+    }
+  }
+
+  const handleAnalyzeImage = async (imageId: string, imageItem: any) => {
+    setIsAnalyzing(true)
+    setAnalyzingImageId(imageId)
+    
+    try {
+      const token = await authService.getAuthToken()
+      if (!token) {
+        throw new Error('No authentication token available')
+      }
+
+      console.log('🔍 Analyzing image:', imageId)
+      
+      const response = await fetch('/api/analyze-image', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          media_id: imageId
+        })
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}))
+        throw new Error(errorData.error || `HTTP error! status: ${response.status}`)
+      }
+
+      const result = await response.json()
+      console.log('✅ Image analysis result:', result)
+      
+      // Extract the data from the API response
+      const analysisData = result.data || result
+      
+      // Process the real analysis result from the webhook
+      // Only use data from the API, no frontend defaults
+      let analysisText = ''
+      if (Array.isArray(analysisData) && analysisData.length > 0) {
+        analysisText = analysisData[0]?.text || analysisData[0] || ''
+      } else if (typeof analysisData === 'string') {
+        analysisText = analysisData
+      } else if (analysisData?.text) {
+        analysisText = analysisData.text
+      } else {
+        analysisText = ''
+      }
+
+      const analysisResult = {
+        id: imageId,
+        filename: imageItem.filename,
+        analysis: {
+          textContent: analysisText,
+          description: analysisText,
+          // Only use API data, no defaults
+          objects: analysisData.objects || analysisData.detected_objects || [],
+          colors: analysisData.colors || analysisData.color_palette || [],
+          sentiment: analysisData.sentiment || '',
+          adElements: {
+            hasCallToAction: analysisData.has_cta || analysisData.ad_elements?.hasCallToAction || false,
+            hasProductImage: analysisData.has_product || analysisData.ad_elements?.hasProductImage || false,
+            hasCompanyLogo: analysisData.has_logo || analysisData.ad_elements?.hasLogo || false,
+            hasContactInfo: analysisData.has_contact || analysisData.ad_elements?.hasContactInfo || false
+          },
+          suggestions: analysisData.suggestions || analysisData.recommendations || []
+        },
+        analyzedAt: new Date().toISOString(),
+        rawData: analysisData // Store the complete response for debugging
+      }
+      
+      setAnalysisResults(prev => ({
+        ...prev,
+        [imageId]: {
+          ...analysisResult,
+          // Preserve existing content if new analysis doesn't provide it
+          analysis: {
+            ...analysisResult.analysis,
+            textContent: analysisResult.analysis.textContent || imageItem.content || '',
+            description: analysisResult.analysis.description || imageItem.content || ''
+          }
+        }
+      }))
+      
+      showToast('Image analysis completed!', 'success')
+    } catch (error) {
+      console.error('❌ Error analyzing image:', error)
+      showToast('Failed to analyze image. Please try again.', 'error')
+    } finally {
+      setIsAnalyzing(false)
+      setAnalyzingImageId(null)
+    }
+  }
+
+  return (
+    <div className="space-y-4">
+      {/* Dropzone */}
+      <div 
+        className={`relative border-2 border-dashed rounded-xl p-8 text-center transition-all duration-200 cursor-pointer group ${
+          dragActive 
+            ? 'border-[#1ABC9C] bg-[#1ABC9C]/10 scale-[1.02]' 
+            : 'border-gray-300 hover:border-[#1ABC9C] hover:bg-gray-50'
+        } ${isUploading ? 'pointer-events-none' : ''}`}
+        onDragEnter={handleDrag}
+        onDragLeave={handleDrag}
+        onDragOver={handleDrag}
+        onDrop={handleDrop}
+        onClick={() => fileInputRef.current?.click()}
+      >
+        <div className="flex flex-col items-center">
+          <div className={`p-3 rounded-full mb-4 transition-colors ${
+            dragActive ? 'bg-[#1ABC9C]/20' : 'bg-gray-100 group-hover:bg-[#1ABC9C]/10'
+          }`}>
+            <Image className={`h-8 w-8 ${
+              isUploading ? 'animate-pulse text-[#1ABC9C]' : 
+              dragActive ? 'text-[#1ABC9C]' : 'text-gray-400 group-hover:text-[#1ABC9C]'
+            }`} />
+          </div>
+          
+          <h3 className={`text-lg font-semibold mb-2 transition-colors ${
+            isUploading ? 'text-[#1ABC9C]' : 'text-gray-700'
+          }`}>
+            {isUploading ? "Processing images..." : "Upload Ad Images"}
+          </h3>
+          
+          <p className="text-sm text-gray-500 mb-4">
+            {isUploading ? "Please wait while we upload your images" : "Drag and drop your ad images here, or click to browse"}
+          </p>
+          
+          <div className="flex items-center space-x-2 text-xs text-gray-400">
+            <span>Supports:</span>
+            <span className="px-2 py-1 bg-gray-100 rounded">JPG</span>
+            <span className="px-2 py-1 bg-gray-100 rounded">PNG</span>
+            <span className="px-2 py-1 bg-gray-100 rounded">GIF</span>
+            <span className="px-2 py-1 bg-gray-100 rounded">WEBP</span>
+          </div>
+        </div>
+        
+        <input
+          ref={fileInputRef}
+          type="file"
+          multiple
+          accept="image/*"
+          onChange={handleFileSelect}
+          className="hidden"
+        />
+      </div>
+
+      {/* Image list */}
+      <div className="space-y-2">
+        {imageItems.length > 0 ? (
+          imageItems.map((item: any, index: number) => {
+            const hasAnalysis = analysisResults[item.id] || item.content
+            const isCurrentlyAnalyzing = analyzingImageId === item.id
+            
+            return (
+              <div key={item.id} className="bg-white rounded-lg border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
+                <div className="p-4">
+                  <div className="flex items-start space-x-4">
+                    <div className="flex-shrink-0">
+                      <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center">
+                        <Image className="h-6 w-6 text-gray-400" />
+                      </div>
+                    </div>
+                    
+                    <div className="flex-1 min-w-0">
+                      <h4 className="text-sm font-medium text-gray-900 truncate">{item.filename}</h4>
+                                          <div className="flex items-center space-x-3 mt-1 mb-3">
+                      {hasAnalysis && (
+                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                          <div className="w-1.5 h-1.5 bg-green-400 rounded-full mr-1"></div>
+                          Analyzed
+                        </span>
+                      )}
+                      {isCurrentlyAnalyzing && (
+                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                          <div className="w-1.5 h-1.5 bg-blue-400 rounded-full mr-1 animate-pulse"></div>
+                          Analyzing...
+                        </span>
+                      )}
+                    </div>
+                      
+                      {/* Buttons moved under the filename */}
+                      <div className="flex items-center space-x-2">
+                        {hasAnalysis ? (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setShowAnalysisPopup({
+                              id: item.id,
+                              filename: item.filename,
+                              analysis: {
+                                textContent: item.content || analysisResults[item.id]?.analysis?.textContent || '',
+                                description: item.content || analysisResults[item.id]?.analysis?.description || '',
+                                objects: analysisResults[item.id]?.analysis?.objects || [],
+                                colors: analysisResults[item.id]?.analysis?.colors || [],
+                                suggestions: analysisResults[item.id]?.analysis?.suggestions || []
+                              },
+                              analyzedAt: item.created_at || analysisResults[item.id]?.analyzedAt || new Date().toISOString()
+                            })}
+                            className="h-8 px-3 text-xs border-blue-200 text-blue-600 hover:bg-blue-50"
+                          >
+                            View Analysis
+                          </Button>
+                        ) : null}
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleAnalyzeImage(item.id, item)}
+                          disabled={isAnalyzing}
+                          className="h-8 px-3 text-xs border-[#1ABC9C] text-[#1ABC9C] hover:bg-[#1ABC9C]/10 disabled:opacity-50"
+                        >
+                          {isCurrentlyAnalyzing ? 'Analyzing...' : hasAnalysis ? 'Re-analyze' : 'Analyze'}
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => onDelete(item.id, item.filename)}
+                          className="h-8 w-8 p-0 hover:bg-red-50 hover:text-red-600"
+                        >
+                          <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                          </svg>
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )
+          })
+        ) : (
+          <div className="text-center py-8">
+            <Image className="h-8 w-8 text-[#929AAB] mx-auto mb-2" />
+            <p className="text-sm text-[#929AAB]">No ad images uploaded yet</p>
+            <p className="text-xs text-[#929AAB] mt-1">Upload images to analyze ad content</p>
+          </div>
+        )}
+      </div>
+
+      {/* Analysis Results Panel */}
+      {selectedImageAnalysis && (
+        <div className="mt-6 p-4 bg-gray-50 rounded-lg border">
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-lg font-semibold text-gray-800">Analysis Results</h3>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setSelectedImageAnalysis(null)}
+              className="h-6 w-6 p-0 hover:bg-gray-200"
+            >
+              <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </Button>
+          </div>
+          
+          <div className="space-y-4">
+            <div>
+              <h4 className="font-medium text-gray-700 mb-2">{selectedImageAnalysis.filename}</h4>
+              <div className="bg-white p-4 rounded-lg border">
+                <h5 className="font-medium text-gray-800 mb-3">AI Analysis</h5>
+                <div className="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap">
+                  {selectedImageAnalysis.analysis.textContent}
+                </div>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <h5 className="font-medium text-gray-700 mb-2">Detected Objects</h5>
+                <div className="flex flex-wrap gap-1">
+                  {selectedImageAnalysis.analysis.objects.map((obj: string, idx: number) => (
+                    <span key={idx} className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded">
+                      {obj}
+                    </span>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <h5 className="font-medium text-gray-700 mb-2">Color Palette</h5>
+                <div className="flex gap-2">
+                  {selectedImageAnalysis.analysis.colors.map((color: string, idx: number) => (
+                    <div
+                      key={idx}
+                      className="w-6 h-6 rounded border"
+                      style={{ backgroundColor: color }}
+                      title={color}
+                    ></div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <h5 className="font-medium text-gray-700 mb-2">Ad Elements</h5>
+              <div className="grid grid-cols-2 gap-2 text-sm">
+                <div className="flex items-center space-x-2">
+                  <span className={`w-2 h-2 rounded-full ${selectedImageAnalysis.analysis.adElements.hasCallToAction ? 'bg-green-500' : 'bg-red-500'}`}></span>
+                  <span>Call to Action</span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <span className={`w-2 h-2 rounded-full ${selectedImageAnalysis.analysis.adElements.hasProductImage ? 'bg-green-500' : 'bg-red-500'}`}></span>
+                  <span>Product Image</span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <span className={`w-2 h-2 rounded-full ${selectedImageAnalysis.analysis.adElements.hasCompanyLogo ? 'bg-green-500' : 'bg-red-500'}`}></span>
+                  <span>Company Logo</span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <span className={`w-2 h-2 rounded-full ${selectedImageAnalysis.analysis.adElements.hasContactInfo ? 'bg-green-500' : 'bg-red-500'}`}></span>
+                  <span>Contact Info</span>
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <h5 className="font-medium text-gray-700 mb-2">Analysis Summary</h5>
+              <div className="bg-blue-50 p-3 rounded border-l-4 border-blue-400">
+                <p className="text-sm text-blue-800">
+                  {selectedImageAnalysis.analysis.description}
+                </p>
+              </div>
+            </div>
+
+            <div>
+              <h5 className="font-medium text-gray-700 mb-2">Suggestions</h5>
+              <ul className="text-sm text-gray-600 space-y-1">
+                {selectedImageAnalysis.analysis.suggestions.map((suggestion: string, idx: number) => (
+                  <li key={idx} className="flex items-start space-x-2">
+                    <span className="text-yellow-500 mt-0.5">•</span>
+                    <span>{suggestion}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            <div className="text-xs text-gray-400">
+              Analyzed at: {new Date(selectedImageAnalysis.analyzedAt).toLocaleString()}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Analysis Popup */}
+      {showAnalysisPopup && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl shadow-2xl max-w-5xl w-full max-h-[85vh] overflow-hidden">
+            <div className="flex justify-between items-center p-6 border-b bg-gradient-to-r from-blue-50 to-indigo-50">
+              <div>
+                <h3 className="text-xl font-semibold text-gray-800">
+                  Image Analysis Results
+                </h3>
+                <p className="text-sm text-gray-600 mt-1">{showAnalysisPopup.filename}</p>
+              </div>
+              <div className="flex items-center space-x-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    navigator.clipboard.writeText(showAnalysisPopup.analysis.textContent)
+                    showToast('Analysis copied to clipboard!', 'success')
+                  }}
+                  className="h-8 px-3 text-xs border-green-200 text-green-600 hover:bg-green-50"
+                >
+                  <svg className="h-3 w-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                  </svg>
+                  Copy
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setShowAnalysisPopup(null)}
+                  className="h-8 w-8 p-0 hover:bg-gray-100"
+                >
+                  <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </Button>
+              </div>
+            </div>
+            
+            <div className="p-6 overflow-y-auto max-h-[calc(85vh-140px)]">
+              <div className="space-y-6">
+                {/* Main Analysis Content - Only API Data */}
+                <div className="bg-gradient-to-br from-blue-50 to-indigo-50 p-6 rounded-xl border border-blue-100">
+                  <div className="flex items-center justify-between mb-4">
+                    <h4 className="font-semibold text-gray-800 flex items-center">
+                      <svg className="h-5 w-5 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                      </svg>
+                      AI Analysis
+                    </h4>
+                    <span className="text-xs text-blue-600 bg-blue-100 px-2 py-1 rounded-full">
+                      {showAnalysisPopup.analysis.textContent ? 'Content Available' : 'No Content'}
+                    </span>
+                  </div>
+                  <div className="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap bg-white p-4 rounded-lg border border-blue-200">
+                    {showAnalysisPopup.analysis.textContent || 'No analysis content available'}
+                  </div>
+                </div>
+
+                {/* Only show other sections if API provides data */}
+                {showAnalysisPopup.analysis.objects && showAnalysisPopup.analysis.objects.length > 0 && (
+                  <div className="bg-gray-50 p-4 rounded-lg">
+                    <h4 className="font-medium text-gray-800 mb-3 flex items-center">
+                      <svg className="h-4 w-4 mr-2 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 4V2a1 1 0 011-1h8a1 1 0 011 1v2m-9 0h10m-10 0a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V6a2 2 0 00-2-2" />
+                      </svg>
+                      Detected Objects
+                    </h4>
+                    <div className="flex flex-wrap gap-2">
+                      {showAnalysisPopup.analysis.objects.map((obj: string, idx: number) => (
+                        <span key={idx} className="px-3 py-1 bg-blue-100 text-blue-800 text-sm rounded-full border border-blue-200">
+                          {obj}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {showAnalysisPopup.analysis.colors && showAnalysisPopup.analysis.colors.length > 0 && (
+                  <div className="bg-gray-50 p-4 rounded-lg">
+                    <h4 className="font-medium text-gray-800 mb-3 flex items-center">
+                      <svg className="h-4 w-4 mr-2 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zM21 5a2 2 0 00-2-2h-4a2 2 0 00-2 2v12a4 4 0 004 4h4a2 2 0 002-2V5z" />
+                      </svg>
+                      Color Palette
+                    </h4>
+                    <div className="flex gap-3">
+                      {showAnalysisPopup.analysis.colors.map((color: string, idx: number) => (
+                        <div key={idx} className="flex flex-col items-center">
+                          <div
+                            className="w-10 h-10 rounded-lg border-2 border-white shadow-md"
+                            style={{ backgroundColor: color }}
+                            title={color}
+                          ></div>
+                          <span className="text-xs text-gray-500 mt-2 font-mono">{color}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {showAnalysisPopup.analysis.suggestions && showAnalysisPopup.analysis.suggestions.length > 0 && (
+                  <div className="bg-gray-50 p-4 rounded-lg">
+                    <h4 className="font-medium text-gray-800 mb-3 flex items-center">
+                      <svg className="h-4 w-4 mr-2 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                      </svg>
+                      Suggestions
+                    </h4>
+                    <ul className="space-y-2">
+                      {showAnalysisPopup.analysis.suggestions.map((suggestion: string, idx: number) => (
+                        <li key={idx} className="flex items-start space-x-3 bg-white p-3 rounded border-l-4 border-yellow-400">
+                          <span className="text-yellow-500 mt-1">•</span>
+                          <span className="text-sm text-gray-700">{suggestion}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
+                {/* Timestamp */}
+                <div className="text-xs text-gray-400 pt-4 border-t bg-gray-50 p-3 rounded-lg">
+                  <div className="flex items-center">
+                    <svg className="h-3 w-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    Analyzed at: {new Date(showAnalysisPopup.analyzedAt).toLocaleString()}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Toast Notification */}
+      <Toast
+        message={toast.message}
+        type={toast.type}
+        isVisible={toast.isVisible}
+        onClose={hideToast}
+      />
     </div>
   )
 }
