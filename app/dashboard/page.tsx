@@ -6,7 +6,7 @@ import {
   Menu, Search, Bell, User, MessageSquare, Plus, 
   Bot, Settings, Upload, FileText, Link2, Mic, 
   PanelLeftClose, PanelRightClose, Send, Paperclip,
-  ChevronRight, MoreHorizontal, Star, Clock, Zap, RefreshCw, Image
+  ChevronRight, MoreHorizontal, Star, Clock, Zap, RefreshCw, Image, Activity
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
@@ -342,7 +342,30 @@ export default function Dashboard() {
   const [showCreditPopup, setShowCreditPopup] = React.useState(false)
   const [mediaItems, setMediaItems] = React.useState<any[]>([])
   const [isRefreshing, setIsRefreshing] = React.useState(false)
+  const [isLoadingMedia, setIsLoadingMedia] = React.useState(false)
   const [isAgentSelectorOpen, setIsAgentSelectorOpen] = React.useState(false)
+  const [isMediaSelectorOpen, setIsMediaSelectorOpen] = React.useState(false)
+  const [selectedMediaItems, setSelectedMediaItems] = React.useState<Set<string>>(new Set())
+  const [toast, setToast] = React.useState<{ message: string; type: 'success' | 'error' | 'info'; isVisible: boolean }>({
+    message: '',
+    type: 'info',
+    isVisible: false
+  })
+
+  const showToast = (message: string, type: 'success' | 'error' | 'info') => {
+    setToast({
+      message,
+      type,
+      isVisible: true
+    })
+    setTimeout(() => {
+      setToast(prev => ({ ...prev, isVisible: false }))
+    }, 3000)
+  }
+
+  const hideToast = () => {
+    setToast(prev => ({ ...prev, isVisible: false }))
+  }
 
   // Load session data from localStorage on component mount
   React.useEffect(() => {
@@ -670,9 +693,11 @@ export default function Dashboard() {
       }
       
       // Set a small delay to ensure token is properly loaded from storage
-      setTimeout(() => {
+      setTimeout(async () => {
         fetchAgents()
         fetchMediaLibrary()
+        // Fetch chat history on dashboard load
+        await fetchChatHistory()
       }, 300)
     }
   }, [isAuthenticated, currentUser, logout])
@@ -788,10 +813,51 @@ export default function Dashboard() {
         console.log('📋 Full webhook response:', data)
       }
       
+      // Fetch chat history when new chat is initiated
+      console.log('📚 Fetching chat history for new chat...')
+      await fetchChatHistory()
+      
       return true
     } catch (error) {
       console.error('Error initiating new chat:', error)
       return false
+    }
+  }
+
+  // Fetch chat history from n8n webhook
+  const fetchChatHistory = async () => {
+    try {
+      const accessToken = authService.getAuthToken()
+      
+      if (!accessToken) {
+        console.error("No access token available for chat history")
+        return null
+      }
+
+      console.log('📚 Fetching chat history...')
+      
+      const response = await fetch('/api/chat-history', {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+          'Content-Type': 'application/json',
+        },
+      })
+
+      if (!response.ok) {
+        console.error('Failed to fetch chat history. Status:', response.status)
+        const errorData = await response.json().catch(() => ({}))
+        console.error('Chat history error details:', errorData)
+        return null
+      }
+
+      const data = await response.json()
+      console.log('✅ Chat history fetched successfully:', data)
+      
+      return data
+    } catch (error) {
+      console.error('Error fetching chat history:', error)
+      return null
     }
   }
 
@@ -1016,6 +1082,7 @@ export default function Dashboard() {
   const fetchMediaLibrary = async () => {
     try {
       setIsRefreshing(true)
+      setIsLoadingMedia(true)
       const accessToken = authService.getAuthToken()
       
       if (!accessToken) {
@@ -1146,6 +1213,7 @@ export default function Dashboard() {
       setMediaItems([])
     } finally {
       setIsRefreshing(false)
+      setIsLoadingMedia(false)
     }
   }
 
@@ -1275,6 +1343,7 @@ export default function Dashboard() {
         
         console.log('🔄 Updating media items with scraped contents...')
         console.log('📊 Scraped items to add:', scrapedItems)
+        console.log('📊 Scraped items count:', scrapedItems.length)
         
         // Update the media items state
         setMediaItems((prevItems: any[]) => {
@@ -1460,6 +1529,80 @@ export default function Dashboard() {
     } catch (error) {
       console.error('Error deleting file:', error)
       return false
+    }
+  }
+
+  // Handle media item selection for RAG
+  const handleMediaSelection = async (itemId: string, isSelected: boolean) => {
+    try {
+      const accessToken = authService.getAuthToken()
+      if (!accessToken) {
+        console.error("No access token available")
+        return
+      }
+
+      const item = mediaItems.find(item => item.id === itemId)
+      if (!item) {
+        console.error("Item not found:", itemId)
+        return
+      }
+
+      if (isSelected) {
+        // Add item to RAG
+        console.log('🔗 Adding item to RAG:', item.filename)
+        const response = await fetch('/api/rag/upload', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            access_token: accessToken,
+            session_id: sessionId,
+            media_id: itemId
+          })
+        })
+
+        if (response.ok) {
+          setSelectedMediaItems(prev => new Set([...prev, itemId]))
+          showToast('Item added to chat context', 'success')
+        } else {
+          console.error('Failed to add item to RAG:', response.status, response.statusText)
+          const errorText = await response.text().catch(() => 'Unable to read error response')
+          console.error('Error response body:', errorText)
+          showToast('Failed to add item to chat context', 'error')
+        }
+      } else {
+        // Remove item from RAG
+        console.log('🗑️ Removing item from RAG:', item.filename)
+        const response = await fetch('/api/rag/delete', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            access_token: accessToken,
+            session_id: sessionId,
+            media_id: itemId
+          })
+        })
+
+        if (response.ok) {
+          setSelectedMediaItems(prev => {
+            const newSet = new Set(prev)
+            newSet.delete(itemId)
+            return newSet
+          })
+          showToast('Item removed from chat context', 'success')
+        } else {
+          console.error('Failed to remove item from RAG:', response.status, response.statusText)
+          const errorText = await response.text().catch(() => 'Unable to read error response')
+          console.error('Error response body:', errorText)
+          showToast('Failed to remove item from chat context', 'error')
+        }
+      }
+    } catch (error) {
+      console.error('Error handling media selection:', error)
+      showToast('Error updating chat context', 'error')
     }
   }
 
@@ -1820,6 +1963,12 @@ export default function Dashboard() {
               selectedAgent={selectedAgent}
               onSendMessage={handleSendMessage}
               isLoading={isLoading}
+              onOpenMediaSelector={async () => {
+                // Refresh media items when opening the selector
+                await fetchMediaLibrary()
+                setIsMediaSelectorOpen(true)
+              }}
+              selectedMediaCount={selectedMediaItems.size}
             />
           </div>
         </div>
@@ -1898,8 +2047,195 @@ export default function Dashboard() {
           </div>
         </div>
       )}
+
+      {/* Media Selector */}
+              <MediaSelector
+          mediaItems={mediaItems}
+          selectedMediaItems={selectedMediaItems}
+          onMediaSelection={handleMediaSelection}
+          isOpen={isMediaSelectorOpen}
+          onClose={() => setIsMediaSelectorOpen(false)}
+          isLoading={isLoadingMedia}
+        />
+
+      {/* Toast Notification */}
+      <Toast
+        message={toast.message}
+        type={toast.type}
+        isVisible={toast.isVisible}
+        onClose={hideToast}
+      />
         </motion.div>
       )}
+    </div>
+  )
+}
+
+// Media Selector Component
+function MediaSelector({ 
+  mediaItems, 
+  selectedMediaItems, 
+  onMediaSelection, 
+  isOpen, 
+  onClose,
+  isLoading
+}: { 
+  mediaItems: any[]
+  selectedMediaItems: Set<string>
+  onMediaSelection: (itemId: string, isSelected: boolean) => void
+  isOpen: boolean
+  onClose: () => void
+  isLoading: boolean
+}) {
+  if (!isOpen) return null
+
+  console.log('🔍 MediaSelector - All mediaItems:', mediaItems)
+  console.log('🔍 MediaSelector - Items with type "scraped":', mediaItems.filter(item => item.type === 'scraped'))
+
+  const availableItems = mediaItems.filter(item => {
+    const shouldInclude = item.content || item.type === 'url' || item.type === 'scraped' || 
+      item.type === 'file' || item.type === 'document' || item.type === 'pdf' ||
+      item.type === 'text' || item.type === 'image' || item.filename
+    
+    if (item.type === 'scraped') {
+      console.log('🔍 Scraped item found:', item)
+      console.log('🔍 Should include:', shouldInclude)
+    }
+    
+    return shouldInclude
+  })
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-xl shadow-2xl max-w-4xl w-full max-h-[80vh] overflow-hidden">
+        <div className="flex justify-between items-center p-6 border-b bg-gradient-to-r from-blue-50 to-indigo-50">
+          <div>
+            <h3 className="text-xl font-semibold text-gray-800 flex items-center">
+              <Activity className="h-5 w-5 mr-2 text-blue-600" />
+              Select Media for Chat Context
+            </h3>
+            <p className="text-sm text-gray-600 mt-1">
+              Choose media items to include in your chat context
+            </p>
+          </div>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={onClose}
+            className="h-8 w-8 p-0 hover:bg-gray-100"
+          >
+            <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </Button>
+        </div>
+        
+        <div className="p-6 overflow-y-auto max-h-[calc(80vh-140px)]">
+          {isLoading ? (
+            <div className="text-center py-12">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+              <h4 className="text-lg font-medium text-gray-900 mb-2">Loading Media...</h4>
+              <p className="text-gray-600">Please wait while we fetch your media items.</p>
+            </div>
+          ) : availableItems.length === 0 ? (
+            <div className="text-center py-12">
+              <Activity className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+              <h4 className="text-lg font-medium text-gray-900 mb-2">No Media Available</h4>
+              <p className="text-gray-600">Upload files or scrape content to make them available for chat context.</p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {availableItems.map((item) => {
+                const isSelected = selectedMediaItems.has(item.id)
+                const isImage = ['image', 'jpg', 'jpeg', 'png', 'gif', 'webp'].includes(item.type)
+                const isLink = item.type === 'url' || item.type === 'scraped'
+                const isFile = item.type === 'file' || item.type === 'document' || item.type === 'pdf' || item.type === 'text'
+                
+                return (
+                  <div 
+                    key={item.id}
+                    className={`p-4 rounded-lg border-2 transition-all duration-200 cursor-pointer hover:shadow-md ${
+                      isSelected 
+                        ? 'border-blue-500 bg-blue-50' 
+                        : 'border-gray-200 hover:border-blue-300'
+                    }`}
+                    onClick={() => onMediaSelection(item.id, !isSelected)}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-3 flex-1 min-w-0">
+                        <div className={`p-2 rounded-lg ${
+                          isSelected ? 'bg-blue-100' : 'bg-gray-100'
+                        }`}>
+                          {isImage ? (
+                            <Image className={`h-4 w-4 ${isSelected ? 'text-blue-600' : 'text-gray-600'}`} />
+                          ) : isLink ? (
+                            <Link2 className={`h-4 w-4 ${isSelected ? 'text-blue-600' : 'text-gray-600'}`} />
+                          ) : isFile ? (
+                            <FileText className={`h-4 w-4 ${isSelected ? 'text-blue-600' : 'text-gray-600'}`} />
+                          ) : (
+                            <FileText className={`h-4 w-4 ${isSelected ? 'text-blue-600' : 'text-gray-600'}`} />
+                          )}
+                        </div>
+                        
+                        <div className="flex-1 min-w-0">
+                          <h4 className="font-medium text-gray-900 truncate">{item.filename}</h4>
+                          <div className="flex items-center space-x-2 mt-1">
+                            <span className={`text-xs px-2 py-1 rounded-full ${
+                              isImage ? 'bg-green-100 text-green-800' :
+                              isLink ? 'bg-blue-100 text-blue-800' :
+                              isFile ? 'bg-purple-100 text-purple-800' :
+                              'bg-gray-100 text-gray-800'
+                            }`}>
+                              {isImage ? 'Image' : isLink ? 'Link' : isFile ? 'File' : 'Document'}
+                            </span>
+                            {item.content ? (
+                              <span className="text-xs text-gray-500">
+                                {item.content.length > 100 ? `${item.content.substring(0, 100)}...` : item.content}
+                              </span>
+                            ) : item.filename && (
+                              <span className="text-xs text-gray-500">
+                                {item.filename}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <div className="flex items-center space-x-2">
+                        <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
+                          isSelected 
+                            ? 'border-blue-500 bg-blue-500' 
+                            : 'border-gray-300'
+                        }`}>
+                          {isSelected && (
+                            <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
+                              <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                            </svg>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          )}
+        </div>
+        
+        <div className="p-6 border-t bg-gray-50">
+          <div className="flex justify-between items-center">
+            <div className="text-sm text-gray-600">
+              {selectedMediaItems.size} item{selectedMediaItems.size !== 1 ? 's' : ''} selected
+            </div>
+            <Button
+              onClick={onClose}
+              className="bg-blue-600 hover:bg-blue-700 text-white"
+            >
+              Done
+            </Button>
+          </div>
+        </div>
+      </div>
     </div>
   )
 }
@@ -2706,8 +3042,10 @@ function ImageAnalyzerTab({ mediaItems, onUpload, onDelete }: any) {
   })
   const fileInputRef = React.useRef<HTMLInputElement>(null)
   
-  const imageItems = mediaItems.filter((item: any) => 
-    ['image', 'jpg', 'jpeg', 'png', 'gif', 'webp'].includes(item.type)
+  const imageItems = React.useMemo(() => 
+    mediaItems.filter((item: any) => 
+      ['image', 'jpg', 'jpeg', 'png', 'gif', 'webp'].includes(item.type)
+    ), [mediaItems]
   )
   
   // Check for existing analysis content when component mounts

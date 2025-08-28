@@ -2,10 +2,10 @@
 
 import * as React from "react"
 import { 
-  Send, Bot, User, Paperclip, Download, Copy, ThumbsUp, 
+  Send, Bot, User, Download, Copy, ThumbsUp, 
   ThumbsDown, RotateCcw, Zap, Star, MessageSquare, Settings,
   ChevronDown, Facebook, Linkedin, Twitter, Mail, Chrome,
-  Pin, Trash2, Edit, CheckCircle
+  Pin, Trash2, Edit, CheckCircle, Plus
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -34,6 +34,9 @@ interface ChatInterfaceProps {
     animated?: boolean
   }>
   selectedAgent?: string
+  // Media selector props
+  onOpenMediaSelector?: () => void
+  selectedMediaCount?: number
 }
 
 export function ChatInterface({ 
@@ -47,10 +50,11 @@ export function ChatInterface({
   onDeleteMessage,
   isLoading,
   messages,
-  selectedAgent
+  selectedAgent,
+  onOpenMediaSelector,
+  selectedMediaCount = 0
 }: ChatInterfaceProps) {
   const [message, setMessage] = React.useState("")
-  const [attachedMedia, setAttachedMedia] = React.useState<string[]>([])
   const [selectedPreset, setSelectedPreset] = React.useState<OutputPreset>("facebook")
   const [showAgentSelector, setShowAgentSelector] = React.useState(false)
   const messagesEndRef = React.useRef<HTMLDivElement>(null)
@@ -72,9 +76,8 @@ export function ChatInterface({
 
   const handleSend = () => {
     if (message.trim() && onSendMessage) {
-      onSendMessage(message.trim(), attachedMedia)
+      onSendMessage(message.trim(), [])
       setMessage("")
-      setAttachedMedia([])
     }
   }
 
@@ -320,33 +323,7 @@ export function ChatInterface({
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Attached Media Preview */}
-      {attachedMedia.length > 0 && (
-        <div className="p-4 bg-white/90 backdrop-blur-sm border-t border-slate-200 sticky bottom-20 left-0 right-0 z-10">
-          <div className="flex items-center space-x-3 mb-3">
-            <Paperclip className="h-4 w-4 text-slate-600" />
-            <span className="text-sm text-slate-700 font-medium">Attached Media ({attachedMedia.length})</span>
-          </div>
-          <div className="flex flex-wrap gap-2">
-            {attachedMedia.map(mediaId => {
-              const media = mediaItems.find(item => item.id === mediaId)
-              return media ? (
-                <Badge key={mediaId} variant="secondary" className="flex items-center space-x-2 bg-slate-100 text-slate-700 border-slate-200 px-3 py-1">
-                  <span>{media.filename}</span>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setAttachedMedia(prev => prev.filter(id => id !== mediaId))}
-                    className="h-4 w-4 p-0 ml-1 hover:bg-slate-200 rounded-full"
-                  >
-                    <Trash2 className="h-3 w-3" />
-                  </Button>
-                </Badge>
-              ) : null
-            })}
-          </div>
-        </div>
-      )}
+
 
       {/* Input Area */}
       <div className="p-6 bg-white/95 backdrop-blur-sm border-t border-slate-200 sticky bottom-0 left-0 right-0 z-10">
@@ -365,9 +342,20 @@ export function ChatInterface({
             <Button
               variant="ghost"
               size="sm"
-              className="text-slate-600 hover:text-slate-800 hover:bg-slate-100 rounded-xl p-3"
+              onClick={onOpenMediaSelector}
+              className={`rounded-xl p-3 relative ${
+                selectedMediaCount > 0 
+                  ? 'text-blue-600 hover:text-blue-700 hover:bg-blue-50' 
+                  : 'text-slate-600 hover:text-slate-800 hover:bg-slate-100'
+              }`}
+              title="Select media for chat context"
             >
-              <Paperclip className="h-5 w-5" />
+              <Plus className="h-5 w-5" />
+              {selectedMediaCount > 0 && (
+                <span className="absolute -top-1 -right-1 bg-blue-600 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-medium">
+                  {selectedMediaCount}
+                </span>
+              )}
             </Button>
             <Button
               onClick={handleSend}
