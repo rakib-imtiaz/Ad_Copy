@@ -80,7 +80,7 @@ function InitialInterface({ agents, selectedAgent, onSelectAgent, onStartChattin
 
   return (
     <motion.div 
-      className="flex flex-col items-center justify-center min-h-screen p-8 bg-gradient-to-br from-slate-50 via-white to-blue-50/30"
+      className="flex flex-col items-center justify-center h-full p-8 bg-gradient-to-br from-slate-50 via-white to-blue-50/30"
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.6 }}
@@ -351,6 +351,14 @@ export default function Dashboard() {
     type: 'info',
     isVisible: false
   })
+  // Add chat history state
+  const [chatHistory, setChatHistory] = React.useState<Array<{
+    session_id: string
+    title: string
+    created_at: string
+  }>>([])
+  const [isLoadingChatHistory, setIsLoadingChatHistory] = React.useState(false)
+  const [currentChatSession, setCurrentChatSession] = React.useState<string | null>(null)
 
   const showToast = (message: string, type: 'success' | 'error' | 'info') => {
     setToast({
@@ -615,6 +623,7 @@ export default function Dashboard() {
     setHasInitializedChat(false) // Reset initialization flag
     setChatStarted(false) // Reset chat state
     setMessages([]) // Clear messages
+    setCurrentChatSession(null) // Clear current chat session
     
     // Clear localStorage
     if (typeof window !== 'undefined') {
@@ -624,6 +633,247 @@ export default function Dashboard() {
     }
     
     console.log('💡 Chat state cleared. User can now select agent and start chatting.')
+  }
+
+  // Load specific chat session
+  const loadChatSession = async (sessionId: string) => {
+    console.log('🔄 Loading chat session:', sessionId)
+    
+    try {
+      // Set the session ID
+      setSessionId(sessionId)
+      setCurrentChatSession(sessionId)
+      
+      // Save to localStorage
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('chat_session_id', sessionId)
+      }
+      
+      // Mark chat as started
+      setChatStarted(true)
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('chat_started', 'true')
+      }
+      
+      // Load messages for this specific session
+      await loadMessagesForSession(sessionId)
+      
+      console.log('✅ Chat session loaded:', sessionId)
+    } catch (error) {
+      console.error('❌ Error loading chat session:', error)
+    }
+  }
+
+  // Delete specific chat session
+  const deleteChatSession = async (sessionId: string) => {
+    console.log('🗑️ Deleting chat session:', sessionId)
+    
+    try {
+      const accessToken = authService.getAuthToken()
+      
+      if (!accessToken) {
+        console.error("❌ No access token available for deleting chat")
+        showToast('Authentication required', 'error')
+        return
+      }
+
+      console.log('🗑️ Sending delete request for session:', sessionId)
+      
+      const response = await fetch('/api/chat-delete', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          session_id: sessionId
+        }),
+      })
+
+      console.log('📡 Delete response received:')
+      console.log('  - Status:', response.status)
+      console.log('  - Status text:', response.statusText)
+      console.log('  - OK:', response.ok)
+
+      if (!response.ok) {
+        console.error('❌ Failed to delete chat. Status:', response.status)
+        console.error('❌ Status text:', response.statusText)
+        
+        try {
+          const errorData = await response.json()
+          console.error('❌ Delete error details:', errorData)
+        } catch (jsonError) {
+          console.error('❌ Could not parse error response as JSON')
+          try {
+            const errorText = await response.text()
+            console.error('❌ Error response text:', errorText)
+          } catch (textError) {
+            console.error('❌ Could not read error response text')
+          }
+        }
+        
+        showToast('Failed to delete chat session', 'error')
+        return
+      }
+
+      console.log('✅ Response is OK, parsing JSON...')
+      const data = await response.json()
+      console.log('✅ Chat delete successful:')
+      console.log('  - Data type:', typeof data)
+      console.log('  - Data keys:', Object.keys(data))
+      console.log('  - Success:', data.success)
+      console.log('  - Message:', data.message)
+      
+      // Remove the chat from the chat history
+      setChatHistory(prev => prev.filter(chat => chat.session_id !== sessionId))
+      
+      // If the deleted chat was the current one, clear the current session
+      if (currentChatSession === sessionId) {
+        setCurrentChatSession(null)
+        setSessionId('')
+        setChatStarted(false)
+        setMessages([])
+        
+        // Clear localStorage
+        if (typeof window !== 'undefined') {
+          localStorage.removeItem('chat_session_id')
+          localStorage.removeItem('chat_started')
+          localStorage.removeItem('chat_messages')
+        }
+      }
+      
+      showToast('Chat session deleted successfully', 'success')
+      console.log('✅ Chat session deleted:', sessionId)
+      
+    } catch (error) {
+      console.error('❌ Error deleting chat session:', error)
+      console.error('❌ Error details:', {
+        message: error instanceof Error ? error.message : 'Unknown error',
+        stack: error instanceof Error ? error.stack : 'No stack trace',
+        name: error instanceof Error ? error.name : 'Unknown'
+      })
+      
+      showToast('Error deleting chat session', 'error')
+    }
+  }
+
+  // Load messages for a specific chat session
+  const loadMessagesForSession = async (sessionId: string) => {
+    console.log('📚 Loading messages for session:', sessionId)
+    
+    try {
+      const accessToken = authService.getAuthToken()
+      
+      if (!accessToken) {
+        console.error("❌ No access token available for loading messages")
+        return
+      }
+
+      console.log('📚 Fetching messages from API for session:', sessionId)
+      
+      const response = await fetch(`/api/chat-messages?session_id=${sessionId}`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+          'Content-Type': 'application/json',
+        },
+      })
+
+      console.log('📡 Chat messages response received:')
+      console.log('  - Status:', response.status)
+      console.log('  - Status text:', response.statusText)
+      console.log('  - OK:', response.ok)
+
+      if (!response.ok) {
+        console.error('❌ Failed to fetch chat messages. Status:', response.status)
+        console.error('❌ Status text:', response.statusText)
+        
+        try {
+          const errorData = await response.json()
+          console.error('❌ Chat messages error details:', errorData)
+        } catch (jsonError) {
+          console.error('❌ Could not parse error response as JSON')
+          try {
+            const errorText = await response.text()
+            console.error('❌ Error response text:', errorText)
+          } catch (textError) {
+            console.error('❌ Could not read error response text')
+          }
+        }
+        
+        // Set empty messages on error
+        setMessages([])
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('chat_messages', JSON.stringify([]))
+        }
+        return
+      }
+
+      console.log('✅ Response is OK, parsing JSON...')
+      const data = await response.json()
+      console.log('✅ Chat messages fetched successfully:')
+      console.log('  - Data type:', typeof data)
+      console.log('  - Data keys:', Object.keys(data))
+      console.log('  - Has messages property:', 'messages' in data)
+      console.log('  - Messages type:', typeof data.messages)
+      console.log('  - Messages is array:', Array.isArray(data.messages))
+      if (Array.isArray(data.messages)) {
+        console.log('  - Messages array length:', data.messages.length)
+        console.log('  - First message:', data.messages[0])
+      }
+      
+      // Process the messages data
+      let messagesData: any[] = []
+      
+      if (Array.isArray(data.messages)) {
+        // Direct messages array
+        messagesData = data.messages
+      } else if (data && Array.isArray(data.data)) {
+        // Nested data array
+        messagesData = data.data
+      } else if (data && typeof data === 'object') {
+        // Convert object with numeric keys to array
+        const keys = Object.keys(data).filter(key => !isNaN(Number(key)))
+        if (keys.length > 0) {
+          messagesData = keys.map(key => data[key]).filter(Boolean)
+        }
+      }
+      
+      console.log('📚 Processed messages data:', messagesData)
+      console.log('📚 Messages count:', messagesData.length)
+      
+      // Transform messages to match our interface
+      const transformedMessages = messagesData.map((msg: any, index: number) => ({
+        id: msg.id || `session-${sessionId}-${index}`,
+        role: msg.role || 'assistant',
+        content: msg.content || msg.message || msg.text || 'No content',
+        timestamp: msg.timestamp ? new Date(msg.timestamp).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true }) : new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true }),
+        animated: false
+      }))
+      
+      // Update messages state
+      setMessages(transformedMessages)
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('chat_messages', JSON.stringify(transformedMessages))
+      }
+      
+      console.log('✅ Messages loaded for session:', sessionId)
+      console.log('✅ Transformed messages:', transformedMessages)
+      
+    } catch (error) {
+      console.error('❌ Error loading messages for session:', error)
+      console.error('❌ Error details:', {
+        message: error instanceof Error ? error.message : 'Unknown error',
+        stack: error instanceof Error ? error.stack : 'No stack trace',
+        name: error instanceof Error ? error.name : 'Unknown'
+      })
+      
+      // Set empty messages on error
+      setMessages([])
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('chat_messages', JSON.stringify([]))
+      }
+    }
   }
 
   // Handle starting chat from initial interface
@@ -722,6 +972,33 @@ export default function Dashboard() {
       setHasInitializedChat(false)
     }
   }, [sessionId])
+
+  // Update URL when chat session changes
+  React.useEffect(() => {
+    if (typeof window !== 'undefined' && currentChatSession) {
+      const url = new URL(window.location.href)
+      url.searchParams.set('chatid', currentChatSession)
+      window.history.replaceState({}, document.title, url.toString())
+    } else if (typeof window !== 'undefined' && !currentChatSession) {
+      const url = new URL(window.location.href)
+      url.searchParams.delete('chatid')
+      window.history.replaceState({}, document.title, url.toString())
+    }
+  }, [currentChatSession])
+
+  // Load chat session from URL on page load
+  React.useEffect(() => {
+    if (typeof window !== 'undefined' && !currentChatSession) {
+      const urlParams = new URLSearchParams(window.location.search)
+      const chatId = urlParams.get('chatid')
+      if (chatId && chatHistory.length > 0) {
+        const sessionExists = chatHistory.find(chat => chat.session_id === chatId)
+        if (sessionExists) {
+          loadChatSession(chatId)
+        }
+      }
+    }
+  }, [chatHistory, currentChatSession])
 
   // Additional authentication check - if somehow we get here without being authenticated, redirect
   React.useEffect(() => {
@@ -826,15 +1103,21 @@ export default function Dashboard() {
 
   // Fetch chat history from n8n webhook
   const fetchChatHistory = async () => {
+    console.log('=== FETCH CHAT HISTORY CLIENT START ===')
+    console.log('Timestamp:', new Date().toISOString())
+    
     try {
+      setIsLoadingChatHistory(true)
       const accessToken = authService.getAuthToken()
       
       if (!accessToken) {
-        console.error("No access token available for chat history")
+        console.error("❌ No access token available for chat history")
+        console.log('=== FETCH CHAT HISTORY CLIENT END (NO TOKEN) ===')
         return null
       }
 
-      console.log('📚 Fetching chat history...')
+      console.log('🔐 Access token available, length:', accessToken.length)
+      console.log('📚 Fetching chat history from /api/chat-history...')
       
       const response = await fetch('/api/chat-history', {
         method: 'GET',
@@ -844,20 +1127,87 @@ export default function Dashboard() {
         },
       })
 
+      console.log('📡 Chat history response received:')
+      console.log('  - Status:', response.status)
+      console.log('  - Status text:', response.statusText)
+      console.log('  - OK:', response.ok)
+      console.log('  - Headers:', Object.fromEntries(response.headers.entries()))
+
       if (!response.ok) {
-        console.error('Failed to fetch chat history. Status:', response.status)
-        const errorData = await response.json().catch(() => ({}))
-        console.error('Chat history error details:', errorData)
+        console.error('❌ Failed to fetch chat history. Status:', response.status)
+        console.error('❌ Status text:', response.statusText)
+        
+        try {
+          const errorData = await response.json()
+          console.error('❌ Chat history error details:', errorData)
+        } catch (jsonError) {
+          console.error('❌ Could not parse error response as JSON')
+          try {
+            const errorText = await response.text()
+            console.error('❌ Error response text:', errorText)
+          } catch (textError) {
+            console.error('❌ Could not read error response text')
+          }
+        }
+        
+        console.log('=== FETCH CHAT HISTORY CLIENT END (ERROR) ===')
         return null
       }
 
+      console.log('✅ Response is OK, parsing JSON...')
       const data = await response.json()
-      console.log('✅ Chat history fetched successfully:', data)
+      console.log('✅ Chat history fetched successfully:')
+      console.log('  - Data type:', typeof data)
+      console.log('  - Data keys:', Object.keys(data))
+      console.log('  - Has data property:', 'data' in data)
+      if ('data' in data && Array.isArray(data.data)) {
+        console.log('  - Data array length:', data.data.length)
+        console.log('  - First item:', data.data[0])
+      }
       
+      // Process the chat history data
+      let chatHistoryData: any[] = []
+      
+      // Handle different response formats
+      if (Array.isArray(data)) {
+        // Direct array response
+        chatHistoryData = data
+      } else if (data && Array.isArray(data.data)) {
+        // Nested data array
+        chatHistoryData = data.data
+      } else if (data && typeof data === 'object') {
+        // Convert object with numeric keys to array
+        const keys = Object.keys(data).filter(key => !isNaN(Number(key)))
+        if (keys.length > 0) {
+          chatHistoryData = keys.map(key => data[key]).filter(Boolean)
+        }
+      }
+      
+      console.log('📚 Processed chat history data:', chatHistoryData)
+      console.log('📚 Chat history count:', chatHistoryData.length)
+      
+      // Update chat history state
+      setChatHistory(chatHistoryData)
+      
+      // Set current chat session if none is set and we have history
+      if (!currentChatSession && chatHistoryData.length > 0) {
+        const latestSession = chatHistoryData[0] // Assuming newest first
+        setCurrentChatSession(latestSession.session_id)
+        console.log('🎯 Set current chat session to latest:', latestSession.session_id)
+      }
+      
+      console.log('=== FETCH CHAT HISTORY CLIENT END (SUCCESS) ===')
       return data
     } catch (error) {
-      console.error('Error fetching chat history:', error)
+      console.error('❌ Error fetching chat history:')
+      console.error('  - Error:', error)
+      console.error('  - Error message:', error instanceof Error ? error.message : 'Unknown error')
+      console.error('  - Error stack:', error instanceof Error ? error.stack : 'No stack trace')
+      
+      console.log('=== FETCH CHAT HISTORY CLIENT END (EXCEPTION) ===')
       return null
+    } finally {
+      setIsLoadingChatHistory(false)
     }
   }
 
@@ -1771,15 +2121,120 @@ export default function Dashboard() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50/20 text-slate-800 font-sans">
       {!chatStarted ? (
-        // Initial ChatGPT-like interface
-        <InitialInterface 
-          agents={agents}
-          selectedAgent={selectedAgent}
-          onSelectAgent={setSelectedAgent}
-          onStartChatting={handleStartChatting}
-          onRefreshAgents={refreshAgents}
-          isLoadingAgents={isLoadingAgents}
-        />
+        // Initial interface with chat history sidebar
+        <div className="flex h-screen">
+          {/* Left Sidebar - Chat History */}
+          <motion.div 
+            className="hidden lg:flex flex-col bg-gradient-to-b from-white via-slate-50 to-white border-r border-slate-200/60 w-80 shadow-sm"
+            initial={{ x: -320 }}
+            animate={{ x: 0 }}
+            transition={{ duration: 0.3 }}
+          >
+            <div className="flex-1 overflow-y-auto">
+              <LeftSidebar 
+                agents={agents} 
+                conversations={conversations} 
+                selectedAgent={selectedAgent} 
+                onSelectAgent={setSelectedAgent} 
+                isLoadingAgents={isLoadingAgents} 
+                onRefreshAgents={refreshAgents}
+                setChatStarted={setChatStarted}
+                setMessages={setMessages}
+                setSessionId={setSessionId}
+                initiateNewChat={initiateNewChat}
+                messages={messages}
+                chatStarted={chatStarted}
+                chatHistory={chatHistory}
+                isLoadingChatHistory={isLoadingChatHistory}
+                currentChatSession={currentChatSession}
+                onLoadChatSession={loadChatSession}
+                onRefreshChatHistory={fetchChatHistory}
+                onDeleteChatSession={deleteChatSession}
+              />
+            </div>
+          </motion.div>
+
+          {/* Main Content - Initial Interface */}
+          <div className="flex-1 flex flex-col min-w-0">
+            {/* Header */}
+            <header className="h-16 border-b border-slate-200/60 bg-white/90 backdrop-blur-sm px-6 flex items-center justify-between sticky top-0 z-40 shadow-sm">
+              <div className="flex items-center space-x-4">
+                {/* Mobile menu button */}
+                <div className="lg:hidden">
+                  <Sheet>
+                    <SheetTrigger asChild>
+                      <Button variant="ghost" size="icon">
+                        <Menu className="h-5 w-5" />
+                      </Button>
+                    </SheetTrigger>
+                    <SheetContent side="left" className="w-80 p-0 bg-white border-[#EEEEEE]">
+                      <MobileSidebar 
+                        agents={agents} 
+                        conversations={conversations} 
+                        chatHistory={chatHistory}
+                        isLoadingChatHistory={isLoadingChatHistory}
+                        currentChatSession={currentChatSession}
+                        onLoadChatSession={loadChatSession}
+                        onRefreshChatHistory={fetchChatHistory}
+                        onDeleteChatSession={deleteChatSession}
+                      />
+                    </SheetContent>
+                  </Sheet>
+                </div>
+
+                {/* Logo */}
+                <div className="flex items-center space-x-2">
+                  <div className="flex h-8 w-8 items-center justify-center">
+                    <img 
+                      src="/logo.png" 
+                      alt="Copy Ready logo" 
+                      width={32} 
+                      height={32}
+                      className="rounded-lg"
+                    />
+                  </div>
+                  <span className="font-semibold text-lg hidden sm:block">Copy Ready</span>
+                </div>
+              </div>
+
+              <div className="flex items-center space-x-2">
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        className="h-8 px-3 text-[#929AAB] hover:text-[#393E46] hover:bg-[#F7F7F7] text-xs"
+                        onClick={logout}
+                      >
+                        Logout
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Return to landing page</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+                
+                <Avatar className="h-8 w-8">
+                  <AvatarFallback className="bg-[#393E46] text-white text-xs">SJ</AvatarFallback>
+                </Avatar>
+              </div>
+            </header>
+
+            {/* Initial Interface Content */}
+            <div className="flex-1">
+              <InitialInterface 
+                agents={agents}
+                selectedAgent={selectedAgent}
+                                 onSelectAgent={setSelectedAgent}
+                onStartChatting={handleStartChatting}
+                onRefreshAgents={refreshAgents}
+                isLoadingAgents={isLoadingAgents}
+              />
+            </div>
+          </div>
+        </div>
       ) : (
         // Full dashboard with chat interface
         <motion.div
@@ -1800,7 +2255,16 @@ export default function Dashboard() {
                 </Button>
               </SheetTrigger>
               <SheetContent side="left" className="w-80 p-0 bg-white border-[#EEEEEE]">
-                <MobileSidebar agents={agents} conversations={conversations} />
+                <MobileSidebar 
+                  agents={agents} 
+                  conversations={conversations} 
+                  chatHistory={chatHistory}
+                  isLoadingChatHistory={isLoadingChatHistory}
+                  currentChatSession={currentChatSession}
+                  onLoadChatSession={loadChatSession}
+                  onRefreshChatHistory={fetchChatHistory}
+                  onDeleteChatSession={deleteChatSession}
+                />
               </SheetContent>
             </Sheet>
           </div>
@@ -1951,6 +2415,12 @@ export default function Dashboard() {
           initiateNewChat={initiateNewChat}
           messages={messages}
           chatStarted={chatStarted}
+          chatHistory={chatHistory}
+          isLoadingChatHistory={isLoadingChatHistory}
+          currentChatSession={currentChatSession}
+          onLoadChatSession={loadChatSession}
+          onRefreshChatHistory={fetchChatHistory}
+          onDeleteChatSession={deleteChatSession}
         />
           </div>
         </motion.div>
@@ -2241,7 +2711,26 @@ function MediaSelector({
 }
 
 // Left Sidebar Component
-function LeftSidebar({ agents, conversations, selectedAgent, onSelectAgent, isLoadingAgents, onRefreshAgents, setChatStarted, setMessages, setSessionId, initiateNewChat, messages, chatStarted }: any) {
+function LeftSidebar({ 
+  agents, 
+  conversations, 
+  selectedAgent, 
+  onSelectAgent, 
+  isLoadingAgents, 
+  onRefreshAgents, 
+  setChatStarted, 
+  setMessages, 
+  setSessionId, 
+  initiateNewChat, 
+  messages, 
+  chatStarted,
+  chatHistory,
+  isLoadingChatHistory,
+  currentChatSession,
+  onLoadChatSession,
+  onRefreshChatHistory,
+  onDeleteChatSession
+}: any) {
   const [isAgentSelectorOpen, setIsAgentSelectorOpen] = React.useState(false)
 
   return (
@@ -2271,112 +2760,144 @@ function LeftSidebar({ agents, conversations, selectedAgent, onSelectAgent, isLo
         />
       </div>
 
-      {/* Conversations Section */}
+      {/* Chat History Section */}
       <div className="flex-1 flex flex-col">
         <div className="p-5 pb-3 border-b border-slate-200/60">
           <div className="flex items-center justify-between">
-            <h3 className="text-xs font-semibold text-slate-600 uppercase tracking-wider">Conversations</h3>
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button 
-                    onClick={() => {
-                      console.log('🔄 Starting new chat (sidebar) - clearing chat state')
-                      setChatStarted(false)
-                      setMessages([])
-                      setSessionId('') // Clear session ID for new chat
-                      
-                      // Clear localStorage
-                      if (typeof window !== 'undefined') {
-                        localStorage.removeItem('chat_session_id')
-                        localStorage.removeItem('chat_started')
-                        localStorage.removeItem('chat_messages')
-                      }
-                      
-                      console.log('💡 Chat state cleared. User can now select agent and start chatting.')
-                    }}
-                    variant="ghost" 
-                    size="icon" 
-                    className="h-8 w-8 text-slate-600 hover:text-slate-800 hover:bg-slate-100 rounded-lg"
-                  >
-                    <Plus className="h-4 w-4" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>New conversation</p>
-                </TooltipContent>
+            <h3 className="text-xs font-semibold text-slate-600 uppercase tracking-wider">Chat History</h3>
+            <div className="flex items-center space-x-2">
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button 
+                      onClick={onRefreshChatHistory}
+                      disabled={isLoadingChatHistory}
+                      variant="ghost" 
+                      size="icon" 
+                      className="h-8 w-8 text-slate-600 hover:text-slate-800 hover:bg-slate-100 rounded-lg"
+                    >
+                      <RefreshCw className={`h-4 w-4 ${isLoadingChatHistory ? 'animate-spin' : ''}`} />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Refresh chat history</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button 
+                      onClick={() => {
+                        console.log('🔄 Starting new chat (sidebar) - clearing chat state')
+                        setChatStarted(false)
+                        setMessages([])
+                        setSessionId('') // Clear session ID for new chat
+                        
+                        // Clear localStorage
+                        if (typeof window !== 'undefined') {
+                          localStorage.removeItem('chat_session_id')
+                          localStorage.removeItem('chat_started')
+                          localStorage.removeItem('chat_messages')
+                        }
+                        
+                        console.log('💡 Chat state cleared. User can now select agent and start chatting.')
+                      }}
+                      variant="ghost" 
+                      size="icon" 
+                      className="h-8 w-8 text-slate-600 hover:text-slate-800 hover:bg-slate-100 rounded-lg"
+                    >
+                      <Plus className="h-4 w-4" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>New conversation</p>
+                  </TooltipContent>
                 </Tooltip>
               </TooltipProvider>
             </div>
           </div>
+        </div>
+        
         <div className={`flex-1 p-5 pt-3 ${isAgentSelectorOpen ? 'overflow-hidden' : 'overflow-y-auto'}`}>
-          <div className="space-y-2">
-          {chatStarted && messages.length > 0 ? (
-            // Show current chat messages
-            <div className="space-y-3">
-              <div className="text-xs font-medium text-slate-500 uppercase tracking-wider mb-3">
-                Current Chat
-              </div>
-              {messages.slice(-5).map((msg: any, index: number) => (
-                <motion.div
-                  key={msg.id || index}
-                  className="p-3 rounded-lg bg-white/60 border border-slate-200/40 hover:bg-white/80 transition-colors"
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: index * 0.1 }}
-                >
-                  <div className="flex items-start space-x-2">
-                    <div className={`w-2 h-2 rounded-full mt-2 flex-shrink-0 ${
-                      msg.role === 'user' ? 'bg-blue-400' : 'bg-[#1ABC9C]'
-                    }`} />
-                    <div className="flex-1 min-w-0">
-                      <p className="text-xs font-medium text-slate-700 mb-1">
-                        {msg.role === 'user' ? 'You' : selectedAgent}
-                      </p>
-                      <p className="text-xs text-slate-600 line-clamp-2 leading-relaxed">
-                        {msg.content}
-                      </p>
-                    </div>
-                  </div>
-                </motion.div>
-              ))}
+          {isLoadingChatHistory ? (
+            <div className="flex items-center justify-center py-8">
+              <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-[#1ABC9C]"></div>
+              <span className="ml-2 text-sm text-slate-600">Loading chat history...</span>
             </div>
-          ) : conversations.length > 0 ? (
-            conversations.map((conv: any) => (
-              <motion.div
-                key={conv.id}
-                className="p-4 rounded-xl hover:bg-white/80 cursor-pointer border border-slate-200/60 hover:border-slate-300 bg-white/40 hover:shadow-sm transition-all duration-200"
-                whileHover={{ scale: 1.01 }}
-              >
-                <div className="flex items-start justify-between mb-2">
-                  <h4 className="font-semibold text-sm truncate pr-2 text-slate-800">{conv.title}</h4>
-                  <div className="flex items-center space-x-2">
-                    <span className="text-xs text-slate-500 flex-shrink-0 font-medium">{conv.time}</span>
-                    <ThreeDotsMenu 
-                      onDelete={() => console.log('Delete conversation:', conv.title)}
-                    />
-                  </div>
-                </div>
-                <p className="text-xs text-slate-600 mb-3 line-clamp-2 leading-relaxed">{conv.lastMessage}</p>
-                <div className="flex items-center justify-between">
-                  <span className="text-xs text-slate-600 font-medium">{conv.agent}</span>
-                  <div className={`w-2.5 h-2.5 rounded-full shadow-sm ${
-                    conv.status === 'active' ? 'bg-emerald-400' : 
-                    conv.status === 'review' ? 'bg-amber-400' : 'bg-slate-400'
-                  }`} />
-                </div>
-              </motion.div>
-            ))
+          ) : chatHistory.length > 0 ? (
+            <div className="space-y-2">
+              {chatHistory.map((chat: any, index: number) => {
+                const isActive = currentChatSession === chat.session_id
+                const chatDate = new Date(chat.created_at)
+                const timeAgo = formatTimeAgo(chatDate)
+                
+                return (
+                  <motion.div
+                    key={chat.session_id}
+                    className={`p-3 rounded-lg border transition-all duration-200 ${
+                      isActive 
+                        ? 'bg-[#1ABC9C]/10 border-[#1ABC9C] shadow-sm' 
+                        : 'bg-white/60 border-slate-200/40 hover:bg-white/80 hover:border-slate-300'
+                    }`}
+                    whileHover={{ scale: 1.01 }}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: index * 0.05 }}
+                  >
+                    <div className="flex items-start justify-between mb-2">
+                      <div 
+                        className="flex-1 min-w-0 cursor-pointer"
+                        onClick={() => onLoadChatSession(chat.session_id)}
+                      >
+                        <h4 className={`font-medium text-sm truncate ${
+                          isActive ? 'text-[#1ABC9C]' : 'text-slate-800'
+                        }`}>
+                          {chat.title || `Chat ${chat.session_id}`}
+                        </h4>
+                        <p className="text-xs text-slate-500 mt-1">{timeAgo}</p>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        {isActive && (
+                          <div className="w-2 h-2 bg-[#1ABC9C] rounded-full flex-shrink-0 mt-1"></div>
+                        )}
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-6 w-6 text-slate-400 hover:text-red-500 hover:bg-red-50"
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            onDeleteChatSession(chat.session_id)
+                          }}
+                        >
+                          <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                          </svg>
+                        </Button>
+                      </div>
+                    </div>
+                    <div 
+                      className="flex items-center justify-between cursor-pointer"
+                      onClick={() => onLoadChatSession(chat.session_id)}
+                    >
+                      <span className="text-xs text-slate-600 font-medium">Session {chat.session_id}</span>
+                      <div className={`w-2 h-2 rounded-full ${
+                        isActive ? 'bg-[#1ABC9C]' : 'bg-slate-300'
+                      }`} />
+                    </div>
+                  </motion.div>
+                )
+              })}
+            </div>
           ) : (
             <div className="text-center py-8">
               <div className="w-16 h-16 mx-auto mb-4 bg-slate-100 rounded-full flex items-center justify-center">
                 <MessageSquare className="h-8 w-8 text-slate-400" />
               </div>
-              <p className="text-sm text-slate-600 mb-2">No conversations yet</p>
+              <p className="text-sm text-slate-600 mb-2">No chat history yet</p>
               <p className="text-xs text-slate-500">Start a new chat to begin</p>
             </div>
           )}
-          </div>
         </div>
       </div>
     </div>
@@ -2384,7 +2905,7 @@ function LeftSidebar({ agents, conversations, selectedAgent, onSelectAgent, isLo
 }
 
 // Mobile Sidebar Component
-function MobileSidebar({ agents, conversations }: any) {
+function MobileSidebar({ agents, conversations, chatHistory, isLoadingChatHistory, currentChatSession, onLoadChatSession, onRefreshChatHistory, onDeleteChatSession }: any) {
   return (
     <div className="h-full relative flex flex-col bg-white">
       <div className="p-4 border-b border-[#EEEEEE]">
@@ -2417,6 +2938,12 @@ function MobileSidebar({ agents, conversations }: any) {
         initiateNewChat={async () => true}
         messages={[]}
         chatStarted={false}
+        chatHistory={chatHistory}
+        isLoadingChatHistory={isLoadingChatHistory}
+        currentChatSession={currentChatSession}
+        onLoadChatSession={onLoadChatSession}
+        onRefreshChatHistory={onRefreshChatHistory}
+        onDeleteChatSession={onDeleteChatSession}
       />
     </div>
   )

@@ -89,6 +89,8 @@ export const API_ENDPOINTS = {
       UPLOAD_RAG_DOCUMENT: 'https://n8n.srv934833.hstgr.cloud/webhook/upload-rag-document',
       DELETE_RAG_DOCUMENT: 'https://n8n.srv934833.hstgr.cloud/webhook/delete-separate-file-embedding',
       GET_CHAT_HISTORY: 'https://n8n.srv934833.hstgr.cloud/webhook/user-chat-history',
+      GET_CHAT_MESSAGES: 'https://n8n.srv934833.hstgr.cloud/webhook/show-specific-chat-history',
+      DELETE_CHAT: 'https://n8n.srv934833.hstgr.cloud/webhook/delte-chat',
       },
   
   // User Management

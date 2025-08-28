@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { API_ENDPOINTS } from '@/lib/api-config'
 
 export async function GET(request: NextRequest) {
-  console.log('=== CHAT HISTORY API ROUTE START ===')
+  console.log('=== CHAT MESSAGES API ROUTE START ===')
   console.log('Timestamp:', new Date().toISOString())
   console.log('Request URL:', request.url)
   console.log('Request method:', request.method)
@@ -22,24 +22,45 @@ export async function GET(request: NextRequest) {
     console.log('🔐 Access token length:', accessToken.length)
     console.log('🔐 Access token preview:', accessToken.substring(0, 20) + '...')
 
-    console.log('📚 Fetching chat history from n8n webhook')
-    console.log('🔗 Webhook URL:', API_ENDPOINTS.N8N_WEBHOOKS.GET_CHAT_HISTORY)
-    console.log('🔗 Full webhook URL:', API_ENDPOINTS.N8N_WEBHOOKS.GET_CHAT_HISTORY)
+    // Get session_id from query parameters
+    const { searchParams } = new URL(request.url)
+    const sessionId = searchParams.get('session_id')
+    
+    if (!sessionId) {
+      console.log('❌ Session ID missing from query parameters')
+      return NextResponse.json({ error: 'Session ID required' }, { status: 400 })
+    }
+    
+    console.log('📚 Session ID:', sessionId)
+
+    console.log('📚 Fetching chat messages from n8n webhook')
+    console.log('🔗 Webhook URL:', API_ENDPOINTS.N8N_WEBHOOKS.GET_CHAT_MESSAGES)
+    console.log('🔗 Full webhook URL:', API_ENDPOINTS.N8N_WEBHOOKS.GET_CHAT_MESSAGES)
 
     // Log request details
     console.log('📤 Making request with:')
-    console.log('  - Method: GET')
+    console.log('  - Method: POST')
     console.log('  - Headers:', {
       'Authorization': `Bearer ${accessToken.substring(0, 20)}...`,
       'Content-Type': 'application/json',
     })
+    console.log('  - Request body:', {
+      access_token: accessToken,
+      session_id: sessionId
+    })
 
-    const response = await fetch(API_ENDPOINTS.N8N_WEBHOOKS.GET_CHAT_HISTORY, {
-      method: 'GET',
+    const webhookUrl = API_ENDPOINTS.N8N_WEBHOOKS.GET_CHAT_MESSAGES
+    
+    const response = await fetch(webhookUrl, {
+      method: 'POST',
       headers: {
         'Authorization': `Bearer ${accessToken}`,
         'Content-Type': 'application/json',
       },
+      body: JSON.stringify({
+        access_token: accessToken,
+        session_id: sessionId
+      }),
     })
 
     console.log('📊 Response received:')
@@ -48,20 +69,20 @@ export async function GET(request: NextRequest) {
     console.log('  - OK:', response.ok)
     console.log('  - Headers:', Object.fromEntries(response.headers.entries()))
 
-    if (!response.ok) {
-      console.log('❌ Response not OK, reading error response...')
-      const errorText = await response.text().catch(() => 'Unable to read error response')
-      console.error('❌ Chat history fetch failed:')
-      console.error('  - Status:', response.status)
-      console.error('  - Status text:', response.statusText)
-      console.error('  - Error text:', errorText)
-      console.error('  - Error text length:', errorText.length)
-      
-      return NextResponse.json(
-        { error: `Failed to fetch chat history: ${response.status} ${response.statusText}`, details: errorText },
-        { status: response.status }
-      )
-    }
+      if (!response.ok) {
+        console.log('❌ Response not OK, reading error response...')
+        const errorText = await response.text().catch(() => 'Unable to read error response')
+        console.error('❌ Chat messages fetch failed:')
+        console.error('  - Status:', response.status)
+        console.error('  - Status text:', response.statusText)
+        console.error('  - Error text:', errorText)
+        console.error('  - Error text length:', errorText.length)
+        
+        return NextResponse.json(
+          { error: `Failed to fetch chat messages: ${response.status} ${response.statusText}`, details: errorText },
+          { status: response.status }
+        )
+      }
 
     // Try to parse JSON response
     console.log('📄 Reading response text...')
@@ -73,8 +94,8 @@ export async function GET(request: NextRequest) {
       console.log('📄 Raw response text (last 500 chars):', responseText.substring(Math.max(0, responseText.length - 500)))
       
       if (!responseText || responseText.trim() === '') {
-        console.log('📄 Empty response text, returning empty data array')
-        result = { data: [] }
+        console.log('📄 Empty response text, returning empty messages array')
+        result = { messages: [] }
       } else {
         console.log('📄 Parsing JSON response...')
         result = JSON.parse(responseText)
@@ -93,25 +114,24 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    console.log('✅ Chat history fetched successfully:')
+    console.log('✅ Chat messages fetched successfully:')
     console.log('  - Result type:', typeof result)
     console.log('  - Result keys:', Object.keys(result))
-    console.log('  - Has data property:', 'data' in result)
-    console.log('  - Data type:', typeof result.data)
-    console.log('  - Data is array:', Array.isArray(result.data))
-    if (Array.isArray(result.data)) {
-      console.log('  - Data array length:', result.data.length)
-      console.log('  - First item:', result.data[0])
+    console.log('  - Has messages property:', 'messages' in result)
+    console.log('  - Messages type:', typeof result.messages)
+    console.log('  - Messages is array:', Array.isArray(result.messages))
+    if (Array.isArray(result.messages)) {
+      console.log('  - Messages array length:', result.messages.length)
+      console.log('  - First message:', result.messages[0])
     }
 
-    console.log('=== CHAT HISTORY API ROUTE END ===')
+    console.log('=== CHAT MESSAGES API ROUTE END ===')
     return NextResponse.json(result)
   } catch (error) {
-    console.error('❌ Error in chat history proxy:', error)
+    console.error('❌ Error in chat messages proxy:', error)
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
     )
   }
 }
-
