@@ -27,6 +27,11 @@ export default function KnowledgeBasePage() {
   const [passwordError, setPasswordError] = React.useState('')
   const [passwordSuccess, setPasswordSuccess] = React.useState('')
 
+  // Delete user state
+  const [isDeletingUser, setIsDeletingUser] = React.useState(false)
+  const [showDeleteConfirm, setShowDeleteConfirm] = React.useState(false)
+  const [deleteError, setDeleteError] = React.useState('')
+
   // Debug: Monitor userProfile state changes
   React.useEffect(() => {
     console.log('🔄 userProfile state changed:', userProfile)
@@ -557,6 +562,56 @@ export default function KnowledgeBasePage() {
     }
   }
 
+  const handleDeleteUser = async () => {
+    setIsDeletingUser(true)
+    setDeleteError('')
+    
+    try {
+      const accessToken = authService.getAuthToken()
+      if (!accessToken) {
+        setDeleteError('Authentication token not found')
+        return
+      }
+
+      const currentUser = authService.getCurrentUser()
+      if (!currentUser) {
+        setDeleteError('User information not found')
+        return
+      }
+
+      console.log('🗑️ Client - Deleting user ID:', currentUser.id, 'Email:', currentUser.email)
+      console.log('🔑 Client - Token exists:', !!accessToken)
+
+      const response = await fetch('/api/admin/delete-user', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          userId: currentUser.id,
+          email: currentUser.email,
+          accessToken: accessToken,
+        }),
+      })
+
+      if (!response.ok) {
+        const error = await response.json()
+        throw new Error(error.error || 'Failed to delete user')
+      }
+
+      console.log('✅ User deleted successfully')
+      
+      // Sign out the user after successful deletion
+      authService.signOut()
+      
+    } catch (error) {
+      console.error('❌ Error deleting user:', error)
+      setDeleteError(`Failed to delete user: ${error instanceof Error ? error.message : 'Unknown error'}`)
+    } finally {
+      setIsDeletingUser(false)
+    }
+  }
+
   console.log('🔄 Knowledge base component rendering...')
   console.log('🔄 Active tab:', activeTab)
   console.log('🔄 Uploaded files count:', uploadedFiles.length)
@@ -924,6 +979,38 @@ export default function KnowledgeBasePage() {
                             </div>
                           </div>
                         </div>
+
+                        {/* Delete Account */}
+                        <div className="border-t border-gray-200 pt-6">
+                          <h3 className="text-lg font-medium text-gray-900 mb-4">Delete Account</h3>
+                          <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                            <div className="flex items-start space-x-3">
+                              <div className="w-6 h-6 bg-red-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                                <svg className="w-4 h-4 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                                </svg>
+                              </div>
+                              <div className="flex-1">
+                                <h4 className="text-sm font-medium text-red-800">Danger Zone</h4>
+                                <p className="text-sm text-red-700 mt-1">
+                                  Once you delete your account, there is no going back. Please be certain.
+                                </p>
+                                {deleteError && (
+                                  <div className="mt-2 p-2 bg-red-100 border border-red-300 rounded">
+                                    <p className="text-red-600 text-xs">{deleteError}</p>
+                                  </div>
+                                )}
+                                <button 
+                                  onClick={() => setShowDeleteConfirm(true)}
+                                  disabled={isDeletingUser}
+                                  className="mt-3 bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                >
+                                  Delete My Account
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
                       </>
                     )}
                   </div>
@@ -976,6 +1063,55 @@ export default function KnowledgeBasePage() {
         isOpen={isKnowledgeViewerOpen}
         onClose={() => setIsKnowledgeViewerOpen(false)}
       />
+
+      {/* Delete Account Confirmation Modal */}
+      {showDeleteConfirm && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl p-6 max-w-md w-full mx-4">
+            <div className="flex items-center space-x-3 mb-4">
+              <div className="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
+                <svg className="text-red-600" width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                </svg>
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900">Delete Account</h3>
+                <p className="text-sm text-gray-500">This action cannot be undone</p>
+              </div>
+            </div>
+            
+            <div className="text-gray-600 mb-6">
+              <p>Are you sure you want to delete your account? This will permanently remove your account and all associated data including:</p>
+              <ul className="list-disc list-inside mt-2 text-sm">
+                <li>Your profile information</li>
+                <li>All uploaded files and knowledge base</li>
+                <li>Chat history and conversations</li>
+                <li>Account credits and settings</li>
+              </ul>
+              <p className="mt-3 font-semibold text-red-600">
+                This action is irreversible!
+              </p>
+            </div>
+            
+            <div className="flex space-x-3">
+              <button
+                onClick={handleDeleteUser}
+                disabled={isDeletingUser}
+                className="flex-1 bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                {isDeletingUser ? 'Deleting...' : 'Delete My Account'}
+              </button>
+              <button
+                onClick={() => setShowDeleteConfirm(false)}
+                disabled={isDeletingUser}
+                className="flex-1 bg-gray-200 text-gray-800 px-4 py-2 rounded-lg hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </ProtectedRoute>
   )
 }

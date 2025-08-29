@@ -41,7 +41,8 @@ export async function POST(request: NextRequest) {
       accessToken: accessToken ? '***' : 'NOT PROVIDED', 
       agent_id, 
       system_prompt, 
-      short_description 
+      short_description,
+      is_active: true
     });
 
     const response = await fetch(API_ENDPOINTS.N8N_WEBHOOKS.CREATE_AGENT, {
@@ -54,6 +55,7 @@ export async function POST(request: NextRequest) {
         agent_id,
         system_prompt,
         short_description,
+        is_active: true, // Set agent as active when created from admin dashboard
       }),
       signal: AbortSignal.timeout(30000), // 30 second timeout
     });

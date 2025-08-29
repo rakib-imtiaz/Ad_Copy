@@ -27,15 +27,45 @@ export async function GET(request: NextRequest) {
       const errorText = await response.text().catch(() => 'Unable to read error response')
       console.error('Error response:', errorText)
       
+      // Handle 404 errors gracefully - return empty media library
+      if (response.status === 404) {
+        console.log('n8n webhook not found (404) - returning empty media library')
+        return NextResponse.json({ data: [] })
+      }
+      
+      // Handle 500 workflow errors gracefully
+      if (response.status === 500) {
+        console.log('n8n webhook workflow error (500) - returning empty media library')
+        return NextResponse.json({ data: [] })
+      }
+      
       return NextResponse.json(
         { error: `n8n webhook failed: ${response.status} ${response.statusText}` },
         { status: response.status }
       )
     }
 
-    const data = await response.json()
-    console.log('✅ n8n webhook success:', data)
-    console.log('📊 Raw data structure:', JSON.stringify(data, null, 2))
+    // Check if response has content before parsing JSON
+    const responseText = await response.text()
+    console.log('Response text length:', responseText.length)
+    console.log('Response text preview:', responseText.substring(0, 200))
+
+    if (!responseText || responseText.trim() === '') {
+      console.log('n8n webhook returned empty response - returning empty media library')
+      return NextResponse.json({ data: [] })
+    }
+
+    let data
+    try {
+      data = JSON.parse(responseText)
+      console.log('✅ n8n webhook success:', data)
+      console.log('📊 Raw data structure:', JSON.stringify(data, null, 2))
+    } catch (parseError) {
+      console.error('❌ Failed to parse JSON response:', parseError)
+      console.error('Raw response text:', responseText)
+      console.log('Returning empty media library due to JSON parse error')
+      return NextResponse.json({ data: [] })
+    }
 
     // Extract the actual media items from the n8n response
     let mediaItems = []

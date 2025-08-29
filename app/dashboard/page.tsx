@@ -273,19 +273,19 @@ function AgentSelector({ agents, selectedAgent, onSelectAgent, onOpenChange, isL
       <motion.button
         onClick={() => handleOpenChange(!isOpen)}
         onMouseEnter={() => handleOpenChange(true)}
-        className="w-full text-left p-3 rounded-lg border border-[#EEEEEE] bg-white hover:bg-[#F9FAFB] transition-colors"
+        className="w-full text-left p-4 rounded-lg border border-gray-200 bg-white hover:bg-gray-50 transition-colors"
         whileHover={{ scale: 1.01 }}
         whileTap={{ scale: 0.99 }}
       >
         <div className="flex items-start justify-between">
           <div className="flex items-start space-x-3 flex-1 min-w-0">
-            <span className="text-lg flex-shrink-0">{currentAgent?.icon || "🤖"}</span>
+            <span className="text-xl flex-shrink-0">{currentAgent?.icon || "🤖"}</span>
             <div className="flex-1 min-w-0">
-              <div className="font-medium text-sm truncate">{currentAgent?.name || "Select Agent"}</div>
-              <div className="text-xs text-[#929AAB] line-clamp-2 leading-relaxed mt-0.5">{currentAgent?.description || "Choose an AI agent"}</div>
+              <div className="font-medium text-sm truncate text-gray-900">{currentAgent?.name || "Select Agent"}</div>
+              <div className="text-xs text-gray-500 line-clamp-2 leading-relaxed mt-1">{currentAgent?.description || "Choose an AI agent"}</div>
             </div>
           </div>
-          <ChevronRight className={`h-4 w-4 text-[#929AAB] transition-transform flex-shrink-0 mt-0.5 ${isOpen ? 'rotate-90' : ''}`} />
+          <ChevronRight className={`h-4 w-4 text-gray-400 transition-transform flex-shrink-0 mt-0.5 ${isOpen ? 'rotate-90' : ''}`} />
         </div>
       </motion.button>
 
@@ -296,10 +296,10 @@ function AgentSelector({ agents, selectedAgent, onSelectAgent, onOpenChange, isL
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -10 }}
           onMouseLeave={() => handleOpenChange(false)}
-          className="absolute top-full left-0 right-0 mt-1 bg-white border border-[#EEEEEE] rounded-lg shadow-xl z-[100] max-h-72 overflow-y-auto"
+          className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-xl z-[100] max-h-72 overflow-y-auto"
         >
           <div className="p-2">
-            <div className="text-xs font-medium text-[#929AAB] uppercase tracking-wider px-2 py-1 mb-1">
+            <div className="text-xs font-medium text-gray-500 uppercase tracking-wider px-2 py-1 mb-1">
               Available Agents
             </div>
             {agents.map((agent: any) => (
@@ -311,8 +311,8 @@ function AgentSelector({ agents, selectedAgent, onSelectAgent, onOpenChange, isL
                 }}
                 className={`w-full text-left p-3 rounded-md transition-colors ${
                   selectedAgent === agent.name 
-                    ? 'bg-[#F0F9FF] border border-[#0EA5E9]' 
-                    : 'hover:bg-[#F9FAFB]'
+                    ? 'bg-blue-50 border border-blue-200' 
+                    : 'hover:bg-gray-50'
                 }`}
                 whileHover={{ scale: 1.005 }}
                 whileTap={{ scale: 0.995 }}
@@ -320,11 +320,11 @@ function AgentSelector({ agents, selectedAgent, onSelectAgent, onOpenChange, isL
                 <div className="flex items-start space-x-3">
                   <span className="text-lg flex-shrink-0">{agent.icon}</span>
                   <div className="flex-1 min-w-0">
-                    <div className="font-medium text-sm truncate">{agent.name}</div>
-                    <div className="text-xs text-[#929AAB] line-clamp-2 leading-relaxed mt-0.5">{agent.description}</div>
+                    <div className="font-medium text-sm truncate text-gray-900">{agent.name}</div>
+                    <div className="text-xs text-gray-500 line-clamp-2 leading-relaxed mt-0.5">{agent.description}</div>
                   </div>
                   {selectedAgent === agent.name && (
-                    <div className="w-2 h-2 bg-[#0EA5E9] rounded-full flex-shrink-0 mt-1" />
+                    <div className="w-2 h-2 bg-blue-600 rounded-full flex-shrink-0 mt-1" />
                   )}
                 </div>
               </motion.button>
@@ -451,6 +451,28 @@ export default function Dashboard() {
     setIsInitialLoad(false)
   }, [])
 
+  // Check for refresh parameter on component mount
+  React.useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const urlParams = new URLSearchParams(window.location.search)
+      const refreshAgents = urlParams.get('refreshAgents')
+      
+      if (refreshAgents === 'true') {
+        console.log('🔄 Detected refreshAgents=true parameter - automatically refreshing agents')
+        
+        // Remove the parameter from URL
+        const url = new URL(window.location.href)
+        url.searchParams.delete('refreshAgents')
+        window.history.replaceState({}, document.title, url.toString())
+        
+        // Refresh agents after a short delay to ensure component is mounted
+        setTimeout(() => {
+          refreshAgents()
+        }, 500)
+      }
+    }
+  }, [])
+
   // Watch for agent changes and clear session when agent is changed
   React.useEffect(() => {
     // Skip on initial load to avoid unnecessary actions
@@ -506,14 +528,14 @@ export default function Dashboard() {
         return
       }
 
-      console.log('Fetching agents from n8n webhook...')
-      console.log('Request URL:', '/api/agents/list')
+      console.log('Fetching active agents from n8n webhook...')
+      console.log('Request URL:', '/api/agents/active-list')
       console.log('Request headers:', {
         'Authorization': `Bearer ${accessToken}`,
         'Content-Type': 'application/json',
       })
 
-      const response = await fetch('/api/agents/list', {
+      const response = await fetch('/api/agents/active-list', {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${accessToken}`,
@@ -631,8 +653,11 @@ export default function Dashboard() {
 
   // Refresh agents function
   const refreshAgents = async () => {
-    console.log('Refreshing agents...')
+    console.log('🔄 refreshAgents function called')
+    console.log('🔄 Current agents state:', agents)
+    console.log('🔄 isLoadingAgents state:', isLoadingAgents)
     await fetchAgents()
+    console.log('🔄 fetchAgents completed')
   }
 
   // Start new conversation function
@@ -1544,6 +1569,8 @@ export default function Dashboard() {
         if (response.status === 404) {
           console.log("No media items found (404) - setting empty array")
           setMediaItems([])
+          setIsLoadingMedia(false)
+          setIsRefreshing(false)
           return
         }
         console.error('🔍 Response not OK:', response.status, response.statusText)
@@ -1563,6 +1590,8 @@ export default function Dashboard() {
       if (!data || !Array.isArray(data)) {
         console.log('No valid data received, setting empty array')
         setMediaItems([])
+        setIsLoadingMedia(false)
+        setIsRefreshing(false)
         return
       }
       
@@ -1626,6 +1655,12 @@ export default function Dashboard() {
         stack: error instanceof Error ? error.stack : 'No stack trace',
         name: error instanceof Error ? error.name : 'Unknown'
       })
+      
+      // Check if it's a 404 error (n8n webhook not found)
+      if (error instanceof Error && error.message.includes('404')) {
+        console.log('🔄 n8n webhook not found - this is expected if the webhook is not set up yet')
+      }
+      
       // Set empty array on error to prevent UI issues
       setMediaItems([])
     } finally {
@@ -2192,7 +2227,7 @@ export default function Dashboard() {
         <div className="flex h-screen">
           {/* Left Sidebar - Chat History */}
           <motion.div 
-            className="hidden lg:flex flex-col bg-gradient-to-b from-white via-slate-50 to-white border-r border-slate-200/60 w-80 shadow-sm"
+            className="hidden lg:flex flex-col bg-white border-r border-gray-200 w-80 shadow-sm"
             initial={{ x: -320 }}
             animate={{ x: 0 }}
             transition={{ duration: 0.3 }}
@@ -2265,6 +2300,24 @@ export default function Dashboard() {
               </div>
 
               <div className="flex items-center space-x-2">
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        className="h-8 w-8 text-[#929AAB] hover:text-[#393E46] hover:bg-[#F7F7F7]"
+                        onClick={() => window.location.href = '/knowledge-base'}
+                      >
+                        <Settings className="h-4 w-4" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Brand Settings</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+
                 <TooltipProvider>
                   <Tooltip>
                     <TooltipTrigger asChild>
@@ -2802,20 +2855,31 @@ function LeftSidebar({
   const [isAgentSelectorOpen, setIsAgentSelectorOpen] = React.useState(false)
 
   return (
-    <div className="h-full flex flex-col">
+    <div className="h-full flex flex-col bg-white">
       {/* Agent Selector */}
-      <div className="p-5 border-b border-slate-200/60">
+      <div className="p-6 border-b border-gray-200">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-xs font-semibold text-slate-600 uppercase tracking-wider">Current Agent</h3>
+          <h3 className="text-sm font-semibold text-gray-900">Current Agent</h3>
           <Button
-            variant="outline"
+            variant="ghost"
             size="sm"
-            onClick={onRefreshAgents}
+            onClick={(e) => {
+              e.preventDefault()
+              e.stopPropagation()
+              console.log('🔄 Refresh button clicked in LeftSidebar')
+              console.log('🔄 Event target:', e.target)
+              console.log('🔄 onRefreshAgents function:', typeof onRefreshAgents)
+              try {
+                onRefreshAgents()
+              } catch (error) {
+                console.error('🔄 Error calling onRefreshAgents:', error)
+              }
+            }}
             disabled={isLoadingAgents}
-            className="flex items-center space-x-2 bg-gradient-to-r from-[#1ABC9C] to-emerald-500 hover:from-[#1ABC9C]/90 hover:to-emerald-500/90 text-white border-0 shadow-lg hover:shadow-xl transition-all duration-200 rounded-xl"
+            className="flex items-center space-x-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
           >
-            <RefreshCw className={`h-3 w-3 ${isLoadingAgents ? 'animate-spin' : ''}`} />
-            <span className="text-xs font-medium">Refresh</span>
+            <RefreshCw className={`h-4 w-4 ${isLoadingAgents ? 'animate-spin' : ''}`} />
+            <span className="text-sm font-medium">Refresh</span>
           </Button>
         </div>
         <AgentSelector 
@@ -2830,9 +2894,9 @@ function LeftSidebar({
 
       {/* Chat History Section */}
       <div className="flex-1 flex flex-col">
-        <div className="p-5 pb-3 border-b border-slate-200/60">
+        <div className="p-6 pb-4 border-b border-gray-200">
           <div className="flex items-center justify-between">
-            <h3 className="text-xs font-semibold text-slate-600 uppercase tracking-wider">Chat History</h3>
+            <h3 className="text-sm font-semibold text-gray-900">Chat History</h3>
             <div className="flex items-center space-x-2">
               <TooltipProvider>
                 <Tooltip>
@@ -2842,7 +2906,7 @@ function LeftSidebar({
                       disabled={isLoadingChatHistory}
                       variant="ghost" 
                       size="icon" 
-                      className="h-8 w-8 text-slate-600 hover:text-slate-800 hover:bg-slate-100 rounded-lg"
+                      className="h-8 w-8 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg"
                     >
                       <RefreshCw className={`h-4 w-4 ${isLoadingChatHistory ? 'animate-spin' : ''}`} />
                     </Button>
@@ -2873,7 +2937,7 @@ function LeftSidebar({
                     }}
                     variant="ghost" 
                     size="icon" 
-                    className="h-8 w-8 text-slate-600 hover:text-slate-800 hover:bg-slate-100 rounded-lg"
+                    className="h-8 w-8 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg"
                   >
                     <Plus className="h-4 w-4" />
                   </Button>
@@ -2887,14 +2951,14 @@ function LeftSidebar({
           </div>
         </div>
         
-        <div className={`flex-1 p-5 pt-3 ${isAgentSelectorOpen ? 'overflow-hidden' : 'overflow-y-auto'}`}>
+        <div className={`flex-1 p-6 pt-4 ${isAgentSelectorOpen ? 'overflow-hidden' : 'overflow-y-auto'}`}>
           {isLoadingChatHistory ? (
             <div className="flex items-center justify-center py-8">
-              <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-[#1ABC9C]"></div>
-              <span className="ml-2 text-sm text-slate-600">Loading chat history...</span>
+              <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
+              <span className="ml-2 text-sm text-gray-600">Loading chat history...</span>
               </div>
           ) : chatHistory.length > 0 ? (
-            <div className="space-y-2">
+            <div className="space-y-3">
               {chatHistory.map((chat: any, index: number) => {
                 const isActive = currentChatSession === chat.session_id
                 const chatDate = new Date(chat.created_at)
@@ -2903,10 +2967,10 @@ function LeftSidebar({
                 return (
                 <motion.div
                     key={chat.session_id}
-                    className={`p-3 rounded-lg border transition-all duration-200 ${
+                    className={`p-4 rounded-lg border transition-all duration-200 ${
                       isActive 
-                        ? 'bg-[#1ABC9C]/10 border-[#1ABC9C] shadow-sm' 
-                        : 'bg-white/60 border-slate-200/40 hover:bg-white/80 hover:border-slate-300'
+                        ? 'bg-blue-50 border-blue-200 shadow-sm' 
+                        : 'bg-gray-50 border-gray-200 hover:bg-gray-100 hover:border-gray-300'
                     }`}
                     whileHover={{ scale: 1.01 }}
                   initial={{ opacity: 0, y: 10 }}
@@ -2919,20 +2983,20 @@ function LeftSidebar({
                         onClick={() => onLoadChatSession(chat.session_id)}
                       >
                         <h4 className={`font-medium text-sm truncate ${
-                          isActive ? 'text-[#1ABC9C]' : 'text-slate-800'
+                          isActive ? 'text-blue-700' : 'text-gray-900'
                         }`}>
                           {chat.title || `Chat ${chat.session_id}`}
                         </h4>
-                        <p className="text-xs text-slate-500 mt-1">{timeAgo}</p>
+                        <p className="text-xs text-gray-500 mt-1">{timeAgo}</p>
                       </div>
                   <div className="flex items-center space-x-2">
                         {isActive && (
-                          <div className="w-2 h-2 bg-[#1ABC9C] rounded-full flex-shrink-0 mt-1"></div>
+                          <div className="w-2 h-2 bg-blue-600 rounded-full flex-shrink-0 mt-1"></div>
                         )}
                         <Button
                           variant="ghost"
                           size="icon"
-                          className="h-6 w-6 text-slate-400 hover:text-red-500 hover:bg-red-50"
+                          className="h-6 w-6 text-gray-400 hover:text-red-500 hover:bg-red-50"
                           onClick={(e) => {
                             e.stopPropagation()
                             onDeleteChatSession(chat.session_id)
@@ -2948,9 +3012,9 @@ function LeftSidebar({
                       className="flex items-center justify-between cursor-pointer"
                       onClick={() => onLoadChatSession(chat.session_id)}
                     >
-                      <span className="text-xs text-slate-600 font-medium">Session {chat.session_id}</span>
+                      <span className="text-xs text-gray-600 font-medium">Session {chat.session_id}</span>
                       <div className={`w-2 h-2 rounded-full ${
-                        isActive ? 'bg-[#1ABC9C]' : 'bg-slate-300'
+                        isActive ? 'bg-blue-600' : 'bg-gray-300'
                   }`} />
                 </div>
               </motion.div>
@@ -2959,11 +3023,11 @@ function LeftSidebar({
             </div>
           ) : (
             <div className="text-center py-8">
-              <div className="w-16 h-16 mx-auto mb-4 bg-slate-100 rounded-full flex items-center justify-center">
-                <MessageSquare className="h-8 w-8 text-slate-400" />
+              <div className="w-16 h-16 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center">
+                <MessageSquare className="h-8 w-8 text-gray-400" />
               </div>
-              <p className="text-sm text-slate-600 mb-2">No chat history yet</p>
-              <p className="text-xs text-slate-500">Start a new chat to begin</p>
+              <p className="text-sm text-gray-600 mb-2">No chat history yet</p>
+              <p className="text-xs text-gray-500">Start a new chat to begin</p>
             </div>
           )}
         </div>
@@ -3022,6 +3086,7 @@ function MediaDrawer({ activeTab, onTabChange, mediaItems, setMediaItems, onRefr
   const tabs = [
     { id: 'files' as const, label: 'Files', icon: FileText },
     { id: 'links' as const, label: 'Links', icon: Link2 },
+    { id: 'youtube' as const, label: 'YouTube', icon: Mic },
     { id: 'image-analyzer' as const, label: 'Images', icon: Image },
     { id: 'transcripts' as const, label: 'Transcripts', icon: Mic },
   ]
@@ -3065,6 +3130,7 @@ function MediaDrawer({ activeTab, onTabChange, mediaItems, setMediaItems, onRefr
       <div className="flex-1 overflow-y-auto p-4">
         {activeTab === 'files' && <FilesTab mediaItems={mediaItems} onUpload={onUpload} onDelete={onDelete} />}
         {activeTab === 'links' && <LinksTab mediaItems={mediaItems} onDelete={handleDeleteItem} onRefresh={onRefresh} setMediaItems={setMediaItems} />}
+        {activeTab === 'youtube' && <YouTubeTab mediaItems={mediaItems} onDelete={handleDeleteItem} onRefresh={onRefresh} setMediaItems={setMediaItems} />}
         {activeTab === 'image-analyzer' && <ImageAnalyzerTab mediaItems={mediaItems} onUpload={onUpload} onDelete={onDelete} />}
         {activeTab === 'transcripts' && <TranscriptsTab mediaItems={mediaItems} onDelete={onDelete} />}
       </div>
@@ -3615,6 +3681,241 @@ function LinksTab({ mediaItems, onDelete, onRefresh, setMediaItems }: any) {
             <Link2 className="h-8 w-8 text-[#929AAB] mx-auto mb-2" />
             <p className="text-sm text-[#929AAB]">No links or scraped content yet</p>
             <p className="text-xs text-[#929AAB] mt-1">Add a URL to scrape content</p>
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
+// YouTube Transcription Tab Component
+function YouTubeTab({ mediaItems, onDelete, onRefresh, setMediaItems }: any) {
+  const youtubeItems = mediaItems.filter((item: any) => item.type === 'youtube')
+  const [urlInput, setUrlInput] = React.useState("")
+  const [isTranscribing, setIsTranscribing] = React.useState(false)
+  const [toast, setToast] = React.useState<{
+    message: string
+    type: 'success' | 'error' | 'info'
+    isVisible: boolean
+  }>({
+    message: '',
+    type: 'info',
+    isVisible: false
+  })
+  
+  const [viewerContent, setViewerContent] = React.useState<{
+    title: string
+    content: string
+    sourceUrl?: string
+    transcribedAt?: string
+    filename?: string
+  } | null>(null)
+  
+  const [isViewerOpen, setIsViewerOpen] = React.useState(false)
+  
+  const showToast = (message: string, type: 'success' | 'error' | 'info') => {
+    setToast({
+      message,
+      type,
+      isVisible: true
+    })
+  }
+  
+  const hideToast = () => {
+    setToast(prev => ({ ...prev, isVisible: false }))
+  }
+
+  const handleViewContent = (item: any) => {
+    if (item.content) {
+      setViewerContent({
+        title: item.filename || 'YouTube Transcription',
+        content: item.content,
+        sourceUrl: item.url,
+        transcribedAt: item.uploadedAt?.toISOString(),
+        filename: item.filename
+      })
+    } else {
+      setViewerContent({
+        title: item.filename || 'YouTube Transcription',
+        content: 'Transcription not available...',
+        sourceUrl: item.url,
+        transcribedAt: item.uploadedAt?.toISOString(),
+        filename: item.filename
+      })
+    }
+    setIsViewerOpen(true)
+  }
+  
+  const handleTranscribeYouTube = async () => {
+    console.log('🎥 handleTranscribeYouTube called with URL:', urlInput)
+    
+    if (!urlInput.trim()) {
+      console.log('❌ URL input is empty, returning early')
+      showToast('Please enter a YouTube URL to transcribe', 'error')
+      return
+    }
+    
+    // Validate YouTube URL
+    const youtubeRegex = /^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.be)\/.+/
+    if (!youtubeRegex.test(urlInput.trim())) {
+      showToast('Please enter a valid YouTube URL', 'error')
+      return
+    }
+    
+    try {
+      setIsTranscribing(true)
+      console.log('🎥 Getting access token...')
+      const accessToken = authService.getAuthToken()
+      
+      if (!accessToken) {
+        console.error("❌ No access token available")
+        showToast('Authentication required. Please sign in again.', 'error')
+        return
+      }
+
+      console.log('✅ Access token found:', accessToken ? 'Present' : 'Missing')
+      console.log('🎥 Transcribing YouTube URL:', urlInput)
+      
+      const apiUrl = `/api/youtube-transcribe?url=${encodeURIComponent(urlInput.trim())}`
+      console.log('🎥 Making request to:', apiUrl)
+      
+      const response = await fetch(apiUrl, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+          'Content-Type': 'application/json',
+        },
+      })
+
+      console.log('📡 YouTube transcription response status:', response.status)
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}))
+        console.error('❌ YouTube transcription failed:', response.status, errorData)
+        showToast(`Failed to transcribe video: ${errorData.error || response.statusText}`, 'error')
+        return
+      }
+
+      const result = await response.json()
+      console.log('✅ YouTube transcription result:', result)
+      
+      if (result.success && result.data) {
+        // Create a new media item for the transcription
+        const transcriptionItem = {
+          id: `youtube-${Date.now()}`,
+          filename: `youtube_transcription_${new Date().toISOString().split('T')[0]}.txt`,
+          type: 'youtube',
+          url: urlInput.trim(),
+          uploadedAt: new Date(),
+          size: result.data.content?.length || 0,
+          content: result.data.content || 'No transcription available',
+          title: result.data.title || 'YouTube Video',
+          duration: result.data.duration,
+          channel: result.data.channel
+        }
+        
+        // Add to media items
+        setMediaItems((prevItems: any[]) => [...prevItems, transcriptionItem])
+        
+        // Clear input
+        setUrlInput("")
+        
+        showToast('YouTube video transcribed successfully!', 'success')
+      } else {
+        showToast('Failed to transcribe video. Please try again.', 'error')
+      }
+      
+    } catch (error) {
+      console.error('❌ Error transcribing YouTube video:', error)
+      showToast('An error occurred while transcribing the video', 'error')
+    } finally {
+      setIsTranscribing(false)
+    }
+  }
+  
+  return (
+    <div className="space-y-4">
+      <Toast 
+        message={toast.message}
+        type={toast.type}
+        isVisible={toast.isVisible}
+        onClose={hideToast}
+      />
+      
+      {viewerContent && (
+        <ContentViewer
+          isOpen={isViewerOpen}
+          onClose={() => setIsViewerOpen(false)}
+          content={viewerContent}
+        />
+      )}
+      
+      <div className="flex space-x-2">
+        <Input 
+          placeholder="Paste YouTube URL here..." 
+          value={urlInput}
+          onChange={(e) => setUrlInput(e.target.value)}
+          onKeyPress={(e) => e.key === 'Enter' && handleTranscribeYouTube()}
+          className="flex-1 text-sm border-gray-300 focus:ring-blue-500 focus:border-blue-500 bg-gray-50" 
+        />
+        <Button 
+          size="sm" 
+          onClick={handleTranscribeYouTube}
+          disabled={isTranscribing || !urlInput.trim()}
+          className="bg-blue-600 hover:bg-blue-700 text-white disabled:opacity-50"
+        >
+          {isTranscribing ? 'Transcribing...' : 'Transcribe'}
+        </Button>
+      </div>
+      
+      <div className="space-y-2">
+        {youtubeItems.length > 0 ? (
+          youtubeItems.map((item: any, index: number) => (
+            <div 
+              key={item.id} 
+              className="flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-50 border border-gray-200 hover:border-gray-300 cursor-pointer transition-colors"
+              onClick={() => handleViewContent(item)}
+            >
+              <div className="flex-shrink-0">
+                <div className="w-8 h-8 bg-red-100 rounded-lg flex items-center justify-center">
+                  <svg className="w-4 h-4 text-red-600" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+                  </svg>
+                </div>
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium truncate text-gray-900">{item.title || item.filename}</p>
+                <p className="text-xs text-gray-500">
+                  {item.channel && `Channel: ${item.channel}`}
+                  {item.duration && ` • ${item.duration}`}
+                </p>
+              </div>
+              <div className="flex items-center space-x-2">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    onDelete(item.id, item.filename)
+                  }}
+                  className="h-6 w-6 p-0 hover:bg-red-50 hover:text-red-600"
+                >
+                  <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                  </svg>
+                </Button>
+              </div>
+            </div>
+          ))
+        ) : (
+          <div className="text-center py-8">
+            <div className="w-12 h-12 mx-auto mb-3 bg-red-100 rounded-lg flex items-center justify-center">
+              <svg className="w-6 h-6 text-red-600" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+              </svg>
+            </div>
+            <p className="text-sm text-gray-600 mb-2">No YouTube transcriptions yet</p>
+            <p className="text-xs text-gray-500">Paste a YouTube URL to transcribe the video</p>
           </div>
         )}
       </div>

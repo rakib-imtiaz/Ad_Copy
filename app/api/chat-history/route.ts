@@ -57,6 +57,24 @@ export async function GET(request: NextRequest) {
       console.error('  - Error text:', errorText)
       console.error('  - Error text length:', errorText.length)
       
+      // Handle 404 errors gracefully - return empty chat history
+      if (response.status === 404) {
+        console.log('n8n webhook not found (404) - returning empty chat history')
+        return NextResponse.json({
+          success: true,
+          data: []
+        })
+      }
+      
+      // Handle 500 workflow errors gracefully
+      if (response.status === 500) {
+        console.log('n8n webhook workflow error (500) - returning empty chat history')
+        return NextResponse.json({
+          success: true,
+          data: []
+        })
+      }
+      
       return NextResponse.json(
         { error: `Failed to fetch chat history: ${response.status} ${response.statusText}`, details: errorText },
         { status: response.status }

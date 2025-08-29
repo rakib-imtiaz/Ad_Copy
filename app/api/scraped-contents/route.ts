@@ -44,6 +44,24 @@ export async function GET(request: NextRequest) {
       const errorText = await response.text().catch(() => 'Unable to read error response')
       console.error('Error response:', errorText)
       
+      // Handle 404 errors gracefully - return empty scraped contents
+      if (response.status === 404) {
+        console.log('n8n webhook not found (404) - returning empty scraped contents')
+        return NextResponse.json({
+          success: true,
+          data: []
+        })
+      }
+      
+      // Handle 500 workflow errors gracefully
+      if (response.status === 500) {
+        console.log('n8n webhook workflow error (500) - returning empty scraped contents')
+        return NextResponse.json({
+          success: true,
+          data: []
+        })
+      }
+      
       return NextResponse.json(
         { error: `n8n webhook failed: ${response.status} ${response.statusText}` },
         { status: response.status }

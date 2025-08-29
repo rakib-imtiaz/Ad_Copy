@@ -75,6 +75,7 @@ export const API_ENDPOINTS = {
     CHAT_WINDOW: 'https://n8n.srv934833.hstgr.cloud/webhook/chat-window',
     FETCH_USER_PROFILE: 'https://n8n.srv934833.hstgr.cloud/webhook/fetch-user-profile',
           AGENT_LIST: 'https://n8n.srv934833.hstgr.cloud/webhook/agent-list',
+          ACTIVE_AGENT_LIST: 'https://n8n.srv934833.hstgr.cloud/webhook/active-agent-list',
           CREATE_AGENT: 'https://n8n.srv934833.hstgr.cloud/webhook/create-agent',
           DELETE_AGENT: 'https://n8n.srv934833.hstgr.cloud/webhook/delete-agent',
           UPDATE_SYSTEM_PROMPT: 'https://n8n.srv934833.hstgr.cloud/webhook/update-system-prompt',
@@ -103,6 +104,7 @@ export const API_ENDPOINTS = {
       DELETE_REFERRAL: 'https://n8n.srv934833.hstgr.cloud/webhook/delete-referral',
       SET_TOKEN_PRICE: 'https://n8n.srv934833.hstgr.cloud/webhook/set-token-price',
       GET_TOKEN_PRICE: 'https://n8n.srv934833.hstgr.cloud/webhook/show-token-price',
+      YOUTUBE_TRANSCRIBE: 'https://n8n.srv934833.hstgr.cloud/webhook-test/youtube-video-transcribe',
       },
   
   // User Management

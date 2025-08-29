@@ -32,6 +32,25 @@ export async function GET(request: NextRequest) {
     if (!response.ok) {
       const errorText = await response.text();
       console.error('❌ Admin - Get agent list failed:', response.status, errorText);
+      
+      // Handle 404 errors gracefully - return empty agent list
+      if (response.status === 404) {
+        console.log('n8n webhook not found (404) - returning empty agent list')
+        return NextResponse.json({
+          success: true,
+          agents: []
+        })
+      }
+      
+      // Handle 500 workflow errors gracefully
+      if (response.status === 500) {
+        console.log('n8n webhook workflow error (500) - returning empty agent list')
+        return NextResponse.json({
+          success: true,
+          agents: []
+        })
+      }
+      
       return NextResponse.json(
         { error: `Failed to fetch agent list: ${response.status}` },
         { status: response.status }
@@ -40,21 +59,23 @@ export async function GET(request: NextRequest) {
 
     // Check if response has content before parsing JSON
     const responseText = await response.text();
-    console.log('📡 Response text:', responseText);
+    console.log('📡 Response text length:', responseText.length);
+    console.log('📡 Response text preview:', responseText.substring(0, 200));
     
     let result;
-    if (responseText.trim()) {
+    if (!responseText || responseText.trim() === '') {
+      console.log('n8n webhook returned empty response - returning empty agent list');
+      result = { agents: [] };
+    } else {
       try {
         result = JSON.parse(responseText);
         console.log('✅ Admin - Agent list fetched successfully:', result);
       } catch (parseError) {
         console.error('❌ Admin - JSON parse error:', parseError);
+        console.error('Raw response text:', responseText);
+        console.log('Returning empty agent list due to JSON parse error');
         result = { agents: [] };
       }
-    } else {
-      // Empty response - return empty array
-      result = { agents: [] };
-      console.log('✅ Admin - Agent list fetched successfully (empty response)');
     }
 
     return NextResponse.json(result);

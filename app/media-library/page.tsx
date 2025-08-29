@@ -35,6 +35,11 @@ export default function MediaLibraryPage() {
           setMediaItems([])
           return
         }
+        if (response.status === 404) {
+          console.log("No media items found (404) - setting empty array")
+          setMediaItems([])
+          return
+        }
         throw new Error('Failed to fetch media library')
       }
 
@@ -61,6 +66,12 @@ export default function MediaLibraryPage() {
       setMediaItems(transformedItems)
     } catch (error) {
       console.error('Error fetching media library:', error)
+      
+      // Check if it's a 404 error (n8n webhook not found)
+      if (error instanceof Error && error.message.includes('404')) {
+        console.log('🔄 n8n webhook not found - this is expected if the webhook is not set up yet')
+      }
+      
       setMediaItems([])
     } finally {
       setIsLoading(false)

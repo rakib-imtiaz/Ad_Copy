@@ -42,7 +42,8 @@ export async function POST(request: NextRequest) {
     }
 
     // Forward the request to n8n webhook
-    const n8nEndpoint = 'https://n8n.srv934833.hstgr.cloud/webhook/chat-window';
+    const { API_ENDPOINTS } = await import('@/lib/api-config');
+    const n8nEndpoint = API_ENDPOINTS.N8N_WEBHOOKS.CHAT;
     console.log('Calling n8n endpoint:', n8nEndpoint);
     
     const n8nResponse = await fetch(n8nEndpoint, {
@@ -83,6 +84,33 @@ export async function POST(request: NextRequest) {
     // Check for other errors
     if (!n8nResponse.ok) {
       console.log('Chat request failed with status:', n8nResponse.status);
+      
+      // Handle 404 errors gracefully
+      if (n8nResponse.status === 404) {
+        console.log('n8n webhook not found (404) - returning fallback response')
+        return NextResponse.json({
+          success: true,
+          data: {
+            response: "The AI agent service is currently unavailable. Please try again later.",
+            type: 'service_unavailable',
+            timestamp: new Date().toISOString()
+          }
+        })
+      }
+      
+      // Handle 500 workflow errors gracefully
+      if (n8nResponse.status === 500) {
+        console.log('n8n webhook workflow error (500) - returning fallback response')
+        return NextResponse.json({
+          success: true,
+          data: {
+            response: "The AI agent is experiencing technical difficulties. Please try again in a moment.",
+            type: 'workflow_error',
+            timestamp: new Date().toISOString()
+          }
+        })
+      }
+      
       return NextResponse.json(
         { 
           success: false, 
