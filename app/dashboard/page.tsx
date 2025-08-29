@@ -261,21 +261,34 @@ function ThreeDotsMenu({ onDelete }: any) {
 // Agent Selector Component
 function AgentSelector({ agents, selectedAgent, onSelectAgent, onOpenChange, isLoading, onRefresh }: any) {
   const [isOpen, setIsOpen] = React.useState(false)
-  const currentAgent = agents.find((agent: any) => agent.name === selectedAgent)
+  
+  // Memoize currentAgent to prevent unnecessary recalculations
+  const currentAgent = React.useMemo(() => 
+    agents.find((agent: any) => agent.name === selectedAgent), 
+    [agents, selectedAgent]
+  )
 
-  const handleOpenChange = (newIsOpen: boolean) => {
+  // Memoize the click handler to prevent unnecessary re-renders
+  const handleAgentSelect = React.useCallback((agentName: string) => {
+    onSelectAgent(agentName)
+    setIsOpen(false)
+    onOpenChange?.(false)
+  }, [onSelectAgent, onOpenChange])
+
+  const handleOpenChange = React.useCallback((newIsOpen: boolean) => {
     setIsOpen(newIsOpen)
     onOpenChange?.(newIsOpen)
-  }
+  }, [onOpenChange])
 
   return (
     <div className="relative">
-      <motion.button
+      <button
         onClick={() => handleOpenChange(!isOpen)}
         onMouseEnter={() => handleOpenChange(true)}
-        className="w-full text-left p-4 rounded-lg border border-gray-200 bg-white hover:bg-gray-50 transition-colors"
-        whileHover={{ scale: 1.01 }}
-        whileTap={{ scale: 0.99 }}
+        disabled={isLoading}
+        className={`w-full text-left p-4 rounded-lg border border-gray-200 bg-white hover:bg-gray-50 transition-colors duration-150 ${
+          isLoading ? 'opacity-50 cursor-not-allowed' : ''
+        }`}
       >
         <div className="flex items-start justify-between">
           <div className="flex items-start space-x-3 flex-1 min-w-0">
@@ -285,37 +298,29 @@ function AgentSelector({ agents, selectedAgent, onSelectAgent, onOpenChange, isL
               <div className="text-xs text-gray-500 line-clamp-2 leading-relaxed mt-1">{currentAgent?.description || "Choose an AI agent"}</div>
             </div>
           </div>
-          <ChevronRight className={`h-4 w-4 text-gray-400 transition-transform flex-shrink-0 mt-0.5 ${isOpen ? 'rotate-90' : ''}`} />
+          <ChevronRight className={`h-4 w-4 text-gray-400 transition-transform duration-150 flex-shrink-0 mt-0.5 ${isOpen ? 'rotate-90' : ''}`} />
         </div>
-      </motion.button>
+      </button>
 
       {/* Agent Dropdown */}
       {isOpen && (
-        <motion.div
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -10 }}
-          onMouseLeave={() => handleOpenChange(false)}
+        <div
           className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-xl z-[100] max-h-72 overflow-y-auto"
+          onMouseLeave={() => handleOpenChange(false)}
         >
           <div className="p-2">
             <div className="text-xs font-medium text-gray-500 uppercase tracking-wider px-2 py-1 mb-1">
               Available Agents
             </div>
             {agents.map((agent: any) => (
-              <motion.button
+              <button
                 key={agent.id}
-                onClick={() => {
-                  onSelectAgent(agent.name)
-                  handleOpenChange(false)
-                }}
-                className={`w-full text-left p-3 rounded-md transition-colors ${
+                onClick={() => handleAgentSelect(agent.name)}
+                className={`w-full text-left p-3 rounded-md transition-colors duration-150 ${
                   selectedAgent === agent.name 
                     ? 'bg-blue-50 border border-blue-200' 
                     : 'hover:bg-gray-50'
                 }`}
-                whileHover={{ scale: 1.005 }}
-                whileTap={{ scale: 0.995 }}
               >
                 <div className="flex items-start space-x-3">
                   <span className="text-lg flex-shrink-0">{agent.icon}</span>
@@ -327,10 +332,10 @@ function AgentSelector({ agents, selectedAgent, onSelectAgent, onOpenChange, isL
                     <div className="w-2 h-2 bg-blue-600 rounded-full flex-shrink-0 mt-1" />
                   )}
                 </div>
-              </motion.button>
+              </button>
             ))}
           </div>
-        </motion.div>
+        </div>
       )}
     </div>
   )
@@ -342,6 +347,14 @@ export default function Dashboard() {
   const [rightPanelOpen, setRightPanelOpen] = React.useState(true)
   const [activeTab, setActiveTab] = React.useState<'files' | 'links' | 'transcripts'>('files')
   const [selectedAgent, setSelectedAgent] = React.useState("")
+  
+  // Memoize the setSelectedAgent function to prevent unnecessary re-renders
+  const handleSelectAgent = React.useCallback((agentName: string) => {
+    // Prevent unnecessary re-renders if the same agent is selected
+    if (selectedAgent !== agentName) {
+      setSelectedAgent(agentName)
+    }
+  }, [selectedAgent])
   const [agents, setAgents] = React.useState<any[]>([])
   const [isLoadingAgents, setIsLoadingAgents] = React.useState(false)
   const [chatStarted, setChatStarted] = React.useState(false)
@@ -2237,7 +2250,7 @@ export default function Dashboard() {
                 agents={agents} 
                 conversations={conversations} 
                 selectedAgent={selectedAgent} 
-                onSelectAgent={setSelectedAgent} 
+                onSelectAgent={handleSelectAgent} 
                 isLoadingAgents={isLoadingAgents} 
                 onRefreshAgents={refreshAgents}
                 setChatStarted={setChatStarted}
@@ -2347,7 +2360,7 @@ export default function Dashboard() {
         <InitialInterface 
           agents={agents}
           selectedAgent={selectedAgent}
-          onSelectAgent={setSelectedAgent}
+          onSelectAgent={handleSelectAgent}
           onStartChatting={handleStartChatting}
           onRefreshAgents={refreshAgents}
           isLoadingAgents={isLoadingAgents}
@@ -2527,7 +2540,7 @@ export default function Dashboard() {
           agents={agents} 
           conversations={conversations} 
           selectedAgent={selectedAgent} 
-          onSelectAgent={setSelectedAgent} 
+          onSelectAgent={handleSelectAgent} 
           isLoadingAgents={isLoadingAgents} 
           onRefreshAgents={refreshAgents}
           setChatStarted={setChatStarted}
@@ -2959,23 +2972,19 @@ function LeftSidebar({
               </div>
           ) : chatHistory.length > 0 ? (
             <div className="space-y-3">
-              {chatHistory.map((chat: any, index: number) => {
+              {chatHistory.map((chat: any) => {
                 const isActive = currentChatSession === chat.session_id
                 const chatDate = new Date(chat.created_at)
                 const timeAgo = formatTimeAgo(chatDate)
                 
                 return (
-                <motion.div
+                <div
                     key={chat.session_id}
-                    className={`p-4 rounded-lg border transition-all duration-200 ${
+                    className={`p-4 rounded-lg border transition-all duration-150 ${
                       isActive 
                         ? 'bg-blue-50 border-blue-200 shadow-sm' 
                         : 'bg-gray-50 border-gray-200 hover:bg-gray-100 hover:border-gray-300'
                     }`}
-                    whileHover={{ scale: 1.01 }}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: index * 0.05 }}
               >
                 <div className="flex items-start justify-between mb-2">
                       <div 
@@ -3017,7 +3026,7 @@ function LeftSidebar({
                         isActive ? 'bg-blue-600' : 'bg-gray-300'
                   }`} />
                 </div>
-              </motion.div>
+              </div>
                 )
               })}
             </div>
