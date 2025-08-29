@@ -468,9 +468,9 @@ export default function Dashboard() {
   React.useEffect(() => {
     if (typeof window !== 'undefined') {
       const urlParams = new URLSearchParams(window.location.search)
-      const refreshAgents = urlParams.get('refreshAgents')
+      const shouldRefreshAgents = urlParams.get('refreshAgents')
       
-      if (refreshAgents === 'true') {
+      if (shouldRefreshAgents === 'true') {
         console.log('🔄 Detected refreshAgents=true parameter - automatically refreshing agents')
         
         // Remove the parameter from URL
