@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Bot, PlusCircle, MoreHorizontal, Edit, Eye, Star, Globe, RefreshCw, Trash2 } from 'lucide-react';
+import { Bot, PlusCircle, MoreHorizontal, Edit, Eye, Star, Globe, RefreshCw, Trash2, Power, PowerOff } from 'lucide-react';
 import { authService } from '@/lib/auth-service';
 
 interface Agent {
@@ -12,6 +12,8 @@ interface Agent {
   status: 'active' | 'inactive';
   scope: string;
   systemPrompt: string;
+  creator: string;
+  created_at: string;
 }
 
 const AgentsPage = () => {
@@ -19,6 +21,7 @@ const AgentsPage = () => {
   const [loading, setLoading] = useState(false);
   const [deletingAgentId, setDeletingAgentId] = useState<string | null>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState<string | null>(null);
+  const [activatingAgentId, setActivatingAgentId] = useState<string | null>(null);
 
   const fetchAgents = async () => {
     try {
@@ -49,28 +52,32 @@ const AgentsPage = () => {
       const result = await response.json();
       console.log('✅ Agents fetched successfully:', result);
       
-      // Transform API data to match our interface
-      if (result && Array.isArray(result)) {
-        const transformedAgents: Agent[] = result.map((agent: any, index: number) => ({
-          id: agent.agent_id || agent.id || `agent-${index + 1}`,
-          name: agent.agent_id || agent.name || agent.agent_name || `Agent ${index + 1}`,
-          description: agent.short_description || agent.description || agent.purpose || 'AI agent for various tasks',
-          status: agent.status || 'active',
-          scope: agent.scope || agent.category || 'General',
-          systemPrompt: agent.systemPrompt || agent.prompt || agent.short_description || 'Default system prompt for this agent'
-        }));
-        setAgents(transformedAgents);
-      } else if (result && result.agents && Array.isArray(result.agents)) {
-        const transformedAgents: Agent[] = result.agents.map((agent: any, index: number) => ({
-          id: agent.agent_id || agent.id || `agent-${index + 1}`,
-          name: agent.agent_id || agent.name || agent.agent_name || `Agent ${index + 1}`,
-          description: agent.short_description || agent.description || agent.purpose || 'AI agent for various tasks',
-          status: agent.status || 'active',
-          scope: agent.scope || agent.category || 'General',
-          systemPrompt: agent.systemPrompt || agent.prompt || agent.short_description || 'Default system prompt for this agent'
-        }));
-        setAgents(transformedAgents);
-      } else {
+             // Transform API data to match our interface
+       if (result && Array.isArray(result)) {
+                   const transformedAgents: Agent[] = result.map((agent: any, index: number) => ({
+            id: agent.agent_id || agent.id || `agent-${index + 1}`,
+            name: agent.agent_id || agent.name || agent.agent_name || `Agent ${index + 1}`,
+            description: agent.short_description || agent.description || agent.purpose || 'AI agent for various tasks',
+            status: agent.status || 'active',
+            scope: agent.scope || agent.category || 'General',
+            systemPrompt: agent.system_prompt || agent.systemPrompt || agent.prompt || agent.short_description || 'Default system prompt for this agent',
+            creator: agent.creator || 'Unknown',
+            created_at: agent.created_at || new Date().toISOString()
+          }));
+         setAgents(transformedAgents);
+       } else if (result && result.agents && Array.isArray(result.agents)) {
+                   const transformedAgents: Agent[] = result.agents.map((agent: any, index: number) => ({
+            id: agent.agent_id || agent.id || `agent-${index + 1}`,
+            name: agent.agent_id || agent.name || agent.agent_name || `Agent ${index + 1}`,
+            description: agent.short_description || agent.description || agent.purpose || 'AI agent for various tasks',
+            status: agent.status || 'active',
+            scope: agent.scope || agent.category || 'General',
+            systemPrompt: agent.system_prompt || agent.systemPrompt || agent.prompt || agent.short_description || 'Default system prompt for this agent',
+            creator: agent.creator || 'Unknown',
+            created_at: agent.created_at || new Date().toISOString()
+          }));
+         setAgents(transformedAgents);
+       } else {
         console.error('❌ Invalid API response format:', result);
         setAgents([]);
       }
@@ -136,6 +143,53 @@ const AgentsPage = () => {
 
   const handleDeleteConfirm = (agentId: string) => {
     deleteAgent(agentId);
+  };
+
+  const activateAgent = async (agentId: string, newStatus: boolean) => {
+    try {
+      setActivatingAgentId(agentId);
+      const token = authService.getAuthToken();
+      
+      if (!token) {
+        throw new Error('No authentication token found');
+      }
+
+      console.log('🔄 Client - Activating/Deactivating agent:', agentId, 'New status:', newStatus);
+      console.log('🔑 Client - Token exists:', !!token);
+
+      const response = await fetch('/api/admin/activate-agent', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          accessToken: token,
+          agent_id: agentId,
+          active_status: newStatus,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to activate/deactivate agent');
+      }
+
+      const result = await response.json();
+      console.log('✅ Agent activation status updated successfully:', result);
+      
+      // Update the agent status in local state
+      setAgents(prevAgents => prevAgents.map(agent => 
+        agent.id === agentId 
+          ? { ...agent, status: newStatus ? 'active' : 'inactive' }
+          : agent
+      ));
+      
+    } catch (err: any) {
+      console.error('❌ Error activating/deactivating agent:', err);
+      alert(`Failed to activate/deactivate agent: ${err.message}`);
+    } finally {
+      setActivatingAgentId(null);
+    }
   };
 
   useEffect(() => {
@@ -270,47 +324,77 @@ const AgentsPage = () => {
                     </div>
                   </div>
 
-                  <p className="text-gray-600 text-sm mb-4">{agent.description}</p>
+                                     <p className="text-gray-600 text-sm mb-4">{agent.description}</p>
 
-                  <div className="mb-4">
-                    <div className="bg-gray-50 p-3 rounded-lg">
-                      <p className="text-xs text-gray-500 mb-1">System Prompt</p>
-                      <p className="text-sm text-gray-700 line-clamp-2">{agent.systemPrompt}</p>
-                    </div>
-                  </div>
+                   <div className="mb-4">
+                     <div className="bg-gray-50 p-3 rounded-lg">
+                       <p className="text-xs text-gray-500 mb-2 font-medium">System Prompt</p>
+                       <p className="text-sm text-gray-700 line-clamp-3 leading-relaxed">{agent.systemPrompt}</p>
+                     </div>
+                   </div>
 
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-3">
-                      <button 
-                        onClick={() => window.location.href = `/admin/agents/edit/${agent.id}`}
-                        className="flex items-center space-x-1 text-gray-600 hover:text-indigo-600 transition-colors"
-                      >
-                        <Edit size={16} />
-                        <span className="text-sm">Edit Prompt</span>
-                      </button>
-                      <button className="flex items-center space-x-1 text-gray-600 hover:text-indigo-600 transition-colors">
-                        <Eye size={16} />
-                        <span className="text-sm">View Details</span>
-                      </button>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <button 
-                        onClick={() => handleDeleteClick(agent.id)}
-                        disabled={deletingAgentId === agent.id}
-                        className="flex items-center space-x-1 text-gray-600 hover:text-red-600 transition-colors disabled:opacity-50"
-                      >
-                        <Trash2 size={16} />
-                        <span className="text-sm">
-                          {deletingAgentId === agent.id ? 'Deleting...' : 'Delete'}
-                        </span>
-                      </button>
-                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                        agent.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
-                      }`}>
-                        {agent.status}
-                      </span>
-                    </div>
-                  </div>
+                   <div className="mb-4 grid grid-cols-2 gap-3 text-xs">
+                     <div className="bg-blue-50 p-2 rounded-lg">
+                       <p className="text-blue-600 font-medium">Creator</p>
+                       <p className="text-blue-800 truncate">{agent.creator}</p>
+                     </div>
+                     <div className="bg-green-50 p-2 rounded-lg">
+                       <p className="text-green-600 font-medium">Created</p>
+                       <p className="text-green-800">{new Date(agent.created_at).toLocaleDateString()}</p>
+                     </div>
+                   </div>
+
+                                     <div className="flex items-center justify-between">
+                     <div className="flex items-center space-x-3">
+                       <button 
+                         onClick={() => window.location.href = `/admin/agents/edit/${agent.id}`}
+                         className="flex items-center space-x-1 text-gray-600 hover:text-indigo-600 transition-colors"
+                       >
+                         <Edit size={16} />
+                         <span className="text-sm">Edit Prompt</span>
+                       </button>
+                       <button className="flex items-center space-x-1 text-gray-600 hover:text-indigo-600 transition-colors">
+                         <Eye size={16} />
+                         <span className="text-sm">View Details</span>
+                       </button>
+                     </div>
+                     <div className="flex items-center space-x-2">
+                       <button 
+                         onClick={() => activateAgent(agent.id, !(agent.status === 'active'))}
+                         disabled={activatingAgentId === agent.id}
+                         className={`flex items-center space-x-1 transition-colors disabled:opacity-50 ${
+                           agent.status === 'active' 
+                             ? 'text-orange-600 hover:text-orange-700' 
+                             : 'text-green-600 hover:text-green-700'
+                         }`}
+                       >
+                         {agent.status === 'active' ? <PowerOff size={16} /> : <Power size={16} />}
+                         <span className="text-sm">
+                           {activatingAgentId === agent.id 
+                             ? 'Updating...' 
+                             : agent.status === 'active' 
+                               ? 'Deactivate' 
+                               : 'Activate'
+                           }
+                         </span>
+                       </button>
+                       <button 
+                         onClick={() => handleDeleteClick(agent.id)}
+                         disabled={deletingAgentId === agent.id}
+                         className="flex items-center space-x-1 text-gray-600 hover:text-red-600 transition-colors disabled:opacity-50"
+                       >
+                         <Trash2 size={16} />
+                         <span className="text-sm">
+                           {deletingAgentId === agent.id ? 'Deleting...' : 'Delete'}
+                         </span>
+                       </button>
+                       <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                         agent.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
+                       }`}>
+                         {agent.status}
+                       </span>
+                     </div>
+                   </div>
                 </motion.div>
               ))}
 

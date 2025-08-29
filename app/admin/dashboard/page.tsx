@@ -1,44 +1,136 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { BarChart, Users, Bot, FileText, ArrowUpRight, ArrowDownRight } from 'lucide-react';
+import { BarChart, Users, Bot, FileText, ArrowUpRight, ArrowDownRight, RefreshCw } from 'lucide-react';
+import { authService } from '@/lib/auth-service';
 
-const statsCards = [
-  {
-    title: 'Total Users',
-    value: '1,250',
-    change: '+15%',
-    trend: 'up',
-    icon: Users,
-    color: 'indigo'
-  },
-  {
-    title: 'Active Agents',
-    value: '58',
-    change: '+5%',
-    trend: 'up',
-    icon: Bot,
-    color: 'green'
-  },
-  {
-    title: 'Referral Codes',
-    value: '24',
-    change: '+12%',
-    trend: 'up',
-    icon: FileText,
-    color: 'blue'
-  },
-  {
-    title: 'Token Price',
-    value: '$0.05',
-    change: '+8%',
-    trend: 'up',
-    icon: BarChart,
-    color: 'purple'
-  }
-];
+interface DashboardStats {
+  totalUsers: number;
+  activeAgents: number;
+  referralCodes: number;
+  loading: boolean;
+  error: string | null;
+}
 
 const AdminDashboardPage = () => {
+  const [stats, setStats] = useState<DashboardStats>({
+    totalUsers: 0,
+    activeAgents: 0,
+    referralCodes: 0,
+    loading: true,
+    error: null
+  });
+
+  const fetchDashboardStats = async () => {
+    try {
+      setStats(prev => ({ ...prev, loading: true, error: null }));
+      const token = authService.getAuthToken();
+      
+      if (!token) {
+        throw new Error('No authentication token found');
+      }
+
+      console.log('🔍 Dashboard - Starting data fetch with token:', !!token);
+
+      // Helper function to safely parse JSON responses
+      const safeJsonParse = async (response: Response, endpoint: string) => {
+        const text = await response.text();
+        console.log(`📡 ${endpoint} - Response status:`, response.status);
+        console.log(`📡 ${endpoint} - Response text:`, text);
+        
+        if (!text.trim()) {
+          console.warn(`⚠️ ${endpoint} - Empty response`);
+          return null;
+        }
+        try {
+          const parsed = JSON.parse(text);
+          console.log(`✅ ${endpoint} - Parsed data:`, parsed);
+          return parsed;
+        } catch (parseError) {
+          console.warn(`❌ ${endpoint} - Failed to parse JSON:`, text);
+          return null;
+        }
+      };
+
+             // Fetch users count
+       console.log('👥 Dashboard - Fetching users...');
+       const usersResponse = await fetch(`/api/admin/users?accessToken=${encodeURIComponent(token)}`);
+       const usersData = await safeJsonParse(usersResponse, 'Users API');
+       const totalUsers = Array.isArray(usersData) ? usersData.length : 0;
+       console.log('👥 Dashboard - Total users:', totalUsers);
+
+       // Fetch agents count
+       console.log('🤖 Dashboard - Fetching agents...');
+       const agentsResponse = await fetch(`/api/admin/agent-list?accessToken=${encodeURIComponent(token)}&t=${Date.now()}`);
+       const agentsData = await safeJsonParse(agentsResponse, 'Agents API');
+       const agents = Array.isArray(agentsData) ? agentsData : (agentsData?.agents || []);
+       console.log('🤖 Dashboard - Raw agents data:', agents);
+       console.log('🤖 Dashboard - Agent is_active values:', agents.map((agent: any) => ({ id: agent.agent_id, is_active: agent.is_active })));
+       const activeAgents = agents.filter((agent: any) => agent.is_active === true).length;
+       console.log('🤖 Dashboard - Total agents:', agents.length, 'Active agents:', activeAgents);
+
+       // Fetch referral codes count
+       console.log('📋 Dashboard - Fetching referral codes...');
+       const referralsResponse = await fetch(`/api/admin/view-referral-codes?accessToken=${encodeURIComponent(token)}`);
+       const referralsData = await safeJsonParse(referralsResponse, 'Referrals API');
+       const referralCodes = Array.isArray(referralsData) ? referralsData.length : 0;
+       console.log('📋 Dashboard - Total referral codes:', referralCodes);
+
+              console.log('📊 Dashboard - Final stats:', {
+         totalUsers,
+         activeAgents,
+         referralCodes
+       });
+
+       setStats({
+         totalUsers,
+         activeAgents,
+         referralCodes,
+         loading: false,
+         error: null
+       });
+    } catch (error: any) {
+      console.error('❌ Error fetching dashboard stats:', error);
+      setStats(prev => ({
+        ...prev,
+        loading: false,
+        error: error.message || 'Failed to fetch dashboard data'
+      }));
+    }
+  };
+
+  useEffect(() => {
+    fetchDashboardStats();
+  }, []);
+
+  const statsCards = [
+    {
+      title: 'Total Users',
+      value: stats.loading ? '...' : stats.totalUsers.toLocaleString(),
+      change: '+0%',
+      trend: 'up' as const,
+      icon: Users,
+      color: 'indigo'
+    },
+    {
+      title: 'Active Agents',
+      value: stats.loading ? '...' : stats.activeAgents.toString(),
+      change: '+0%',
+      trend: 'up' as const,
+      icon: Bot,
+      color: 'green'
+    },
+    {
+      title: 'Referral Codes',
+      value: stats.loading ? '...' : stats.referralCodes.toString(),
+      change: '+0%',
+      trend: 'up' as const,
+      icon: FileText,
+      color: 'blue'
+    }
+  ];
+
   const container = {
     hidden: { opacity: 0 },
     show: {
@@ -56,17 +148,40 @@ const AdminDashboardPage = () => {
 
   return (
     <>
-      <motion.h1 
-        className="text-2xl font-bold text-gray-900 mb-8"
-        initial={{ opacity: 0, y: -10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.3 }}
-      >
-        System Overview
-      </motion.h1>
+      <div className="flex justify-between items-center mb-8">
+        <motion.h1 
+          className="text-2xl font-bold text-gray-900"
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3 }}
+        >
+          System Overview
+        </motion.h1>
+        <motion.button 
+          onClick={fetchDashboardStats}
+          disabled={stats.loading}
+          className="flex items-center space-x-2 bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition-colors disabled:opacity-50"
+          whileHover={{ scale: 1.03 }}
+          whileTap={{ scale: 0.97 }}
+        >
+          <RefreshCw size={18} className={stats.loading ? 'animate-spin' : ''} />
+          <span>Refresh</span>
+        </motion.button>
+      </div>
 
-      <motion.div 
-        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8"
+      {stats.error && (
+        <motion.div 
+          className="mb-6 p-4 bg-red-100 border border-red-400 text-red-700 rounded-lg"
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+        >
+          <p className="font-medium">Error loading dashboard data:</p>
+          <p className="text-sm">{stats.error}</p>
+        </motion.div>
+      )}
+
+             <motion.div 
+         className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8"
         variants={container}
         initial="hidden"
         animate="show"
@@ -109,7 +224,7 @@ const AdminDashboardPage = () => {
           transition={{ duration: 0.4, delay: 0.3 }}
         >
           <h2 className="text-xl font-semibold text-gray-900 mb-4">Admin Features Overview</h2>
-          <div className="grid grid-cols-2 gap-4">
+                     <div className="grid grid-cols-1 gap-4">
             <div className="p-4 border border-gray-200 rounded-lg">
               <h3 className="font-semibold text-gray-900 mb-2">Agent Management</h3>
               <ul className="text-sm text-gray-600 space-y-1">
@@ -134,14 +249,7 @@ const AdminDashboardPage = () => {
                 <li>• Manage referral rewards</li>
               </ul>
             </div>
-            <div className="p-4 border border-gray-200 rounded-lg">
-              <h3 className="font-semibold text-gray-900 mb-2">Token Pricing</h3>
-              <ul className="text-sm text-gray-600 space-y-1">
-                <li>• Set token prices</li>
-                <li>• View current pricing</li>
-                <li>• Monitor token usage</li>
-              </ul>
-            </div>
+            
           </div>
         </motion.div>
 
@@ -152,23 +260,20 @@ const AdminDashboardPage = () => {
           transition={{ duration: 0.4, delay: 0.4 }}
         >
           <h2 className="text-xl font-semibold text-gray-900 mb-4">Quick Actions</h2>
-          <div className="space-y-4">
-            <a href="/admin/agents/create" className="block p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
-              <h3 className="font-semibold text-gray-900">Create Agent</h3>
-              <p className="text-sm text-gray-600">Add new AI agent to the system</p>
-            </a>
-            <a href="/admin/users" className="block p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
-              <h3 className="font-semibold text-gray-900">Manage Users</h3>
-              <p className="text-sm text-gray-600">View and manage user accounts</p>
-            </a>
-            <a href="/admin/referrals/create" className="block p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
-              <h3 className="font-semibold text-gray-900">Create Referral</h3>
-              <p className="text-sm text-gray-600">Generate new referral codes</p>
-            </a>
-            <a href="/admin/tokens" className="block p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
-              <h3 className="font-semibold text-gray-900">Token Pricing</h3>
-              <p className="text-sm text-gray-600">Set and view token prices</p>
-            </a>
+                     <div className="space-y-4">
+             <a href="/admin/agents" className="block p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
+               <h3 className="font-semibold text-gray-900">Manage Agents</h3>
+               <p className="text-sm text-gray-600">View and manage AI agents</p>
+             </a>
+             <a href="/admin/users" className="block p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
+               <h3 className="font-semibold text-gray-900">Manage Users</h3>
+               <p className="text-sm text-gray-600">View and manage user accounts</p>
+             </a>
+             <a href="/admin/referrals" className="block p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
+               <h3 className="font-semibold text-gray-900">Manage Referrals</h3>
+               <p className="text-sm text-gray-600">View and manage referral codes</p>
+             </a>
+            
           </div>
         </motion.div>
       </div>

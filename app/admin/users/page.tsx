@@ -82,9 +82,12 @@ const UserManagementPage = () => {
       // The API returns an array directly, no need for nested data.users
       const transformedUsers = Array.isArray(result) ? result : [];
       
+      // Get current user info directly to ensure it's available for filtering
+      const currentUserInfo = authService.getCurrentUser();
+      
       // Filter out the current logged-in user
       const filteredUsers = transformedUsers.filter(user => 
-        user.id !== currentUser?.id && user.email !== currentUser?.email
+        user.id !== currentUserInfo?.id && user.email !== currentUserInfo?.email
       );
       
       setUsers(filteredUsers);
@@ -150,7 +153,8 @@ const UserManagementPage = () => {
       }
 
       // This should never happen since current user is filtered out, but keep as safety
-      if (userId === currentUser?.id) {
+      const currentUserInfo = authService.getCurrentUser();
+      if (userId === currentUserInfo?.id) {
         console.log('❌ Self-deletion prevented');
         alert('You cannot delete your own account');
         return;

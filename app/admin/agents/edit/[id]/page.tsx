@@ -13,6 +13,8 @@ interface Agent {
   status: 'active' | 'inactive';
   scope: string;
   systemPrompt: string;
+  creator: string;
+  created_at: string;
 }
 
 const EditAgentPage = () => {
@@ -59,14 +61,16 @@ const EditAgentPage = () => {
         throw new Error('Agent not found');
       }
 
-      const transformedAgent: Agent = {
-        id: foundAgent.agent_id || foundAgent.id,
-        name: foundAgent.agent_id || foundAgent.name || foundAgent.agent_name,
-        description: foundAgent.short_description || foundAgent.description || foundAgent.purpose || 'AI agent for various tasks',
-        status: foundAgent.status || 'active',
-        scope: foundAgent.scope || foundAgent.category || 'General',
-        systemPrompt: foundAgent.systemPrompt || foundAgent.prompt || foundAgent.short_description || 'Default system prompt for this agent'
-      };
+             const transformedAgent: Agent = {
+         id: foundAgent.agent_id || foundAgent.id,
+         name: foundAgent.agent_id || foundAgent.name || foundAgent.agent_name,
+         description: foundAgent.short_description || foundAgent.description || foundAgent.purpose || 'AI agent for various tasks',
+         status: foundAgent.status || 'active',
+         scope: foundAgent.scope || foundAgent.category || 'General',
+         systemPrompt: foundAgent.system_prompt || foundAgent.systemPrompt || foundAgent.prompt || foundAgent.short_description || 'Default system prompt for this agent',
+         creator: foundAgent.creator || 'Unknown',
+         created_at: foundAgent.created_at || new Date().toISOString()
+       };
 
       setAgent(transformedAgent);
       setSystemPrompt(transformedAgent.systemPrompt);
@@ -208,27 +212,35 @@ const EditAgentPage = () => {
             </div>
           </div>
 
-          <div className="mb-6 p-4 bg-gray-50 rounded-lg">
-            <h3 className="font-semibold text-gray-900 mb-2">Agent Details</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-              <div>
-                <span className="text-gray-500">Name:</span>
-                <span className="ml-2 font-medium">{agent.name}</span>
-              </div>
-              <div>
-                <span className="text-gray-500">Status:</span>
-                <span className="ml-2 font-medium">{agent.status}</span>
-              </div>
-              <div>
-                <span className="text-gray-500">Scope:</span>
-                <span className="ml-2 font-medium">{agent.scope}</span>
-              </div>
-              <div>
-                <span className="text-gray-500">Description:</span>
-                <span className="ml-2 font-medium">{agent.description}</span>
-              </div>
-            </div>
-          </div>
+                     <div className="mb-6 p-4 bg-gray-50 rounded-lg">
+             <h3 className="font-semibold text-gray-900 mb-3">Agent Details</h3>
+             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+               <div>
+                 <span className="text-gray-500">Name:</span>
+                 <span className="ml-2 font-medium">{agent.name}</span>
+               </div>
+               <div>
+                 <span className="text-gray-500">Status:</span>
+                 <span className="ml-2 font-medium">{agent.status}</span>
+               </div>
+               <div>
+                 <span className="text-gray-500">Scope:</span>
+                 <span className="ml-2 font-medium">{agent.scope}</span>
+               </div>
+               <div>
+                 <span className="text-gray-500">Creator:</span>
+                 <span className="ml-2 font-medium">{agent.creator}</span>
+               </div>
+               <div>
+                 <span className="text-gray-500">Created:</span>
+                 <span className="ml-2 font-medium">{new Date(agent.created_at).toLocaleDateString()}</span>
+               </div>
+               <div>
+                 <span className="text-gray-500">Description:</span>
+                 <span className="ml-2 font-medium">{agent.description}</span>
+               </div>
+             </div>
+           </div>
 
           <form onSubmit={handleSubmit}>
             <div className="mb-6">

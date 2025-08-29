@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Shield, LayoutDashboard, Bot, FileText, Palette, Users, BarChart2, PlusCircle, Edit, UserPlus, LogOut } from 'lucide-react';
+import { Shield, LayoutDashboard, Bot, FileText, Palette, Users, BarChart2, LogOut } from 'lucide-react';
 import { useAuth } from '@/lib/auth-context';
 
 const navItems = [
@@ -13,12 +13,7 @@ const navItems = [
   { href: '/admin/tokens', label: 'Token Pricing', icon: BarChart2 },
 ];
 
-const quickActions = [
-  { href: '/admin/agents/create', label: 'Create Agent', icon: PlusCircle },
-  { href: '/admin/agents/prompts', label: 'Agent Prompts', icon: Edit },
-  { href: '/admin/users/create', label: 'Create Admin User', icon: UserPlus },
-  { href: '/admin/referrals/create', label: 'Create Referral Code', icon: PlusCircle },
-]
+
 
 export const LeftSidebar = () => {
   const pathname = usePathname();
@@ -56,19 +51,7 @@ export const LeftSidebar = () => {
         </ul>
       </nav>
 
-      <div>
-        <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-4">Quick Actions</p>
-        <ul className="space-y-2">
-          {quickActions.map((action) => (
-            <li key={action.label}>
-              <Link href={action.href} className="flex items-center space-x-3 p-3 rounded-lg transition-colors text-gray-600 hover:bg-gray-100">
-                <action.icon size={20} />
-                <span>{action.label}</span>
-              </Link>
-            </li>
-          ))}
-        </ul>
-      </div>
+
 
       <div className="mt-6 pt-6 border-t border-gray-200">
         <div className="flex items-center space-x-3 mb-4">

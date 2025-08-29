@@ -42,9 +42,20 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const result = await response.json();
-    console.log('✅ Admin - User deleted successfully:', result);
-    console.log('📊 Response data structure:', Object.keys(result));
+    const responseText = await response.text();
+    let result;
+    if (responseText.trim()) {
+      try {
+        result = JSON.parse(responseText);
+        console.log('✅ Admin - User deleted successfully:', result);
+      } catch (parseError) {
+        console.error('❌ Admin - JSON parse error:', parseError);
+        result = { message: 'User deleted successfully' };
+      }
+    } else {
+      result = { message: 'User deleted successfully' };
+      console.log('✅ Admin - User deleted successfully (empty response)');
+    }
 
     return NextResponse.json(result);
   } catch (error) {

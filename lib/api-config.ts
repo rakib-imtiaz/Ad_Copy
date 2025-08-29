@@ -78,6 +78,7 @@ export const API_ENDPOINTS = {
           CREATE_AGENT: 'https://n8n.srv934833.hstgr.cloud/webhook/create-agent',
           DELETE_AGENT: 'https://n8n.srv934833.hstgr.cloud/webhook/delete-agent',
           UPDATE_SYSTEM_PROMPT: 'https://n8n.srv934833.hstgr.cloud/webhook/update-system-prompt',
+          ACTIVATE_AGENT: 'https://n8n.srv934833.hstgr.cloud/webhook/activate-agent',
     UPLOAD_KNOWLEDGE_BASE: 'https://n8n.srv934833.hstgr.cloud/webhook/upload-knowledge-base',
     SEE_KNOWLEDGE_BASE: 'https://n8n.srv934833.hstgr.cloud/webhook/see-knowledgebase-data',
     MODIFY_KNOWLEDGE_BASE: 'https://n8n.srv934833.hstgr.cloud/webhook/modify-knowledge-base',

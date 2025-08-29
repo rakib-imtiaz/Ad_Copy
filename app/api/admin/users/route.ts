@@ -1,6 +1,60 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { API_ENDPOINTS } from '@/lib/api-config';
 
+export async function GET(request: NextRequest) {
+  try {
+    const { searchParams } = new URL(request.url);
+    const accessToken = searchParams.get('accessToken');
+
+    if (!accessToken) {
+      return NextResponse.json(
+        { error: 'Missing required field: accessToken' },
+        { status: 400 }
+      );
+    }
+
+    console.log('👥 Admin - Fetching users for dashboard');
+    console.log('🔗 URL:', API_ENDPOINTS.N8N_WEBHOOKS.GET_USER_INFO);
+    console.log('🔑 Access Token:', accessToken ? `${accessToken.substring(0, 20)}...` : 'NOT PROVIDED');
+
+    const response = await fetch(API_ENDPOINTS.N8N_WEBHOOKS.GET_USER_INFO, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${accessToken}`,
+      },
+      body: JSON.stringify({
+        search_for: 'all',
+      }),
+      signal: AbortSignal.timeout(30000), // 30 second timeout
+    });
+
+    console.log('📡 Response status:', response.status);
+    console.log('📡 Response headers:', Object.fromEntries(response.headers.entries()));
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('❌ Admin - Get user info failed:', response.status, errorText);
+      return NextResponse.json(
+        { error: `Failed to fetch users: ${response.status}` },
+        { status: response.status }
+      );
+    }
+
+    const result = await response.json();
+    console.log('✅ Admin - Users fetched successfully for dashboard:', result);
+    console.log('📊 Response data structure:', Object.keys(result));
+
+    return NextResponse.json(result);
+  } catch (error) {
+    console.error('❌ Admin - Get user info error:', error);
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    );
+  }
+}
+
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
