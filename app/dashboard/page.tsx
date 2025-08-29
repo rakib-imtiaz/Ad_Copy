@@ -156,8 +156,8 @@ function InitialInterface({ agents, selectedAgent, onSelectAgent, onStartChattin
               </>
             ) : (
               <>
-                <MessageSquare className="h-5 w-5 mr-2" />
-                Start Chatting with {selectedAgent || 'Selected Agent'}
+            <MessageSquare className="h-5 w-5 mr-2" />
+            Start Chatting with {selectedAgent || 'Selected Agent'}
               </>
             )}
           </Button>
@@ -907,11 +907,11 @@ export default function Dashboard() {
     setIsStartingChat(true)
     
     try {
-      // Create new session for the selected agent
-      const success = await initiateNewChat(true)
-      
-      if (success) {
-        setChatStarted(true)
+    // Create new session for the selected agent
+    const success = await initiateNewChat(true)
+    
+    if (success) {
+      setChatStarted(true)
         
         // Set the current chat session to the newly created session
         if (sessionId) {
@@ -926,20 +926,20 @@ export default function Dashboard() {
         }
         
         console.log('✅ Chat started successfully with session:', sessionId)
-        
-        // Check if there's a pending prompt from quick prompts
-        if (typeof window !== 'undefined') {
-          const pendingPrompt = localStorage.getItem('pending_prompt')
-          if (pendingPrompt) {
-            localStorage.removeItem('pending_prompt')
-            // Send the pending prompt
-            setTimeout(() => {
-              handleSendMessage(pendingPrompt)
-            }, 500)
-          }
+      
+      // Check if there's a pending prompt from quick prompts
+      if (typeof window !== 'undefined') {
+        const pendingPrompt = localStorage.getItem('pending_prompt')
+        if (pendingPrompt) {
+          localStorage.removeItem('pending_prompt')
+          // Send the pending prompt
+          setTimeout(() => {
+            handleSendMessage(pendingPrompt)
+          }, 500)
         }
-      } else {
-        console.error('❌ Failed to start chat')
+      }
+    } else {
+      console.error('❌ Failed to start chat')
         showToast('Failed to start chat. Please try again.', 'error')
       }
     } catch (error) {
@@ -2291,15 +2291,15 @@ export default function Dashboard() {
 
             {/* Initial Interface Content */}
             <div className="flex-1">
-              <InitialInterface 
-                agents={agents}
-                selectedAgent={selectedAgent}
-                onSelectAgent={setSelectedAgent}
-                onStartChatting={handleStartChatting}
-                onRefreshAgents={refreshAgents}
-                isLoadingAgents={isLoadingAgents}
+        <InitialInterface 
+          agents={agents}
+          selectedAgent={selectedAgent}
+          onSelectAgent={setSelectedAgent}
+          onStartChatting={handleStartChatting}
+          onRefreshAgents={refreshAgents}
+          isLoadingAgents={isLoadingAgents}
                 isStartingChat={isStartingChat}
-              />
+        />
             </div>
           </div>
         </div>
@@ -2852,35 +2852,35 @@ function LeftSidebar({
                   </TooltipContent>
                 </Tooltip>
               </TooltipProvider>
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button 
-                      onClick={() => {
-                        console.log('🔄 Starting new chat (sidebar) - clearing chat state')
-                        setChatStarted(false)
-                        setMessages([])
-                        setSessionId('') // Clear session ID for new chat
-                        
-                        // Clear localStorage
-                        if (typeof window !== 'undefined') {
-                          localStorage.removeItem('chat_session_id')
-                          localStorage.removeItem('chat_started')
-                          localStorage.removeItem('chat_messages')
-                        }
-                        
-                        console.log('💡 Chat state cleared. User can now select agent and start chatting.')
-                      }}
-                      variant="ghost" 
-                      size="icon" 
-                      className="h-8 w-8 text-slate-600 hover:text-slate-800 hover:bg-slate-100 rounded-lg"
-                    >
-                      <Plus className="h-4 w-4" />
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>New conversation</p>
-                  </TooltipContent>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button 
+                    onClick={() => {
+                      console.log('🔄 Starting new chat (sidebar) - clearing chat state')
+                      setChatStarted(false)
+                      setMessages([])
+                      setSessionId('') // Clear session ID for new chat
+                      
+                      // Clear localStorage
+                      if (typeof window !== 'undefined') {
+                        localStorage.removeItem('chat_session_id')
+                        localStorage.removeItem('chat_started')
+                        localStorage.removeItem('chat_messages')
+                      }
+                      
+                      console.log('💡 Chat state cleared. User can now select agent and start chatting.')
+                    }}
+                    variant="ghost" 
+                    size="icon" 
+                    className="h-8 w-8 text-slate-600 hover:text-slate-800 hover:bg-slate-100 rounded-lg"
+                  >
+                    <Plus className="h-4 w-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>New conversation</p>
+                </TooltipContent>
                 </Tooltip>
               </TooltipProvider>
             </div>
@@ -2892,7 +2892,7 @@ function LeftSidebar({
             <div className="flex items-center justify-center py-8">
               <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-[#1ABC9C]"></div>
               <span className="ml-2 text-sm text-slate-600">Loading chat history...</span>
-            </div>
+              </div>
           ) : chatHistory.length > 0 ? (
             <div className="space-y-2">
               {chatHistory.map((chat: any, index: number) => {
@@ -2901,7 +2901,7 @@ function LeftSidebar({
                 const timeAgo = formatTimeAgo(chatDate)
                 
                 return (
-                  <motion.div
+                <motion.div
                     key={chat.session_id}
                     className={`p-3 rounded-lg border transition-all duration-200 ${
                       isActive 
@@ -2909,11 +2909,11 @@ function LeftSidebar({
                         : 'bg-white/60 border-slate-200/40 hover:bg-white/80 hover:border-slate-300'
                     }`}
                     whileHover={{ scale: 1.01 }}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: index * 0.05 }}
-                  >
-                    <div className="flex items-start justify-between mb-2">
+              >
+                <div className="flex items-start justify-between mb-2">
                       <div 
                         className="flex-1 min-w-0 cursor-pointer"
                         onClick={() => onLoadChatSession(chat.session_id)}
@@ -2925,7 +2925,7 @@ function LeftSidebar({
                         </h4>
                         <p className="text-xs text-slate-500 mt-1">{timeAgo}</p>
                       </div>
-                      <div className="flex items-center space-x-2">
+                  <div className="flex items-center space-x-2">
                         {isActive && (
                           <div className="w-2 h-2 bg-[#1ABC9C] rounded-full flex-shrink-0 mt-1"></div>
                         )}
@@ -2942,8 +2942,8 @@ function LeftSidebar({
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                           </svg>
                         </Button>
-                      </div>
-                    </div>
+                  </div>
+                </div>
                     <div 
                       className="flex items-center justify-between cursor-pointer"
                       onClick={() => onLoadChatSession(chat.session_id)}
@@ -2951,9 +2951,9 @@ function LeftSidebar({
                       <span className="text-xs text-slate-600 font-medium">Session {chat.session_id}</span>
                       <div className={`w-2 h-2 rounded-full ${
                         isActive ? 'bg-[#1ABC9C]' : 'bg-slate-300'
-                      }`} />
-                    </div>
-                  </motion.div>
+                  }`} />
+                </div>
+              </motion.div>
                 )
               })}
             </div>

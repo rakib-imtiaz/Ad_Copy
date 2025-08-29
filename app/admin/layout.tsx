@@ -3,7 +3,6 @@
 import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { LeftSidebar } from '@/components/admin/LeftSidebar';
-import { RightSidebar } from '@/components/admin/RightSidebar';
 import { authService } from '@/lib/auth-service';
 
 export default function AdminLayout({
@@ -74,7 +73,6 @@ export default function AdminLayout({
       >
         {children}
       </motion.main>
-      <RightSidebar />
     </div>
   );
 }

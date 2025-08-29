@@ -4,28 +4,28 @@ import { API_ENDPOINTS } from '@/lib/api-config';
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { userId, email, accessToken } = body;
+    const { accessToken, search_for = 'all' } = body;
 
-    if (!email || !accessToken) {
+    if (!accessToken) {
       return NextResponse.json(
-        { error: 'Missing required fields: email and accessToken' },
+        { error: 'Missing required field: accessToken' },
         { status: 400 }
       );
     }
 
-    console.log('🗑️ Admin - Deleting user:', email);
-    console.log('🔗 URL:', API_ENDPOINTS.N8N_WEBHOOKS.DELETE_USER);
+    console.log('👥 Admin - Fetching users with filter:', search_for);
+    console.log('🔗 URL:', API_ENDPOINTS.N8N_WEBHOOKS.GET_USER_INFO);
     console.log('🔑 Access Token:', accessToken ? `${accessToken.substring(0, 20)}...` : 'NOT PROVIDED');
-    console.log('📋 Request Body:', { email, accessToken: accessToken ? '***' : 'NOT PROVIDED' });
+    console.log('📋 Request Body:', { accessToken: accessToken ? '***' : 'NOT PROVIDED', search_for });
 
-    const response = await fetch(API_ENDPOINTS.N8N_WEBHOOKS.DELETE_USER, {
+    const response = await fetch(API_ENDPOINTS.N8N_WEBHOOKS.GET_USER_INFO, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${accessToken}`,
       },
       body: JSON.stringify({
-        delete_for: email,
+        search_for,
       }),
       signal: AbortSignal.timeout(30000), // 30 second timeout
     });
@@ -35,20 +35,20 @@ export async function POST(request: NextRequest) {
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('❌ Admin - Delete user failed:', response.status, errorText);
+      console.error('❌ Admin - Get user info failed:', response.status, errorText);
       return NextResponse.json(
-        { error: `Failed to delete user: ${response.status}` },
+        { error: `Failed to fetch users: ${response.status}` },
         { status: response.status }
       );
     }
 
     const result = await response.json();
-    console.log('✅ Admin - User deleted successfully:', result);
+    console.log('✅ Admin - Users fetched successfully:', result);
     console.log('📊 Response data structure:', Object.keys(result));
 
     return NextResponse.json(result);
   } catch (error) {
-    console.error('❌ Admin - Delete user error:', error);
+    console.error('❌ Admin - Get user info error:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

@@ -4,7 +4,7 @@ import { API_ENDPOINTS } from '@/lib/api-config';
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { userId, email, accessToken } = body;
+    const { email, accessToken } = body;
 
     if (!email || !accessToken) {
       return NextResponse.json(
@@ -13,19 +13,19 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    console.log('🗑️ Admin - Deleting user:', email);
-    console.log('🔗 URL:', API_ENDPOINTS.N8N_WEBHOOKS.DELETE_USER);
+    console.log('👑 Admin - Changing user role for:', email);
+    console.log('🔗 URL:', API_ENDPOINTS.N8N_WEBHOOKS.CHANGE_USER_ROLE);
     console.log('🔑 Access Token:', accessToken ? `${accessToken.substring(0, 20)}...` : 'NOT PROVIDED');
     console.log('📋 Request Body:', { email, accessToken: accessToken ? '***' : 'NOT PROVIDED' });
 
-    const response = await fetch(API_ENDPOINTS.N8N_WEBHOOKS.DELETE_USER, {
+    const response = await fetch(API_ENDPOINTS.N8N_WEBHOOKS.CHANGE_USER_ROLE, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${accessToken}`,
       },
       body: JSON.stringify({
-        delete_for: email,
+        email,
       }),
       signal: AbortSignal.timeout(30000), // 30 second timeout
     });
@@ -35,20 +35,20 @@ export async function POST(request: NextRequest) {
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('❌ Admin - Delete user failed:', response.status, errorText);
+      console.error('❌ Admin - Change user role failed:', response.status, errorText);
       return NextResponse.json(
-        { error: `Failed to delete user: ${response.status}` },
+        { error: `Failed to change user role: ${response.status}` },
         { status: response.status }
       );
     }
 
     const result = await response.json();
-    console.log('✅ Admin - User deleted successfully:', result);
+    console.log('✅ Admin - User role changed successfully:', result);
     console.log('📊 Response data structure:', Object.keys(result));
 
     return NextResponse.json(result);
   } catch (error) {
-    console.error('❌ Admin - Delete user error:', error);
+    console.error('❌ Admin - Change user role error:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
