@@ -3307,11 +3307,8 @@ function FilesTab({ mediaItems, onUpload, onDelete }: any) {
 }
 
 function LinksTab({ mediaItems, onDelete, onRefresh, setMediaItems }: any) {
-  const urlItems = mediaItems.filter((item: any) => item.type === 'url')
-  const scrapedItems = mediaItems.filter((item: any) => 
-    item.type === 'scraped' && item.url && item.url !== 'Not available'
-  )
-  const allLinkItems = [...urlItems, ...scrapedItems]
+  // Filter to show only webpage type items
+  const webpageItems = mediaItems.filter((item: any) => item.type === 'webpage')
   const [urlInput, setUrlInput] = React.useState("")
   const [isScraping, setIsScraping] = React.useState(false)
   const [isLoadingContents, setIsLoadingContents] = React.useState(false)
@@ -3388,7 +3385,7 @@ function LinksTab({ mediaItems, onDelete, onRefresh, setMediaItems }: any) {
             return {
               id: `scraped-${item.resource_id || index}`,
               filename: filename,
-              type: 'scraped', // Use 'scraped' type instead of 'url' to avoid filtering
+              type: item.type || 'webpage', // Use actual type from n8n response, fallback to 'webpage'
               url: item.url || '',
               uploadedAt: createdDate,
               size: 0, // Scraped content doesn't have file size
@@ -3397,11 +3394,11 @@ function LinksTab({ mediaItems, onDelete, onRefresh, setMediaItems }: any) {
               resourceId: item.resource_id,
               contentType: item.type,
               resourceName: item.resource_name,
-                         // Add any other properties from the scraped content (but preserve our type override)
-               owner: item.owner,
-               created_at: item.created_at,
-               originalApiType: item.type
-             }
+              // Add any other properties from the scraped content
+              owner: item.owner,
+              created_at: item.created_at,
+              originalApiType: item.type
+            }
           })
           
                      console.log('🔄 LinksTab - Updating media items with scraped contents...')
@@ -3645,8 +3642,8 @@ function LinksTab({ mediaItems, onDelete, onRefresh, setMediaItems }: any) {
       </div>
       
       <div className="space-y-2">
-        {allLinkItems.length > 0 ? (
-          allLinkItems.map((item: any, index: number) => (
+        {webpageItems.length > 0 ? (
+          webpageItems.map((item: any, index: number) => (
             <div 
               key={item.id} 
               className="flex items-center space-x-3 p-2 rounded-lg hover:bg-white border border-transparent hover:border-[#EEEEEE] cursor-pointer transition-colors"
@@ -3654,9 +3651,9 @@ function LinksTab({ mediaItems, onDelete, onRefresh, setMediaItems }: any) {
             >
               <Link2 className="h-4 w-4 text-[#929AAB]" />
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium truncate">{item.filename}</p>
+                <p className="text-sm font-medium truncate">{item.resourceName || item.filename}</p>
                 <p className="text-xs text-[#929AAB]">
-                  {item.type === 'scraped' ? 'Scraped Content' : 'URL Link'}
+                  Webpage Content
                 </p>
               </div>
               <div className="flex items-center space-x-2">
@@ -3803,15 +3800,16 @@ function YouTubeTab({ mediaItems, onDelete, onRefresh, setMediaItems }: any) {
         // Create a new media item for the transcription
         const transcriptionItem = {
           id: `youtube-${Date.now()}`,
-          filename: `youtube_transcription_${new Date().toISOString().split('T')[0]}.txt`,
+          filename: result.data.resource_name || `youtube_transcription_${new Date().toISOString().split('T')[0]}.txt`,
           type: 'youtube',
           url: urlInput.trim(),
           uploadedAt: new Date(),
           size: result.data.content?.length || 0,
           content: result.data.content || 'No transcription available',
-          title: result.data.title || 'YouTube Video',
+          title: result.data.resource_name || result.data.title || 'YouTube Video',
           duration: result.data.duration,
-          channel: result.data.channel
+          channel: result.data.channel,
+          resourceName: result.data.resource_name
         }
         
         // Add to media items
@@ -3884,7 +3882,7 @@ function YouTubeTab({ mediaItems, onDelete, onRefresh, setMediaItems }: any) {
                 </div>
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium truncate text-gray-900">{item.title || item.filename}</p>
+                <p className="text-sm font-medium truncate text-gray-900">{item.resourceName || item.title || item.filename}</p>
                 <p className="text-xs text-gray-500">
                   {item.channel && `Channel: ${item.channel}`}
                   {item.duration && ` • ${item.duration}`}

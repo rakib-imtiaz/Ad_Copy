@@ -104,7 +104,8 @@ export const API_ENDPOINTS = {
       DELETE_REFERRAL: 'https://n8n.srv934833.hstgr.cloud/webhook/delete-referral',
       SET_TOKEN_PRICE: 'https://n8n.srv934833.hstgr.cloud/webhook/set-token-price',
       GET_TOKEN_PRICE: 'https://n8n.srv934833.hstgr.cloud/webhook/show-token-price',
-      YOUTUBE_TRANSCRIBE: 'https://n8n.srv934833.hstgr.cloud/webhook-test/youtube-video-transcribe',
+      YOUTUBE_TRANSCRIBE: 'https://n8n.srv934833.hstgr.cloud/webhook/youtube-video-transcribe',
+      EXTRA_RESOURCES_CONTENT_EXTRACT: 'https://n8n.srv934833.hstgr.cloud/webhook/extra-resources-content-extract',
       },
   
   // User Management
