@@ -18,14 +18,13 @@ import Image from "next/image"
 
 import {
   Sidebar,
-  SidebarBody,
   SidebarContent,
   SidebarFooter,
   SidebarHeader,
-  SidebarHeading,
   SidebarMenu,
   SidebarMenuItem,
   SidebarSeparator,
+  SidebarGroupLabel,
 } from "@/components/ui/sidebar"
 import { Button } from "@/components/ui/button"
 
@@ -49,23 +48,22 @@ export function AppSidebar() {
 
   return (
     <Sidebar className="border-r border-white/10">
-      <SidebarContent>
-        <SidebarHeader>
-          <div className="flex items-center space-x-2.5">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br from-primary to-green-400">
-              <span className="text-lg font-bold text-black">C</span>
-            </div>
-            <div className="flex flex-col">
-              <span className="text-lg font-bold">Copy Ready</span>
-              <span className="text-xs text-muted-foreground">AI Ad Copy Platform</span>
-            </div>
+      <SidebarHeader>
+        <div className="flex items-center space-x-2.5">
+          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br from-primary to-green-400">
+            <span className="text-lg font-bold text-black">C</span>
           </div>
-        </SidebarHeader>
+          <div className="flex flex-col">
+            <span className="text-lg font-bold">Copy Ready</span>
+            <span className="text-xs text-muted-foreground">AI Ad Copy Platform</span>
+          </div>
+        </div>
+      </SidebarHeader>
 
-        <SidebarBody className="flex flex-col justify-between">
+      <SidebarContent className="flex flex-col justify-between">
           <div className="space-y-6">
             <SidebarMenu>
-              <SidebarHeading>Main Features</SidebarHeading>
+              <SidebarGroupLabel>Main Features</SidebarGroupLabel>
               {mainNav.map((item) => (
                 <SidebarMenuItem key={item.href}>
                   <Button
@@ -82,7 +80,7 @@ export function AppSidebar() {
             </SidebarMenu>
 
             <SidebarMenu>
-              <SidebarHeading>Workspace</SidebarHeading>
+              <SidebarGroupLabel>Workspace</SidebarGroupLabel>
               {secondaryNav.map((item) => (
                 <SidebarMenuItem key={item.href}>
                   <Button
@@ -107,8 +105,7 @@ export function AppSidebar() {
               </Button>
             </SidebarMenuItem>
           </SidebarMenu>
-        </SidebarBody>
-      </SidebarContent>
+        </SidebarContent>
 
       <SidebarFooter>
         <div className="flex items-center space-x-3 p-3 rounded-lg bg-secondary/50 border border-white/10">

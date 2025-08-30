@@ -78,10 +78,10 @@ const AnalyticsPage = () => {
       {/* Header Section */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <motion.div
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3 }}
-        >
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3 }}
+          >
           <h1 className="text-3xl font-bold tracking-tight">Analytics Dashboard</h1>
           <p className="text-muted-foreground mt-1">
             Monitor platform performance, user engagement, and revenue metrics
@@ -90,7 +90,7 @@ const AnalyticsPage = () => {
         <motion.div
           initial={{ opacity: 0, x: 10 }}
           animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.3, delay: 0.1 }}
+            transition={{ duration: 0.3, delay: 0.1 }}
           className="flex items-center gap-3"
         >
           <div className="flex items-center gap-2">
@@ -106,7 +106,7 @@ const AnalyticsPage = () => {
                 <SelectItem value="1year">Last year</SelectItem>
               </SelectContent>
             </Select>
-          </div>
+        </div>
           <Button
             variant="outline"
             size="sm"
@@ -122,7 +122,7 @@ const AnalyticsPage = () => {
             Export
           </Button>
         </motion.div>
-      </div>
+          </div>
 
       {/* Key Metrics Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -151,7 +151,7 @@ const AnalyticsPage = () => {
                   {item.trend === 'up' ? <TrendingUp className="mr-1 h-3 w-3" /> :
                    item.trend === 'down' ? <TrendingDown className="mr-1 h-3 w-3" /> : null}
                   {item.change} from last period
-                </div>
+        </div>
               </CardContent>
             </Card>
           </motion.div>
@@ -159,9 +159,9 @@ const AnalyticsPage = () => {
       </div>
 
       {/* Revenue Metrics */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4, delay: 0.2 }}
       >
         <Card>
@@ -193,7 +193,7 @@ const AnalyticsPage = () => {
                   </div>
                 </motion.div>
               ))}
-            </div>
+          </div>
           </CardContent>
         </Card>
       </motion.div>
@@ -221,16 +221,16 @@ const AnalyticsPage = () => {
                 <CardDescription>Most popular AI agents and their usage statistics</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="space-y-4">
-                  {usageByAgent.map((agent, index) => (
-                    <motion.div
-                      key={agent.name}
-                      className="space-y-2"
-                      initial={{ opacity: 0, x: -20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ duration: 0.3, delay: index * 0.1 }}
-                    >
-                      <div className="flex justify-between items-center">
+          <div className="space-y-4">
+            {usageByAgent.map((agent, index) => (
+              <motion.div
+                key={agent.name}
+                className="space-y-2"
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.3, delay: index * 0.1 }}
+              >
+                <div className="flex justify-between items-center">
                         <div className="flex items-center gap-2">
                           <span className="font-medium">{agent.name}</span>
                           <Badge 
@@ -244,22 +244,22 @@ const AnalyticsPage = () => {
                           </Badge>
                         </div>
                         <span className="text-sm font-semibold">{agent.usage} uses</span>
-                      </div>
+                </div>
                       <div className="w-full bg-secondary/20 rounded-full h-2">
-                        <motion.div
+                  <motion.div
                           className={cn(
                             "h-2 rounded-full",
                             agent.trend === 'up' ? 'bg-green-500' :
                             agent.trend === 'down' ? 'bg-red-500' : 'bg-primary'
                           )}
-                          initial={{ width: 0 }}
-                          animate={{ width: `${agent.percentage}%` }}
-                          transition={{ duration: 0.8, delay: index * 0.1 }}
-                        />
-                      </div>
-                    </motion.div>
-                  ))}
+                    initial={{ width: 0 }}
+                    animate={{ width: `${agent.percentage}%` }}
+                    transition={{ duration: 0.8, delay: index * 0.1 }}
+                  />
                 </div>
+              </motion.div>
+            ))}
+          </div>
               </CardContent>
             </Card>
           </TabsContent>
@@ -273,13 +273,13 @@ const AnalyticsPage = () => {
               <CardContent>
                 <div className="space-y-4">
                   {topRegions.map((region, index) => (
-                    <motion.div
+        <motion.div 
                       key={region.region}
                       className="flex items-center justify-between p-3 rounded-lg border"
                       initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.3, delay: index * 0.1 }}
-                    >
+          animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.3, delay: index * 0.1 }}
+              >
                       <div className="flex items-center gap-3">
                         <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center">
                           <span className="text-xs font-medium">{index + 1}</span>
@@ -290,9 +290,9 @@ const AnalyticsPage = () => {
                         <Badge variant="outline">{region.users}</Badge>
                         <span className="text-sm text-muted-foreground">{region.value} users</span>
                       </div>
-                    </motion.div>
-                  ))}
-                </div>
+              </motion.div>
+            ))}
+          </div>
               </CardContent>
             </Card>
           </TabsContent>
@@ -308,14 +308,14 @@ const AnalyticsPage = () => {
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  {performance.map((item, index) => (
-                    <motion.div
-                      key={item.metric}
+            {performance.map((item, index) => (
+              <motion.div
+                key={item.metric}
                       className="flex justify-between items-center p-4 rounded-lg border"
-                      initial={{ opacity: 0, x: 20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ duration: 0.3, delay: index * 0.1 }}
-                    >
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.3, delay: index * 0.1 }}
+              >
                       <div className="space-y-1">
                         <span className="text-sm font-medium">{item.metric}</span>
                         <div className="flex items-center gap-2">
@@ -332,20 +332,20 @@ const AnalyticsPage = () => {
                       <div className="text-right">
                         <div className={cn(
                           "text-lg font-bold",
-                          item.status === 'good' ? 'text-green-600' : 
-                          item.status === 'warning' ? 'text-yellow-600' : 'text-red-600'
+                  item.status === 'good' ? 'text-green-600' : 
+                  item.status === 'warning' ? 'text-yellow-600' : 'text-red-600'
                         )}>
-                          {item.value}
+                  {item.value}
                         </div>
                       </div>
-                    </motion.div>
-                  ))}
-                </div>
+              </motion.div>
+            ))}
+          </div>
               </CardContent>
             </Card>
           </TabsContent>
         </Tabs>
-      </motion.div>
+        </motion.div>
 
       {/* Chart Placeholder */}
       <motion.div 
@@ -360,12 +360,12 @@ const AnalyticsPage = () => {
           </CardHeader>
           <CardContent>
             <div className="h-80 bg-muted/20 rounded-lg border-2 border-dashed border-muted flex items-center justify-center">
-              <div className="text-center">
+          <div className="text-center">
                 <BarChart2 className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
                 <p className="text-muted-foreground mb-2">Interactive Chart Coming Soon</p>
                 <p className="text-xs text-muted-foreground">Real-time analytics and trend visualization</p>
-              </div>
-            </div>
+          </div>
+        </div>
           </CardContent>
         </Card>
       </motion.div>
