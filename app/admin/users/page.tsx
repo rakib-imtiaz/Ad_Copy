@@ -1,9 +1,39 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
-import { UserPlus, MoreHorizontal, Trash2, AlertTriangle, Filter, RefreshCw, Crown } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { UserPlus, MoreHorizontal, Trash2, AlertTriangle, Filter, RefreshCw, Crown, Search, Eye, ChevronDown } from 'lucide-react';
 import { authService } from '@/lib/auth-service';
+import {
+  Table,
+  TableBody,
+  TableCaption,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Input } from '@/components/ui/input';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { cn } from '@/lib/utils';
 
 interface User {
   id: number;
@@ -21,6 +51,7 @@ const UserManagementPage = () => {
   const [changingRoleUserId, setChangingRoleUserId] = useState<number | null>(null);
   const [showRoleChangeConfirm, setShowRoleChangeConfirm] = useState<number | null>(null);
   const [filterRole, setFilterRole] = useState<string>('all');
+  const [searchTerm, setSearchTerm] = useState<string>('');
   const [currentUser, setCurrentUser] = useState<{ id?: number; email?: string } | null>(null);
 
   const container = {
@@ -220,298 +251,357 @@ const UserManagementPage = () => {
     }
   };
 
+  // Filter users based on search term and role
+  const filteredUsers = users.filter(user => {
+    const matchesSearch = user.email.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesRole = filterRole === 'all' || user.role === filterRole;
+    return matchesSearch && matchesRole;
+  });
+
   return (
-    <>
-      <div className="flex justify-between items-center mb-8">
-        <div>
-          <motion.h1 
-            className="text-2xl font-bold text-gray-900"
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3 }}
-          >
-            User Management
-          </motion.h1>
-          <motion.p 
-            className="text-gray-500"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.3, delay: 0.1 }}
-          >
-            View user records with filters, create admin users, and manage accounts
+    <div className="space-y-8">
+      {/* Header Section */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3 }}
+        >
+          <h1 className="text-3xl font-bold tracking-tight">User Management</h1>
+          <p className="text-muted-foreground mt-1">
+            Manage user accounts, roles, and permissions
             {currentUser && (
-              <span className="block text-xs text-blue-600 mt-1">
+              <span className="block text-xs text-primary mt-1">
                 💡 Your account is hidden from this list for security
               </span>
             )}
-          </motion.p>
-        </div>
-        <motion.button 
-          className="flex items-center space-x-2 bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition-colors"
-          whileHover={{ scale: 1.03 }}
-          whileTap={{ scale: 0.97 }}
+          </p>
+        </motion.div>
+        <motion.div
+          initial={{ opacity: 0, x: 10 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.3, delay: 0.1 }}
         >
-          <UserPlus size={18} />
-          <span>Create Admin User</span>
-        </motion.button>
+          <Button 
+            className="gap-2"
+            onClick={() => {}}
+          >
+            <UserPlus size={18} />
+            Create Admin User
+          </Button>
+        </motion.div>
       </div>
 
-             {/* Filters */}
-       <motion.div 
-         className="bg-white rounded-xl shadow p-4 mb-6"
-         initial={{ opacity: 0, y: 20 }}
-         animate={{ opacity: 1, y: 0 }}
-         transition={{ duration: 0.4 }}
-       >
-         <div className="flex items-center justify-between">
-           <div className="flex items-center space-x-4">
-             <div className="flex items-center space-x-2">
-               <Filter size={20} className="text-gray-500" />
-               <span className="text-sm font-medium text-gray-700">Filter by role:</span>
-             </div>
-             <select 
-               value={filterRole} 
-               onChange={(e) => setFilterRole(e.target.value)}
-               className="border border-gray-300 rounded-lg px-3 py-2 text-sm"
-             >
-               <option value="all">All Users</option>
-               <option value="paid-user">Paid Users</option>
-               <option value="Superking">Admin Users</option>
-             </select>
-           </div>
-           <button
-             onClick={() => fetchUsers(filterRole)}
-             disabled={loading}
-             className="flex items-center space-x-2 text-gray-600 hover:text-gray-800 transition-colors disabled:opacity-50"
-           >
-             <RefreshCw size={16} className={loading ? 'animate-spin' : ''} />
-             <span className="text-sm">Refresh</span>
-           </button>
-         </div>
-       </motion.div>
+      {/* Filters and Search */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4 }}
+      >
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-lg">Filters & Search</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex flex-col sm:flex-row gap-4">
+              <div className="flex-1">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+                  <Input
+                    placeholder="Search by email..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="pl-10"
+                  />
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <Filter size={16} className="text-muted-foreground" />
+                <Select value={filterRole} onValueChange={setFilterRole}>
+                  <SelectTrigger className="w-40">
+                    <SelectValue placeholder="Filter by role" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Users</SelectItem>
+                    <SelectItem value="paid-user">Paid Users</SelectItem>
+                    <SelectItem value="Superking">Admin Users</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => fetchUsers(filterRole)}
+                  disabled={loading}
+                  className="gap-2"
+                >
+                  <RefreshCw size={16} className={cn(loading && 'animate-spin')} />
+                  Refresh
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </motion.div>
 
-       <motion.div 
-         className="bg-white rounded-xl shadow p-6"
-         initial={{ opacity: 0, y: 20 }}
-         animate={{ opacity: 1, y: 0 }}
-         transition={{ duration: 0.4 }}
-       >
-         <h2 className="text-xl font-semibold text-gray-900 mb-6">User Records</h2>
-        
-                 {loading ? (
-           <div className="flex items-center justify-center py-12">
-             <div className="text-center">
-               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto mb-4"></div>
-               <p className="text-gray-600">Loading users...</p>
-             </div>
-           </div>
-         ) : !authService.isAuthenticated() ? (
-           <div className="flex items-center justify-center py-12">
-             <div className="text-center">
-               <p className="text-gray-600 mb-2">Authentication required</p>
-               <p className="text-sm text-gray-500">Please sign in to view user data</p>
-             </div>
-           </div>
-         ) : (
-           <motion.div 
-             className="space-y-4"
-             variants={container}
-             initial="hidden"
-             animate="show"
-           >
-             {users.length === 0 ? (
-               <div className="text-center py-12">
-                 <p className="text-gray-500">No users found.</p>
-               </div>
-             ) : (
-               users.map((member) => (
-                         <motion.div 
-               key={member.id}
-               className="bg-gray-50 p-4 rounded-lg border border-gray-200 flex justify-between items-center"
-               variants={item}
-             >
-                             <div className="flex items-center space-x-4">
-                 <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center text-lg font-bold text-gray-600">
-                   {member.email.split('@')[0].substring(0, 2).toUpperCase()}
-                 </div>
-                 <div>
-                   <h3 className="font-semibold text-gray-800">{member.email}</h3>
-                   <p className="text-sm text-gray-500">ID: {member.id}</p>
-                 </div>
-               </div>
-              
-                             <div className="flex items-center space-x-4">
-                                    <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                     member.role === 'Superking' ? 'bg-purple-100 text-purple-800' : 
-                     member.role === 'paid-user' ? 'bg-blue-100 text-blue-800' : 
-                     'bg-gray-100 text-gray-800'
-                   }`}>
-                     {member.role === 'Superking' ? 'Admin' : member.role || 'No Role'}
-                     {member.role === 'Superking' && (
-                       <span className="ml-1 text-xs">👑</span>
-                     )}
-                   </span>
-                 
-                 <span className="text-sm text-gray-500">
-                   Credits: {parseFloat(member.total_credit).toFixed(2)}
-                 </span>
-                 
-                 <span className="text-sm text-gray-500">
-                   {new Date(member.created_at).toLocaleDateString()}
-                 </span>
-                 
-                 <div className="flex items-center space-x-2">
-                   <button className="text-gray-400 hover:text-gray-600">
-                     <MoreHorizontal size={20} />
-                   </button>
-                   
-                   {/* Change role button - only show for non-admin users */}
-                   {member.role !== 'Superking' && (
-                     <button 
-                       onClick={() => setShowRoleChangeConfirm(member.id)}
-                       className="text-purple-400 hover:text-purple-600 transition-colors"
-                       disabled={changingRoleUserId === member.id}
-                       title="Make Admin"
-                     >
-                       <Crown size={20} />
-                     </button>
-                   )}
-                   
-                   {/* Allow deleting any user (current user is filtered out) */}
-                   <button 
-                     onClick={() => setShowDeleteConfirm(member.id)}
-                     className="text-red-400 hover:text-red-600 transition-colors"
-                     disabled={deletingUserId === member.id}
-                   >
-                     <Trash2 size={20} />
-                   </button>
-                 </div>
-                                </div>
-               </motion.div>
-             ))
-             )}
-           </motion.div>
-         )}
-       </motion.div>
-
-              {/* Delete Confirmation Modal */}
-       {showDeleteConfirm && (
-         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-           <motion.div
-             initial={{ opacity: 0, scale: 0.9 }}
-             animate={{ opacity: 1, scale: 1 }}
-             className="bg-white rounded-xl p-6 max-w-md w-full mx-4"
-           >
-             <div className="flex items-center space-x-3 mb-4">
-               <div className="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
-                 <AlertTriangle className="text-red-600" size={20} />
-               </div>
-               <div>
-                 <h3 className="text-lg font-semibold text-gray-900">
-                   {showDeleteConfirm && users.find(u => u.id === showDeleteConfirm)?.role === 'Superking' 
-                     ? 'Delete Admin User' 
-                     : 'Delete User'
-                   }
-                 </h3>
-                 <p className="text-sm text-gray-500">This action cannot be undone</p>
-               </div>
-             </div>
-             
-             <p className="text-gray-600 mb-6">
-                {showDeleteConfirm && users.find(u => u.id === showDeleteConfirm)?.role === 'Superking' 
-                  ? 'Are you sure you want to delete this admin user? This will permanently remove their admin account and all associated data. This action requires careful consideration.'
-                  : 'Are you sure you want to delete this user? This will permanently remove their account and all associated data.'
-                }
-                {showDeleteConfirm && (
-                  <span className="block mt-2 font-semibold">
-                    User: {users.find(u => u.id === showDeleteConfirm)?.email}
-                    {users.find(u => u.id === showDeleteConfirm)?.role === 'Superking' && (
-                      <span className="text-red-600 ml-2">(Admin User)</span>
-                    )}
-                  </span>
+      {/* Users Table */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4, delay: 0.1 }}
+      >
+        <Card>
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <CardTitle>User Records</CardTitle>
+              <Badge variant="secondary" className="text-xs">
+                {filteredUsers.length} of {users.length} users
+              </Badge>
+            </div>
+          </CardHeader>
+          <CardContent className="p-0">
+            {loading ? (
+              <div className="flex items-center justify-center py-16">
+                <div className="text-center">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+                  <p className="text-muted-foreground">Loading users...</p>
+                </div>
+              </div>
+            ) : !authService.isAuthenticated() ? (
+              <div className="flex items-center justify-center py-16">
+                <div className="text-center">
+                  <p className="text-muted-foreground mb-2">Authentication required</p>
+                  <p className="text-xs text-muted-foreground">Please sign in to view user data</p>
+                </div>
+              </div>
+            ) : filteredUsers.length === 0 ? (
+              <div className="text-center py-16">
+                <p className="text-muted-foreground">No users found.</p>
+                {searchTerm && (
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Try adjusting your search or filters
+                  </p>
                 )}
-              </p>
-             
-             <div className="flex space-x-3">
-               <button
-                 onClick={() => handleDeleteUser(showDeleteConfirm)}
-                 disabled={deletingUserId === showDeleteConfirm}
-                 className={`flex-1 px-4 py-2 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-colors ${
-                   showDeleteConfirm && users.find(u => u.id === showDeleteConfirm)?.role === 'Superking'
-                     ? 'bg-red-700 text-white hover:bg-red-800'
-                     : 'bg-red-600 text-white hover:bg-red-700'
-                 }`}
-               >
-                 {deletingUserId === showDeleteConfirm 
-                   ? 'Deleting...' 
-                   : showDeleteConfirm && users.find(u => u.id === showDeleteConfirm)?.role === 'Superking'
-                     ? 'Delete Admin User'
-                     : 'Delete User'
-                 }
-               </button>
-               <button
-                 onClick={() => setShowDeleteConfirm(null)}
-                 disabled={deletingUserId === showDeleteConfirm}
-                 className="flex-1 bg-gray-200 text-gray-800 px-4 py-2 rounded-lg hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-               >
-                 Cancel
-               </button>
-             </div>
-           </motion.div>
-         </div>
-       )}
+              </div>
+            ) : (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>User</TableHead>
+                    <TableHead>Role</TableHead>
+                    <TableHead className="text-right">Credits</TableHead>
+                    <TableHead>Created</TableHead>
+                    <TableHead className="w-[100px]">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  <AnimatePresence>
+                    {filteredUsers.map((user, index) => (
+                      <motion.tr
+                        key={user.id}
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -10 }}
+                        transition={{ duration: 0.3, delay: index * 0.05 }}
+                        className="group"
+                      >
+                        <TableCell>
+                          <div className="flex items-center space-x-3">
+                            <Avatar className="h-8 w-8">
+                              <AvatarFallback className="text-xs font-medium">
+                                {user.email.substring(0, 2).toUpperCase()}
+                              </AvatarFallback>
+                            </Avatar>
+                            <div>
+                              <div className="font-medium">{user.email}</div>
+                              <div className="text-xs text-muted-foreground">ID: {user.id}</div>
+                            </div>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <Badge 
+                            variant={
+                              user.role === 'Superking' ? 'default' :
+                              user.role === 'paid-user' ? 'secondary' : 
+                              'outline'
+                            }
+                            className="gap-1"
+                          >
+                            {user.role === 'Superking' && <Crown size={12} />}
+                            {user.role === 'Superking' ? 'Admin' : user.role || 'No Role'}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-right font-mono text-sm">
+                          ${parseFloat(user.total_credit).toFixed(2)}
+                        </TableCell>
+                        <TableCell className="text-sm text-muted-foreground">
+                          {new Date(user.created_at).toLocaleDateString()}
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center space-x-1">
+                            {user.role !== 'Superking' && (
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => setShowRoleChangeConfirm(user.id)}
+                                disabled={changingRoleUserId === user.id}
+                                className="h-8 w-8 p-0 hover:bg-purple-100 hover:text-purple-600"
+                                title="Make Admin"
+                              >
+                                <Crown size={14} />
+                              </Button>
+                            )}
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => setShowDeleteConfirm(user.id)}
+                              disabled={deletingUserId === user.id}
+                              className="h-8 w-8 p-0 hover:bg-destructive/10 hover:text-destructive"
+                              title="Delete User"
+                            >
+                              <Trash2 size={14} />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </motion.tr>
+                    ))}
+                  </AnimatePresence>
+                </TableBody>
+              </Table>
+            )}
+          </CardContent>
+        </Card>
+      </motion.div>
 
-       {/* Role Change Confirmation Modal */}
-       {showRoleChangeConfirm && (
-         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-           <motion.div
-             initial={{ opacity: 0, scale: 0.9 }}
-             animate={{ opacity: 1, scale: 1 }}
-             className="bg-white rounded-xl p-6 max-w-md w-full mx-4"
-           >
-             <div className="flex items-center space-x-3 mb-4">
-               <div className="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center">
-                 <Crown className="text-purple-600" size={20} />
-               </div>
-               <div>
-                 <h3 className="text-lg font-semibold text-gray-900">Make User Admin</h3>
-                 <p className="text-sm text-gray-500">This will grant admin privileges</p>
-               </div>
-             </div>
-             
-             <p className="text-gray-600 mb-6">
-                Are you sure you want to make this user an admin? They will have full access to the admin dashboard and all administrative functions.
-                {showRoleChangeConfirm && (
-                  <span className="block mt-2 font-semibold">
-                    User: {users.find(u => u.id === showRoleChangeConfirm)?.email}
-                  </span>
-                )}
-              </p>
-             
-             <div className="flex space-x-3">
-               <button
-                 onClick={() => handleChangeUserRole(showRoleChangeConfirm)}
-                 disabled={changingRoleUserId === showRoleChangeConfirm}
-                 className="flex-1 bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-               >
-                 {changingRoleUserId === showRoleChangeConfirm 
-                   ? 'Changing Role...' 
-                   : 'Make Admin'
-                 }
-               </button>
-               <button
-                 onClick={() => setShowRoleChangeConfirm(null)}
-                 disabled={changingRoleUserId === showRoleChangeConfirm}
-                 className="flex-1 bg-gray-200 text-gray-800 px-4 py-2 rounded-lg hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-               >
-                 Cancel
-               </button>
-             </div>
-           </motion.div>
-         </div>
-       )}
-     </>
-   );
- };
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={!!showDeleteConfirm} onOpenChange={() => setShowDeleteConfirm(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <div className="flex items-center space-x-3">
+              <div className="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
+                <AlertTriangle className="text-red-600 h-5 w-5" />
+              </div>
+              <div>
+                <DialogTitle>
+                  {showDeleteConfirm && users.find(u => u.id === showDeleteConfirm)?.role === 'Superking' 
+                    ? 'Delete Admin User' 
+                    : 'Delete User'
+                  }
+                </DialogTitle>
+                <DialogDescription>This action cannot be undone</DialogDescription>
+              </div>
+            </div>
+          </DialogHeader>
+          
+          <div className="my-4">
+            <p className="text-sm text-muted-foreground mb-4">
+              {showDeleteConfirm && users.find(u => u.id === showDeleteConfirm)?.role === 'Superking' 
+                ? 'Are you sure you want to delete this admin user? This will permanently remove their admin account and all associated data.'
+                : 'Are you sure you want to delete this user? This will permanently remove their account and all associated data.'
+              }
+            </p>
+            {showDeleteConfirm && (
+              <div className="p-3 bg-muted rounded-lg">
+                <div className="text-sm">
+                  <span className="font-medium">User:</span> {users.find(u => u.id === showDeleteConfirm)?.email}
+                  {users.find(u => u.id === showDeleteConfirm)?.role === 'Superking' && (
+                    <Badge variant="destructive" className="ml-2">Admin User</Badge>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+          
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setShowDeleteConfirm(null)}
+              disabled={deletingUserId === showDeleteConfirm}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={() => showDeleteConfirm && handleDeleteUser(showDeleteConfirm)}
+              disabled={deletingUserId === showDeleteConfirm}
+              className="gap-2"
+            >
+              {deletingUserId === showDeleteConfirm ? (
+                <>
+                  <div className="w-4 h-4 border-2 border-current border-t-transparent animate-spin rounded-full" />
+                  Deleting...
+                </>
+              ) : (
+                <>
+                  <Trash2 size={16} />
+                  {showDeleteConfirm && users.find(u => u.id === showDeleteConfirm)?.role === 'Superking'
+                    ? 'Delete Admin User'
+                    : 'Delete User'
+                  }
+                </>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Role Change Confirmation Dialog */}
+      <Dialog open={!!showRoleChangeConfirm} onOpenChange={() => setShowRoleChangeConfirm(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <div className="flex items-center space-x-3">
+              <div className="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center">
+                <Crown className="text-purple-600 h-5 w-5" />
+              </div>
+              <div>
+                <DialogTitle>Make User Admin</DialogTitle>
+                <DialogDescription>This will grant admin privileges</DialogDescription>
+              </div>
+            </div>
+          </DialogHeader>
+          
+          <div className="my-4">
+            <p className="text-sm text-muted-foreground mb-4">
+              Are you sure you want to make this user an admin? They will have full access to the admin dashboard and all administrative functions.
+            </p>
+            {showRoleChangeConfirm && (
+              <div className="p-3 bg-muted rounded-lg">
+                <div className="text-sm">
+                  <span className="font-medium">User:</span> {users.find(u => u.id === showRoleChangeConfirm)?.email}
+                </div>
+              </div>
+            )}
+          </div>
+          
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setShowRoleChangeConfirm(null)}
+              disabled={changingRoleUserId === showRoleChangeConfirm}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={() => showRoleChangeConfirm && handleChangeUserRole(showRoleChangeConfirm)}
+              disabled={changingRoleUserId === showRoleChangeConfirm}
+              className="gap-2 bg-purple-600 hover:bg-purple-700"
+            >
+              {changingRoleUserId === showRoleChangeConfirm ? (
+                <>
+                  <div className="w-4 h-4 border-2 border-current border-t-transparent animate-spin rounded-full" />
+                  Changing Role...
+                </>
+              ) : (
+                <>
+                  <Crown size={16} />
+                  Make Admin
+                </>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+};
 
 export default UserManagementPage;
