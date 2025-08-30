@@ -120,6 +120,17 @@
   }
 }
 
+@keyframes pulse-subtle {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow: var(--shadow-soft);
+  }
+  50% {
+    transform: scale(1.005);
+    box-shadow: var(--shadow-med);
+  }
+}
+
 /* ===========================
    RFA Components & Utilities
    =========================== */
