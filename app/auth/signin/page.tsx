@@ -136,6 +136,7 @@ export default function SignInPage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.4 }}
+            className="relative"
           >
             <Card className="border-rfa-border/30 backdrop-blur-sm bg-rfa-white/98 shadow-med">
               <CardHeader className="space-y-2">
@@ -182,7 +183,8 @@ export default function SignInPage() {
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       required
-                      className="bg-white border-gray-300 text-gray-900 placeholder:text-gray-500 focus:border-brand focus:ring-2 focus:ring-brand/20 transition-all duration-200 focus:scale-[1.02]"
+                      disabled={isLoading}
+                      className="bg-white border-gray-300 text-gray-900 placeholder:text-gray-500 focus:border-brand focus:ring-2 focus:ring-brand/20 transition-all duration-200 focus:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed"
                     />
                   </motion.div>
                   <motion.div 
@@ -204,7 +206,8 @@ export default function SignInPage() {
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       required
-                      className="bg-white border-gray-300 text-gray-900 placeholder:text-gray-500 focus:border-brand focus:ring-2 focus:ring-brand/20 transition-all duration-200 focus:scale-[1.02]"
+                      disabled={isLoading}
+                      className="bg-white border-gray-300 text-gray-900 placeholder:text-gray-500 focus:border-brand focus:ring-2 focus:ring-brand/20 transition-all duration-200 focus:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed"
                     />
                   </motion.div>
                   <motion.div
@@ -214,7 +217,7 @@ export default function SignInPage() {
                   >
                     <Button 
                       type="submit" 
-                      className="w-full bg-brand hover:bg-brand-dark text-white font-semibold py-3 transition-all duration-200 hover:scale-[1.02] shadow-lg border-0" 
+                      className="w-full bg-brand hover:bg-brand-dark text-white font-semibold py-3 transition-all duration-200 hover:scale-[1.02] shadow-lg border-0 disabled:opacity-50 disabled:cursor-not-allowed" 
                       disabled={isLoading}
                     >
                       {isLoading ? "Signing in..." : "Sign In"}
@@ -236,6 +239,24 @@ export default function SignInPage() {
                 </motion.div>
               </CardFooter>
             </Card>
+
+            {/* Loading Overlay */}
+            {isLoading && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="absolute inset-0 bg-white/90 backdrop-blur-sm rounded-xl flex flex-col items-center justify-center z-10"
+              >
+                <div className="flex flex-col items-center space-y-4">
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand"></div>
+                  <div className="text-center">
+                    <h3 className="text-lg font-semibold text-gray-900 mb-2">Signing you in...</h3>
+                    <p className="text-sm text-gray-600">Please wait while we verify your credentials</p>
+                  </div>
+                </div>
+              </motion.div>
+            )}
           </motion.div>
         </motion.div>
       </div>
