@@ -25,25 +25,16 @@ export default function SignInPage() {
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
-  const [debugInfo, setDebugInfo] = useState("");
   const router = useRouter();
 
-  // Debug authentication state and check for error parameters
+  // Check for error parameters
   useEffect(() => {
-    console.log('🔐 SignIn page - isAuthenticated:', isAuthenticated, 'loading:', loading);
-    const token = authService.getAuthToken();
-    console.log('🔐 SignIn page - token exists:', !!token);
-    if (token) {
-      console.log('🔐 SignIn page - token preview:', token.substring(0, 50) + '...');
-    }
-    
     // Check for error parameter in URL
     if (typeof window !== 'undefined') {
       const params = new URLSearchParams(window.location.search);
       const errorParam = params.get('error');
       
       if (errorParam === 'invalid_token') {
-        console.log('🔐 SignIn page - invalid_token error parameter detected');
         setError('Your session has expired. Please sign in again.');
         
         // Clear any potentially invalid auth state
@@ -53,7 +44,7 @@ export default function SignInPage() {
         window.history.replaceState({}, document.title, window.location.pathname);
       }
     }
-  }, [isAuthenticated, loading]);
+  }, []);
 
   // Redirect if already authenticated, but only after explicit login
   useEffect(() => {
@@ -66,23 +57,17 @@ export default function SignInPage() {
       if (token && authService.isAuthenticated() && explicitLogin === 'true') {
         // Get user role for proper redirect
         const user = authService.getCurrentUser();
-        console.log('🔐 SignIn page - User already authenticated, role:', user?.role);
         
         if (user?.role === 'Superking') {
-          console.log('🔐 SignIn page - Redirecting admin user to admin dashboard');
           router.push("/admin");
         } else if (user?.role === 'paid-user') {
-          console.log('🔐 SignIn page - Redirecting paid user to dashboard');
           router.push("/dashboard");
         } else {
-          console.log('🔐 SignIn page - Unauthorized role, clearing tokens');
           authService.clearTokens();
         }
       } else {
-        console.log('🔐 SignIn page - User appears authenticated but either token is invalid or not from explicit login');
         // Clear any potentially invalid authentication state
         if (!explicitLogin) {
-          console.log('🔐 SignIn page - No explicit login detected, clearing tokens');
           authService.clearTokens();
         }
       }
@@ -92,11 +77,9 @@ export default function SignInPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
-    setDebugInfo("");
     setIsLoading(true);
     
     try {
-      console.log('🔐 Starting sign in process...');
       // Use auth context for sign in
       const success = await login(email, password);
       
@@ -104,24 +87,15 @@ export default function SignInPage() {
         // Mark this as an explicit user login
         sessionStorage.setItem('explicit_login', 'true');
         
-        // Successful sign in - show success message and redirect
-        console.log('✅ Sign in successful - webhook responded with success');
-        setError(""); // Clear any previous errors
-        setDebugInfo("✅ Authentication successful! Redirecting...");
-        
-        // Wait a moment to show the success message, then redirect
-        setTimeout(() => {
-          router.push("/dashboard");
-        }, 1500);
+        // Successful sign in - redirect
+        router.push("/dashboard");
       } else {
-        console.log('❌ Sign in failed - webhook did not return success');
         setError('Invalid email or password. Please check your credentials and try again.');
       }
       
     } catch (error: any) {
       console.error("Sign in failed", error);
       setError(`Sign in failed: ${error.message}`);
-      setDebugInfo(prev => prev + `\nError: ${error.message}`);
     } finally {
       setIsLoading(false);
     }
@@ -193,32 +167,6 @@ export default function SignInPage() {
                   </motion.div>
                 )}
 
-                {/* Success Display */}
-                {debugInfo && debugInfo.includes('✅') && (
-                  <motion.div 
-                    className="p-3 text-sm bg-green-500/10 border border-green-500/20 rounded-lg text-green-600 mb-4"
-                    initial={{ opacity: 0, scale: 0.95 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ duration: 0.3 }}
-                  >
-                    <div className="flex flex-col space-y-2">
-                      <span>{debugInfo}</span>
-                    </div>
-                  </motion.div>
-                )}
-
-                {/* Debug Information */}
-                {debugInfo && !debugInfo.includes('✅') && (
-                  <motion.div 
-                    className="p-3 text-xs bg-blue-50 border border-blue-200 rounded-lg text-blue-700 mb-4 max-h-32 overflow-y-auto"
-                    initial={{ opacity: 0, scale: 0.95 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ duration: 0.3 }}
-                  >
-                    <pre className="whitespace-pre-wrap">{debugInfo}</pre>
-                  </motion.div>
-                )}
-
                 <form onSubmit={handleSubmit} className="space-y-4">
                   <motion.div 
                     className="space-y-2"
@@ -286,86 +234,6 @@ export default function SignInPage() {
                     Create an account
                   </Link>
                 </motion.div>
-
-                {/* Debug: Current State */}
-                <motion.div 
-                  className="text-center space-y-2"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ duration: 0.3, delay: 0.9 }}
-                >
-                  <div className="text-xs text-gray-500 p-2 bg-gray-100 rounded">
-                    <div>Auth State: {isAuthenticated ? 'Authenticated' : 'Not Authenticated'}</div>
-                    <div>Loading: {loading ? 'Yes' : 'No'}</div>
-                    <div>Token: {authService.getAuthToken() ? 'Exists' : 'None'}</div>
-                  </div>
-                </motion.div>
-
-                {/* Debug: Clear Cache Button */}
-                <motion.div 
-                  className="text-center space-y-2"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ duration: 0.3, delay: 1.0 }}
-                >
-                  <button
-                    onClick={() => {
-                      console.log('🔍 === CURRENT STORAGE STATE ===');
-                      console.log('localStorage.auth_token:', localStorage.getItem('auth_token'));
-                      console.log('localStorage.refresh_token:', localStorage.getItem('refresh_token'));
-                      console.log('authService.getAuthToken():', authService.getAuthToken());
-                      console.log('authService.isAuthenticated():', authService.isAuthenticated());
-                      console.log('=== END STORAGE STATE ===');
-                    }}
-                    className="text-xs text-blue-600 hover:text-blue-800 underline transition-colors block"
-                  >
-                    Check Current Storage State
-                  </button>
-                  <button
-                    onClick={() => {
-                      console.log('🧹 Clearing all tokens and cache...');
-                      
-                      // Clear auth service tokens
-                      authService.clearTokens();
-                      
-                      // Clear localStorage completely
-                      if (typeof window !== 'undefined') {
-                        localStorage.removeItem('auth_token');
-                        localStorage.removeItem('refresh_token');
-                        localStorage.removeItem('chat_session_id');
-                        localStorage.removeItem('chat_started');
-                        localStorage.removeItem('chat_messages');
-                        console.log('🧹 localStorage cleared');
-                      }
-                      
-                      // Clear sessionStorage
-                      if (typeof window !== 'undefined') {
-                        sessionStorage.removeItem('explicit_login');
-                        sessionStorage.clear();
-                        console.log('🧹 sessionStorage cleared (including explicit_login flag)');
-                      }
-                      
-                      console.log('🧹 Reloading page...');
-                      window.location.reload();
-                    }}
-                    className="text-xs text-red-600 hover:text-red-800 underline transition-colors"
-                  >
-                    Clear All Cache & Reload
-                  </button>
-                  
-                  <button
-                    onClick={() => {
-                      console.log('🔧 Force loading to false...');
-                      // Force reload to reset auth state
-                      window.location.reload();
-                    }}
-                    className="text-xs text-blue-600 hover:text-blue-800 underline transition-colors"
-                  >
-                    Force Reset Auth State
-                  </button>
-                </motion.div>
-
-
               </CardFooter>
             </Card>
           </motion.div>

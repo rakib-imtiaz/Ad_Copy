@@ -19,13 +19,11 @@ import { Button } from "@/components/ui/button";
 import { AuroraBackground } from "@/components/ui/aurora-background";
 
 export default function SignUpPage() {
-  const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
-  const [debugInfo, setDebugInfo] = useState("");
   const [showVerification, setShowVerification] = useState(false);
   const [verificationCode, setVerificationCode] = useState("");
   const [isVerifying, setIsVerifying] = useState(false);
@@ -34,7 +32,6 @@ export default function SignUpPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
-    setDebugInfo("");
     
     if (password !== confirmPassword) {
       setError("Passwords do not match");
@@ -47,12 +44,8 @@ export default function SignUpPage() {
       // Use auth service for registration
       const result = await authService.signUp({
         email,
-        password,
-        fullName
+        password
       });
-      
-      // Debug information
-      setDebugInfo(`Registration Response: ${JSON.stringify(result, null, 2)}`);
 
       if (!result.success) {
         // Handle specific error cases
@@ -72,7 +65,6 @@ export default function SignUpPage() {
     } catch (error: any) {
       console.error("Registration failed", error);
       setError(`Registration failed: ${error.message}`);
-      setDebugInfo(prev => prev + `\nError: ${error.message}`);
     } finally {
       setIsLoading(false);
     }
@@ -86,9 +78,6 @@ export default function SignUpPage() {
     try {
       // Use auth service to verify the code
       const result = await authService.verifyCode(email, verificationCode);
-      
-      // Debug information
-      setDebugInfo(prev => prev + `\nVerification Response: ${JSON.stringify(result, null, 2)}`);
 
       if (!result.success) {
         // Handle specific n8n configuration error
@@ -112,7 +101,6 @@ export default function SignUpPage() {
     } catch (error: any) {
       console.error("Verification failed", error);
       setError(`Verification failed: ${error.message}`);
-      setDebugInfo(prev => prev + `\nVerification Error: ${error.message}`);
     } finally {
       setIsVerifying(false);
     }
@@ -189,18 +177,6 @@ export default function SignUpPage() {
                    </motion.div>
                  )}
 
-                 {/* Debug Information */}
-                 {debugInfo && (
-                   <motion.div 
-                     className="p-3 text-xs bg-blue-50 border border-blue-200 rounded-lg text-blue-700 mb-4 max-h-32 overflow-y-auto"
-                     initial={{ opacity: 0, scale: 0.95 }}
-                     animate={{ opacity: 1, scale: 1 }}
-                     transition={{ duration: 0.3 }}
-                   >
-                     <pre className="whitespace-pre-wrap">{debugInfo}</pre>
-                   </motion.div>
-                 )}
-
                  {!showVerification ? (
                    // Registration Form
                    <form onSubmit={handleSubmit} className="space-y-4">
@@ -209,23 +185,6 @@ export default function SignUpPage() {
                        initial={{ opacity: 0, x: -20 }}
                        animate={{ opacity: 1, x: 0 }}
                        transition={{ duration: 0.3, delay: 0.6 }}
-                     >
-                       <label className="text-sm font-medium text-black" htmlFor="fullName">Full Name</label>
-                       <Input
-                         id="fullName"
-                         type="text"
-                         placeholder="John Doe"
-                         value={fullName}
-                         onChange={(e) => setFullName(e.target.value)}
-                         required
-                         className="bg-white border-gray-300 text-gray-900 placeholder:text-gray-500 focus:border-brand focus:ring-2 focus:ring-brand/20 transition-all duration-200 focus:scale-[1.02]"
-                       />
-                     </motion.div>
-                     <motion.div 
-                       className="space-y-2"
-                       initial={{ opacity: 0, x: -20 }}
-                       animate={{ opacity: 1, x: 0 }}
-                       transition={{ duration: 0.3, delay: 0.7 }}
                      >
                        <label className="text-sm font-medium text-black" htmlFor="email">Email</label>
                        <Input
@@ -242,7 +201,7 @@ export default function SignUpPage() {
                        className="space-y-2"
                        initial={{ opacity: 0, x: -20 }}
                        animate={{ opacity: 1, x: 0 }}
-                       transition={{ duration: 0.3, delay: 0.8 }}
+                       transition={{ duration: 0.3, delay: 0.7 }}
                      >
                        <div className="flex items-center justify-between">
                          <label className="text-sm font-medium text-black" htmlFor="password">Password</label>
@@ -264,7 +223,7 @@ export default function SignUpPage() {
                        className="space-y-2"
                        initial={{ opacity: 0, x: -20 }}
                        animate={{ opacity: 1, x: 0 }}
-                       transition={{ duration: 0.3, delay: 0.9 }}
+                       transition={{ duration: 0.3, delay: 0.8 }}
                      >
                        <label className="text-sm font-medium text-black" htmlFor="confirmPassword">Confirm Password</label>
                        <Input
@@ -280,7 +239,7 @@ export default function SignUpPage() {
                      <motion.div
                        initial={{ opacity: 0, y: 20 }}
                        animate={{ opacity: 1, y: 0 }}
-                       transition={{ duration: 0.3, delay: 1.0 }}
+                       transition={{ duration: 0.3, delay: 0.9 }}
                      >
                        <Button 
                          type="submit" 

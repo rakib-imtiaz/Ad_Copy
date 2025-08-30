@@ -73,11 +73,39 @@ export async function POST(request: NextRequest) {
       const errorText = await response.text()
       console.log('❌ N8N Error Response:', errorText)
       
+      // Parse error response to provide more specific messages
+      let errorMessage = 'Failed to apply referral code'
+      let errorCode = 'N8N_ERROR'
+      
+      try {
+        const errorData = JSON.parse(errorText)
+        if (errorData.error) {
+          errorMessage = errorData.error.message || errorMessage
+          errorCode = errorData.error.code || errorCode
+        } else if (errorData.message) {
+          errorMessage = errorData.message
+        }
+      } catch (parseError) {
+        // If we can't parse the error, use the raw text
+        if (errorText.toLowerCase().includes('invalid') || errorText.toLowerCase().includes('not found')) {
+          errorMessage = 'Invalid referral code. Please check the code and try again.'
+          errorCode = 'INVALID_REFERRAL_CODE'
+        } else if (errorText.toLowerCase().includes('already used') || errorText.toLowerCase().includes('expired')) {
+          errorMessage = 'This referral code has already been used or has expired.'
+          errorCode = 'REFERRAL_CODE_USED'
+        } else if (errorText.toLowerCase().includes('storage') || errorText.toLowerCase().includes('space')) {
+          errorMessage = 'Insufficient storage space. Please free up some space and try again.'
+          errorCode = 'STORAGE_FULL'
+        } else {
+          errorMessage = `Failed to apply referral code: ${errorText}`
+        }
+      }
+      
       const errorResponse = {
         success: false,
         error: {
-          code: 'N8N_ERROR',
-          message: `Failed to apply referral code: ${response.status} ${response.statusText}`,
+          code: errorCode,
+          message: errorMessage,
           details: errorText
         }
       }

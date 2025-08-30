@@ -12,7 +12,6 @@ interface LoginCredentials {
 interface SignupData {
   email: string;
   password: string;
-  fullName: string;
 }
 
 interface AuthResponse {
@@ -84,7 +83,6 @@ class AuthService {
         body: JSON.stringify({
           email: userData.email,
           password: userData.password,
-          fullName: userData.fullName
         }),
       });
 
@@ -119,7 +117,7 @@ class AuthService {
           user: {
             id: `temp_${Date.now()}`,
             email: userData.email,
-            name: userData.fullName,
+            name: 'User', // Placeholder, will be updated after verification
             role: 'user'
           },
           token: '', // Token will be provided after verification
@@ -465,7 +463,7 @@ class AuthService {
             user: data.user || {
               id: `user_${Date.now()}`,
               email: email,
-              name: 'User',
+              name: 'User', // Placeholder, will be updated after verification
               role: 'user'
             },
             token: data.token || ''

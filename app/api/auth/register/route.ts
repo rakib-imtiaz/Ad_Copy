@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { email, password, fullName } = body;
+    const { email, password } = body;
 
     // Validate required fields
     if (!email || !password) {
@@ -30,7 +30,7 @@ export async function POST(request: NextRequest) {
       body: JSON.stringify({
         email,
         password,
-        name: fullName || email.split('@')[0] // Use part of email as name if not provided
+        name: email.split('@')[0] // Use part of email as name
       }),
     });
 

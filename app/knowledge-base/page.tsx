@@ -294,6 +294,29 @@ export default function KnowledgeBasePage() {
       return
     }
 
+    // Validate file types
+    const allowedTypes = ['.pdf', '.docx', '.txt']
+    const invalidFiles = files.filter(file => {
+      const extension = '.' + file.name.split('.').pop()?.toLowerCase()
+      return !allowedTypes.includes(extension)
+    })
+
+    if (invalidFiles.length > 0) {
+      const invalidFileNames = invalidFiles.map(f => f.name).join(', ')
+      alert(`Invalid file type(s): ${invalidFileNames}\nOnly .pdf, .docx, and .txt files are accepted.`)
+      return
+    }
+
+    // Validate file sizes (10MB limit)
+    const maxSize = 10 * 1024 * 1024 // 10MB in bytes
+    const oversizedFiles = files.filter(file => file.size > maxSize)
+
+    if (oversizedFiles.length > 0) {
+      const oversizedFileNames = oversizedFiles.map(f => f.name).join(', ')
+      alert(`File(s) too large: ${oversizedFileNames}\nMaximum file size is 10MB.`)
+      return
+    }
+
     console.log(`📁 Selected ${files.length} file(s):`, files.map(f => f.name))
     setUploadedFiles(prev => [...prev, ...files])
     
@@ -303,6 +326,28 @@ export default function KnowledgeBasePage() {
       console.error('❌ No access token available')
       alert('Please log in first')
       return
+    }
+
+    // Check storage space before uploading
+    if (userProfile) {
+      const totalFileSize = files.reduce((sum, file) => sum + file.size, 0)
+      const totalFileSizeMB = totalFileSize / (1024 * 1024)
+      const currentStorage = userProfile.kb_storage || 0
+      const maxStorage = userProfile.max_kb_storage_mb || 500
+      const remainingStorage = maxStorage - currentStorage
+
+      if (totalFileSizeMB > remainingStorage) {
+        const shouldContinue = confirm(
+          `Warning: You have ${remainingStorage.toFixed(1)} MB remaining storage space, but the selected files total ${totalFileSizeMB.toFixed(1)} MB.\n\n` +
+          `This upload may fail due to insufficient storage space. Do you want to continue anyway?`
+        )
+        if (!shouldContinue) {
+          setUploadedFiles(prev => prev.filter(f => !files.includes(f)))
+          return
+        }
+      } else if (remainingStorage < 50) {
+        alert(`Warning: You have only ${remainingStorage.toFixed(1)} MB remaining storage space. Consider deleting some files or upgrading your storage plan.`)
+      }
     }
 
     // Process each file
@@ -378,7 +423,32 @@ export default function KnowledgeBasePage() {
           console.error('❌ Error response text:', errorText)
           console.error('❌ Error response length:', errorText.length)
           setUploadProgress(prev => ({ ...prev, [file.name]: -1 }))
-          alert(`Failed to upload ${file.name}: ${response.status}\nError: ${errorText}`)
+          
+          // Parse error response to provide more specific messages
+          let errorMessage = 'Upload failed'
+          
+          try {
+            const errorData = JSON.parse(errorText)
+            if (errorData.error) {
+              errorMessage = errorData.error.message || errorMessage
+            } else if (errorData.message) {
+              errorMessage = errorData.message
+            }
+          } catch (parseError) {
+            // If we can't parse the error, use the raw text
+            if (errorText.toLowerCase().includes('storage') || errorText.toLowerCase().includes('space') || errorText.toLowerCase().includes('full')) {
+              errorMessage = 'Storage space is full. Please delete some files or upgrade your storage plan.'
+            } else if (errorText.toLowerCase().includes('size') || errorText.toLowerCase().includes('large')) {
+              errorMessage = 'File is too large. Please use a smaller file (max 10MB).'
+            } else if (errorText.toLowerCase().includes('type') || errorText.toLowerCase().includes('format')) {
+              errorMessage = 'File type not supported. Only .pdf, .docx, and .txt files are accepted.'
+            } else if (errorText.toLowerCase().includes('invalid') || errorText.toLowerCase().includes('corrupted')) {
+              errorMessage = 'File appears to be corrupted or invalid. Please try a different file.'
+            } else {
+              errorMessage = `Upload failed: ${errorText}`
+            }
+          }
+                      alert(`Failed to upload ${file.name}: ${errorMessage}`)
         }
 
       } catch (error) {
@@ -463,7 +533,7 @@ export default function KnowledgeBasePage() {
           console.log('Response data:', JSON.stringify(result, null, 2))
           
           if (result.success || result.message === "credit has been added" || result.message === "Workflow was started") {
-            alert('Referral code applied successfully! The workflow has been started and credit will be added to your account.')
+            alert('Referral code applied successfully! Credits will be added to your account shortly.')
             setReferralCode('') // Clear the input
             // Refresh user profile to show updated credits with a small delay
             if (activeTab === 'profile') {
@@ -473,7 +543,8 @@ export default function KnowledgeBasePage() {
               }, 2000) // Wait 2 seconds for the credit to be updated in the database
             }
           } else {
-            alert(`Failed to apply referral code: ${result.error?.message || 'Unknown error'}`)
+            const errorMessage = result.error?.message || 'Unknown error'
+            alert(`Failed to apply referral code: ${errorMessage}`)
           }
         } catch (jsonError) {
           console.error('Failed to parse JSON response:', jsonError)
@@ -489,7 +560,25 @@ export default function KnowledgeBasePage() {
         const errorText = await response.text()
         console.log('❌ STEP 4: HTTP error response')
         console.log('Error details:', errorText)
-        alert(`Failed to apply referral code: ${response.status} ${response.statusText}`)
+        
+        // Try to parse the error response for better error messages
+        let errorMessage = `Failed to apply referral code: ${response.status} ${response.statusText}`
+        
+        try {
+          const errorData = JSON.parse(errorText)
+          if (errorData.error && errorData.error.message) {
+            errorMessage = errorData.error.message
+          } else if (errorData.message) {
+            errorMessage = errorData.message
+          }
+        } catch (parseError) {
+          // If we can't parse JSON, use the raw text if it's meaningful
+          if (errorText.trim() && errorText.length < 200) {
+            errorMessage = errorText
+          }
+        }
+        
+        alert(errorMessage)
       }
     } catch (error) {
       console.error('❌ Exception during referral code application:', error)
@@ -706,11 +795,11 @@ export default function KnowledgeBasePage() {
                       </div>
                       <h4 className="font-medium text-gray-900 mb-1">Upload Files</h4>
                       <p className="text-sm text-gray-500 mb-3">Upload documents, presentations, or other business-related files</p>
-                      <p className="text-xs text-gray-400 mb-4">PDF, DOC, PPT, XLS, TXT up to 10MB</p>
+                      <p className="text-xs text-gray-400 mb-4">Only .pdf, .docx, and .txt files are accepted (up to 10MB)</p>
                       <input
                         type="file"
                         multiple
-                        accept=".pdf,.doc,.docx,.txt,.csv,.ppt,.pptx,.xls,.xlsx"
+                        accept=".pdf,.docx,.txt"
                         onChange={handleFileUpload}
                         className="hidden"
                         id="file-upload"
@@ -754,6 +843,20 @@ export default function KnowledgeBasePage() {
                         </button>
                       </div>
                     </div>
+
+                    {/* Storage Warning */}
+                    {userProfile && (userProfile.kb_storage || 0) > ((userProfile.max_kb_storage_mb || 500) * 0.8) && (
+                      <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                        <div className="flex items-center">
+                          <svg className="w-5 h-5 text-yellow-600 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                          </svg>
+                          <span className="text-sm text-yellow-800">
+                            Storage space is running low. You have used {(userProfile.kb_storage || 0)} MB of {(userProfile.max_kb_storage_mb || 500)} MB.
+                          </span>
+                        </div>
+                      </div>
+                    )}
 
                     {/* Upload Progress */}
                     {uploadedFiles.length > 0 && (
@@ -860,6 +963,52 @@ export default function KnowledgeBasePage() {
                                   : "Not available"
                                 }
                               </span>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Storage Information */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">Knowledge Base Storage</label>
+                            <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
+                              <div className="flex items-center justify-between">
+                                <span className="text-lg font-semibold text-green-600">
+                                  {userProfile?.kb_storage || "0"} MB
+                                </span>
+                                <span className="text-sm text-green-600">
+                                  of {userProfile?.max_kb_storage_mb || "500"} MB
+                                </span>
+                              </div>
+                              <div className="w-full bg-green-200 rounded-full h-2 mt-2">
+                                <div 
+                                  className="bg-green-600 h-2 rounded-full transition-all duration-300"
+                                  style={{ 
+                                    width: `${Math.min(100, ((userProfile?.kb_storage || 0) / (userProfile?.max_kb_storage_mb || 500)) * 100)}%` 
+                                  }}
+                                ></div>
+                              </div>
+                            </div>
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">Media Storage</label>
+                            <div className="p-3 bg-purple-50 border border-purple-200 rounded-lg">
+                              <div className="flex items-center justify-between">
+                                <span className="text-lg font-semibold text-purple-600">
+                                  {userProfile?.media_storage || "0"} MB
+                                </span>
+                                <span className="text-sm text-purple-600">
+                                  of {userProfile?.max_media_storage_mb || "1000"} MB
+                                </span>
+                              </div>
+                              <div className="w-full bg-purple-200 rounded-full h-2 mt-2">
+                                <div 
+                                  className="bg-purple-600 h-2 rounded-full transition-all duration-300"
+                                  style={{ 
+                                    width: `${Math.min(100, ((userProfile?.media_storage || 0) / (userProfile?.max_media_storage_mb || 1000)) * 100)}%` 
+                                  }}
+                                ></div>
+                              </div>
                             </div>
                           </div>
                         </div>
