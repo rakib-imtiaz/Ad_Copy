@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation"
 import { motion } from "motion/react"
 import { Button } from "@/components/ui/button"
 import { FlipWords } from "@/components/ui/flip-words"
+import ShinyText from "@/components/ui/ShinyText"
 
 import Iridescence from "@/components/ui/Iridescence"
 
@@ -131,19 +132,24 @@ export function LandingHero() {
           >
             <a 
               href="/dashboard"
-              className="inline-flex items-center space-x-2 rounded-full bg-rfa-white text-brand hover:bg-surface hover:text-brand-dark shadow-med font-semibold px-8 py-3 border-2 border-brand transition-all duration-200"
+              className="inline-flex items-center space-x-2 rounded-full bg-black border border-white/40 text-white hover:bg-gray-900 hover:border-white/50 shadow-2xl font-bold px-8 py-3 transition-all duration-200"
             >
-              <span>Start Creating</span>
+              <ShinyText 
+                text="Start Creating" 
+                disabled={false} 
+                speed={3} 
+                className="font-bold text-white" 
+              />
               <motion.div
                 animate={{ x: [0, 4, 0] }}
                 transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
-                className="text-lg"
+                className="text-lg text-white font-bold"
               >
                 →
               </motion.div>
             </a>
             {/* Subtle glow effect */}
-            <div className="absolute inset-0 rounded-full bg-rfa-white blur-lg opacity-25 -z-10"></div>
+            <div className="absolute inset-0 rounded-full bg-black/20 blur-lg opacity-30 -z-10"></div>
           </motion.div>
 
 

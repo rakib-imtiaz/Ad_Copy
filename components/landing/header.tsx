@@ -52,10 +52,6 @@ export function LandingHeader() {
     }
   ];
 
-  const handleGetStarted = () => {
-    window.location.href = "/auth/signup";
-  };
-
   const handleSectionClick = (sectionId: string) => {
     const element = document.getElementById(sectionId);
     if (element) {
@@ -79,9 +75,6 @@ export function LandingHeader() {
         items={navItems}
         baseColor="rgba(255, 255, 255, 0.1)"
         menuColor="#000000"
-        buttonBgColor="linear-gradient(135deg, rgba(59, 130, 246, 0.8) 0%, rgba(29, 78, 216, 0.8) 100%)"
-        buttonTextColor="#ffffff"
-        onGetStarted={handleGetStarted}
       />
     </motion.div>
   )

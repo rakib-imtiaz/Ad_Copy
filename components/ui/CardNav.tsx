@@ -6,7 +6,6 @@ import "./CardNav.css";
 import React from "react";
 import { X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import ShinyText from './ShinyText';
 
 interface NavLink {
   label: string;
@@ -28,8 +27,6 @@ interface CardNavProps {
   ease?: string;
   baseColor?: string;
   menuColor?: string;
-  buttonBgColor?: string;
-  buttonTextColor?: string;
   onGetStarted?: () => void;
 }
 
@@ -40,8 +37,6 @@ const CardNav: React.FC<CardNavProps> = ({
   ease = "power3.out",
   baseColor = "#fff",
   menuColor,
-  buttonBgColor,
-  buttonTextColor,
   onGetStarted,
 }) => {
   const [isHamburgerOpen, setIsHamburgerOpen] = useState(false);
@@ -222,26 +217,6 @@ const CardNav: React.FC<CardNavProps> = ({
             <div className="logo-container">
               {logoComponent}
             </div>
-
-            <button
-              type="button"
-              className="card-nav-cta-button group"
-              style={{ 
-                background: buttonBgColor?.includes('linear-gradient') 
-                  ? buttonBgColor 
-                  : buttonBgColor, 
-                color: buttonTextColor 
-              }}
-              onClick={onGetStarted}
-            >
-              <ShinyText 
-                text="Get Started" 
-                disabled={false} 
-                speed={3} 
-                className="relative z-10 font-semibold" 
-              />
-              <div className="absolute inset-0 bg-white/10 rounded-[calc(0.75rem-0.35rem)] opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-            </button>
           </div>
 
           <div className="card-nav-content" aria-hidden={!isExpanded}>
