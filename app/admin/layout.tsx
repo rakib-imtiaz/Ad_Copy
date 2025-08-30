@@ -4,6 +4,8 @@ import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { LeftSidebar } from '@/components/admin/LeftSidebar';
 import { authService } from '@/lib/auth-service';
+import { SidebarProvider, SidebarInset, SidebarTrigger } from '@/components/ui/sidebar';
+import { Separator } from '@/components/ui/separator';
 
 export default function AdminLayout({
   children,
@@ -49,11 +51,16 @@ export default function AdminLayout({
 
   if (loading) {
     return (
-      <div className="flex h-screen items-center justify-center bg-gray-50">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Checking admin access...</p>
-        </div>
+      <div className="flex h-screen items-center justify-center bg-background">
+        <motion.div 
+          className="text-center"
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.3 }}
+        >
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Checking admin access...</p>
+        </motion.div>
       </div>
     );
   }
@@ -63,16 +70,27 @@ export default function AdminLayout({
   }
 
   return (
-    <div className="flex h-screen bg-gray-50 text-gray-800 overflow-hidden">
+    <SidebarProvider>
       <LeftSidebar />
-      <motion.main 
-        className="flex-1 p-8 overflow-y-auto"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.3 }}
-      >
-        {children}
-      </motion.main>
-    </div>
+      <SidebarInset>
+        <header className="flex h-16 shrink-0 items-center gap-2 px-4 transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12">
+          <div className="flex items-center gap-2">
+            <SidebarTrigger className="-ml-1" />
+            <Separator orientation="vertical" className="mr-2 h-4" />
+          </div>
+          <div className="flex flex-1 items-center gap-2 px-3" />
+        </header>
+        <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
+          <motion.main 
+            className="flex-1 rounded-xl bg-white md:min-h-min p-6"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4, delay: 0.1 }}
+          >
+            {children}
+          </motion.main>
+        </div>
+      </SidebarInset>
+    </SidebarProvider>
   );
 }

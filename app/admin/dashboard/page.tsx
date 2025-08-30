@@ -2,8 +2,11 @@
 
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { BarChart, Users, Bot, FileText, ArrowUpRight, ArrowDownRight, RefreshCw } from 'lucide-react';
+import { Users, Bot, FileText, RefreshCw, TrendingUp, TrendingDown } from 'lucide-react';
 import { authService } from '@/lib/auth-service';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
 
 interface DashboardStats {
   totalUsers: number;
@@ -147,137 +150,247 @@ const AdminDashboardPage = () => {
   };
 
   return (
-    <>
-      <div className="flex justify-between items-center mb-8">
-        <motion.h1 
-          className="text-2xl font-bold text-gray-900"
+    <div className="space-y-8">
+      {/* Header Section */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <motion.div
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3 }}
         >
-          System Overview
-        </motion.h1>
-        <motion.button 
-          onClick={fetchDashboardStats}
-          disabled={stats.loading}
-          className="flex items-center space-x-2 bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition-colors disabled:opacity-50"
-          whileHover={{ scale: 1.03 }}
-          whileTap={{ scale: 0.97 }}
+          <h1 className="text-3xl font-bold tracking-tight">System Overview</h1>
+        </motion.div>
+        <motion.div
+          initial={{ opacity: 0, x: 10 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.3, delay: 0.1 }}
         >
-          <RefreshCw size={18} className={stats.loading ? 'animate-spin' : ''} />
-          <span>Refresh</span>
-        </motion.button>
+          <Button 
+            onClick={fetchDashboardStats}
+            disabled={stats.loading}
+            variant="default"
+            size="sm"
+            className="gap-2"
+          >
+            <RefreshCw size={16} className={cn(stats.loading && 'animate-spin')} />
+            Refresh
+          </Button>
+        </motion.div>
       </div>
 
+      {/* Error Alert */}
       {stats.error && (
-        <motion.div 
-          className="mb-6 p-4 bg-red-100 border border-red-400 text-red-700 rounded-lg"
+        <motion.div
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
+          className="rounded-lg border border-destructive/50 bg-destructive/10 p-4"
         >
-          <p className="font-medium">Error loading dashboard data:</p>
-          <p className="text-sm">{stats.error}</p>
+          <div className="flex">
+            <div className="flex-shrink-0">
+              <svg className="h-5 w-5 text-destructive" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.28 7.22a.75.75 0 00-1.06 1.06L8.94 10l-1.72 1.72a.75.75 0 101.06 1.06L10 11.06l1.72 1.72a.75.75 0 101.06-1.06L11.06 10l1.72-1.72a.75.75 0 00-1.06-1.06L10 8.94 8.28 7.22z" clipRule="evenodd" />
+              </svg>
+            </div>
+            <div className="ml-3">
+              <h3 className="text-sm font-medium text-destructive">Error loading dashboard data</h3>
+              <div className="mt-2 text-sm text-destructive/80">
+                <p>{stats.error}</p>
+              </div>
+            </div>
+          </div>
         </motion.div>
       )}
 
-             <motion.div 
-         className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8"
+      {/* Stats Cards */}
+      <motion.div 
+        className="grid gap-4 md:grid-cols-2 lg:grid-cols-3"
         variants={container}
         initial="hidden"
         animate="show"
       >
-        {statsCards.map((stat) => (
+        {statsCards.map((stat, index) => (
           <motion.div
             key={stat.title}
-            className="bg-white rounded-xl shadow p-6"
             variants={item}
-            whileHover={{ y: -5, transition: { duration: 0.2 } }}
+            whileHover={{ y: -2, transition: { duration: 0.2 } }}
           >
-            <div className="flex justify-between items-start">
-              <div>
-                <p className="text-sm text-gray-500">{stat.title}</p>
-                <h3 className="text-3xl font-bold text-gray-900 mt-2">{stat.value}</h3>
-                <div className={`flex items-center mt-2 ${
-                  stat.trend === 'up' ? 'text-green-500' : 'text-red-500'
-                }`}>
-                  {stat.trend === 'up' ? (
-                    <ArrowUpRight size={16} />
-                  ) : (
-                    <ArrowDownRight size={16} />
-                  )}
-                  <span className="ml-1 text-sm">{stat.change} from last month</span>
+            <Card className="relative overflow-hidden">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium text-muted-foreground">
+                  {stat.title}
+                </CardTitle>
+                <div className={cn(
+                  "p-2 rounded-md",
+                  stat.color === 'indigo' && "bg-gray-100 text-gray-700",
+                  stat.color === 'green' && "bg-gray-100 text-gray-700", 
+                  stat.color === 'blue' && "bg-gray-100 text-gray-700"
+                )}>
+                  <stat.icon className="h-4 w-4" />
                 </div>
-              </div>
-              <div className={`p-3 rounded-lg bg-${stat.color}-100`}>
-                <stat.icon className={`text-${stat.color}-600`} size={24} />
-              </div>
-            </div>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{stat.value}</div>
+                <div className="flex items-center text-xs text-muted-foreground mt-1">
+                  {stat.trend === 'up' ? (
+                    <TrendingUp className="mr-1 h-3 w-3 text-green-500" />
+                  ) : (
+                    <TrendingDown className="mr-1 h-3 w-3 text-red-500" />
+                  )}
+                  <span className={cn(
+                    stat.trend === 'up' ? 'text-green-600' : 'text-red-600'
+                  )}>
+                    {stat.change}
+                  </span>
+                  <span className="ml-1">from last month</span>
+                </div>
+              </CardContent>
+            </Card>
           </motion.div>
         ))}
       </motion.div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <motion.div 
-          className="bg-white rounded-xl shadow p-6 lg:col-span-2"
+      {/* Main Content Grid */}
+      <div className="grid gap-6 lg:grid-cols-3">
+        {/* Admin Features Overview */}
+        <motion.div
+          className="lg:col-span-2"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4, delay: 0.3 }}
         >
-          <h2 className="text-xl font-semibold text-gray-900 mb-4">Admin Features Overview</h2>
-                     <div className="grid grid-cols-1 gap-4">
-            <div className="p-4 border border-gray-200 rounded-lg">
-              <h3 className="font-semibold text-gray-900 mb-2">Agent Management</h3>
-              <ul className="text-sm text-gray-600 space-y-1">
-                <li>• Create new agents</li>
-                <li>• Modify agent system prompts</li>
-                <li>• Manage agent configurations</li>
-              </ul>
-            </div>
-            <div className="p-4 border border-gray-200 rounded-lg">
-              <h3 className="font-semibold text-gray-900 mb-2">User Management</h3>
-              <ul className="text-sm text-gray-600 space-y-1">
-                <li>• View user records with filters</li>
-                <li>• Create admin users</li>
-                <li>• Delete users</li>
-              </ul>
-            </div>
-            <div className="p-4 border border-gray-200 rounded-lg">
-              <h3 className="font-semibold text-gray-900 mb-2">Referral System</h3>
-              <ul className="text-sm text-gray-600 space-y-1">
-                <li>• Create referral codes</li>
-                <li>• Track referral usage</li>
-                <li>• Manage referral rewards</li>
-              </ul>
-            </div>
-            
-          </div>
+          <Card>
+            <CardHeader>
+              <CardTitle>Admin Features Overview</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid gap-4">
+                <div className="rounded-lg border p-4">
+                  <div className="flex items-center gap-2 mb-3">
+                    <Bot className="h-5 w-5 text-gray-700" />
+                    <h3 className="font-semibold">Agent Management</h3>
+                  </div>
+                  <ul className="text-sm text-muted-foreground space-y-2">
+                    <li className="flex items-center gap-2">
+                      <div className="w-1.5 h-1.5 bg-gray-700 rounded-full"></div>
+                      Create new agents
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <div className="w-1.5 h-1.5 bg-gray-700 rounded-full"></div>
+                      Modify agent system prompts
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <div className="w-1.5 h-1.5 bg-gray-700 rounded-full"></div>
+                      Manage agent configurations
+                    </li>
+                  </ul>
+                </div>
+                
+                <div className="rounded-lg border p-4">
+                  <div className="flex items-center gap-2 mb-3">
+                    <Users className="h-5 w-5 text-gray-700" />
+                    <h3 className="font-semibold">User Management</h3>
+                  </div>
+                  <ul className="text-sm text-muted-foreground space-y-2">
+                    <li className="flex items-center gap-2">
+                      <div className="w-1.5 h-1.5 bg-gray-700 rounded-full"></div>
+                      View user records with filters
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <div className="w-1.5 h-1.5 bg-gray-700 rounded-full"></div>
+                      Create admin users
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <div className="w-1.5 h-1.5 bg-gray-700 rounded-full"></div>
+                      Delete users
+                    </li>
+                  </ul>
+                </div>
+                
+                <div className="rounded-lg border p-4">
+                  <div className="flex items-center gap-2 mb-3">
+                    <FileText className="h-5 w-5 text-gray-700" />
+                    <h3 className="font-semibold">Referral System</h3>
+                  </div>
+                  <ul className="text-sm text-muted-foreground space-y-2">
+                    <li className="flex items-center gap-2">
+                      <div className="w-1.5 h-1.5 bg-gray-700 rounded-full"></div>
+                      Create referral codes
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <div className="w-1.5 h-1.5 bg-gray-700 rounded-full"></div>
+                      Track referral usage
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <div className="w-1.5 h-1.5 bg-gray-700 rounded-full"></div>
+                      Manage referral rewards
+                    </li>
+                  </ul>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         </motion.div>
 
-        <motion.div 
-          className="bg-white rounded-xl shadow p-6"
+        {/* Quick Actions */}
+        <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4, delay: 0.4 }}
         >
-          <h2 className="text-xl font-semibold text-gray-900 mb-4">Quick Actions</h2>
-                     <div className="space-y-4">
-             <a href="/admin/agents" className="block p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
-               <h3 className="font-semibold text-gray-900">Manage Agents</h3>
-               <p className="text-sm text-gray-600">View and manage AI agents</p>
-             </a>
-             <a href="/admin/users" className="block p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
-               <h3 className="font-semibold text-gray-900">Manage Users</h3>
-               <p className="text-sm text-gray-600">View and manage user accounts</p>
-             </a>
-             <a href="/admin/referrals" className="block p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
-               <h3 className="font-semibold text-gray-900">Manage Referrals</h3>
-               <p className="text-sm text-gray-600">View and manage referral codes</p>
-             </a>
-            
-          </div>
+          <Card>
+            <CardHeader>
+              <CardTitle>Quick Actions</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <motion.a 
+                href="/admin/agents" 
+                className="block p-3 rounded-lg border transition-colors hover:bg-accent"
+                whileHover={{ x: 4 }}
+                transition={{ duration: 0.2 }}
+              >
+                <div className="flex items-center gap-3">
+                  <Bot className="h-5 w-5 text-gray-700" />
+                  <div>
+                    <h3 className="font-semibold text-sm">Manage Agents</h3>
+                    <p className="text-xs text-muted-foreground">View and manage AI agents</p>
+                  </div>
+                </div>
+              </motion.a>
+              
+              <motion.a 
+                href="/admin/users" 
+                className="block p-3 rounded-lg border transition-colors hover:bg-accent"
+                whileHover={{ x: 4 }}
+                transition={{ duration: 0.2 }}
+              >
+                <div className="flex items-center gap-3">
+                  <Users className="h-5 w-5 text-gray-700" />
+                  <div>
+                    <h3 className="font-semibold text-sm">Manage Users</h3>
+                    <p className="text-xs text-muted-foreground">View and manage user accounts</p>
+                  </div>
+                </div>
+              </motion.a>
+              
+              <motion.a 
+                href="/admin/referrals" 
+                className="block p-3 rounded-lg border transition-colors hover:bg-accent"
+                whileHover={{ x: 4 }}
+                transition={{ duration: 0.2 }}
+              >
+                <div className="flex items-center gap-3">
+                  <FileText className="h-5 w-5 text-gray-700" />
+                  <div>
+                    <h3 className="font-semibold text-sm">Manage Referrals</h3>
+                    <p className="text-xs text-muted-foreground">View and manage referral codes</p>
+                  </div>
+                </div>
+              </motion.a>
+            </CardContent>
+          </Card>
         </motion.div>
       </div>
-    </>
+    </div>
   );
 };
 
