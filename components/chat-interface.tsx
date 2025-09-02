@@ -1,10 +1,9 @@
 "use client"
 
 import * as React from "react"
-import { 
-  Send, Bot, User, Download, Copy, ThumbsUp, 
-  ThumbsDown, RotateCcw, Zap, Star, MessageSquare, Settings,
-  ChevronDown, Facebook, Linkedin, Twitter, Mail, Chrome,
+import {
+  Send, User, Download, Copy, ThumbsUp,
+  ThumbsDown, RotateCcw, Zap, Star, MessageSquare,
   Pin, Trash2, Edit, CheckCircle, Plus
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
@@ -13,15 +12,13 @@ import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Conversation, ChatMessage, Agent, MediaItem, OutputPreset } from "@/types"
+import { Conversation, ChatMessage, Agent, MediaItem } from "@/types"
 
 interface ChatInterfaceProps {
   conversation?: Conversation
   availableAgents?: Agent[]
   mediaItems?: MediaItem[]
-  onSendMessage?: (content: string, attachedMedia?: string[]) => void
-  onSelectAgent?: (agentId: string) => void
-  onExportCopy?: (messageId: string, preset: OutputPreset) => void
+      onSendMessage?: (content: string, attachedMedia?: string[]) => void
   onPinMessage?: (messageId: string) => void
   onDeleteMessage?: (messageId: string) => void
   isLoading?: boolean
@@ -39,13 +36,11 @@ interface ChatInterfaceProps {
   selectedMediaCount?: number
 }
 
-export function ChatInterface({ 
+export function ChatInterface({
   conversation,
   availableAgents = [],
   mediaItems = [],
   onSendMessage,
-  onSelectAgent,
-  onExportCopy,
   onPinMessage,
   onDeleteMessage,
   isLoading,
@@ -55,20 +50,12 @@ export function ChatInterface({
   selectedMediaCount = 0
 }: ChatInterfaceProps) {
   const [message, setMessage] = React.useState("")
-  const [selectedPreset, setSelectedPreset] = React.useState<OutputPreset>("facebook")
-  const [showAgentSelector, setShowAgentSelector] = React.useState(false)
+
   const messagesEndRef = React.useRef<HTMLDivElement>(null)
 
   const currentAgent = availableAgents.find(agent => agent.id === conversation?.agentId)
 
-  const outputPresets: { value: OutputPreset; label: string; icon: React.ComponentType }[] = [
-    { value: "facebook", label: "Facebook", icon: Facebook },
-    { value: "google", label: "Google Ads", icon: Chrome },
-    { value: "linkedin", label: "LinkedIn", icon: Linkedin },
-    { value: "x", label: "X (Twitter)", icon: Twitter },
-    { value: "email-subject", label: "Email Subject", icon: Mail },
-    { value: "custom", label: "Custom", icon: Settings }
-  ]
+
 
   React.useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
@@ -111,11 +98,7 @@ export function ChatInterface({
       {/* Chat Header */}
       <div className="p-4 border-b border-slate-200/60 bg-white/80 backdrop-blur-sm">
         <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-3">
-            <div className="p-3 bg-gradient-to-br from-[#1ABC9C] to-emerald-500 rounded-xl shadow-lg">
-              <Bot className="h-5 w-5 text-white" />
-            </div>
-            <div>
+          <div>
               <div className="flex items-center space-x-2">
                 <h3 className="font-semibold text-slate-800 text-lg">
                   {conversation?.title || "New Conversation"}
@@ -126,76 +109,12 @@ export function ChatInterface({
                   </Badge>
                 )}
               </div>
-              <div className="flex items-center space-x-2">
-                <p className="text-sm text-slate-600">
-                  Agent: {currentAgent?.name || selectedAgent || "No agent selected"}
-                </p>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setShowAgentSelector(!showAgentSelector)}
-                  className="text-xs text-[#1ABC9C] hover:text-[#1ABC9C]/80 hover:bg-[#1ABC9C]/10 rounded-lg"
-                >
-                  <Settings className="h-3 w-3 mr-1" />
-                  Change
-                </Button>
-              </div>
+
             </div>
-          </div>
-          
-          {/* Output Preset Selector */}
-          <div className="flex items-center space-x-3">
-            <span className="text-sm text-slate-600 font-medium">Output:</span>
-            <select
-              value={selectedPreset}
-              onChange={(e) => setSelectedPreset(e.target.value as OutputPreset)}
-              className="px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm text-slate-700 shadow-sm focus:border-[#1ABC9C] focus:ring-2 focus:ring-[#1ABC9C]/20 focus:outline-none"
-            >
-              {outputPresets.map(preset => (
-                <option key={preset.value} value={preset.value}>
-                  {preset.label}
-                </option>
-              ))}
-            </select>
-          </div>
+
+
         </div>
 
-        {/* Agent Selector */}
-        {showAgentSelector && (
-          <div className="mt-4 p-5 bg-white/90 backdrop-blur-sm rounded-xl border border-slate-200 shadow-lg">
-            <h4 className="text-sm font-semibold mb-4 text-slate-800">Select AI Agent</h4>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              {availableAgents.map(agent => (
-                <div
-                  key={agent.id}
-                  className={`p-4 rounded-xl border cursor-pointer transition-all duration-200 hover:shadow-md ${
-                    agent.id === currentAgent?.id
-                      ? 'border-[#1ABC9C] bg-gradient-to-br from-[#1ABC9C]/10 to-emerald-50 shadow-md'
-                      : 'border-slate-200 hover:border-slate-300 bg-white hover:bg-slate-50'
-                  }`}
-                  onClick={() => {
-                    onSelectAgent?.(agent.id)
-                    setShowAgentSelector(false)
-                  }}
-                >
-                  <div className="flex items-center space-x-3">
-                    <div className={`p-2 rounded-lg ${
-                      agent.id === currentAgent?.id 
-                        ? 'bg-[#1ABC9C] text-white' 
-                        : 'bg-slate-100 text-slate-600'
-                    }`}>
-                      <Bot className="h-4 w-4" />
-                    </div>
-                    <div>
-                      <p className="text-sm font-semibold text-slate-800">{agent.name}</p>
-                      <p className="text-xs text-slate-600">{agent.description}</p>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
       </div>
 
       {/* Messages */}
@@ -226,28 +145,15 @@ export function ChatInterface({
                     {/* Generated Copy Preview */}
                     {'metadata' in msg && msg.metadata?.generatedCopy && (
                       <div className="mt-4 p-4 bg-slate-50 rounded-xl border border-slate-200">
-                        <div className="flex items-center justify-between mb-3">
-                          <Badge variant="secondary" className="text-xs bg-[#1ABC9C]/10 text-[#1ABC9C] border-[#1ABC9C]/20">
-                            {outputPresets.find(p => p.value === msg.metadata?.generatedCopy?.preset)?.label}
-                          </Badge>
-                          <div className="flex space-x-2">
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => handleCopyToClipboard(msg.metadata?.generatedCopy?.content || "")}
-                              className="h-8 w-8 p-0 hover:bg-slate-200 text-slate-600"
-                            >
-                              <Copy className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => onExportCopy?.(msg.id, selectedPreset)}
-                              className="h-8 w-8 p-0 hover:bg-slate-200 text-slate-600"
-                            >
-                              <Download className="h-4 w-4" />
-                            </Button>
-                          </div>
+                        <div className="flex items-center justify-end mb-3">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleCopyToClipboard(msg.metadata?.generatedCopy?.content || "")}
+                            className="h-8 w-8 p-0 hover:bg-slate-200 text-slate-600"
+                          >
+                            <Copy className="h-4 w-4" />
+                          </Button>
                         </div>
                         <p className="text-sm text-slate-700 leading-relaxed">{msg.metadata?.generatedCopy?.content}</p>
                       </div>
