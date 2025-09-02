@@ -22,6 +22,7 @@ import {
   useSidebar,
 } from '@/components/ui/sidebar';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 const navItems = [
   { href: '/admin/dashboard', label: 'Overview', icon: LayoutDashboard },
@@ -33,7 +34,7 @@ const navItems = [
 
 export const AdminSidebar = () => {
   const pathname = usePathname();
-  const { logout } = useAuth();
+  const { logout, user } = useAuth();
   const { state } = useSidebar();
 
   const handleLogout = () => {
@@ -68,15 +69,15 @@ export const AdminSidebar = () => {
           >
             <Shield className="h-8 w-8 text-gray-700" />
           </motion.div>
-          <motion.div
-            animate={state}
-            variants={contentVariants}
-            transition={{ duration: 0.2, delay: state === 'expanded' ? 0.1 : 0 }}
-            className="overflow-hidden"
-          >
-            <h1 className="font-bold text-sidebar-foreground whitespace-nowrap">Admin Dashboard</h1>
-            <p className="text-xs text-muted-foreground whitespace-nowrap">System Administration</p>
-          </motion.div>
+                      <motion.div
+              animate={state}
+              variants={contentVariants}
+              transition={{ duration: 0.2, delay: state === 'expanded' ? 0.1 : 0 }}
+              className="overflow-hidden min-w-0 flex-1"
+            >
+              <h1 className="font-bold text-sidebar-foreground truncate">Admin Dashboard</h1>
+              <p className="text-xs text-muted-foreground truncate">System Administration</p>
+            </motion.div>
         </motion.div>
       </SidebarHeader>
 
@@ -122,7 +123,7 @@ export const AdminSidebar = () => {
         <SidebarMenu>
           <SidebarMenuItem>
             <motion.div
-              className="flex items-center gap-2 px-2 py-1.5"
+              className="flex items-center gap-2 px-2 py-1.5 min-w-0"
               animate={state}
               variants={{
                 expanded: { justifyContent: 'flex-start' },
@@ -132,17 +133,30 @@ export const AdminSidebar = () => {
             >
               <Avatar className="h-8 w-8">
                 <AvatarFallback className="bg-gray-100 text-gray-700 font-semibold">
-                  A
+                  {user?.name ? user.name.charAt(0).toUpperCase() : 'A'}
                 </AvatarFallback>
               </Avatar>
               <motion.div
                 animate={state}
                 variants={contentVariants}
                 transition={{ duration: 0.2, delay: state === 'expanded' ? 0.1 : 0 }}
-                className="overflow-hidden"
+                className="overflow-hidden min-w-0 flex-1"
               >
-                <p className="text-sm font-medium text-sidebar-foreground whitespace-nowrap">Admin User</p>
-                <p className="text-xs text-muted-foreground whitespace-nowrap">admin@example.com</p>
+                <p className="text-sm font-medium text-sidebar-foreground truncate">
+                  {user?.name || 'Admin User'}
+                </p>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <p className="text-xs text-muted-foreground truncate cursor-help">
+                        {user?.email || 'Loading...'}
+                      </p>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>{user?.email || 'Loading...'}</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
               </motion.div>
             </motion.div>
           </SidebarMenuItem>

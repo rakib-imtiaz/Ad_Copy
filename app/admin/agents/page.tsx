@@ -321,8 +321,13 @@ const AgentsPage = () => {
                             </Badge>
                             <Badge 
                               variant={agent.is_active ? "default" : "outline"}
-                              className="text-xs"
+                              className="text-xs flex items-center gap-1.5"
                             >
+                              <div className={`w-2 h-2 rounded-full ${
+                                agent.is_active 
+                                  ? 'bg-green-500 status-dot-active' 
+                                  : 'bg-red-500 status-dot-inactive'
+                              }`} />
                               {agent.is_active ? 'Active' : 'Inactive'}
                             </Badge>
                           </div>
