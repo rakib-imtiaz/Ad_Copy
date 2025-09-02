@@ -2,8 +2,12 @@
 
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Bot, PlusCircle, MoreHorizontal, Edit, Eye, Star, Globe, RefreshCw, Trash2, Power, PowerOff } from 'lucide-react';
+import { Bot, PlusCircle, MoreHorizontal, Edit, Star, Globe, RefreshCw, Trash2, Power, PowerOff } from 'lucide-react';
 import { authService } from '@/lib/auth-service';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
 interface Agent {
   id: string;
@@ -213,10 +217,10 @@ const AgentsPage = () => {
 
   return (
     <>
-      <div className="flex justify-between items-center mb-8">
-        <div>
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-8">
+        <div className="space-y-2">
           <motion.h1 
-            className="text-3xl font-bold text-gray-900 tracking-tight"
+            className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight"
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.3 }}
@@ -224,7 +228,7 @@ const AgentsPage = () => {
             Agent Management
           </motion.h1>
           <motion.p 
-            className="text-gray-600 mt-2 text-lg"
+            className="text-muted-foreground text-sm sm:text-base"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.3, delay: 0.1 }}
@@ -232,186 +236,189 @@ const AgentsPage = () => {
             Create, configure, and manage AI agents
           </motion.p>
         </div>
-        <div className="flex space-x-4">
-          <motion.button 
+        <div className="flex gap-2 sm:gap-3">
+          <Button 
+            variant="outline"
             onClick={fetchAgents}
             disabled={loading}
-            className="flex items-center space-x-2 bg-white text-gray-700 px-6 py-3 rounded-xl border border-gray-200 hover:bg-gray-50 hover:border-gray-300 transition-all duration-200 disabled:opacity-50 shadow-sm"
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
+            className="flex-1 sm:flex-none"
           >
-            <RefreshCw size={18} className={loading ? 'animate-spin' : ''} />
-            <span className="font-medium">Refresh</span>
-          </motion.button>
-          <motion.button 
+            <RefreshCw size={16} className={loading ? 'animate-spin' : ''} />
+            Refresh
+          </Button>
+          <Button 
             onClick={() => window.location.href = '/admin/agents/new'}
-            className="flex items-center space-x-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-6 py-3 rounded-xl hover:from-blue-700 hover:to-indigo-700 transition-all duration-200 shadow-lg hover:shadow-xl"
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
+            className="flex-1 sm:flex-none"
           >
-            <PlusCircle size={18} />
-            <span className="font-medium">Create Agent</span>
-          </motion.button>
+            <PlusCircle size={16} />
+            Create Agent
+          </Button>
         </div>
       </div>
 
       {/* Loading State */}
       {loading && (
-        <div className="flex items-center justify-center py-16">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-16 w-16 border-4 border-gray-200 border-t-blue-600 mx-auto mb-6"></div>
-            <p className="text-gray-600 text-lg font-medium">Loading agents...</p>
-            <p className="text-gray-400 text-sm mt-2">Please wait while we fetch your agents</p>
-          </div>
-        </div>
+        <Card className="text-center">
+          <CardContent className="py-16">
+            <div className="animate-spin rounded-full h-12 w-12 border-4 border-muted border-t-primary mx-auto mb-4"></div>
+            <CardTitle className="mb-2">Loading agents...</CardTitle>
+            <CardDescription>Please wait while we fetch your agents</CardDescription>
+          </CardContent>
+        </Card>
       )}
 
       {/* Agents Grid */}
       {!loading && (
         <motion.div 
-          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
+          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6"
           variants={container}
           initial="hidden"
           animate="show"
         >
           {agents.length === 0 ? (
             <motion.div
-              className="col-span-full bg-white rounded-2xl shadow-lg p-16 border-2 border-dashed border-gray-200 flex flex-col items-center justify-center text-center"
+              className="col-span-full"
               variants={item}
             >
-              <div className="w-20 h-20 bg-gradient-to-br from-gray-50 to-gray-100 rounded-full flex items-center justify-center mb-6">
-                <Bot size={40} className="text-gray-400" />
-              </div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-3">No Agents Found</h3>
-              <p className="text-gray-500 text-base mb-6 max-w-md">No agents are currently available. Try refreshing or create a new agent to get started.</p>
-              <button 
-                onClick={fetchAgents}
-                className="flex items-center space-x-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-6 py-3 rounded-xl hover:from-blue-700 hover:to-indigo-700 transition-all duration-200 shadow-lg"
-              >
-                <RefreshCw size={18} />
-                <span className="font-medium">Refresh</span>
-              </button>
+              <Card className="border-dashed border-2 text-center">
+                <CardContent className="pt-8 pb-8">
+                  <div className="w-16 h-16 mx-auto mb-4 bg-muted rounded-full flex items-center justify-center">
+                    <Bot size={32} className="text-muted-foreground" />
+                  </div>
+                  <CardTitle className="mb-2">No Agents Found</CardTitle>
+                  <CardDescription className="mb-6">
+                    No agents are currently available. Try refreshing or create a new agent to get started.
+                  </CardDescription>
+                  <Button onClick={fetchAgents} className="mx-auto">
+                    <RefreshCw size={16} />
+                    Refresh
+                  </Button>
+                </CardContent>
+              </Card>
             </motion.div>
           ) : (
             <>
               {agents.map((agent) => (
                 <motion.div
                   key={agent.id}
-                  className="bg-white rounded-2xl shadow-lg p-8 border border-gray-100 hover:border-gray-200 transition-all duration-200"
                   variants={item}
-                  whileHover={{ y: -8, transition: { duration: 0.3 } }}
+                  whileHover={{ y: -4, transition: { duration: 0.2 } }}
                 >
-                  <div className="flex justify-between items-start mb-6">
-                    <div className="flex items-center space-x-4">
-                      <div className="w-12 h-12 bg-gradient-to-br from-blue-50 to-indigo-100 rounded-xl flex items-center justify-center">
-                        <Bot size={24} className="text-indigo-600" />
-                      </div>
-                      <div>
-                        <h3 className="font-bold text-gray-900 text-lg">{agent.name}</h3>
-                        <div className="flex items-center space-x-2 mt-2">
-                          <span className="px-3 py-1 bg-blue-50 text-blue-700 text-xs font-medium rounded-full flex items-center">
-                            <Globe size={12} className="mr-1" />
-                            {agent.scope}
-                          </span>
-                          <span className={`px-3 py-1 text-xs font-medium rounded-full ${
-                            agent.is_active 
-                              ? 'bg-green-50 text-green-700' 
-                              : 'bg-gray-50 text-gray-700'
-                          }`}>
-                            {agent.is_active ? 'active' : 'inactive'}
-                          </span>
+                  <Card className="h-full flex flex-col hover:shadow-lg transition-all duration-200">
+                    <CardHeader className="pb-4">
+                      <div className="flex items-start gap-3">
+                        <div className="p-2 bg-primary/10 rounded-lg shrink-0">
+                          <Bot size={20} className="text-primary" />
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <CardTitle className="text-base leading-tight truncate">
+                            {agent.name}
+                          </CardTitle>
+                          <div className="flex items-center gap-2 mt-2 flex-wrap">
+                            <Badge variant="secondary" className="text-xs">
+                              <Globe size={10} className="mr-1" />
+                              {agent.scope}
+                            </Badge>
+                            <Badge 
+                              variant={agent.is_active ? "default" : "outline"}
+                              className="text-xs"
+                            >
+                              {agent.is_active ? 'Active' : 'Inactive'}
+                            </Badge>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                    <div className="relative">
-                      <button className="text-gray-400 hover:text-gray-600 p-2 rounded-lg hover:bg-gray-50 transition-colors">
-                        <MoreHorizontal size={20} />
-                      </button>
-                      {/* More options dropdown would go here */}
-                    </div>
-                  </div>
-
-                                     <p className="text-gray-600 text-base mb-6 leading-relaxed">{agent.description}</p>
-
-                   <div className="mb-6">
-                     <div className="bg-gradient-to-r from-gray-50 to-gray-100 p-4 rounded-xl border border-gray-200">
-                       <p className="text-xs text-gray-600 mb-3 font-semibold uppercase tracking-wide">System Prompt</p>
-                       <p className="text-sm text-gray-800 line-clamp-3 leading-relaxed font-medium">{agent.systemPrompt}</p>
-                     </div>
-                   </div>
-
-                   <div className="mb-6 grid grid-cols-2 gap-4">
-                     <div className="bg-gradient-to-br from-blue-50 to-blue-100 p-4 rounded-xl border border-blue-200">
-                       <p className="text-blue-700 font-semibold text-sm mb-1">Creator</p>
-                       <p className="text-blue-900 truncate font-medium">{agent.creator}</p>
-                     </div>
-                     <div className="bg-gradient-to-br from-green-50 to-green-100 p-4 rounded-xl border border-green-200">
-                       <p className="text-green-700 font-semibold text-sm mb-1">Created</p>
-                       <p className="text-green-900 font-medium">{new Date(agent.created_at).toLocaleDateString()}</p>
-                     </div>
-                   </div>
-
-                                     <div className="flex items-center justify-between pt-4 border-t border-gray-100">
-                     <div className="flex items-center space-x-4">
-                       <button 
-                         onClick={() => window.location.href = `/admin/agents/edit/${agent.id}`}
-                         className="flex items-center space-x-2 text-gray-600 hover:text-blue-600 transition-colors px-3 py-2 rounded-lg hover:bg-blue-50"
-                       >
-                         <Edit size={16} />
-                         <span className="text-sm font-medium">Edit</span>
-                       </button>
-                       <button className="flex items-center space-x-2 text-gray-600 hover:text-blue-600 transition-colors px-3 py-2 rounded-lg hover:bg-blue-50">
-                         <Eye size={16} />
-                         <span className="text-sm font-medium">View</span>
-                       </button>
-                     </div>
-                     <div className="flex items-center space-x-3">
-                       <button 
-                         onClick={() => activateAgent(agent.id, !agent.is_active)}
-                         disabled={activatingAgentId === agent.id}
-                         className={`flex items-center space-x-2 px-3 py-2 rounded-lg transition-all duration-200 disabled:opacity-50 ${
-                           agent.is_active 
-                             ? 'text-orange-600 hover:text-orange-700 hover:bg-orange-50' 
-                             : 'text-green-600 hover:text-green-700 hover:bg-green-50'
-                         }`}
-                       >
-                         {agent.is_active ? <PowerOff size={16} /> : <Power size={16} />}
-                         <span className="text-sm font-medium">
-                           {activatingAgentId === agent.id 
-                             ? 'Updating...' 
-                             : agent.is_active 
-                               ? 'Deactivate' 
-                               : 'Activate'
-                           }
-                         </span>
-                       </button>
-                       <button 
-                         onClick={() => handleDeleteClick(agent.id)}
-                         disabled={deletingAgentId === agent.id}
-                         className="flex items-center space-x-2 text-gray-600 hover:text-red-600 transition-colors px-3 py-2 rounded-lg hover:bg-red-50 disabled:opacity-50"
-                       >
-                         <Trash2 size={16} />
-                         <span className="text-sm font-medium">
-                           {deletingAgentId === agent.id ? 'Deleting...' : 'Delete'}
-                         </span>
-                       </button>
-                     </div>
-                   </div>
+                    </CardHeader>
+                    
+                    <CardContent className="flex-1 pb-4 space-y-4">
+                      <CardDescription className="text-sm leading-relaxed text-truncate-2">
+                        {agent.description}
+                      </CardDescription>
+                      
+                      <div className="bg-muted/50 p-3 rounded-lg">
+                        <p className="text-xs font-medium text-muted-foreground mb-2 uppercase tracking-wide">
+                          System Prompt
+                        </p>
+                        <p className="text-xs text-foreground leading-relaxed text-truncate-3">
+                          {agent.systemPrompt}
+                        </p>
+                      </div>
+                      
+                      <div className="grid grid-cols-2 gap-2 text-xs">
+                        <div className="bg-blue-50 dark:bg-blue-950/30 p-2 rounded">
+                          <p className="text-blue-700 dark:text-blue-300 font-medium mb-1">Creator</p>
+                          <p className="text-blue-900 dark:text-blue-100 truncate">{agent.creator}</p>
+                        </div>
+                        <div className="bg-green-50 dark:bg-green-950/30 p-2 rounded">
+                          <p className="text-green-700 dark:text-green-300 font-medium mb-1">Created</p>
+                          <p className="text-green-900 dark:text-green-100">
+                            {new Date(agent.created_at).toLocaleDateString()}
+                          </p>
+                        </div>
+                      </div>
+                    </CardContent>
+                    
+                    <CardFooter className="pt-0 flex-col gap-3">
+                      <div className="flex w-full gap-2">
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          className="flex-1"
+                          onClick={() => window.location.href = `/admin/agents/edit/${agent.id}`}
+                        >
+                          <Edit size={14} />
+                          Edit
+                        </Button>
+                        <Button 
+                          variant={agent.is_active ? "outline" : "default"}
+                          size="sm"
+                          className="flex-1"
+                          onClick={() => activateAgent(agent.id, !agent.is_active)}
+                          disabled={activatingAgentId === agent.id}
+                        >
+                          {agent.is_active ? <PowerOff size={14} /> : <Power size={14} />}
+                          {activatingAgentId === agent.id 
+                            ? 'Updating...' 
+                            : agent.is_active 
+                              ? 'Deactivate' 
+                              : 'Activate'
+                          }
+                        </Button>
+                      </div>
+                      <Button 
+                        variant="outline"
+                        size="sm"
+                        className="w-full text-destructive hover:text-destructive hover:bg-destructive/10"
+                        onClick={() => handleDeleteClick(agent.id)}
+                        disabled={deletingAgentId === agent.id}
+                      >
+                        <Trash2 size={14} />
+                        {deletingAgentId === agent.id ? 'Deleting...' : 'Delete'}
+                      </Button>
+                    </CardFooter>
+                  </Card>
                 </motion.div>
               ))}
 
               {/* Create New Agent Card */}
               <motion.div
-                onClick={() => window.location.href = '/admin/agents/new'}
-                className="bg-white rounded-2xl shadow-lg p-8 border-2 border-dashed border-gray-200 flex flex-col items-center justify-center text-center cursor-pointer hover:border-blue-400 hover:bg-gradient-to-br hover:from-blue-50 hover:to-indigo-50 transition-all duration-300 group"
                 variants={item}
-                whileHover={{ y: -8, transition: { duration: 0.3 } }}
+                whileHover={{ y: -4, transition: { duration: 0.2 } }}
               >
-                <div className="w-20 h-20 bg-gradient-to-br from-blue-100 to-indigo-100 rounded-2xl flex items-center justify-center mb-6 group-hover:from-blue-200 group-hover:to-indigo-200 transition-all duration-300">
-                  <PlusCircle size={40} className="text-blue-600 group-hover:text-blue-700 transition-colors" />
-                </div>
-                <h3 className="text-xl font-bold text-gray-900 mb-3">Create New Agent</h3>
-                <p className="text-gray-600 text-base">Add a new AI agent to your collection</p>
+                <Card 
+                  className="h-full border-dashed border-2 cursor-pointer hover:border-primary/50 hover:bg-primary/5 transition-all duration-200"
+                  onClick={() => window.location.href = '/admin/agents/new'}
+                >
+                  <CardContent className="flex flex-col items-center justify-center text-center p-8 h-full min-h-[320px]">
+                    <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mb-4">
+                      <PlusCircle size={32} className="text-primary" />
+                    </div>
+                    <CardTitle className="mb-2">Create New Agent</CardTitle>
+                    <CardDescription>
+                      Add a new AI agent to your collection
+                    </CardDescription>
+                  </CardContent>
+                </Card>
               </motion.div>
             </>
           )}
@@ -419,41 +426,37 @@ const AgentsPage = () => {
       )}
 
       {/* Delete Confirmation Dialog */}
-      {showDeleteConfirm && (
-        <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 backdrop-blur-sm">
-          <motion.div 
-            className="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full mx-4"
-            initial={{ opacity: 0, scale: 0.9, y: 20 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            transition={{ duration: 0.3 }}
-          >
-            <div className="flex items-center mb-6">
-              <div className="w-12 h-12 bg-gradient-to-br from-red-100 to-red-200 rounded-xl flex items-center justify-center mr-4">
-                <Trash2 size={24} className="text-red-600" />
+      <Dialog open={!!showDeleteConfirm} onOpenChange={(open) => !open && handleDeleteCancel()}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-3">
+              <div className="p-2 bg-destructive/10 rounded-lg">
+                <Trash2 size={20} className="text-destructive" />
               </div>
-              <h3 className="text-xl font-bold text-gray-900">Delete Agent</h3>
-            </div>
-            <p className="text-gray-600 mb-8 text-base leading-relaxed">
+              Delete Agent
+            </DialogTitle>
+            <DialogDescription>
               Are you sure you want to delete this agent? This action cannot be undone and will permanently remove the agent from your system.
-            </p>
-            <div className="flex justify-end space-x-4">
-              <button
-                onClick={handleDeleteCancel}
-                className="px-6 py-3 text-gray-700 bg-gray-100 rounded-xl hover:bg-gray-200 transition-all duration-200 font-medium"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={() => handleDeleteConfirm(showDeleteConfirm)}
-                disabled={deletingAgentId === showDeleteConfirm}
-                className="px-6 py-3 bg-gradient-to-r from-red-600 to-red-700 text-white rounded-xl hover:from-red-700 hover:to-red-800 transition-all duration-200 disabled:opacity-50 font-medium shadow-lg"
-              >
-                {deletingAgentId === showDeleteConfirm ? 'Deleting...' : 'Delete Agent'}
-              </button>
-            </div>
-          </motion.div>
-        </div>
-      )}
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={handleDeleteCancel}
+              disabled={deletingAgentId === showDeleteConfirm}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={() => handleDeleteConfirm(showDeleteConfirm!)}
+              disabled={deletingAgentId === showDeleteConfirm}
+            >
+              {deletingAgentId === showDeleteConfirm ? 'Deleting...' : 'Delete Agent'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   );
 };
