@@ -2960,21 +2960,23 @@ function MediaDrawer({ activeTab, onTabChange, mediaItems, setMediaItems, onRefr
             <span className="text-xs font-medium">Refresh</span>
           </Button>
         </div>
-        <div className="flex space-x-1 bg-[#EEEEEE] p-1 rounded-lg">
-          {tabs.map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => onTabChange(tab.id)}
-              className={`flex-1 flex items-center justify-center space-x-1.5 py-2.5 px-3 rounded-md text-sm font-medium transition-colors ${
-                activeTab === tab.id 
-                  ? 'bg-white text-[#393E46] shadow-sm' 
-                  : 'text-[#929AAB] hover:text-[#393E46]'
-              }`}
-            >
-              <tab.icon className="h-4 w-4 flex-shrink-0" />
-              <span className="whitespace-nowrap">{tab.label}</span>
-            </button>
-          ))}
+        <div className="bg-[#EEEEEE] p-1 rounded-lg overflow-x-auto scrollbar-thin scrollbar-thumb-[#929AAB] scrollbar-track-transparent">
+          <div className="flex space-x-1 min-w-max">
+            {tabs.map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => onTabChange(tab.id)}
+                className={`flex items-center justify-center space-x-1.5 py-2.5 px-3 rounded-md text-sm font-medium transition-colors whitespace-nowrap ${
+                  activeTab === tab.id
+                    ? 'bg-white text-[#393E46] shadow-sm'
+                    : 'text-[#929AAB] hover:text-[#393E46]'
+                }`}
+              >
+                <tab.icon className="h-4 w-4 flex-shrink-0" />
+                <span>{tab.label}</span>
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 
