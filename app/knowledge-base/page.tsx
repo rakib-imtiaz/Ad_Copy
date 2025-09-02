@@ -5,6 +5,7 @@ import { authService } from "@/lib/auth-service"
 import { useAuth } from "@/lib/auth-context"
 import { ProtectedRoute } from "@/components/protected-route"
 import { KnowledgeBaseViewer } from "@/components/knowledge-base-viewer"
+import { BrandForm } from "@/components/brand-form"
 import { API_ENDPOINTS } from "@/lib/api-config"
 
 export default function KnowledgeBasePage() {
@@ -754,6 +755,16 @@ export default function KnowledgeBasePage() {
                 Brand Settings
               </button>
               <button
+                onClick={() => handleTabChange('structured')}
+                className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
+                  activeTab === 'structured'
+                    ? 'bg-white text-purple-600 shadow-sm'
+                    : 'text-gray-600 hover:text-gray-900'
+                }`}
+              >
+                Structured Form
+              </button>
+              <button
                 onClick={() => handleTabChange('profile')}
                 className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
                   activeTab === 'profile'
@@ -901,6 +912,21 @@ export default function KnowledgeBasePage() {
                         </div>
                       </div>
                     )}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {activeTab === 'structured' && (
+              <div className="space-y-8">
+                {/* Structured Brand Form Section */}
+                <div className="bg-white rounded-xl border border-gray-200 shadow-sm">
+                  <div className="p-6 border-b border-gray-200">
+                    <h2 className="text-xl font-semibold text-gray-900">Brand Information Form</h2>
+                    <p className="text-gray-600 mt-1">Fill out your comprehensive brand information to update the knowledge base</p>
+                  </div>
+                  <div className="p-6">
+                    <BrandForm />
                   </div>
                 </div>
               </div>

@@ -7,7 +7,7 @@ import {
   Bot, Settings, Upload, FileText, Link2, Mic, 
   PanelLeftClose, PanelRightClose, Send, Paperclip,
   ChevronRight, MoreHorizontal, Star, Clock, Zap, RefreshCw, Image, Activity,
-  Sparkles, ArrowRight, ChevronDown, Check, Power, Globe, X
+  Sparkles, ArrowRight, ChevronDown, Check, Power
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -2935,18 +2935,70 @@ function MobileSidebar({ agents, conversations, chatHistory, isLoadingChatHistor
 
 // Media Drawer Component  
 function MediaDrawer({ activeTab, onTabChange, mediaItems, setMediaItems, onRefresh, onUpload, onDelete, handleDeleteItem, isRefreshing }: any) {
-  const [isDrawerOpen, setIsDrawerOpen] = React.useState(false)
-  const [selectedTab, setSelectedTab] = React.useState<string>("files")
-  const [dragActive, setDragActive] = React.useState(false)
-  const [urlInput, setUrlInput] = React.useState("")
-  const fileInputRef = React.useRef<HTMLInputElement>(null)
-
   const tabs = [
-    { id: 'files', label: 'Files', icon: FileText },
-    { id: 'links', label: 'Links', icon: Link2 },
-    { id: 'youtube', label: 'YouTube', icon: Mic },
-    { id: 'images', label: 'Images', icon: Image },
+    { id: 'files' as const, label: 'Files', icon: FileText },
+    { id: 'links' as const, label: 'Links', icon: Link2 },
+    { id: 'youtube' as const, label: 'YouTube', icon: Mic },
+    { id: 'image-analyzer' as const, label: 'Images', icon: Image },
+    { id: 'transcripts' as const, label: 'Transcripts', icon: Mic },
   ]
+
+  return (
+    <div className="h-full flex flex-col">
+      {/* Header with tabs */}
+      <div className="border-b border-[#EEEEEE] p-4">
+        <div className="flex items-center justify-between mb-3">
+          <SlideInText text="Media Library" className="font-medium" />
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={onRefresh}
+            disabled={isRefreshing}
+            className="flex items-center space-x-2 bg-[#1ABC9C] hover:bg-[#1ABC9C]/90 text-white border-0 shadow-md hover:shadow-lg transition-all duration-200"
+          >
+            <RefreshCw className={`h-3 w-3 ${isRefreshing ? 'animate-spin' : ''}`} />
+            <span className="text-xs font-medium">Refresh</span>
+          </Button>
+        </div>
+        <div className="flex space-x-1 bg-[#EEEEEE] p-1 rounded-lg">
+          {tabs.map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => onTabChange(tab.id)}
+              className={`flex-1 flex items-center justify-center space-x-1.5 py-2.5 px-3 rounded-md text-sm font-medium transition-colors ${
+                activeTab === tab.id 
+                  ? 'bg-white text-[#393E46] shadow-sm' 
+                  : 'text-[#929AAB] hover:text-[#393E46]'
+              }`}
+            >
+              <tab.icon className="h-4 w-4 flex-shrink-0" />
+              <span className="whitespace-nowrap">{tab.label}</span>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Content */}
+      <div className="flex-1 overflow-y-auto p-4">
+        {activeTab === 'files' && <FilesTab mediaItems={mediaItems} onUpload={onUpload} onDelete={onDelete} />}
+        {activeTab === 'links' && <LinksTab mediaItems={mediaItems} onDelete={handleDeleteItem} onRefresh={onRefresh} setMediaItems={setMediaItems} />}
+        {activeTab === 'youtube' && <YouTubeTab mediaItems={mediaItems} onDelete={handleDeleteItem} onRefresh={onRefresh} setMediaItems={setMediaItems} />}
+        {activeTab === 'image-analyzer' && <ImageAnalyzerTab mediaItems={mediaItems} onUpload={onUpload} onDelete={onDelete} />}
+        {activeTab === 'transcripts' && <TranscriptsTab mediaItems={mediaItems} onDelete={onDelete} />}
+      </div>
+    </div>
+  )
+}
+
+// Media Tab Components
+function FilesTab({ mediaItems, onUpload, onDelete }: any) {
+  const [dragActive, setDragActive] = React.useState(false)
+  const [isUploading, setIsUploading] = React.useState(false)
+  const fileInputRef = React.useRef<HTMLInputElement>(null)
+  
+  const fileItems = mediaItems.filter((item: any) => 
+    ['pdf', 'doc', 'txt', 'audio', 'video'].includes(item.type)
+  )
 
   const handleDrag = (e: React.DragEvent) => {
     e.preventDefault()
@@ -2965,346 +3017,528 @@ function MediaDrawer({ activeTab, onTabChange, mediaItems, setMediaItems, onRefr
     
     const files = Array.from(e.dataTransfer.files)
     if (files.length > 0 && onUpload) {
+      setIsUploading(true)
       await onUpload(files)
+      setIsUploading(false)
     }
   }
 
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || [])
     if (files.length > 0 && onUpload) {
+      setIsUploading(true)
       await onUpload(files)
-    }
-  }
-
-  const handleScrapeUrl = () => {
-    if (urlInput.trim()) {
-      // Handle URL scraping logic here
-      console.log("Scraping URL:", urlInput.trim())
-      setUrlInput("")
-    }
-  }
-
-  const renderTabContent = () => {
-    switch (selectedTab) {
-      case 'files':
-        return (
-          <div className="space-y-4">
-            <div className="text-center">
-              <h3 className="text-lg font-semibold mb-2">File Upload</h3>
-              <p className="text-sm text-muted-foreground mb-4">
-                Upload documents, images, audio, and video files
-              </p>
-            </div>
-            
-            <div 
-              className={`border-2 border-dashed rounded-lg p-6 text-center transition-colors ${
-                dragActive 
-                  ? 'border-[#1ABC9C] bg-[#1ABC9C]/10' 
-                  : 'border-gray-600 hover:border-gray-500'
-              }`}
-              onDragEnter={handleDrag}
-              onDragLeave={handleDrag}
-              onDragOver={handleDrag}
-              onDrop={handleDrop}
-            >
-              <div className="flex flex-col items-center space-y-4">
-                <div className="p-3 bg-gray-800 rounded-full">
-                  <Upload className="h-6 w-6 text-gray-400" />
-                </div>
-                <div>
-                  <p className="text-base font-medium">Drop files here or click to upload</p>
-                  <p className="text-sm text-gray-400">
-                    Supports PDF, DOC, TXT, MP3, MP4, and more
-                  </p>
-                </div>
-                <Button 
-                  onClick={() => fileInputRef.current?.click()}
-                  disabled={isRefreshing}
-                  className="flex items-center space-x-2"
-                >
-                  <Plus className="h-4 w-4" />
-                  <span>Choose Files</span>
-                </Button>
-              </div>
-              <input
-                ref={fileInputRef}
-                type="file"
-                multiple
-                accept=".pdf,.doc,.docx,.txt,.mp3,.mp4,.wav,.m4a"
-                onChange={handleFileSelect}
-                className="hidden"
-              />
-            </div>
-
-            {/* File list */}
-            <div className="space-y-2">
-              {mediaItems.filter((item: any) => 
-                ['pdf', 'doc', 'txt', 'audio', 'video'].includes(item.type)
-              ).slice(0, 8).map((item: any) => (
-                <div key={item.id} className="flex items-center space-x-3 p-3 rounded-lg hover:bg-white border border-transparent hover:border-[#EEEEEE] transition-colors">
-                  <div className="p-2 bg-gray-800 rounded-lg">
-                    <FileText className="h-4 w-4 text-gray-400" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium break-words leading-tight text-gray-900">{item.filename}</p>
-                    <div className="flex items-center space-x-2 text-xs text-[#929AAB] mt-1">
-                      <span>{item.size ? `${(item.size / 1024).toFixed(1)} KB` : 'Unknown size'}</span>
-                      <span>•</span>
-                      <span>{item.uploadedAt ? new Date(item.uploadedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'Unknown date'}</span>
-                    </div>
-                  </div>
-                  <ThreeDotsMenu 
-                    onDelete={() => onDelete(item.id, item.filename)}
-                  />
-                </div>
-              ))}
-            </div>
-          </div>
-        )
-      
-      case 'links':
-        return (
-          <div className="space-y-4">
-            <div className="text-center">
-              <h3 className="text-lg font-semibold mb-2">Web Content Scraping</h3>
-              <p className="text-sm text-muted-foreground mb-4">
-                Scrape and analyze web content from URLs
-              </p>
-            </div>
-            
-            <div className="space-y-3">
-              <Input
-                value={urlInput}
-                onChange={(e) => setUrlInput(e.target.value)}
-                placeholder="Enter URL to scrape (e.g., blog post, article)"
-                className="bg-gray-800 border-gray-700 text-white focus:border-[#1ABC9C] focus:ring-[#1ABC9C]"
-              />
-              <Button 
-                onClick={handleScrapeUrl}
-                disabled={!urlInput.trim() || isRefreshing}
-                className="w-full flex items-center justify-center space-x-2"
-              >
-                <Globe className="h-4 w-4" />
-                <span>Scrape Content</span>
-              </Button>
-            </div>
-
-            {/* Scraped content list */}
-            <div className="space-y-2">
-              {mediaItems.filter((item: any) => item.type === 'scraped').slice(0, 8).map((item: any) => (
-                <div key={item.id} className="flex items-center space-x-3 p-3 rounded-lg hover:bg-white border border-transparent hover:border-[#EEEEEE] transition-colors">
-                  <div className="p-2 bg-gray-800 rounded-lg">
-                    <Link2 className="h-4 w-4 text-gray-400" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium break-words leading-tight text-gray-900">{item.filename}</p>
-                    <div className="flex items-center space-x-2 text-xs text-[#929AAB] mt-1">
-                      <span>{item.created_at ? new Date(item.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'Unknown date'}</span>
-                    </div>
-                  </div>
-                  <ThreeDotsMenu 
-                    onDelete={() => handleDeleteItem(item.id, item.filename)}
-                  />
-                </div>
-              ))}
-            </div>
-          </div>
-        )
-      
-      case 'youtube':
-        return (
-          <YouTubeTranscriptionTab 
-            mediaItems={mediaItems}
-            onDelete={onDelete}
-            setMediaItems={setMediaItems}
-          />
-        )
-      
-      case 'images':
-        return (
-          <div className="space-y-4">
-            <div className="text-center">
-              <h3 className="text-lg font-semibold mb-2">Image Analysis</h3>
-              <p className="text-sm text-muted-foreground mb-4">
-                Upload images for AI analysis and processing
-              </p>
-            </div>
-            
-            <div 
-              className={`border-2 border-dashed rounded-lg p-6 text-center transition-colors ${
-                dragActive 
-                  ? 'border-[#1ABC9C] bg-[#1ABC9C]/10' 
-                  : 'border-gray-600 hover:border-gray-500'
-              }`}
-              onDragEnter={handleDrag}
-              onDragLeave={handleDrag}
-              onDragOver={handleDrag}
-              onDrop={handleDrop}
-            >
-              <div className="flex flex-col items-center space-y-4">
-                <div className="p-3 bg-gray-800 rounded-full">
-                  <Image className="h-6 w-6 text-gray-400" />
-                </div>
-                <div>
-                  <p className="text-base font-medium">Drop images here or click to upload</p>
-                  <p className="text-sm text-gray-400">
-                    Supports JPG, PNG, GIF, and more
-                  </p>
-                </div>
-                <Button 
-                  onClick={() => fileInputRef.current?.click()}
-                  disabled={isRefreshing}
-                  className="flex items-center space-x-2"
-                >
-                  <Plus className="h-4 w-4" />
-                  <span>Choose Images</span>
-                </Button>
-              </div>
-            </div>
-
-            {/* Image list */}
-            <div className="space-y-2">
-              {mediaItems.filter((item: any) => item.type === 'image').slice(0, 8).map((item: any) => (
-                <div key={item.id} className="flex items-center space-x-3 p-3 rounded-lg hover:bg-white border border-transparent hover:border-[#EEEEEE] transition-colors">
-                  <div className="p-2 bg-gray-800 rounded-lg">
-                    <Image className="h-4 w-4 text-gray-400" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium break-words leading-tight text-gray-900">{item.filename}</p>
-                    <div className="flex items-center space-x-2 text-xs text-[#929AAB] mt-1">
-                      <span>{item.size ? `${(item.size / 1024).toFixed(1)} KB` : 'Unknown size'}</span>
-                      <span>•</span>
-                      <span>{item.uploadedAt ? new Date(item.uploadedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'Unknown date'}</span>
-                    </div>
-                  </div>
-                  <ThreeDotsMenu 
-                    onDelete={() => onDelete(item.id, item.filename)}
-                  />
-                </div>
-              ))}
-            </div>
-          </div>
-        )
-      
-      default:
-        return null
+      setIsUploading(false)
     }
   }
 
   return (
-    <div className="h-full flex flex-col">
-      {/* Header */}
-      <div className="border-b border-[#EEEEEE] p-4">
-        <div className="flex items-center justify-between mb-3">
-          <SlideInText text="Media Library" className="font-medium" />
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={onRefresh}
-            disabled={isRefreshing}
-            className="flex items-center space-x-2 bg-[#1ABC9C] hover:bg-[#1ABC9C]/90 text-white border-0 shadow-md hover:shadow-lg transition-all duration-200"
-          >
-            <RefreshCw className={`h-3 w-3 ${isRefreshing ? 'animate-spin' : ''}`} />
-            <span className="text-xs font-medium">Refresh</span>
-          </Button>
-        </div>
-
-        {/* Add Content Button */}
-        <div className="mb-4">
-          <Button 
-            onClick={() => setIsDrawerOpen(true)}
-            className="w-full flex items-center justify-center space-x-2 bg-gray-800 hover:bg-gray-700 text-white"
-          >
-            <Plus className="h-4 w-4" />
-            <span>Add Content</span>
-            <ChevronDown className="h-4 w-4" />
-          </Button>
-        </div>
-
-        {/* Content Type Selection */}
-        {selectedTab && (
-          <div className="flex items-center justify-between">
-            <div>
-              <h3 className="text-sm font-medium capitalize">{selectedTab}</h3>
-              <p className="text-xs text-gray-500">
-                {selectedTab === 'files' && 'Upload and manage your files'}
-                {selectedTab === 'links' && 'Scrape and analyze web content'}
-                {selectedTab === 'youtube' && 'Transcribe YouTube videos'}
-                {selectedTab === 'images' && 'Upload and analyze images'}
-              </p>
-            </div>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setSelectedTab('')}
-              className="text-gray-400 hover:text-white h-6 w-6 p-0"
-            >
-              <X className="h-4 w-4" />
-            </Button>
-          </div>
-        )}
+    <div className="space-y-4">
+      {/* Dropzone */}
+      <div 
+        className={`border-2 border-dashed rounded-lg p-6 text-center transition-colors cursor-pointer ${
+          dragActive 
+            ? 'border-[#1ABC9C] bg-[#1ABC9C]/10' 
+            : 'border-[#EEEEEE] hover:border-[#1ABC9C] hover:bg-[#1ABC9C]/5'
+        }`}
+        onDragEnter={handleDrag}
+        onDragLeave={handleDrag}
+        onDragOver={handleDrag}
+        onDrop={handleDrop}
+        onClick={() => fileInputRef.current?.click()}
+      >
+        <Upload className={`h-6 w-6 mx-auto mb-2 ${isUploading ? 'animate-bounce' : ''} ${dragActive ? 'text-[#1ABC9C]' : 'text-[#929AAB]'}`} />
+        <FadeInText 
+          text={isUploading ? "Uploading files..." : "Drop files here"} 
+          className={`text-sm font-medium mb-1 text-center ${isUploading ? 'text-[#1ABC9C]' : ''}`} 
+        />
+        <FadeInText 
+          text={isUploading ? "Please wait..." : "or click to browse"} 
+          className="text-xs text-[#929AAB] text-center" 
+          delay={0.1} 
+        />
+        <input
+          ref={fileInputRef}
+          type="file"
+          multiple
+          accept=".pdf,.doc,.docx,.txt,.mp3,.mp4,.wav,.m4a,.jpg,.jpeg,.png,.gif"
+          onChange={handleFileSelect}
+          className="hidden"
+        />
       </div>
 
-      {/* Content Area */}
-      <div className="flex-1 overflow-y-auto p-4">
-        {selectedTab ? (
-          renderTabContent()
+      {/* File list */}
+      <div className="space-y-2">
+        {fileItems.length > 0 ? (
+          fileItems.slice(0, 8).map((item: any, index: number) => {
+            // Get appropriate icon based on file type
+            const getFileIcon = (type: string) => {
+              switch (type) {
+                case 'pdf':
+                  return (
+                    <svg className="h-4 w-4 text-red-500" fill="currentColor" viewBox="0 0 20 20">
+                      <path d="M4 18h12V6l-4-4H4v16zm2-2V4h6v2H6v12z"/>
+                    </svg>
+                  )
+                case 'image':
+                  return (
+                    <svg className="h-4 w-4 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                      <path d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z"/>
+                    </svg>
+                  )
+                case 'video':
+                  return (
+                    <svg className="h-4 w-4 text-blue-500" fill="currentColor" viewBox="0 0 20 20">
+                      <path d="M2 6a2 2 0 012-2h6l2 2h6a2 2 0 012 2v6a2 2 0 01-2 2H4a2 2 0 01-2-2V6z"/>
+                    </svg>
+                  )
+                case 'audio':
+                  return (
+                    <svg className="h-4 w-4 text-purple-500" fill="currentColor" viewBox="0 0 20 20">
+                      <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                  )
+                default:
+                  return <FileText className="h-4 w-4 text-[#929AAB]" />
+              }
+            }
+
+            // Format file size
+            const formatFileSize = (sizeInBytes: number) => {
+              const sizeInMB = sizeInBytes / (1024 * 1024)
+              if (sizeInMB >= 1) {
+                return `${sizeInMB.toFixed(1)} MB`
+              } else {
+                const sizeInKB = sizeInBytes / 1024
+                return `${sizeInKB.toFixed(1)} KB`
+              }
+            }
+
+            // Format upload date
+            const formatDate = (date: Date) => {
+              return date.toLocaleDateString('en-US', { 
+                month: 'short', 
+                day: 'numeric',
+                year: 'numeric'
+              })
+            }
+
+            return (
+              <div key={item.id} className="flex items-center space-x-3 p-3 rounded-lg hover:bg-white border border-transparent hover:border-[#EEEEEE] transition-colors">
+                {getFileIcon(item.type)}
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium truncate text-gray-900">{item.filename}</p>
+                  <div className="flex items-center space-x-2 text-xs text-[#929AAB]">
+                    <span>{formatFileSize(item.size)}</span>
+                    <span>•</span>
+                    <span>{formatDate(item.uploadedAt)}</span>
+                    {item.metadata?.fileType && (
+                      <>
+                        <span>•</span>
+                        <span className="capitalize">{item.metadata.fileType}</span>
+                      </>
+                    )}
+                  </div>
+                </div>
+                <ThreeDotsMenu 
+                  onDelete={() => onDelete(item.id, item.filename)}
+                />
+              </div>
+            )
+          })
         ) : (
-          <div className="text-center py-12">
-            <div className="p-4 bg-gray-800 rounded-full w-16 h-16 mx-auto mb-4 flex items-center justify-center">
-              <Upload className="h-8 w-8 text-gray-400" />
-            </div>
-            <h3 className="text-lg font-medium mb-2">No Content Selected</h3>
-            <p className="text-gray-400 mb-4">
-              Click "Add Content" to choose what you want to add
-            </p>
+          <div className="text-center py-8">
+            <FileText className="h-8 w-8 text-[#929AAB] mx-auto mb-2" />
+            <p className="text-sm text-[#929AAB]">No files uploaded yet</p>
+            <p className="text-xs text-[#929AAB] mt-1">Upload your first file to get started</p>
           </div>
         )}
       </div>
-
-      {/* Content Type Selection Drawer */}
-      {isDrawerOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-gray-900 border-gray-800 rounded-xl shadow-2xl max-w-sm w-full">
-            <div className="p-4">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold text-white">Add New Content</h3>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setIsDrawerOpen(false)}
-                  className="text-gray-400 hover:text-white h-8 w-8 p-0"
-                >
-                  <X className="h-4 w-4" />
-                </Button>
-              </div>
-              
-              <div className="grid grid-cols-2 gap-3">
-                {tabs.map((tab) => (
-                  <Button
-                    key={tab.id}
-                    variant="outline"
-                    className="h-20 flex flex-col items-center justify-center space-y-2 bg-gray-800 border-gray-700 text-white hover:bg-gray-700"
-                    onClick={() => {
-                      setSelectedTab(tab.id)
-                      setIsDrawerOpen(false)
-                    }}
-                  >
-                    <tab.icon className="h-6 w-6" />
-                    <span className="text-sm">{tab.label}</span>
-                  </Button>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   )
 }
 
+function LinksTab({ mediaItems, onDelete, onRefresh, setMediaItems }: any) {
+  // Filter to show only webpage type items
+  const webpageItems = mediaItems.filter((item: any) => item.type === 'webpage')
+  const [urlInput, setUrlInput] = React.useState("")
+  const [isScraping, setIsScraping] = React.useState(false)
+  const [isLoadingContents, setIsLoadingContents] = React.useState(false)
+  const [toast, setToast] = React.useState<{
+    message: string
+    type: 'success' | 'error' | 'info'
+    isVisible: boolean
+  }>({
+    message: '',
+    type: 'info',
+    isVisible: false
+  })
+  
+  const [viewerContent, setViewerContent] = React.useState<{
+    title: string
+    content: string
+    sourceUrl?: string
+    scrapedAt?: string
+    filename?: string
+  } | null>(null)
+  
+  const [isViewerOpen, setIsViewerOpen] = React.useState(false)
+  
+  // Fetch scraped contents when component mounts
+  React.useEffect(() => {
+    console.log('🔄 LinksTab useEffect - fetching scraped contents...')
+    const fetchScrapedContents = async () => {
+      try {
+        const accessToken = authService.getAuthToken()
+        
+        if (!accessToken) {
+          console.error('❌ No access token available for scraped contents')
+          return
+        }
 
-  function YouTubeTranscriptionTab({ mediaItems, onDelete, setMediaItems }: any) {
+        console.log('🔍 Making request to: /api/scraped-contents')
+        console.log('🔍 Access token present:', !!accessToken)
+
+        const response = await fetch('/api/scraped-contents', {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${accessToken}`,
+            'Content-Type': 'application/json',
+          },
+        })
+
+        console.log('📡 Scraped contents response status:', response.status)
+
+        if (!response.ok) {
+          console.error('❌ Failed to fetch scraped contents:', response.status, response.statusText)
+          return
+        }
+
+        const result = await response.json()
+        console.log('✅ Scraped contents data received:', result.data?.length || 0, 'items')
+        
+        if (result.data && Array.isArray(result.data)) {
+          // Convert scraped contents to media items format
+          const scrapedItems = result.data.map((item: any, index: number) => {
+            // Format the created_at date for filename
+            const createdDate = item.created_at ? new Date(item.created_at) : new Date()
+            const formattedDate = createdDate.toLocaleString('en-US', {
+              month: 'short',
+              day: '2-digit',
+              year: 'numeric',
+              hour: '2-digit',
+              minute: '2-digit',
+              hour12: true
+            }).replace(/[,\s]/g, '_').replace(/:/g, '.').replace(/\s/g, '')
+            
+            // Create filename in the format: sample_content_created_at.txt
+            const filename = `sample_content_${formattedDate}.txt`
+            
+            return {
+              id: `scraped-${item.resource_id || index}`,
+              filename: filename,
+              type: item.type || 'webpage', // Use actual type from n8n response, fallback to 'webpage'
+              url: item.url || '',
+              uploadedAt: createdDate,
+              size: 0, // Scraped content doesn't have file size
+              // Add scraped content specific properties
+              content: item.content,
+              resourceId: item.resource_id,
+              contentType: item.type,
+              resourceName: item.resource_name,
+              // Add any other properties from the scraped content
+              owner: item.owner,
+              created_at: item.created_at,
+              originalApiType: item.type
+            }
+          })
+          
+                     console.log('🔄 LinksTab - Updating media items with scraped contents...')
+           console.log('📊 Scraped items to add:', scrapedItems.length)
+           console.log('📊 Scraped items details:', scrapedItems)
+           
+           // Update the media items state
+           setMediaItems((prevItems: any[]) => {
+             // Remove existing scraped items and add new ones
+             const nonScrapedItems = prevItems.filter((item: any) => !item.id.startsWith('scraped-'))
+             const updatedItems = [...nonScrapedItems, ...scrapedItems]
+             console.log('📊 Total items after update:', updatedItems.length)
+             console.log('📊 Non-scraped items:', nonScrapedItems.length)
+             console.log('📊 Scraped items added:', scrapedItems.length)
+             console.log('📊 Updated items details:', updatedItems)
+             
+             // Force a re-render by returning a completely new array
+             return [...updatedItems]
+           })
+        }
+      } catch (error) {
+        console.error('❌ Error fetching scraped contents:', error)
+      }
+    }
+    
+    fetchScrapedContents()
+  }, [])
+  
+  const showToast = (message: string, type: 'success' | 'error' | 'info') => {
+    setToast({
+      message,
+      type,
+      isVisible: true
+    })
+  }
+  
+  const hideToast = () => {
+    setToast(prev => ({ ...prev, isVisible: false }))
+  }
+  
+
+
+  const handleViewContent = (item: any) => {
+    // Check if this is scraped content with actual content
+    if (item.content) {
+      setViewerContent({
+        title: item.resourceName || item.filename || 'Scraped Content',
+        content: item.content,
+        sourceUrl: item.url,
+        scrapedAt: item.uploadedAt?.toISOString(),
+        filename: item.filename
+      })
+    } else {
+      // Fallback for items without content
+      setViewerContent({
+        title: item.resourceName || item.filename || 'Scraped Content',
+        content: 'Content not available...',
+        sourceUrl: item.url,
+        scrapedAt: item.uploadedAt?.toISOString(),
+        filename: item.filename
+      })
+    }
+    setIsViewerOpen(true)
+  }
+  
+  const handleScrapeUrl = async () => {
+    console.log('🔍 handleScrapeUrl called with URL:', urlInput)
+    
+    if (!urlInput.trim()) {
+      console.log('❌ URL input is empty, returning early')
+      showToast('Please enter a URL to scrape', 'error')
+      return
+    }
+    
+    try {
+      setIsScraping(true)
+      console.log('🔍 Getting access token...')
+      const accessToken = authService.getAuthToken()
+      
+      if (!accessToken) {
+        console.error("❌ No access token available")
+        showToast('Authentication required. Please sign in again.', 'error')
+        return
+      }
+
+      console.log('✅ Access token found:', accessToken ? 'Present' : 'Missing')
+      console.log('🔍 Scraping URL:', urlInput)
+      
+      const apiUrl = `/api/webpage-scrape?url=${encodeURIComponent(urlInput.trim())}`
+      console.log('🔍 Making request to:', apiUrl)
+      
+      const response = await fetch(apiUrl, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+          'Content-Type': 'application/json',
+        },
+      })
+
+      console.log('🔍 Response received:', response.status, response.statusText)
+
+      if (!response.ok) {
+        console.error('❌ Scraping failed:', response.status, response.statusText)
+        const errorData = await response.json().catch(() => ({}))
+        console.error('❌ Error details:', errorData)
+        
+        // Show user-friendly error message
+        if (response.status === 404) {
+          showToast('Webpage scraping service is currently unavailable. Please try again later.', 'error')
+        } else if (response.status === 401) {
+          showToast('Authentication failed. Please sign in again.', 'error')
+        } else if (response.status === 400) {
+          showToast('Invalid URL. Please check the URL and try again.', 'error')
+        } else {
+          showToast(`Failed to scrape webpage. Error: ${response.status} ${response.statusText}`, 'error')
+        }
+        return
+      }
+
+      const data = await response.json()
+      console.log('✅ URL scraped successfully:', data)
+      
+      // Show success message
+      showToast('Webpage scraped and saved successfully!', 'success')
+      
+      // Clear the input after successful scraping
+      setUrlInput("")
+      
+      // Refresh the scraped contents list
+      try {
+        const refreshResponse = await fetch('/api/scraped-contents', {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${accessToken}`,
+            'Content-Type': 'application/json',
+          },
+        })
+
+        if (refreshResponse.ok) {
+          const refreshResult = await refreshResponse.json()
+          console.log('✅ Scraped contents refreshed after scraping:', refreshResult.data?.length || 0, 'items')
+          
+          if (refreshResult.data && Array.isArray(refreshResult.data)) {
+            const scrapedItems = refreshResult.data.map((item: any, index: number) => {
+              const createdDate = item.created_at ? new Date(item.created_at) : new Date()
+              const formattedDate = createdDate.toLocaleString('en-US', {
+                month: 'short',
+                day: '2-digit',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+                hour12: true
+              }).replace(/[,\s]/g, '_').replace(/:/g, '.').replace(/\s/g, '')
+              
+              const filename = `sample_content_${formattedDate}.txt`
+              
+              return {
+                id: `scraped-${item.resource_id || index}`,
+                filename: filename,
+                type: 'scraped',
+                url: item.url || '',
+                uploadedAt: createdDate,
+                size: 0,
+                content: item.content,
+                resourceId: item.resource_id,
+                contentType: item.type,
+                resourceName: item.resource_name,
+                ...item
+              }
+            })
+            
+            setMediaItems((prevItems: any[]) => {
+              const nonScrapedItems = prevItems.filter((item: any) => !item.id.startsWith('scraped-'))
+              const updatedItems = [...nonScrapedItems, ...scrapedItems]
+              console.log('📊 Total items after scraping refresh:', updatedItems.length)
+              console.log('📊 Scraped items after scraping:', scrapedItems.length)
+              return updatedItems
+            })
+          }
+        }
+      } catch (refreshError) {
+        console.error('❌ Error refreshing scraped contents after scraping:', refreshError)
+      }
+      
+    } catch (error) {
+      console.error('❌ Error scraping URL:', error)
+      console.error('❌ Error details:', {
+        message: error instanceof Error ? error.message : 'Unknown error',
+        stack: error instanceof Error ? error.stack : 'No stack trace',
+        name: error instanceof Error ? error.name : 'Unknown'
+      })
+      
+      // Show user-friendly error message
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred'
+      showToast(`Failed to scrape webpage: ${errorMessage}`, 'error')
+    } finally {
+      console.log('🔍 Setting isScraping to false')
+      setIsScraping(false)
+    }
+  }
+  
+  return (
+    <div className="space-y-4">
+      <Toast 
+        message={toast.message}
+        type={toast.type}
+        isVisible={toast.isVisible}
+        onClose={hideToast}
+      />
+      
+      {viewerContent && (
+        <ContentViewer
+          isOpen={isViewerOpen}
+          onClose={() => setIsViewerOpen(false)}
+          content={viewerContent}
+        />
+      )}
+      <div className="flex space-x-2">
+        <Input 
+          placeholder="Paste URL here..." 
+          value={urlInput}
+          onChange={(e) => setUrlInput(e.target.value)}
+          onKeyPress={(e) => e.key === 'Enter' && handleScrapeUrl()}
+          className="flex-1 text-sm border-[#D1D5DB] focus:ring-[#393E46] focus:border-[#393E46] bg-[#F9FAFB]" 
+        />
+        <Button 
+          size="sm" 
+          onClick={() => {
+            console.log('🔍 Add button clicked!')
+            console.log('🔍 URL input value:', urlInput)
+            console.log('🔍 isScraping:', isScraping)
+            console.log('🔍 urlInput.trim():', urlInput.trim())
+            handleScrapeUrl()
+          }}
+          disabled={isScraping || !urlInput.trim()}
+          className="bg-[#393E46] hover:bg-[#2C3036] text-white disabled:opacity-50"
+        >
+          {isScraping ? 'Scraping...' : 'Add'}
+        </Button>
+
+      </div>
+      
+      <div className="space-y-2">
+        {webpageItems.length > 0 ? (
+          webpageItems.map((item: any, index: number) => (
+            <div 
+              key={item.id} 
+              className="flex items-center space-x-3 p-2 rounded-lg hover:bg-white border border-transparent hover:border-[#EEEEEE] cursor-pointer transition-colors"
+              onClick={() => handleViewContent(item)}
+            >
+              <Link2 className="h-4 w-4 text-[#929AAB]" />
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium truncate">{item.resourceName || item.filename}</p>
+                <p className="text-xs text-[#929AAB]">
+                  Webpage Content
+                </p>
+              </div>
+              <div className="flex items-center space-x-2">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    onDelete(item.id, item.filename)
+                  }}
+                  className="h-6 w-6 p-0 hover:bg-red-50 hover:text-red-600"
+                >
+                  <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                  </svg>
+                </Button>
+              </div>
+            </div>
+          ))
+        ) : (
+          <div className="text-center py-8">
+            <Link2 className="h-8 w-8 text-[#929AAB] mx-auto mb-2" />
+            <p className="text-sm text-[#929AAB]">No links or scraped content yet</p>
+            <p className="text-xs text-[#929AAB] mt-1">Add a URL to scrape content</p>
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
+// YouTube Transcription Tab Component
+function YouTubeTab({ mediaItems, onDelete, onRefresh, setMediaItems }: any) {
   const youtubeItems = mediaItems.filter((item: any) => item.type === 'youtube')
   const [urlInput, setUrlInput] = React.useState("")
   const [isTranscribing, setIsTranscribing] = React.useState(false)
@@ -3525,7 +3759,7 @@ function MediaDrawer({ activeTab, onTabChange, mediaItems, setMediaItems, onRefr
           ))
         ) : (
           <div className="text-center py-8">
-            <div className="w-12 h-12 mx-auto mb-3 bg-red-100 rounded-lg flex items-center justify-center">   
+            <div className="w-12 h-12 mx-auto mb-3 bg-red-100 rounded-lg flex items-center justify-center">
               <svg className="w-6 h-6 text-red-600" fill="currentColor" viewBox="0 0 24 24">
                 <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
               </svg>
