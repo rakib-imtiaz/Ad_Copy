@@ -116,7 +116,7 @@ export function AppSidebar() {
                   variant="ghost"
                   className="w-full justify-start space-x-3 hover:bg-gray-50"
                   size="sm"
-                  onClick={() => handleNavigation('/knowledge-base')}
+                  onClick={() => handleNavigation('/profile')}
                 >
                   <Settings className="h-4 w-4" />
                   {state === 'expanded' && <span>Settings</span>}

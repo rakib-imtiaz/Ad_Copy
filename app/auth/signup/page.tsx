@@ -29,7 +29,11 @@ export default function SignUpPage() {
   const [showVerification, setShowVerification] = useState(false);
   const [verificationCode, setVerificationCode] = useState("");
   const [isVerifying, setIsVerifying] = useState(false);
-  const [passwordStrength, setPasswordStrength] = useState({
+  const [passwordStrength, setPasswordStrength] = useState<{
+    score: number;
+    feedback: string[];
+    isValid: boolean;
+  }>({
     score: 0,
     feedback: [],
     isValid: false
