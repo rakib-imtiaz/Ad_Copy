@@ -15,7 +15,7 @@ import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
-import { Separator } from "@/components/ui/separator"
+
 import { AnimatedText, FadeInText, SlideInText, WordByWordText } from "@/components/ui/animated-text"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command"
@@ -2345,57 +2345,6 @@ export default function Dashboard() {
 
           {/* Main Content - Initial Interface */}
           <div className="flex-1 flex flex-col min-w-0">
-            {/* Header */}
-            <header className="h-16 border-b border-slate-200/60 bg-white/95 backdrop-blur-md px-6 flex items-center justify-between sticky top-0 z-40 shadow-lg">
-              <div className="flex items-center space-x-4">
-                {/* Mobile menu button */}
-                <div className="lg:hidden">
-                  <Sheet>
-                    <SheetTrigger asChild>
-                      <Button variant="ghost" size="icon" className="h-9 w-9 rounded-lg hover:bg-slate-100 transition-colors">
-                        <Menu className="h-5 w-5" />
-                      </Button>
-                    </SheetTrigger>
-                    <SheetContent side="left" className="w-80 p-0 bg-white border-[#EEEEEE]">
-                      <MobileSidebar 
-                        agents={agents} 
-                        conversations={conversations} 
-                        chatHistory={chatHistory}
-                        isLoadingChatHistory={isLoadingChatHistory}
-                        currentChatSession={currentChatSession}
-                        onLoadChatSession={loadChatSession}
-                        onRefreshChatHistory={fetchChatHistory}
-                        onDeleteChatSession={deleteChatSession}
-                      />
-                    </SheetContent>
-                  </Sheet>
-                </div>
-
-                {/* Logo */}
-                <div className="flex items-center space-x-3">
-                  <div className="flex h-9 w-9 items-center justify-center bg-gradient-to-br from-primary to-primary/80 rounded-xl shadow-sm">
-                    <img 
-                      src="/logo.png" 
-                      alt="Copy Ready logo" 
-                      width={28} 
-                      height={28}
-                      className="rounded-lg"
-                    />
-                  </div>
-                  <div className="hidden sm:block">
-                    <h1 className="font-bold text-xl bg-gradient-to-r from-slate-900 to-slate-600 bg-clip-text text-transparent">
-                      Copy Ready
-                    </h1>
-                    <p className="text-xs text-slate-500 -mt-1">AI Copywriting Assistant</p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="flex items-center space-x-3">
-                {/* User actions moved to sidebar */}
-              </div>
-            </header>
-
             {/* Initial Interface Content */}
             <div className="flex-1">
         <InitialInterface 
@@ -2418,125 +2367,9 @@ export default function Dashboard() {
           transition={{ duration: 0.5, ease: "easeOut" }}
           className="h-full"
         >
-      {/* Header */}
-      <header className="h-16 border-b border-slate-200/60 bg-white/95 backdrop-blur-md px-6 flex items-center justify-between sticky top-0 z-40 shadow-lg">
-        <div className="flex items-center space-x-4">
-          {/* Mobile menu button */}
-          <div className="lg:hidden">
-            <Sheet>
-              <SheetTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-9 w-9 rounded-lg hover:bg-slate-100 transition-colors">
-                  <Menu className="h-5 w-5" />
-                </Button>
-              </SheetTrigger>
-              <SheetContent side="left" className="w-80 p-0 bg-white border-[#EEEEEE]">
-                <MobileSidebar 
-                  agents={agents} 
-                  conversations={conversations} 
-                  chatHistory={chatHistory}
-                  isLoadingChatHistory={isLoadingChatHistory}
-                  currentChatSession={currentChatSession}
-                  onLoadChatSession={loadChatSession}
-                  onRefreshChatHistory={fetchChatHistory}
-                  onDeleteChatSession={deleteChatSession}
-                />
-              </SheetContent>
-            </Sheet>
-          </div>
+      {/* Chat Interface Content */}
 
-          {/* Logo */}
-          <div className="flex items-center space-x-3">
-            <div className="flex h-9 w-9 items-center justify-center bg-gradient-to-br from-primary to-primary/80 rounded-xl shadow-sm">
-              <img 
-                src="/logo.png" 
-                alt="Copy Ready logo" 
-                width={28} 
-                height={28}
-                className="rounded-lg"
-              />
-            </div>
-            <div className="hidden sm:block">
-              <h1 className="font-bold text-xl bg-gradient-to-r from-slate-900 to-slate-600 bg-clip-text text-transparent">
-                Copy Ready
-              </h1>
-              <p className="text-xs text-slate-500 -mt-1">AI Copywriting Assistant</p>
-            </div>
-          </div>
-
-          {/* Active Agent Chip */}
-          <div className="hidden md:flex items-center space-x-2 bg-gradient-to-r from-primary/10 to-primary/5 px-4 py-2 rounded-full border border-primary/20 shadow-sm">
-            <Bot className="h-4 w-4 text-primary" />
-            <span className="text-sm font-semibold text-slate-700">{selectedAgent}</span>
-          </div>
-
-          {/* New Chat Button */}
-          <Button
-            onClick={startNewConversation}
-            variant="outline"
-            size="sm"
-            className="hidden sm:flex items-center space-x-2 text-slate-700 border-slate-200 hover:bg-slate-50 hover:border-slate-300 transition-all duration-200 shadow-sm"
-          >
-            <Plus className="h-4 w-4" />
-            <span>New Chat</span>
-          </Button>
-
-          {/* Fresh Start Button */}
-          <Button
-            onClick={startFreshDashboard}
-            variant="ghost"
-            size="sm"
-            className="hidden sm:flex items-center space-x-2 text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-all duration-200"
-          >
-            <RefreshCw className="h-4 w-4" />
-            <span>Fresh Start</span>
-          </Button>
-        </div>
-
-        <div className="flex items-center space-x-3">
-          {/* Desktop panel toggles */}
-          <TooltipProvider>
-            <div className="hidden xl:flex items-center space-x-2">
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => setLeftPanelOpen(!leftPanelOpen)}
-                    className="h-9 w-9 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-all duration-200"
-                  >
-                    <PanelLeftClose className={`h-4 w-4 transition-transform duration-200 ${!leftPanelOpen ? 'rotate-180' : ''}`} />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent side="bottom">
-                  <p className="font-medium">{leftPanelOpen ? 'Hide sidebar' : 'Show sidebar'}</p>
-                </TooltipContent>
-              </Tooltip>
-              
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => setRightPanelOpen(!rightPanelOpen)}
-                    className="h-9 w-9 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-all duration-200"
-                  >
-                    <PanelRightClose className={`h-4 w-4 transition-transform duration-200 ${!rightPanelOpen ? 'rotate-180' : ''}`} />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent side="bottom">
-                  <p className="font-medium">{rightPanelOpen ? 'Hide media library' : 'Show media library'}</p>
-                </TooltipContent>
-              </Tooltip>
-            </div>
-          </TooltipProvider>
-
-          <Separator orientation="vertical" className="h-6" />
-
-          {/* User actions moved to sidebar */}
-        </div>
-      </header>
-
-      <div className="flex h-[calc(100vh-4rem)]">
+      <div className="flex h-screen">
         {/* Left Sidebar - Agents & Conversations */}
         <motion.div 
           className={`hidden lg:flex flex-col bg-gradient-to-b from-white via-slate-50 to-white border-r border-slate-200/60 transition-all duration-300 shadow-sm ${
