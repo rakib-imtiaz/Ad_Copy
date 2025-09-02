@@ -6,10 +6,11 @@ import {
   Menu, Search, Bell, User, MessageSquare, Plus, 
   Bot, Settings, Upload, FileText, Link2, Mic, 
   PanelLeftClose, PanelRightClose, Send, Paperclip,
-  ChevronRight, MoreHorizontal, Star, Clock, Zap, RefreshCw, Image, Activity
+  ChevronRight, MoreHorizontal, Star, Clock, Zap, RefreshCw, Image, Activity,
+  Sparkles, ArrowRight, ChevronDown, Check
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { Card } from "@/components/ui/card"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -17,6 +18,10 @@ import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
 import { Separator } from "@/components/ui/separator"
 import { AnimatedText, FadeInText, SlideInText, WordByWordText } from "@/components/ui/animated-text"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card"
+import { Skeleton } from "@/components/ui/skeleton"
 
 import { authService } from "@/lib/auth-service"
 import { ChatInterface } from "@/components/chat-interface"
@@ -63,7 +68,7 @@ function MarkdownContent({ content }: { content: string }) {
   )
 }
 
-// Initial ChatGPT-like Interface
+// Modern Initial Interface with Enhanced UX
 function InitialInterface({ agents, selectedAgent, onSelectAgent, onStartChatting, onRefreshAgents, isLoadingAgents, isStartingChat }: any) {
   const handleStartChatting = () => {
     if (selectedAgent && onStartChatting) {
@@ -72,58 +77,87 @@ function InitialInterface({ agents, selectedAgent, onSelectAgent, onStartChattin
   }
 
   const quickPrompts = [
-    "Create an Instagram ad for a new fitness app",
-    "Write a Facebook ad for a local restaurant",
-    "Generate email subject lines for a sale",
-    "Draft LinkedIn ad copy for B2B software"
+    {
+      title: "Instagram Ad",
+      description: "Create an Instagram ad for a new fitness app",
+      icon: "📱",
+      category: "Social Media"
+    },
+    {
+      title: "Local Restaurant",
+      description: "Write a Facebook ad for a local restaurant",
+      icon: "🍽️",
+      category: "Facebook"
+    },
+    {
+      title: "Email Subject Lines",
+      description: "Generate email subject lines for a sale",
+      icon: "📧",
+      category: "Email"
+    },
+    {
+      title: "B2B LinkedIn",
+      description: "Draft LinkedIn ad copy for B2B software",
+      icon: "💼",
+      category: "LinkedIn"
+    }
   ]
 
   return (
+    <div className="min-h-screen bg-gradient-to-br from-slate-50/50 via-white to-primary/5">
+      <div className="container mx-auto px-4 py-8 max-w-4xl">
+        {/* Header Section */}
     <motion.div 
-      className="flex flex-col items-center justify-center h-full p-8 bg-gradient-to-br from-slate-50 via-white to-blue-50/30"
+          className="text-center mb-12"
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.6 }}
     >
-      <div className="w-full max-w-2xl mx-auto">
-        {/* Logo and Title */}
-        <motion.div 
-          className="text-center mb-8"
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.1 }}
-        >
-          <div className="flex justify-center mb-4">
+          <div className="flex justify-center mb-6">
+            <div className="relative">
+              <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center shadow-lg">
             <img 
               src="/logo.png" 
               alt="Copy Ready logo" 
-              width={64} 
-              height={64}
+                  width={40} 
+                  height={40}
               className="rounded-lg"
             />
           </div>
-          <h1 className="text-4xl font-bold text-[#393E46] mb-2">What can I help with?</h1>
-          <p className="text-lg text-[#929AAB]">Choose an AI agent and start creating high-converting ad copy</p>
+              <div className="absolute -top-1 -right-1 w-6 h-6 bg-emerald-500 rounded-full flex items-center justify-center">
+                <Sparkles className="h-3 w-3 text-white" />
+              </div>
+            </div>
+          </div>
+          <h1 className="text-5xl font-bold bg-gradient-to-r from-gray-900 to-gray-600 bg-clip-text text-transparent mb-4">
+            What can I help with?
+          </h1>
+          <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+            Choose an AI agent and start creating high-converting ad copy that drives results
+          </p>
         </motion.div>
 
-        {/* Agent Selector */}
+        {/* Agent Selection Section */}
         <motion.div 
           className="mb-8"
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.2 }}
+          transition={{ duration: 0.6, delay: 0.1 }}
         >
-          <div className="flex items-center justify-between mb-3">
-            <h3 className="text-sm font-medium text-[#929AAB] uppercase tracking-wider">Select AI Agent</h3>
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <h2 className="text-lg font-semibold text-foreground mb-1">Select Your AI Agent</h2>
+              <p className="text-sm text-muted-foreground">Choose the perfect assistant for your copywriting needs</p>
+            </div>
             <Button
               variant="outline"
               size="sm"
               onClick={onRefreshAgents}
               disabled={isLoadingAgents || isStartingChat}
-              className="flex items-center space-x-2 bg-[#1ABC9C] hover:bg-[#1ABC9C]/90 text-white border-0 shadow-md hover:shadow-lg transition-all duration-200"
+              className="flex items-center space-x-2"
             >
-              <RefreshCw className={`h-3 w-3 ${isLoadingAgents ? 'animate-spin' : ''}`} />
-              <span className="text-xs font-medium">Refresh</span>
+              <RefreshCw className={`h-4 w-4 ${isLoadingAgents ? 'animate-spin' : ''}`} />
+              <span>Refresh</span>
             </Button>
           </div>
           <AgentSelector 
@@ -136,80 +170,107 @@ function InitialInterface({ agents, selectedAgent, onSelectAgent, onStartChattin
           />
         </motion.div>
 
-        {/* Start Chatting Button */}
+        {/* Start Button */}
         <motion.div 
-          className="mb-6"
+          className="mb-12 flex justify-center"
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.3 }}
+          transition={{ duration: 0.6, delay: 0.2 }}
         >
           <Button
             onClick={handleStartChatting}
             disabled={!selectedAgent || isStartingChat}
             size="lg"
-            className="w-full bg-[#1ABC9C] hover:bg-[#1ABC9C]/90 text-black px-8 py-4 rounded-2xl text-lg font-semibold shadow-lg hover:shadow-xl transition-all duration-200"
+            className="w-full max-w-md h-14 px-8 text-base font-semibold bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary text-white shadow-lg hover:shadow-xl transition-all duration-200 rounded-xl"
           >
             {isStartingChat ? (
-              <>
-                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-black mr-2"></div>
-                Starting Chat...
-              </>
+              <div className="flex items-center justify-center space-x-3">
+                <div className="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent"></div>
+                <span>Starting Chat...</span>
+              </div>
             ) : (
-              <>
-            <MessageSquare className="h-5 w-5 mr-2" />
-            Start Chatting with {selectedAgent || 'Selected Agent'}
-              </>
+              <div className="flex items-center justify-center space-x-3">
+                <MessageSquare className="h-5 w-5" />
+                <span>Start Chatting</span>
+                <ArrowRight className="h-5 w-5" />
+              </div>
             )}
           </Button>
         </motion.div>
 
-        {/* Quick Prompts */}
+        {/* Quick Prompts Section */}
         <motion.div 
-          className="grid grid-cols-1 md:grid-cols-2 gap-3"
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.4 }}
+          transition={{ duration: 0.6, delay: 0.3 }}
         >
+          <div className="text-center mb-8">
+            <h3 className="text-xl font-semibold text-foreground mb-2">Quick Start Templates</h3>
+            <p className="text-muted-foreground">Get started with these popular ad copy templates</p>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {quickPrompts.map((prompt, index) => (
-            <motion.button
+              <motion.div
               key={index}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.4, delay: 0.1 * index }}
+              >
+                <Card 
+                  className={`cursor-pointer transition-all duration-200 border-2 hover:border-primary/50 hover:shadow-lg group ${
+                    isStartingChat ? 'opacity-50 cursor-not-allowed' : ''
+                  }`}
               onClick={() => {
-                // Store the prompt for when chat starts
+                    if (!isStartingChat) {
                 if (typeof window !== 'undefined') {
-                  localStorage.setItem('pending_prompt', prompt)
-                }
-              }}
-              disabled={isStartingChat}
-              className={`p-4 text-left border border-[#EEEEEE] rounded-xl transition-all duration-200 group ${
-                isStartingChat 
-                  ? 'opacity-50 cursor-not-allowed' 
-                  : 'hover:border-[#1ABC9C] hover:bg-[#1ABC9C]/5'
-              }`}
-              whileHover={isStartingChat ? {} : { scale: 1.02 }}
-              whileTap={isStartingChat ? {} : { scale: 0.98 }}
-            >
-              <p className={`text-sm ${
-                isStartingChat 
-                  ? 'text-[#929AAB]' 
-                  : 'text-[#393E46] group-hover:text-[#1ABC9C]'
-              }`}>{prompt}</p>
-            </motion.button>
-          ))}
+                        localStorage.setItem('pending_prompt', prompt.description)
+                      }
+                    }
+                  }}
+                >
+                  <CardHeader className="pb-3">
+                    <div className="flex items-start justify-between">
+                      <div className="flex items-center space-x-3">
+                        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary/20 to-primary/10 flex items-center justify-center text-lg">
+                          {prompt.icon}
+                        </div>
+                        <div>
+                          <CardTitle className="text-base group-hover:text-primary transition-colors">
+                            {prompt.title}
+                          </CardTitle>
+                          <Badge variant="secondary" className="text-xs mt-1">
+                            {prompt.category}
+                          </Badge>
+                        </div>
+                      </div>
+                      <ArrowRight className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors opacity-0 group-hover:opacity-100" />
+                    </div>
+                  </CardHeader>
+                  <CardContent className="pt-0">
+                    <CardDescription className="text-sm leading-relaxed">
+                      {prompt.description}
+                    </CardDescription>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            ))}
+          </div>
         </motion.div>
 
-        {/* Footer Text */}
+        {/* Footer */}
         <motion.div 
-          className="text-center mt-8"
+          className="text-center mt-12 pt-8 border-t border-border"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ duration: 0.6, delay: 0.5 }}
+          transition={{ duration: 0.6, delay: 0.4 }}
         >
-          <p className="text-xs text-[#929AAB]">
-            AI can make mistakes. Verify important information and review all generated content.
+          <p className="text-xs text-muted-foreground">
+            ⚡ AI can make mistakes. Verify important information and review all generated content.
           </p>
         </motion.div>
       </div>
-    </motion.div>
+    </div>
   )
 }
 
@@ -258,9 +319,9 @@ function ThreeDotsMenu({ onDelete }: any) {
   )
 }
 
-// Agent Selector Component
+// Modern Agent Selector Component with Command Search
 function AgentSelector({ agents, selectedAgent, onSelectAgent, onOpenChange, isLoading, onRefresh }: any) {
-  const [isOpen, setIsOpen] = React.useState(false)
+  const [open, setOpen] = React.useState(false)
   
   // Memoize currentAgent to prevent unnecessary recalculations
   const currentAgent = React.useMemo(() => 
@@ -271,73 +332,86 @@ function AgentSelector({ agents, selectedAgent, onSelectAgent, onOpenChange, isL
   // Memoize the click handler to prevent unnecessary re-renders
   const handleAgentSelect = React.useCallback((agentName: string) => {
     onSelectAgent(agentName)
-    setIsOpen(false)
+    setOpen(false)
     onOpenChange?.(false)
   }, [onSelectAgent, onOpenChange])
 
-  const handleOpenChange = React.useCallback((newIsOpen: boolean) => {
-    setIsOpen(newIsOpen)
-    onOpenChange?.(newIsOpen)
-  }, [onOpenChange])
+  if (isLoading) {
+    return (
+      <div className="space-y-3">
+        <Skeleton className="h-20 w-full rounded-xl" />
+        <div className="text-center">
+          <Skeleton className="h-4 w-32 mx-auto" />
+        </div>
+      </div>
+    )
+  }
 
   return (
-    <div className="relative">
-      <button
-        onClick={() => handleOpenChange(!isOpen)}
-        onMouseEnter={() => handleOpenChange(true)}
-        disabled={isLoading}
-        className={`w-full text-left p-4 rounded-lg border border-gray-200 bg-white hover:bg-gray-50 transition-colors duration-150 ${
-          isLoading ? 'opacity-50 cursor-not-allowed' : ''
-        }`}
-      >
-        <div className="flex items-start justify-between">
-          <div className="flex items-start space-x-3 flex-1 min-w-0">
-            <span className="text-xl flex-shrink-0">{currentAgent?.icon || "🤖"}</span>
-            <div className="flex-1 min-w-0">
-              <div className="font-medium text-sm truncate text-gray-900">{currentAgent?.name || "Select Agent"}</div>
-              <div className="text-xs text-gray-500 line-clamp-2 leading-relaxed mt-1">{currentAgent?.description || "Choose an AI agent"}</div>
-            </div>
-          </div>
-          <ChevronRight className={`h-4 w-4 text-gray-400 transition-transform duration-150 flex-shrink-0 mt-0.5 ${isOpen ? 'rotate-90' : ''}`} />
-        </div>
-      </button>
-
-      {/* Agent Dropdown */}
-      {isOpen && (
-        <div
-          className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-xl z-[100] max-h-72 overflow-y-auto"
-          onMouseLeave={() => handleOpenChange(false)}
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <Button
+          variant="outline"
+          role="combobox"
+          aria-expanded={open}
+          className="w-full justify-between h-auto p-0 border-0 bg-transparent"
         >
-          <div className="p-2">
-            <div className="text-xs font-medium text-gray-500 uppercase tracking-wider px-2 py-1 mb-1">
-              Available Agents
+          <Card className="w-full cursor-pointer border-2 border-muted hover:border-primary/50 transition-all duration-200 shadow-sm hover:shadow-md">
+            <CardContent className="p-4">
+              <div className="flex items-center space-x-4">
+                <div className="flex-shrink-0">
+                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary/20 to-primary/10 flex items-center justify-center text-lg">
+                    {currentAgent?.icon || "🤖"}
             </div>
-            {agents.map((agent: any) => (
-              <button
-                key={agent.id}
-                onClick={() => handleAgentSelect(agent.name)}
-                className={`w-full text-left p-3 rounded-md transition-colors duration-150 ${
-                  selectedAgent === agent.name 
-                    ? 'bg-blue-50 border border-blue-200' 
-                    : 'hover:bg-gray-50'
-                }`}
-              >
-                <div className="flex items-start space-x-3">
-                  <span className="text-lg flex-shrink-0">{agent.icon}</span>
-                  <div className="flex-1 min-w-0">
-                    <div className="font-medium text-sm truncate text-gray-900">{agent.name}</div>
-                    <div className="text-xs text-gray-500 line-clamp-2 leading-relaxed mt-0.5">{agent.description}</div>
-                  </div>
-                  {selectedAgent === agent.name && (
-                    <div className="w-2 h-2 bg-blue-600 rounded-full flex-shrink-0 mt-1" />
-                  )}
+          </div>
+                <div className="flex-1 min-w-0 text-left">
+                  <div className="font-semibold text-sm text-foreground">
+                    {currentAgent?.name || "Select an AI Agent"}
+        </div>
+                  <div className="text-xs text-muted-foreground line-clamp-2 mt-1">
+                    {currentAgent?.description || "Choose your AI assistant to start creating amazing ad copy"}
+            </div>
                 </div>
-              </button>
-            ))}
+                <ChevronDown className="h-4 w-4 text-muted-foreground" />
+              </div>
+            </CardContent>
+          </Card>
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className="w-full p-0" side="bottom" align="start">
+        <Command>
+          <CommandInput placeholder="Search agents..." className="h-9" />
+          <CommandEmpty>No agents found.</CommandEmpty>
+          <CommandGroup>
+            <CommandList className="max-h-[300px]">
+            {agents.map((agent: any) => (
+                <CommandItem
+                key={agent.id}
+                  value={agent.name}
+                  onSelect={() => handleAgentSelect(agent.name)}
+                  className="flex items-center space-x-3 p-3 cursor-pointer"
+                >
+                  <div className="flex-shrink-0">
+                    <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary/20 to-primary/10 flex items-center justify-center text-sm">
+                      {agent.icon}
+                  </div>
+                </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="font-medium text-sm">{agent.name}</div>
+                    <div className="text-xs text-muted-foreground line-clamp-1 mt-0.5">
+                      {agent.description}
           </div>
         </div>
-      )}
-    </div>
+                  {selectedAgent === agent.name && (
+                    <Check className="h-4 w-4 text-primary" />
+                  )}
+                </CommandItem>
+              ))}
+            </CommandList>
+          </CommandGroup>
+        </Command>
+      </PopoverContent>
+    </Popover>
   )
 }
 
@@ -4557,4 +4631,5 @@ function TranscriptsTab({ mediaItems, onDelete }: any) {
       )}
     </div>
   )
+}
 }
