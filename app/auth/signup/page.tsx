@@ -29,7 +29,69 @@ export default function SignUpPage() {
   const [showVerification, setShowVerification] = useState(false);
   const [verificationCode, setVerificationCode] = useState("");
   const [isVerifying, setIsVerifying] = useState(false);
+  const [passwordStrength, setPasswordStrength] = useState({
+    score: 0,
+    feedback: [],
+    isValid: false
+  });
   const router = useRouter();
+
+  // Password validation function
+  const validatePassword = (password: string) => {
+    const feedback = [];
+    let score = 0;
+
+    // Check length
+    if (password.length < 8) {
+      feedback.push("At least 8 characters");
+    } else if (password.length >= 12) {
+      score += 2;
+    } else {
+      score += 1;
+    }
+
+    // Check for uppercase letters
+    if (/[A-Z]/.test(password)) {
+      score += 1;
+    } else {
+      feedback.push("At least one uppercase letter");
+    }
+
+    // Check for lowercase letters
+    if (/[a-z]/.test(password)) {
+      score += 1;
+    } else {
+      feedback.push("At least one lowercase letter");
+    }
+
+    // Check for numbers
+    if (/\d/.test(password)) {
+      score += 1;
+    } else {
+      feedback.push("At least one number");
+    }
+
+    // Check for special characters
+    if (/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)) {
+      score += 1;
+    } else {
+      feedback.push("At least one special character");
+    }
+
+    // Check for common patterns
+    if (/(.)\1{2,}/.test(password)) {
+      score -= 1;
+      feedback.push("Avoid repeated characters");
+    }
+
+    const isValid = score >= 4 && feedback.length === 0;
+    
+    return {
+      score: Math.max(0, Math.min(5, score)),
+      feedback,
+      isValid
+    };
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -37,6 +99,11 @@ export default function SignUpPage() {
     
     if (password !== confirmPassword) {
       setError("Passwords do not match");
+      return;
+    }
+
+    if (!passwordStrength.isValid) {
+      setError("Please ensure your password meets all strength requirements");
       return;
     }
 
@@ -238,10 +305,76 @@ export default function SignUpPage() {
                         type="password"
                         placeholder="••••••••"
                         value={password}
-                        onChange={(e) => setPassword(e.target.value)}
+                        onChange={(e) => {
+                          const newPassword = e.target.value;
+                          setPassword(newPassword);
+                          setPasswordStrength(validatePassword(newPassword));
+                        }}
                         required
                         className="bg-white/90 backdrop-blur-sm border-gray-300 text-gray-900 placeholder:text-gray-500 focus:border-brand focus:ring-2 focus:ring-brand/20 transition-all duration-200 h-12"
                       />
+                      
+                      {/* Password Strength Indicator */}
+                      {password && (
+                        <div className="space-y-2">
+                          {/* Strength Bar */}
+                          <div className="w-full bg-gray-200 rounded-full h-2">
+                            <div 
+                              className={`h-2 rounded-full transition-all duration-300 ${
+                                passwordStrength.score <= 1 ? 'bg-red-500' :
+                                passwordStrength.score <= 2 ? 'bg-orange-500' :
+                                passwordStrength.score <= 3 ? 'bg-yellow-500' :
+                                passwordStrength.score <= 4 ? 'bg-blue-500' :
+                                'bg-green-500'
+                              }`}
+                              style={{ width: `${(passwordStrength.score / 5) * 100}%` }}
+                            ></div>
+                          </div>
+                          
+                          {/* Strength Text */}
+                          <div className="flex items-center justify-between text-xs">
+                            <span className={`font-medium ${
+                              passwordStrength.score <= 1 ? 'text-red-600' :
+                              passwordStrength.score <= 2 ? 'text-orange-600' :
+                              passwordStrength.score <= 3 ? 'text-yellow-600' :
+                              passwordStrength.score <= 4 ? 'text-blue-600' :
+                              'text-green-600'
+                            }`}>
+                              {passwordStrength.score <= 1 ? 'Very Weak' :
+                               passwordStrength.score <= 2 ? 'Weak' :
+                               passwordStrength.score <= 3 ? 'Fair' :
+                               passwordStrength.score <= 4 ? 'Good' :
+                               'Strong'}
+                            </span>
+                            <span className="text-gray-500">
+                              {passwordStrength.score}/5
+                            </span>
+                          </div>
+                          
+                          {/* Requirements List */}
+                          {passwordStrength.feedback.length > 0 && (
+                            <div className="space-y-1">
+                              <p className="text-xs font-medium text-gray-700">Requirements:</p>
+                              <ul className="text-xs text-gray-600 space-y-1">
+                                {passwordStrength.feedback.map((req, index) => (
+                                  <li key={index} className="flex items-center">
+                                    <span className="w-1.5 h-1.5 bg-red-400 rounded-full mr-2"></span>
+                                    {req}
+                                  </li>
+                                ))}
+                              </ul>
+                            </div>
+                          )}
+                          
+                          {/* Success Message */}
+                          {passwordStrength.isValid && (
+                            <div className="text-xs text-green-600 font-medium flex items-center">
+                              <span className="w-1.5 h-1.5 bg-green-500 rounded-full mr-2"></span>
+                              Password meets all requirements!
+                            </div>
+                          )}
+                        </div>
+                      )}
                     </motion.div>
                     
                     <motion.div 
@@ -260,8 +393,27 @@ export default function SignUpPage() {
                         value={confirmPassword}
                         onChange={(e) => setConfirmPassword(e.target.value)}
                         required
-                        className="bg-white/90 backdrop-blur-sm border-gray-300 text-gray-900 placeholder:text-gray-500 focus:border-brand focus:ring-2 focus:ring-brand/20 transition-all duration-200 h-12"
+                        className={`bg-white/90 backdrop-blur-sm border-gray-300 text-gray-900 placeholder:text-gray-500 focus:border-brand focus:ring-2 focus:ring-brand/20 transition-all duration-200 h-12 ${
+                          confirmPassword && password !== confirmPassword ? 'border-red-500 focus:border-red-500 focus:ring-red-500/20' : ''
+                        }`}
                       />
+                      
+                      {/* Password Match Indicator */}
+                      {confirmPassword && (
+                        <div className="text-xs flex items-center">
+                          {password === confirmPassword ? (
+                            <span className="text-green-600 font-medium flex items-center">
+                              <span className="w-1.5 h-1.5 bg-green-500 rounded-full mr-2"></span>
+                              Passwords match
+                            </span>
+                          ) : (
+                            <span className="text-red-600 font-medium flex items-center">
+                              <span className="w-1.5 h-1.5 bg-red-500 rounded-full mr-2"></span>
+                              Passwords do not match
+                            </span>
+                          )}
+                        </div>
+                      )}
                     </motion.div>
                     
                     <motion.div
@@ -278,12 +430,9 @@ export default function SignUpPage() {
                         {isLoading ? (
                           "Creating Account..."
                         ) : (
-                          <ShinyText 
-                            text="Sign Up" 
-                            disabled={false} 
-                            speed={4} 
-                            className="font-semibold" 
-                          />
+                          <span className="font-semibold text-black">
+                            Sign Up
+                          </span>
                         )}
                       </Button>
                     </motion.div>
@@ -334,12 +483,9 @@ export default function SignUpPage() {
                         {isVerifying ? (
                           "Verifying..."
                         ) : (
-                          <ShinyText 
-                            text="Verify Email" 
-                            disabled={false} 
-                            speed={4} 
-                            className="font-semibold" 
-                          />
+                          <span className="font-semibold text-black">
+                            Verify Email
+                          </span>
                         )}
                       </Button>
                     </motion.div>

@@ -188,7 +188,7 @@
     position: relative;
     display: flex;
     flex-direction: column;
-    padding: 20px;
+    padding: 20px 20px 32px 20px;
     gap: 12px;
     user-select: none;
     transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
@@ -220,7 +220,7 @@
     display: flex;
     flex-direction: column;
     gap: 2px;
-    padding-bottom: 8px;
+    padding-bottom: 16px;
   }
   
   .nav-card-link {
@@ -345,7 +345,7 @@
       min-height: 80px;
       flex: 1 1 auto;
       max-height: none;
-      padding: 16px;
+      padding: 16px 16px 24px 16px;
     }
   
     .nav-card-label {
