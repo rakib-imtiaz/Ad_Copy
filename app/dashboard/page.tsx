@@ -7,7 +7,7 @@ import {
   Bot, Settings, Upload, FileText, Link2, Mic, 
   PanelLeftClose, PanelRightClose, Send, Paperclip,
   ChevronRight, MoreHorizontal, Star, Clock, Zap, RefreshCw, Image, Activity,
-  Sparkles, ArrowRight, ChevronDown, Check
+  Sparkles, ArrowRight, ChevronDown, Check, Power
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -2346,13 +2346,13 @@ export default function Dashboard() {
           {/* Main Content - Initial Interface */}
           <div className="flex-1 flex flex-col min-w-0">
             {/* Header */}
-            <header className="h-16 border-b border-slate-200/60 bg-white/90 backdrop-blur-sm px-6 flex items-center justify-between sticky top-0 z-40 shadow-sm">
+            <header className="h-16 border-b border-slate-200/60 bg-white/95 backdrop-blur-md px-6 flex items-center justify-between sticky top-0 z-40 shadow-lg">
               <div className="flex items-center space-x-4">
                 {/* Mobile menu button */}
                 <div className="lg:hidden">
                   <Sheet>
                     <SheetTrigger asChild>
-                      <Button variant="ghost" size="icon">
+                      <Button variant="ghost" size="icon" className="h-9 w-9 rounded-lg hover:bg-slate-100 transition-colors">
                         <Menu className="h-5 w-5" />
                       </Button>
                     </SheetTrigger>
@@ -2372,38 +2372,45 @@ export default function Dashboard() {
                 </div>
 
                 {/* Logo */}
-                <div className="flex items-center space-x-2">
-                  <div className="flex h-8 w-8 items-center justify-center">
+                <div className="flex items-center space-x-3">
+                  <div className="flex h-9 w-9 items-center justify-center bg-gradient-to-br from-primary to-primary/80 rounded-xl shadow-sm">
                     <img 
                       src="/logo.png" 
                       alt="Copy Ready logo" 
-                      width={32} 
-                      height={32}
+                      width={28} 
+                      height={28}
                       className="rounded-lg"
                     />
                   </div>
-                  <span className="font-semibold text-lg hidden sm:block">Copy Ready</span>
+                  <div className="hidden sm:block">
+                    <h1 className="font-bold text-xl bg-gradient-to-r from-slate-900 to-slate-600 bg-clip-text text-transparent">
+                      Copy Ready
+                    </h1>
+                    <p className="text-xs text-slate-500 -mt-1">AI Copywriting Assistant</p>
+                  </div>
                 </div>
               </div>
 
-              <div className="flex items-center space-x-2">
+              <div className="flex items-center space-x-3">
                 <TooltipProvider>
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <Button 
                         variant="ghost" 
                         size="icon" 
-                        className="h-8 w-8 text-[#929AAB] hover:text-[#393E46] hover:bg-[#F7F7F7]"
+                        className="h-9 w-9 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-all duration-200"
                         onClick={() => window.location.href = '/knowledge-base'}
                       >
                         <Settings className="h-4 w-4" />
                       </Button>
                     </TooltipTrigger>
-                    <TooltipContent>
-                      <p>Brand Settings</p>
+                    <TooltipContent side="bottom">
+                      <p className="font-medium">Brand Settings</p>
                     </TooltipContent>
                   </Tooltip>
                 </TooltipProvider>
+
+                <Separator orientation="vertical" className="h-6" />
 
                 <TooltipProvider>
                   <Tooltip>
@@ -2411,20 +2418,21 @@ export default function Dashboard() {
                       <Button 
                         variant="ghost" 
                         size="sm" 
-                        className="h-8 px-3 text-[#929AAB] hover:text-[#393E46] hover:bg-[#F7F7F7] text-xs"
+                        className="h-9 px-4 text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-all duration-200 font-medium"
                         onClick={logout}
                       >
+                        <Power className="h-4 w-4 mr-2" />
                         Logout
                       </Button>
                     </TooltipTrigger>
-                    <TooltipContent>
-                      <p>Return to landing page</p>
+                    <TooltipContent side="bottom">
+                      <p className="font-medium">Return to landing page</p>
                     </TooltipContent>
                   </Tooltip>
                 </TooltipProvider>
                 
-                <Avatar className="h-8 w-8">
-                  <AvatarFallback className="bg-[#393E46] text-white text-xs">SJ</AvatarFallback>
+                <Avatar className="h-9 w-9 ring-2 ring-slate-200 hover:ring-slate-300 transition-all duration-200">
+                  <AvatarFallback className="bg-gradient-to-br from-primary to-primary/80 text-white text-sm font-semibold">SJ</AvatarFallback>
                 </Avatar>
               </div>
             </header>
@@ -2452,13 +2460,13 @@ export default function Dashboard() {
           className="h-full"
         >
       {/* Header */}
-      <header className="h-16 border-b border-slate-200/60 bg-white/90 backdrop-blur-sm px-6 flex items-center justify-between sticky top-0 z-40 shadow-sm">
+      <header className="h-16 border-b border-slate-200/60 bg-white/95 backdrop-blur-md px-6 flex items-center justify-between sticky top-0 z-40 shadow-lg">
         <div className="flex items-center space-x-4">
           {/* Mobile menu button */}
           <div className="lg:hidden">
             <Sheet>
               <SheetTrigger asChild>
-                <Button variant="ghost" size="icon">
+                <Button variant="ghost" size="icon" className="h-9 w-9 rounded-lg hover:bg-slate-100 transition-colors">
                   <Menu className="h-5 w-5" />
                 </Button>
               </SheetTrigger>
@@ -2478,23 +2486,28 @@ export default function Dashboard() {
           </div>
 
           {/* Logo */}
-          <div className="flex items-center space-x-2">
-            <div className="flex h-8 w-8 items-center justify-center">
+          <div className="flex items-center space-x-3">
+            <div className="flex h-9 w-9 items-center justify-center bg-gradient-to-br from-primary to-primary/80 rounded-xl shadow-sm">
               <img 
                 src="/logo.png" 
                 alt="Copy Ready logo" 
-                width={32} 
-                height={32}
+                width={28} 
+                height={28}
                 className="rounded-lg"
               />
             </div>
-            <span className="font-semibold text-lg hidden sm:block">Copy Ready</span>
+            <div className="hidden sm:block">
+              <h1 className="font-bold text-xl bg-gradient-to-r from-slate-900 to-slate-600 bg-clip-text text-transparent">
+                Copy Ready
+              </h1>
+              <p className="text-xs text-slate-500 -mt-1">AI Copywriting Assistant</p>
+            </div>
           </div>
 
           {/* Active Agent Chip */}
-          <div className="hidden md:flex items-center space-x-2 bg-[#F7F7F7] px-3 py-1.5 rounded-full border border-[#EEEEEE]">
-            <Bot className="h-4 w-4 text-[#393E46]" />
-            <span className="text-sm font-medium">{selectedAgent}</span>
+          <div className="hidden md:flex items-center space-x-2 bg-gradient-to-r from-primary/10 to-primary/5 px-4 py-2 rounded-full border border-primary/20 shadow-sm">
+            <Bot className="h-4 w-4 text-primary" />
+            <span className="text-sm font-semibold text-slate-700">{selectedAgent}</span>
           </div>
 
           {/* New Chat Button */}
@@ -2502,7 +2515,7 @@ export default function Dashboard() {
             onClick={startNewConversation}
             variant="outline"
             size="sm"
-            className="hidden sm:flex items-center space-x-2 text-[#393E46] border-[#EEEEEE] hover:bg-[#F7F7F7]"
+            className="hidden sm:flex items-center space-x-2 text-slate-700 border-slate-200 hover:bg-slate-50 hover:border-slate-300 transition-all duration-200 shadow-sm"
           >
             <Plus className="h-4 w-4" />
             <span>New Chat</span>
@@ -2513,30 +2526,30 @@ export default function Dashboard() {
             onClick={startFreshDashboard}
             variant="ghost"
             size="sm"
-            className="hidden sm:flex items-center space-x-2 text-[#929AAB] hover:text-[#393E46] hover:bg-[#F7F7F7]"
+            className="hidden sm:flex items-center space-x-2 text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-all duration-200"
           >
             <RefreshCw className="h-4 w-4" />
             <span>Fresh Start</span>
           </Button>
         </div>
 
-        <div className="flex items-center space-x-2">
+        <div className="flex items-center space-x-3">
           {/* Desktop panel toggles */}
           <TooltipProvider>
-            <div className="hidden xl:flex items-center space-x-1">
+            <div className="hidden xl:flex items-center space-x-2">
               <Tooltip>
                 <TooltipTrigger asChild>
                   <Button
                     variant="ghost"
                     size="icon"
                     onClick={() => setLeftPanelOpen(!leftPanelOpen)}
-                    className="h-8 w-8 text-[#929AAB] hover:text-[#393E46] hover:bg-[#F7F7F7]"
+                    className="h-9 w-9 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-all duration-200"
                   >
-                    <PanelLeftClose className={`h-4 w-4 transition-transform ${!leftPanelOpen ? 'rotate-180' : ''}`} />
+                    <PanelLeftClose className={`h-4 w-4 transition-transform duration-200 ${!leftPanelOpen ? 'rotate-180' : ''}`} />
                   </Button>
                 </TooltipTrigger>
-                <TooltipContent>
-                  <p>{leftPanelOpen ? 'Hide sidebar' : 'Show sidebar'}</p>
+                <TooltipContent side="bottom">
+                  <p className="font-medium">{leftPanelOpen ? 'Hide sidebar' : 'Show sidebar'}</p>
                 </TooltipContent>
               </Tooltip>
               
@@ -2546,17 +2559,19 @@ export default function Dashboard() {
                     variant="ghost"
                     size="icon"
                     onClick={() => setRightPanelOpen(!rightPanelOpen)}
-                    className="h-8 w-8 text-[#929AAB] hover:text-[#393E46] hover:bg-[#F7F7F7]"
+                    className="h-9 w-9 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-all duration-200"
                   >
-                    <PanelRightClose className={`h-4 w-4 transition-transform ${!rightPanelOpen ? 'rotate-180' : ''}`} />
+                    <PanelRightClose className={`h-4 w-4 transition-transform duration-200 ${!rightPanelOpen ? 'rotate-180' : ''}`} />
                   </Button>
                 </TooltipTrigger>
-                <TooltipContent>
-                  <p>{rightPanelOpen ? 'Hide media library' : 'Show media library'}</p>
+                <TooltipContent side="bottom">
+                  <p className="font-medium">{rightPanelOpen ? 'Hide media library' : 'Show media library'}</p>
                 </TooltipContent>
               </Tooltip>
             </div>
           </TooltipProvider>
+
+          <Separator orientation="vertical" className="h-6" />
 
           <TooltipProvider>
             <Tooltip>
@@ -2564,14 +2579,14 @@ export default function Dashboard() {
                 <Button 
                   variant="ghost" 
                   size="icon" 
-                  className="h-8 w-8 text-[#929AAB] hover:text-[#393E46] hover:bg-[#F7F7F7]"
+                  className="h-9 w-9 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-all duration-200"
                   onClick={() => window.location.href = '/knowledge-base'}
                 >
                   <Settings className="h-4 w-4" />
                 </Button>
               </TooltipTrigger>
-              <TooltipContent>
-                <p>Brand Settings</p>
+              <TooltipContent side="bottom">
+                <p className="font-medium">Brand Settings</p>
               </TooltipContent>
             </Tooltip>
           </TooltipProvider>
@@ -2582,20 +2597,21 @@ export default function Dashboard() {
                 <Button 
                   variant="ghost" 
                   size="sm" 
-                  className="h-8 px-3 text-[#929AAB] hover:text-[#393E46] hover:bg-[#F7F7F7] text-xs"
+                  className="h-9 px-4 text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-all duration-200 font-medium"
                   onClick={logout}
                 >
+                  <Power className="h-4 w-4 mr-2" />
                   Logout
                 </Button>
               </TooltipTrigger>
-              <TooltipContent>
-                <p>Return to landing page</p>
+              <TooltipContent side="bottom">
+                <p className="font-medium">Return to landing page</p>
               </TooltipContent>
             </Tooltip>
           </TooltipProvider>
           
-          <Avatar className="h-8 w-8">
-            <AvatarFallback className="bg-[#393E46] text-white text-xs">SJ</AvatarFallback>
+          <Avatar className="h-9 w-9 ring-2 ring-slate-200 hover:ring-slate-300 transition-all duration-200">
+            <AvatarFallback className="bg-gradient-to-br from-primary to-primary/80 text-white text-sm font-semibold">SJ</AvatarFallback>
           </Avatar>
         </div>
       </header>
@@ -4631,5 +4647,4 @@ function TranscriptsTab({ mediaItems, onDelete }: any) {
       )}
     </div>
   )
-}
 }
