@@ -2392,48 +2392,7 @@ export default function Dashboard() {
               </div>
 
               <div className="flex items-center space-x-3">
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button 
-                        variant="ghost" 
-                        size="icon" 
-                        className="h-9 w-9 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-all duration-200"
-                        onClick={() => window.location.href = '/knowledge-base'}
-                      >
-                        <Settings className="h-4 w-4" />
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent side="bottom">
-                      <p className="font-medium">Brand Settings</p>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-
-                <Separator orientation="vertical" className="h-6" />
-
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button 
-                        variant="ghost" 
-                        size="sm" 
-                        className="h-9 px-4 text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-all duration-200 font-medium"
-                        onClick={logout}
-                      >
-                        <Power className="h-4 w-4 mr-2" />
-                        Logout
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent side="bottom">
-                      <p className="font-medium">Return to landing page</p>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-                
-                <Avatar className="h-9 w-9 ring-2 ring-slate-200 hover:ring-slate-300 transition-all duration-200">
-                  <AvatarFallback className="bg-gradient-to-br from-primary to-primary/80 text-white text-sm font-semibold">SJ</AvatarFallback>
-                </Avatar>
+                {/* User actions moved to sidebar */}
               </div>
             </header>
 
@@ -2573,46 +2532,7 @@ export default function Dashboard() {
 
           <Separator orientation="vertical" className="h-6" />
 
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button 
-                  variant="ghost" 
-                  size="icon" 
-                  className="h-9 w-9 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-all duration-200"
-                  onClick={() => window.location.href = '/knowledge-base'}
-                >
-                  <Settings className="h-4 w-4" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent side="bottom">
-                <p className="font-medium">Brand Settings</p>
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  className="h-9 px-4 text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-all duration-200 font-medium"
-                  onClick={logout}
-                >
-                  <Power className="h-4 w-4 mr-2" />
-                  Logout
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent side="bottom">
-                <p className="font-medium">Return to landing page</p>
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-          
-          <Avatar className="h-9 w-9 ring-2 ring-slate-200 hover:ring-slate-300 transition-all duration-200">
-            <AvatarFallback className="bg-gradient-to-br from-primary to-primary/80 text-white text-sm font-semibold">SJ</AvatarFallback>
-          </Avatar>
+          {/* User actions moved to sidebar */}
         </div>
       </header>
 

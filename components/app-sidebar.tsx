@@ -2,17 +2,16 @@
 
 import * as React from "react"
 import { 
-  FileText, 
-  PenTool, 
   Search, 
   MessageCircle, 
-  FolderOpen, 
   Users, 
   Settings, 
   Scale,
-  Home,
-  Calendar,
-  Bell
+  Bell,
+  LogOut,
+  User,
+  Moon,
+  Sun
 } from "lucide-react"
 import Image from "next/image"
 
@@ -27,24 +26,42 @@ import {
   SidebarGroupLabel,
 } from "@/components/ui/sidebar"
 import { Button } from "@/components/ui/button"
+import { useAuth } from "@/lib/auth-context"
+import { 
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 
 const mainNav = [
-  { href: "/dashboard", icon: Home, label: "Dashboard" },
-  { href: "/chat", icon: MessageCircle, label: "AI Chat" },
+  { href: "/chat", icon: MessageCircle, label: "Chat History" },
+  { href: "/agents", icon: Users, label: "Choose Agent" },
   { href: "/knowledge-base", icon: Search, label: "Knowledge Base" },
-  { href: "/media-library", icon: FolderOpen, label: "Media Library" },
-  { href: "/agents", icon: Users, label: "AI Agents" },
-  { href: "/export", icon: FileText, label: "Export" },
-]
-
-const secondaryNav = [
-  { href: "/conversations", icon: PenTool, label: "Conversations" },
-  { href: "/brand", icon: Calendar, label: "Brand Settings" },
-  { href: "/notifications", icon: Bell, label: "Notifications" },
 ]
 
 export function AppSidebar() {
   const [activeItem, setActiveItem] = React.useState("/")
+  const [isDark, setIsDark] = React.useState(true)
+  const { user, logout } = useAuth()
+
+  React.useEffect(() => {
+    document.documentElement.classList.add('dark')
+  }, [])
+
+  const toggleTheme = () => {
+    setIsDark(!isDark)
+    document.documentElement.classList.toggle('dark')
+  }
+
+  const handleLogout = () => {
+    logout()
+  }
+
+  const handleNavigation = (href: string) => {
+    setActiveItem(href)
+    window.location.href = href
+  }
 
   return (
     <Sidebar className="border-r border-white/10">
@@ -68,7 +85,7 @@ export function AppSidebar() {
                 <SidebarMenuItem key={item.href}>
                   <Button
                     variant={activeItem === item.href ? "secondary" : "ghost"}
-                    onClick={() => setActiveItem(item.href)}
+                    onClick={() => handleNavigation(item.href)}
                     className="w-full justify-start space-x-3"
                     size="sm"
                   >
@@ -79,44 +96,105 @@ export function AppSidebar() {
               ))}
             </SidebarMenu>
 
-            <SidebarMenu>
-              <SidebarGroupLabel>Workspace</SidebarGroupLabel>
-              {secondaryNav.map((item) => (
-                <SidebarMenuItem key={item.href}>
-                  <Button
-                    variant={activeItem === item.href ? "secondary" : "ghost"}
-                    onClick={() => setActiveItem(item.href)}
-                    className="w-full justify-start space-x-3"
-                    size="sm"
-                  >
-                    <item.icon className="h-4 w-4" />
-                    <span>{item.label}</span>
-                  </Button>
-                </SidebarMenuItem>
-              ))}
-            </SidebarMenu>
+
           </div>
 
-          <SidebarMenu>
-            <SidebarMenuItem>
-              <Button variant="ghost" className="w-full justify-start space-x-3" size="sm">
-                <Settings className="h-4 w-4" />
-                <span>Settings</span>
-              </Button>
-            </SidebarMenuItem>
-          </SidebarMenu>
+          {/* Settings and Theme Toggle */}
+          <div className="space-y-2">
+            <SidebarMenu>
+              <SidebarMenuItem>
+                <Button 
+                  variant="ghost" 
+                  className="w-full justify-start space-x-3" 
+                  size="sm"
+                  onClick={() => handleNavigation('/knowledge-base')}
+                >
+                  <Settings className="h-4 w-4" />
+                  <span>Settings</span>
+                </Button>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <Button 
+                  variant="ghost" 
+                  className="w-full justify-start space-x-3" 
+                  size="sm"
+                  onClick={toggleTheme}
+                >
+                  {isDark ? (
+                    <Sun className="h-4 w-4" />
+                  ) : (
+                    <Moon className="h-4 w-4" />
+                  )}
+                  <span>{isDark ? 'Light Mode' : 'Dark Mode'}</span>
+                </Button>
+              </SidebarMenuItem>
+            </SidebarMenu>
+          </div>
         </SidebarContent>
 
       <SidebarFooter>
-        <div className="flex items-center space-x-3 p-3 rounded-lg bg-secondary/50 border border-white/10">
-          <div className="h-9 w-9 rounded-full bg-gradient-to-br from-primary to-green-400 flex items-center justify-center">
-            <span className="text-sm font-bold text-black">CF</span>
-          </div>
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium truncate">Copy Ready Pro</p>
-            <p className="text-xs text-muted-foreground truncate">Active License</p>
-          </div>
-        </div>
+        {/* User Profile Section with Popover */}
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button 
+              variant="ghost" 
+              className="w-full p-3 rounded-lg hover:bg-secondary/50 transition-colors border border-white/10"
+            >
+              <div className="flex items-center space-x-3 w-full">
+                <Avatar className="h-9 w-9">
+                  <AvatarImage src={user?.avatar} alt={user?.name || 'User'} />
+                  <AvatarFallback className="bg-gradient-to-br from-primary to-green-400">
+                    <User className="h-5 w-5 text-black" />
+                  </AvatarFallback>
+                </Avatar>
+                <div className="flex-1 min-w-0 text-left">
+                  <p className="text-sm font-medium truncate">{user?.name || 'John Doe'}</p>
+                  <p className="text-xs text-muted-foreground truncate">{user?.role || 'Senior Partner'}</p>
+                </div>
+              </div>
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent 
+            align="end" 
+            className="w-56 p-2"
+            side="top"
+          >
+            <div className="space-y-1">
+              <Button 
+                variant="ghost" 
+                className="w-full justify-start h-9 px-2"
+                onClick={() => handleNavigation('/profile')}
+              >
+                <User className="mr-2 h-4 w-4" />
+                <span>Profile</span>
+              </Button>
+              <Button 
+                variant="ghost" 
+                className="w-full justify-start h-9 px-2"
+                onClick={() => handleNavigation('/knowledge-base')}
+              >
+                <Settings className="mr-2 h-4 w-4" />
+                <span>Settings</span>
+              </Button>
+              <Button 
+                variant="ghost" 
+                className="w-full justify-start h-9 px-2"
+              >
+                <Bell className="mr-2 h-4 w-4" />
+                <span>Notifications</span>
+              </Button>
+              <div className="border-t border-border my-2" />
+              <Button 
+                variant="ghost" 
+                className="w-full justify-start h-9 px-2 text-destructive hover:text-destructive"
+                onClick={handleLogout}
+              >
+                <LogOut className="mr-2 h-4 w-4" />
+                <span>Logout</span>
+              </Button>
+            </div>
+          </PopoverContent>
+        </Popover>
       </SidebarFooter>
     </Sidebar>
   )
