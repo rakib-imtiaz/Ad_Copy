@@ -257,4 +257,29 @@
   .no-underline {
     text-decoration: none !important;
   }
+
+  /* Ensure hero section is always visible */
+  main#home {
+    background: var(--hero-gradient) !important;
+    min-height: 100vh;
+  }
+  
+  /* Ensure hero section always has background */
+  .bg-hero-gradient {
+    background: var(--hero-gradient);
+    background-attachment: fixed;
+  }
+  
+  /* Prevent flash during page transitions */
+  .rfa-theme {
+    background: var(--bg);
+    transition: background-color 0.3s ease;
+  }
+  
+  /* Ensure smooth loading for WebGL components */
+  .iridescence-container {
+    will-change: opacity;
+    backface-visibility: hidden;
+    transform: translateZ(0);
+  }
 }

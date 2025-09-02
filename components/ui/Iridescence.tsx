@@ -1,5 +1,5 @@
 import { Renderer, Program, Mesh, Color, Triangle } from "ogl";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import "./Iridescence.css";
 
@@ -62,13 +62,18 @@ export default function Iridescence({
 }: IridescenceProps) {
   const ctnDom = useRef<HTMLDivElement>(null);
   const mousePos = useRef({ x: 0.5, y: 0.5 });
+  const [isLoaded, setIsLoaded] = useState(false);
 
   useEffect(() => {
     if (!ctnDom.current) return;
     const ctn = ctnDom.current;
     const renderer = new Renderer();
     const gl = renderer.gl;
-    gl.clearColor(1, 1, 1, 1);
+    
+    // Set transparent background instead of white to prevent flash
+    gl.clearColor(0, 0, 0, 0);
+    gl.enable(gl.BLEND);
+    gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
 
     let program: Program;
 
@@ -114,7 +119,11 @@ export default function Iridescence({
       program.uniforms.uTime.value = t * 0.001;
       renderer.render({ scene: mesh });
     }
+    
+    // Start animation and mark as loaded
     animateId = requestAnimationFrame(update);
+    setIsLoaded(true);
+    
     ctn.appendChild(gl.canvas);
 
     function handleMouseMove(e: MouseEvent) {
@@ -143,7 +152,15 @@ export default function Iridescence({
   return (
     <div
       ref={ctnDom}
-      className="iridescence-container"
+      className={`iridescence-container ${isLoaded ? 'loaded' : 'loading'}`}
+      style={{
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        width: '100%',
+        height: '100%',
+        overflow: 'hidden'
+      }}
       {...rest}
     />
   );

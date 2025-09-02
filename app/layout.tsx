@@ -64,7 +64,22 @@ export default function RootLayout({
         <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
         <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
         <link rel="manifest" href="/site.webmanifest" />
-        <meta name="theme-color" content="#393E46" />
+        <meta name="theme-color" content="#F3CF3F" />
+        {/* Critical CSS to prevent white flash */}
+        <style dangerouslySetInnerHTML={{
+          __html: `
+            :root {
+              --hero-gradient: linear-gradient(180deg, #FCE37E 0%, #F3CF3F 100%);
+              --bg: #FFFFFF;
+            }
+            body {
+              background: var(--bg) !important;
+            }
+            .bg-hero-gradient {
+              background: var(--hero-gradient) !important;
+            }
+          `
+        }} />
       </head>
       <body className="min-h-screen bg-background font-sans antialiased" suppressHydrationWarning>
         <AuthProvider>
