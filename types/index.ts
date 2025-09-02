@@ -72,7 +72,7 @@ export interface ChatMessage {
 }
 
 // Output Presets (FR-3.4.3)
-export type OutputPreset = 'google' | 'linkedin' | 'x' | 'email-subject' | 'custom'
+export type OutputPreset = 'facebook' | 'google' | 'linkedin' | 'x' | 'email-subject' | 'custom'
 
 export interface GeneratedCopy {
   id: string

@@ -2842,9 +2842,6 @@ function LeftSidebar({
                         <p className="text-xs text-gray-500 mt-1">{timeAgo}</p>
                       </div>
                   <div className="flex items-center space-x-2">
-                        {isActive && (
-                          <div className="w-2 h-2 bg-blue-600 rounded-full flex-shrink-0 mt-1"></div>
-                        )}
                         <Button
                           variant="ghost"
                           size="icon"
@@ -2860,15 +2857,7 @@ function LeftSidebar({
                         </Button>
                   </div>
                 </div>
-                    <div 
-                      className="flex items-center justify-between cursor-pointer"
-                      onClick={() => onLoadChatSession(chat.session_id)}
-                    >
-                      <span className="text-xs text-gray-600 font-medium">Session {chat.session_id}</span>
-                      <div className={`w-2 h-2 rounded-full ${
-                        isActive ? 'bg-blue-600' : 'bg-gray-300'
-                  }`} />
-                </div>
+
               </div>
                 )
               })}
