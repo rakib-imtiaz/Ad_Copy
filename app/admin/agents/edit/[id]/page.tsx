@@ -20,7 +20,7 @@ interface Agent {
 const EditAgentPage = () => {
   const router = useRouter();
   const params = useParams();
-  const agentId = params.id as string;
+  const agentId = decodeURIComponent(params.id as string);
   
   const [agent, setAgent] = useState<Agent | null>(null);
   const [systemPrompt, setSystemPrompt] = useState('');
@@ -39,6 +39,10 @@ const EditAgentPage = () => {
         throw new Error('No authentication token found');
       }
 
+      console.log('🔍 Fetching agent with ID:', agentId);
+      console.log('🔍 Original URL param:', params.id);
+      console.log('🔍 Decoded agent ID:', agentId);
+
       const response = await fetch(`/api/admin/agent-list?accessToken=${encodeURIComponent(token)}`, {
         method: 'GET',
         headers: {
@@ -52,26 +56,62 @@ const EditAgentPage = () => {
       }
 
       const result = await response.json();
+      console.log('📡 API Response:', result);
       
-      // Find the specific agent
-      const agents = Array.isArray(result) ? result : (result.agents || []);
-      const foundAgent = agents.find((a: any) => a.agent_id === agentId);
+      // Find the specific agent - handle different response formats
+      let agents = [];
+      if (Array.isArray(result)) {
+        agents = result;
+      } else if (result && Array.isArray(result.agents)) {
+        agents = result.agents;
+      } else if (result && result.data && Array.isArray(result.data)) {
+        agents = result.data;
+      }
+      
+      console.log('🔍 Available agents:', agents);
+      console.log('🔍 Looking for agent ID:', agentId);
+      
+      // Try multiple ID field variations and name matching
+      const foundAgent = agents.find((a: any) => 
+        a.agent_id === agentId || 
+        a.id === agentId || 
+        a.agent_name === agentId ||
+        a.name === agentId ||
+        String(a.agent_id) === String(agentId) ||
+        String(a.id) === String(agentId) ||
+        // Also try with URL encoding
+        a.agent_id === encodeURIComponent(agentId) ||
+        a.agent_name === encodeURIComponent(agentId) ||
+        a.name === encodeURIComponent(agentId)
+      );
+      
+      console.log('🔍 Found agent:', foundAgent);
       
       if (!foundAgent) {
-        throw new Error('Agent not found');
+        console.error('❌ Agent not found. Looking for:', agentId);
+        console.error('❌ Available agents:', agents.map(a => ({ 
+          agent_id: a.agent_id, 
+          id: a.id, 
+          agent_name: a.agent_name,
+          name: a.name,
+          short_description: a.short_description
+        })));
+        console.error('❌ URL encoded version:', encodeURIComponent(agentId));
+        throw new Error(`Agent with ID "${agentId}" not found. Available agents: ${agents.map(a => a.agent_name || a.name || a.agent_id).join(', ')}`);
       }
 
-             const transformedAgent: Agent = {
-         id: foundAgent.agent_id || foundAgent.id,
-         name: foundAgent.agent_id || foundAgent.name || foundAgent.agent_name,
-         description: foundAgent.short_description || foundAgent.description || foundAgent.purpose || 'AI agent for various tasks',
-         status: foundAgent.status || 'active',
-         scope: foundAgent.scope || foundAgent.category || 'General',
-         systemPrompt: foundAgent.system_prompt || foundAgent.systemPrompt || foundAgent.prompt || foundAgent.short_description || 'Default system prompt for this agent',
-         creator: foundAgent.creator || 'Unknown',
-         created_at: foundAgent.created_at || new Date().toISOString()
-       };
+      const transformedAgent: Agent = {
+        id: foundAgent.agent_id || foundAgent.id || agentId,
+        name: foundAgent.agent_name || foundAgent.name || foundAgent.agent_id || `Agent ${agentId}`,
+        description: foundAgent.short_description || foundAgent.description || foundAgent.purpose || 'AI agent for various tasks',
+        status: foundAgent.is_active ? 'active' : 'inactive',
+        scope: foundAgent.scope || foundAgent.category || 'General',
+        systemPrompt: foundAgent.system_prompt || foundAgent.systemPrompt || foundAgent.prompt || foundAgent.short_description || 'Default system prompt for this agent',
+        creator: foundAgent.creator || foundAgent.created_by || 'Unknown',
+        created_at: foundAgent.created_at || foundAgent.createdAt || new Date().toISOString()
+      };
 
+      console.log('✅ Transformed agent:', transformedAgent);
       setAgent(transformedAgent);
       setSystemPrompt(transformedAgent.systemPrompt);
     } catch (err: any) {
