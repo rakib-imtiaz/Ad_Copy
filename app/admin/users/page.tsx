@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { UserPlus, MoreHorizontal, Trash2, AlertTriangle, Filter, RefreshCw, Crown, Search, Eye, ChevronDown } from 'lucide-react';
+import { UserPlus, MoreHorizontal, Trash2, AlertTriangle, Filter, RefreshCw, Crown, Search, Eye, ChevronDown, User, Info } from 'lucide-react';
 import { authService } from '@/lib/auth-service';
 import {
   Table,
@@ -34,6 +34,13 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
+import { UserSwitchDialog } from '@/components/admin/UserSwitchDialog';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 
 interface User {
   id: number;
@@ -53,6 +60,7 @@ const UserManagementPage = () => {
   const [filterRole, setFilterRole] = useState<string>('all');
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [currentUser, setCurrentUser] = useState<{ id?: number; email?: string } | null>(null);
+  const [showUserSwitchDialog, setShowUserSwitchDialog] = useState<{ userId: number; userEmail: string } | null>(null);
 
   const container = {
     hidden: { opacity: 0 },
@@ -352,7 +360,12 @@ const UserManagementPage = () => {
         <Card>
           <CardHeader>
             <div className="flex items-center justify-between">
-              <CardTitle>User Records</CardTitle>
+              <div>
+                <CardTitle>User Records</CardTitle>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Manage users and switch to their accounts to view their dashboard experience. Use the "Switch" button to log in as any user and see their perspective.
+                </p>
+              </div>
               <Badge variant="secondary" className="text-xs">
                 {filteredUsers.length} of {users.length} users
               </Badge>
@@ -438,6 +451,24 @@ const UserManagementPage = () => {
                         </TableCell>
                         <TableCell>
                           <div className="flex items-center space-x-1">
+                            <TooltipProvider>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => setShowUserSwitchDialog({ userId: user.id, userEmail: user.email })}
+                                    className="h-8 px-2 hover:bg-blue-100 hover:text-blue-600 text-xs"
+                                  >
+                                    <User size={14} className="mr-1" />
+                                    Switch
+                                  </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                  <p>Switch to this user's account to view their dashboard and experience</p>
+                                </TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider>
                             {user.role !== 'Superking' && (
                               <Button
                                 variant="ghost"
@@ -600,6 +631,16 @@ const UserManagementPage = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* User Switch Dialog */}
+      {showUserSwitchDialog && (
+        <UserSwitchDialog
+          isOpen={!!showUserSwitchDialog}
+          onClose={() => setShowUserSwitchDialog(null)}
+          userEmail={showUserSwitchDialog.userEmail}
+          userId={showUserSwitchDialog.userId}
+        />
+      )}
     </div>
   );
 };

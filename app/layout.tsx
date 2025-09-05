@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
 import './globals.css'
 import { AuthProvider } from '@/lib/auth-context'
+import { AdminSwitchBanner } from '@/components/admin/AdminSwitchBanner'
 
 const inter = Inter({ 
   subsets: ['latin'],
@@ -83,6 +84,7 @@ export default function RootLayout({
       </head>
       <body className="min-h-screen bg-background font-sans antialiased" suppressHydrationWarning>
         <AuthProvider>
+          <AdminSwitchBanner />
           <div className="relative flex min-h-screen flex-col">
             <div className="flex-1">
               {children}

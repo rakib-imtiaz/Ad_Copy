@@ -3,6 +3,7 @@
 import * as React from "react"
 import { authService } from "@/lib/auth-service"
 import { Toast } from "@/components/ui/toast"
+import { API_ENDPOINTS } from "@/lib/api-config"
 
 interface BrandFormData {
   brandIdentity: {
@@ -206,6 +207,41 @@ export function BrandForm({ onSuccess }: BrandFormProps) {
     }))
   }
 
+  // Filter out empty fields from form data
+  const filterEmptyFields = (data: any): any => {
+    if (Array.isArray(data)) {
+      return data
+        .map(item => filterEmptyFields(item))
+        .filter(item => {
+          if (typeof item === 'object' && item !== null) {
+            return Object.keys(item).length > 0
+          }
+          return item !== '' && item != null
+        })
+    }
+    
+    if (typeof data === 'object' && data !== null) {
+      const filtered: any = {}
+      for (const [key, value] of Object.entries(data)) {
+        const filteredValue = filterEmptyFields(value)
+        if (Array.isArray(filteredValue)) {
+          if (filteredValue.length > 0) {
+            filtered[key] = filteredValue
+          }
+        } else if (typeof filteredValue === 'object' && filteredValue !== null) {
+          if (Object.keys(filteredValue).length > 0) {
+            filtered[key] = filteredValue
+          }
+        } else if (filteredValue !== '' && filteredValue != null) {
+          filtered[key] = filteredValue
+        }
+      }
+      return filtered
+    }
+    
+    return data
+  }
+
   // Submit form to webhook
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -220,45 +256,83 @@ export function BrandForm({ onSuccess }: BrandFormProps) {
         return
       }
 
+      // Filter out empty fields before sending
+      const filteredFormData = filterEmptyFields(formData)
+      
       console.log('📤 Submitting brand form data to webhook...')
-      console.log('URL: https://n8n.srv934833.hstgr.cloud/webhook-test/upload-knowledgebase-by-field')
+      console.log('URL:', API_ENDPOINTS.N8N_WEBHOOKS.UPLOAD_KNOWLEDGE_BASE_BY_FIELD)
+      console.log('📋 Filtered form data:', filteredFormData)
+      console.log('🔑 Access token available:', !!accessToken)
+      console.log('📊 Data size:', JSON.stringify(filteredFormData).length, 'characters')
 
-      const response = await fetch('https://n8n.srv934833.hstgr.cloud/webhook-test/upload-knowledgebase-by-field', {
+      // Create AbortController for timeout
+      const controller = new AbortController()
+      const timeoutId = setTimeout(() => controller.abort(), 30000) // 30 second timeout
+
+      const response = await fetch(API_ENDPOINTS.N8N_WEBHOOKS.UPLOAD_KNOWLEDGE_BASE_BY_FIELD, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${accessToken}`,
         },
-        body: JSON.stringify(formData)
+        body: JSON.stringify(filteredFormData),
+        signal: controller.signal
       })
+
+      clearTimeout(timeoutId)
 
       console.log('📡 Response status:', response.status)
 
+      // Read the response body only once
+      let responseText = ''
+      try {
+        responseText = await response.text()
+        console.log('📄 Response body:', responseText)
+      } catch (readError) {
+        console.error('❌ Failed to read response body:', readError)
+        responseText = 'Unable to read response'
+      }
+
       if (response.ok) {
         try {
-          const result = await response.json()
+          const result = JSON.parse(responseText)
           console.log('✅ Success response:', result)
           setToastMessage("Brand information updated successfully!")
           setToastType('success')
           setShowToast(true)
           onSuccess?.()
         } catch (jsonError) {
-          console.log('✅ Response received (not JSON):', await response.text())
+          console.log('✅ Response received (not JSON):', responseText)
           setToastMessage("Brand information updated successfully!")
           setToastType('success')
           setShowToast(true)
           onSuccess?.()
         }
       } else {
-        const errorText = await response.text()
-        console.error('❌ Submission failed:', errorText)
-        setToastMessage(`Failed to update brand information: ${response.status}`)
+        console.error('❌ Submission failed:', responseText)
+        try {
+          const errorData = JSON.parse(responseText)
+          setToastMessage(`Failed to update brand information: ${errorData.message || 'Unknown error'}`)
+        } catch {
+          setToastMessage(`Failed to update brand information: ${response.status} - ${responseText}`)
+        }
         setToastType('error')
         setShowToast(true)
       }
     } catch (error: any) {
       console.error('❌ Network error:', error)
-      setToastMessage(`Network error: ${error.message}`)
+      
+      let errorMessage = 'Network error occurred'
+      
+      if (error.name === 'AbortError') {
+        errorMessage = 'Request timed out. Please try again.'
+      } else if (error.message.includes('Failed to fetch')) {
+        errorMessage = 'Unable to connect to server. Please check your internet connection.'
+      } else if (error.message) {
+        errorMessage = `Network error: ${error.message}`
+      }
+      
+      setToastMessage(errorMessage)
       setToastType('error')
       setShowToast(true)
     } finally {
