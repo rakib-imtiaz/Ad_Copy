@@ -37,28 +37,10 @@ interface BrandFormData {
     audienceVocabulary: string[]
   }
   offers: {
-    rfaFacebookAdsAccelerator: string
-    vipExperience: {
-      twoDayMastermind: string
-      unlimitedSupport: string
-      innerCircleAccess: string
-      accessToReplays: string
-      accessToVideoCourses: string
-      roiGuarantee: string
-    }
-    supercharge: {
-      fourWeeksTraining: string
-      innerCircleAccess: string
-      accessToReplays: string
-      accessToVideoCourses: string
-      roiGuarantee: string
-    }
-    innerCircle: {
-      innerCircleAccess: string
-      accessToVideoCourses: string
-      accessToReplays: string
-    }
-  }
+    name: string
+    price: string
+    description: string
+  }[]
   clientAssets: {
     socialMediaProfiles: {
       instagram: string
@@ -108,29 +90,13 @@ const defaultFormData: BrandFormData = {
     commonObjections: [""],
     audienceVocabulary: [""]
   },
-  offers: {
-    rfaFacebookAdsAccelerator: "",
-    vipExperience: {
-      twoDayMastermind: "",
-      unlimitedSupport: "",
-      innerCircleAccess: "",
-      accessToReplays: "",
-      accessToVideoCourses: "",
-      roiGuarantee: ""
-    },
-    supercharge: {
-      fourWeeksTraining: "",
-      innerCircleAccess: "",
-      accessToReplays: "",
-      accessToVideoCourses: "",
-      roiGuarantee: ""
-    },
-    innerCircle: {
-      innerCircleAccess: "",
-      accessToVideoCourses: "",
-      accessToReplays: ""
+  offers: [
+    {
+      name: "",
+      price: "",
+      description: ""
     }
-  },
+  ],
   clientAssets: {
     socialMediaProfiles: {
       instagram: "",
@@ -193,7 +159,10 @@ export function BrandForm({ onSuccess }: BrandFormProps) {
       for (let i = 0; i < path.length - 1; i++) {
         current = current[path[i]]
       }
-      current[path[path.length - 1]].push("")
+      // Only add if we can access the array properly
+      if (Array.isArray(current[path[path.length - 1]])) {
+        current[path[path.length - 1]].push("")
+      }
       return newData
     })
   }
@@ -209,6 +178,32 @@ export function BrandForm({ onSuccess }: BrandFormProps) {
       current[path[path.length - 1]].splice(index, 1)
       return newData
     })
+  }
+
+  // Add new offer
+  const addOffer = () => {
+    setFormData(prev => ({
+      ...prev,
+      offers: [...prev.offers, { name: "", price: "", description: "" }]
+    }))
+  }
+
+  // Remove offer
+  const removeOffer = (index: number) => {
+    setFormData(prev => ({
+      ...prev,
+      offers: prev.offers.filter((_, i) => i !== index)
+    }))
+  }
+
+  // Update offer field
+  const updateOfferField = (index: number, field: 'name' | 'price' | 'description', value: string) => {
+    setFormData(prev => ({
+      ...prev,
+      offers: prev.offers.map((offer, i) => 
+        i === index ? { ...offer, [field]: value } : offer
+      )
+    }))
   }
 
   // Submit form to webhook
@@ -413,7 +408,11 @@ export function BrandForm({ onSuccess }: BrandFormProps) {
                 ))}
                 <button
                   type="button"
-                  onClick={() => addArrayItem(['brandIdentity', 'tonePersonality', 'style'])}
+                  onClick={(e) => {
+                    e.preventDefault()
+                    e.stopPropagation()
+                    addArrayItem(['brandIdentity', 'tonePersonality', 'style'])
+                  }}
                   className="px-4 py-2 text-purple-600 border border-purple-300 rounded-lg hover:bg-purple-50"
                 >
                   Add Style
@@ -444,7 +443,11 @@ export function BrandForm({ onSuccess }: BrandFormProps) {
               ))}
               <button
                 type="button"
-                onClick={() => addArrayItem(['brandIdentity', 'examplePhrases'])}
+                onClick={(e) => {
+                  e.preventDefault()
+                  e.stopPropagation()
+                  addArrayItem(['brandIdentity', 'examplePhrases'])
+                }}
                 className="px-4 py-2 text-purple-600 border border-purple-300 rounded-lg hover:bg-purple-50"
               >
                 Add Example Phrase
@@ -474,7 +477,11 @@ export function BrandForm({ onSuccess }: BrandFormProps) {
               ))}
               <button
                 type="button"
-                onClick={() => addArrayItem(['brandIdentity', 'brandPowerWords'])}
+                onClick={(e) => {
+                  e.preventDefault()
+                  e.stopPropagation()
+                  addArrayItem(['brandIdentity', 'brandPowerWords'])
+                }}
                 className="px-4 py-2 text-purple-600 border border-purple-300 rounded-lg hover:bg-purple-50"
               >
                 Add Power Word
@@ -504,7 +511,11 @@ export function BrandForm({ onSuccess }: BrandFormProps) {
               ))}
               <button
                 type="button"
-                onClick={() => addArrayItem(['brandIdentity', 'thingsToAvoid'])}
+                onClick={(e) => {
+                  e.preventDefault()
+                  e.stopPropagation()
+                  addArrayItem(['brandIdentity', 'thingsToAvoid'])
+                }}
                 className="px-4 py-2 text-purple-600 border border-purple-300 rounded-lg hover:bg-purple-50"
               >
                 Add Thing to Avoid
@@ -546,7 +557,11 @@ export function BrandForm({ onSuccess }: BrandFormProps) {
                 ))}
                 <button
                   type="button"
-                  onClick={() => addArrayItem(['targetAudience', 'idealCustomerProfile', 'description'])}
+                  onClick={(e) => {
+                    e.preventDefault()
+                    e.stopPropagation()
+                    addArrayItem(['targetAudience', 'idealCustomerProfile', 'description'])
+                  }}
                   className="px-4 py-2 text-purple-600 border border-purple-300 rounded-lg hover:bg-purple-50"
                 >
                   Add Description
@@ -577,7 +592,11 @@ export function BrandForm({ onSuccess }: BrandFormProps) {
               ))}
               <button
                 type="button"
-                onClick={() => addArrayItem(['targetAudience', 'primaryPainPoints'])}
+                onClick={(e) => {
+                  e.preventDefault()
+                  e.stopPropagation()
+                  addArrayItem(['targetAudience', 'primaryPainPoints'])
+                }}
                 className="px-4 py-2 text-purple-600 border border-purple-300 rounded-lg hover:bg-purple-50"
               >
                 Add Pain Point
@@ -607,7 +626,11 @@ export function BrandForm({ onSuccess }: BrandFormProps) {
               ))}
               <button
                 type="button"
-                onClick={() => addArrayItem(['targetAudience', 'primaryDesiresGoals'])}
+                onClick={(e) => {
+                  e.preventDefault()
+                  e.stopPropagation()
+                  addArrayItem(['targetAudience', 'primaryDesiresGoals'])
+                }}
                 className="px-4 py-2 text-purple-600 border border-purple-300 rounded-lg hover:bg-purple-50"
               >
                 Add Desire/Goal
@@ -637,7 +660,11 @@ export function BrandForm({ onSuccess }: BrandFormProps) {
               ))}
               <button
                 type="button"
-                onClick={() => addArrayItem(['targetAudience', 'commonObjections'])}
+                onClick={(e) => {
+                  e.preventDefault()
+                  e.stopPropagation()
+                  addArrayItem(['targetAudience', 'commonObjections'])
+                }}
                 className="px-4 py-2 text-purple-600 border border-purple-300 rounded-lg hover:bg-purple-50"
               >
                 Add Objection
@@ -667,7 +694,11 @@ export function BrandForm({ onSuccess }: BrandFormProps) {
               ))}
               <button
                 type="button"
-                onClick={() => addArrayItem(['targetAudience', 'audienceVocabulary'])}
+                onClick={(e) => {
+                  e.preventDefault()
+                  e.stopPropagation()
+                  addArrayItem(['targetAudience', 'audienceVocabulary'])
+                }}
                 className="px-4 py-2 text-purple-600 border border-purple-300 rounded-lg hover:bg-purple-50"
               >
                 Add Vocabulary Word
@@ -682,180 +713,71 @@ export function BrandForm({ onSuccess }: BrandFormProps) {
             <h2 className="text-xl font-semibold text-gray-900">3. Offers</h2>
             <p className="text-gray-600 mt-1">Define your products and services</p>
           </div>
-          <div className="p-6 space-y-8">
-
-            {/* RFA Facebook Ads Accelerator */}
-            <div className="space-y-4">
-              <h3 className="text-lg font-medium text-gray-900">RFA Facebook Ads Accelerator (Video Course)</h3>
-              <textarea
-                value={formData.offers.rfaFacebookAdsAccelerator}
-                onChange={(e) => updateNestedField(['offers', 'rfaFacebookAdsAccelerator'], e.target.value)}
-                rows={4}
-                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
-                placeholder="Describe the Facebook Ads Accelerator course"
-              />
-            </div>
-
-            {/* VIP Experience */}
-            <div className="space-y-4">
-              <h3 className="text-lg font-medium text-gray-900">VIP Experience – $50,000</h3>
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">2-Day In-Person Private Mastermind</label>
-                  <textarea
-                    value={formData.offers.vipExperience.twoDayMastermind}
-                    onChange={(e) => updateNestedField(['offers', 'vipExperience', 'twoDayMastermind'], e.target.value)}
-                    rows={3}
-                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
-                    placeholder="Describe the 2-day mastermind"
-                  />
+          <div className="p-6 space-y-6">
+            {formData.offers.map((offer, index) => (
+              <div key={index} className="border border-gray-200 rounded-lg p-6 space-y-4">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-lg font-medium text-gray-900">Offer {index + 1}</h3>
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.preventDefault()
+                      e.stopPropagation()
+                      removeOffer(index)
+                    }}
+                    className="px-3 py-2 text-red-600 border border-red-300 rounded-lg hover:bg-red-50"
+                  >
+                    Remove Offer
+                  </button>
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Unlimited Priority Support for 12 Months</label>
-                  <textarea
-                    value={formData.offers.vipExperience.unlimitedSupport}
-                    onChange={(e) => updateNestedField(['offers', 'vipExperience', 'unlimitedSupport'], e.target.value)}
-                    rows={3}
-                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
-                    placeholder="Describe the priority support"
-                  />
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Offer Name</label>
+                    <input
+                      type="text"
+                      value={offer.name}
+                      onChange={(e) => updateOfferField(index, 'name', e.target.value)}
+                      className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                      placeholder="Enter offer name"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Price</label>
+                    <input
+                      type="text"
+                      value={offer.price}
+                      onChange={(e) => updateOfferField(index, 'price', e.target.value)}
+                      className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                      placeholder="Enter price (e.g., $1,000 or Free)"
+                    />
+                  </div>
                 </div>
+                
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">12 Months RFA Inner Circle Access</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Description</label>
                   <textarea
-                    value={formData.offers.vipExperience.innerCircleAccess}
-                    onChange={(e) => updateNestedField(['offers', 'vipExperience', 'innerCircleAccess'], e.target.value)}
-                    rows={3}
+                    value={offer.description}
+                    onChange={(e) => updateOfferField(index, 'description', e.target.value)}
+                    rows={4}
                     className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
-                    placeholder="Describe the Inner Circle access"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Access to All Inner Circle Replays</label>
-                  <textarea
-                    value={formData.offers.vipExperience.accessToReplays}
-                    onChange={(e) => updateNestedField(['offers', 'vipExperience', 'accessToReplays'], e.target.value)}
-                    rows={3}
-                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
-                    placeholder="Describe access to replays"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Access to All Video Courses</label>
-                  <textarea
-                    value={formData.offers.vipExperience.accessToVideoCourses}
-                    onChange={(e) => updateNestedField(['offers', 'vipExperience', 'accessToVideoCourses'], e.target.value)}
-                    rows={3}
-                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
-                    placeholder="Describe access to video courses"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">ROI Guarantee</label>
-                  <textarea
-                    value={formData.offers.vipExperience.roiGuarantee}
-                    onChange={(e) => updateNestedField(['offers', 'vipExperience', 'roiGuarantee'], e.target.value)}
-                    rows={3}
-                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
-                    placeholder="Describe the ROI guarantee"
+                    placeholder="Describe what this offer includes, benefits, features, etc."
                   />
                 </div>
               </div>
-            </div>
-
-            {/* Supercharge */}
-            <div className="space-y-4">
-              <h3 className="text-lg font-medium text-gray-900">Supercharge – $25,000</h3>
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">4 Weeks of 1-on-1 Zoom Training</label>
-                  <textarea
-                    value={formData.offers.supercharge.fourWeeksTraining}
-                    onChange={(e) => updateNestedField(['offers', 'supercharge', 'fourWeeksTraining'], e.target.value)}
-                    rows={3}
-                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
-                    placeholder="Describe the 4-week training"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">12 Months RFA Inner Circle Access</label>
-                  <textarea
-                    value={formData.offers.supercharge.innerCircleAccess}
-                    onChange={(e) => updateNestedField(['offers', 'supercharge', 'innerCircleAccess'], e.target.value)}
-                    rows={3}
-                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
-                    placeholder="Describe Inner Circle access"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Access to All Inner Circle Replays</label>
-                  <textarea
-                    value={formData.offers.supercharge.accessToReplays}
-                    onChange={(e) => updateNestedField(['offers', 'supercharge', 'accessToReplays'], e.target.value)}
-                    rows={3}
-                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
-                    placeholder="Describe access to replays"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Access to All Video Courses</label>
-                  <textarea
-                    value={formData.offers.supercharge.accessToVideoCourses}
-                    onChange={(e) => updateNestedField(['offers', 'supercharge', 'accessToVideoCourses'], e.target.value)}
-                    rows={3}
-                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
-                    placeholder="Describe access to video courses"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">ROI Guarantee</label>
-                  <textarea
-                    value={formData.offers.supercharge.roiGuarantee}
-                    onChange={(e) => updateNestedField(['offers', 'supercharge', 'roiGuarantee'], e.target.value)}
-                    rows={3}
-                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
-                    placeholder="Describe the ROI guarantee"
-                  />
-                </div>
-              </div>
-            </div>
-
-            {/* Inner Circle */}
-            <div className="space-y-4">
-              <h3 className="text-lg font-medium text-gray-900">Inner Circle – $10,000</h3>
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">12 Months RFA Inner Circle Access</label>
-                  <textarea
-                    value={formData.offers.innerCircle.innerCircleAccess}
-                    onChange={(e) => updateNestedField(['offers', 'innerCircle', 'innerCircleAccess'], e.target.value)}
-                    rows={3}
-                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
-                    placeholder="Describe Inner Circle access"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Access to Our Suite of Video Courses</label>
-                  <textarea
-                    value={formData.offers.innerCircle.accessToVideoCourses}
-                    onChange={(e) => updateNestedField(['offers', 'innerCircle', 'accessToVideoCourses'], e.target.value)}
-                    rows={3}
-                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
-                    placeholder="Describe access to video courses"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Access to All Inner Circle Replays</label>
-                  <textarea
-                    value={formData.offers.innerCircle.accessToReplays}
-                    onChange={(e) => updateNestedField(['offers', 'innerCircle', 'accessToReplays'], e.target.value)}
-                    rows={3}
-                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
-                    placeholder="Describe access to replays"
-                  />
-                </div>
-              </div>
-            </div>
+            ))}
+            
+            <button
+              type="button"
+              onClick={(e) => {
+                e.preventDefault()
+                e.stopPropagation()
+                addOffer()
+              }}
+              className="w-full px-4 py-3 text-purple-600 border-2 border-dashed border-purple-300 rounded-lg hover:bg-purple-50 hover:border-purple-400 transition-colors"
+            >
+              + Add New Offer
+            </button>
           </div>
         </div>
 
@@ -941,7 +863,11 @@ export function BrandForm({ onSuccess }: BrandFormProps) {
                 ))}
                 <button
                   type="button"
-                  onClick={() => addArrayItem(['clientAssets', 'testimonialsCaseStudies', 'ecommerce'])}
+                  onClick={(e) => {
+                    e.preventDefault()
+                    e.stopPropagation()
+                    addArrayItem(['clientAssets', 'testimonialsCaseStudies', 'ecommerce'])
+                  }}
                   className="px-4 py-2 text-purple-600 border border-purple-300 rounded-lg hover:bg-purple-50"
                 >
                   Add Ecommerce Testimonial
@@ -971,7 +897,11 @@ export function BrandForm({ onSuccess }: BrandFormProps) {
                 ))}
                 <button
                   type="button"
-                  onClick={() => addArrayItem(['clientAssets', 'testimonialsCaseStudies', 'financialServices'])}
+                  onClick={(e) => {
+                    e.preventDefault()
+                    e.stopPropagation()
+                    addArrayItem(['clientAssets', 'testimonialsCaseStudies', 'financialServices'])
+                  }}
                   className="px-4 py-2 text-purple-600 border border-purple-300 rounded-lg hover:bg-purple-50"
                 >
                   Add Financial Services Testimonial
@@ -1001,7 +931,11 @@ export function BrandForm({ onSuccess }: BrandFormProps) {
                 ))}
                 <button
                   type="button"
-                  onClick={() => addArrayItem(['clientAssets', 'testimonialsCaseStudies', 'entertainment'])}
+                  onClick={(e) => {
+                    e.preventDefault()
+                    e.stopPropagation()
+                    addArrayItem(['clientAssets', 'testimonialsCaseStudies', 'entertainment'])
+                  }}
                   className="px-4 py-2 text-purple-600 border border-purple-300 rounded-lg hover:bg-purple-50"
                 >
                   Add Entertainment Testimonial
@@ -1031,7 +965,11 @@ export function BrandForm({ onSuccess }: BrandFormProps) {
                 ))}
                 <button
                   type="button"
-                  onClick={() => addArrayItem(['clientAssets', 'testimonialsCaseStudies', 'coachesConsultants'])}
+                  onClick={(e) => {
+                    e.preventDefault()
+                    e.stopPropagation()
+                    addArrayItem(['clientAssets', 'testimonialsCaseStudies', 'coachesConsultants'])
+                  }}
                   className="px-4 py-2 text-purple-600 border border-purple-300 rounded-lg hover:bg-purple-50"
                 >
                   Add Coach/Consultant Testimonial
@@ -1061,7 +999,11 @@ export function BrandForm({ onSuccess }: BrandFormProps) {
                 ))}
                 <button
                   type="button"
-                  onClick={() => addArrayItem(['clientAssets', 'testimonialsCaseStudies', 'brickMortar'])}
+                  onClick={(e) => {
+                    e.preventDefault()
+                    e.stopPropagation()
+                    addArrayItem(['clientAssets', 'testimonialsCaseStudies', 'brickMortar'])
+                  }}
                   className="px-4 py-2 text-purple-600 border border-purple-300 rounded-lg hover:bg-purple-50"
                 >
                   Add Brick & Mortar Testimonial
