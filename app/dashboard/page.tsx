@@ -30,6 +30,7 @@ import { ProtectedRoute } from "@/components/protected-route"
 import { API_ENDPOINTS, getAuthHeaders } from "@/lib/api-config"
 import { Toast } from "@/components/ui/toast"
 import { ContentViewer } from "@/components/content-viewer"
+import { useSidebarState } from "@/lib/sidebar-state-context"
 
 // Helper function to format time ago
 function formatTimeAgo(date: Date): string {
@@ -422,13 +423,26 @@ export default function Dashboard() {
   const [activeTab, setActiveTab] = React.useState<'files' | 'links' | 'transcripts'>('files')
   const [selectedAgent, setSelectedAgent] = React.useState("")
   
+  // Get sidebar state updaters
+  const {
+    updateAgents,
+    updateSelectedAgent,
+    updateChatHistory,
+    updateCurrentChatSession,
+    updateIsLoadingAgents,
+    updateIsLoadingChatHistory,
+    setActionRefs
+  } = useSidebarState()
+  
+  
   // Memoize the setSelectedAgent function to prevent unnecessary re-renders
   const handleSelectAgent = React.useCallback((agentName: string) => {
     // Prevent unnecessary re-renders if the same agent is selected
     if (selectedAgent !== agentName) {
       setSelectedAgent(agentName)
+      updateSelectedAgent(agentName)
     }
-  }, [selectedAgent])
+  }, [selectedAgent, updateSelectedAgent])
   const [agents, setAgents] = React.useState<any[]>([])
   const [isLoadingAgents, setIsLoadingAgents] = React.useState(false)
   const [chatStarted, setChatStarted] = React.useState(false)
@@ -594,6 +608,7 @@ export default function Dashboard() {
   const fetchAgents = async () => {
     try {
       setIsLoadingAgents(true)
+      updateIsLoadingAgents(true)
       const accessToken = authService.getAuthToken()
       
       if (!accessToken) {
@@ -690,10 +705,12 @@ export default function Dashboard() {
       })))
       
       setAgents(transformedAgents)
+      updateAgents(transformedAgents)
       
       // Set the first agent as selected if none is selected
       if (transformedAgents.length > 0 && !selectedAgent) {
         setSelectedAgent(transformedAgents[0].name)
+        updateSelectedAgent(transformedAgents[0].name)
       } else if (transformedAgents.length === 0) {
         // Fallback: If no agents loaded, show default agents
         console.log('No agents loaded, showing fallback agents')
@@ -730,8 +747,9 @@ export default function Dashboard() {
       }
       
       setAgents([])
-    } finally {
-      setIsLoadingAgents(false)
+      } finally {
+        setIsLoadingAgents(false)
+        updateIsLoadingAgents(false)
       
       // Fallback: If no agents loaded, show default agents
       // Note: This fallback is now handled in the main logic above
@@ -876,6 +894,16 @@ export default function Dashboard() {
           localStorage.removeItem('chat_started')
           localStorage.removeItem('chat_messages')
         }
+      }
+      
+      // Auto-refresh chat history to ensure consistency with server
+      console.log('🔄 Auto-refreshing chat history after deletion...')
+      try {
+        await fetchChatHistory()
+        console.log('✅ Chat history refreshed successfully after deletion')
+      } catch (refreshError) {
+        console.error('❌ Error refreshing chat history after deletion:', refreshError)
+        // Don't show error toast for refresh failure as deletion was successful
       }
       
       showToast('Chat session deleted successfully', 'success')
@@ -1287,6 +1315,7 @@ export default function Dashboard() {
     
     try {
       setIsLoadingChatHistory(true)
+      updateIsLoadingChatHistory(true)
       const accessToken = authService.getAuthToken()
       
       if (!accessToken) {
@@ -1367,11 +1396,13 @@ export default function Dashboard() {
       
       // Update chat history state
       setChatHistory(chatHistoryData)
+      updateChatHistory(chatHistoryData)
       
       // Set current chat session if none is set and we have history
       if (!currentChatSession && chatHistoryData.length > 0) {
         const latestSession = chatHistoryData[0] // Assuming newest first
         setCurrentChatSession(latestSession.session_id)
+        updateCurrentChatSession(latestSession.session_id)
         console.log('🎯 Set current chat session to latest:', latestSession.session_id)
       }
       
@@ -1387,8 +1418,30 @@ export default function Dashboard() {
       return null
     } finally {
       setIsLoadingChatHistory(false)
+      updateIsLoadingChatHistory(false)
     }
   }
+
+  // Set up action refs for sidebar
+  React.useEffect(() => {
+    setActionRefs({
+      onSelectAgent: handleSelectAgent,
+      onRefreshAgents: refreshAgents,
+      onLoadChatSession: loadChatSession,
+      onRefreshChatHistory: fetchChatHistory,
+      onDeleteChatSession: deleteChatSession,
+      onStartNewChat: () => {
+        setChatStarted(false)
+        setMessages([])
+        setSessionId('')
+        if (typeof window !== 'undefined') {
+          localStorage.removeItem('chat_session_id')
+          localStorage.removeItem('chat_started')
+          localStorage.removeItem('chat_messages')
+        }
+      }
+    })
+  }, [setActionRefs, handleSelectAgent, refreshAgents, loadChatSession, fetchChatHistory, deleteChatSession])
 
   // Send message to chat window webhook
   const sendMessageToChatWindow = async (userPrompt: string) => {
@@ -2308,53 +2361,22 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50/20 text-slate-800 font-sans">
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50/20 text-slate-800 font-sans">
       {!chatStarted ? (
-        // Initial interface with chat history sidebar
+        // Initial interface without separate sidebar
         <div className="flex h-screen">
-          {/* Left Sidebar - Chat History */}
-          <motion.div 
-            className="hidden lg:flex flex-col bg-white border-r border-gray-200 w-80 shadow-sm"
-            initial={{ x: -320 }}
-            animate={{ x: 0 }}
-            transition={{ duration: 0.3 }}
-          >
-            <div className="flex-1 overflow-y-auto">
-              <LeftSidebar 
-                agents={agents} 
-                conversations={conversations} 
-                selectedAgent={selectedAgent} 
-                onSelectAgent={handleSelectAgent} 
-                isLoadingAgents={isLoadingAgents} 
-                onRefreshAgents={refreshAgents}
-                setChatStarted={setChatStarted}
-                setMessages={setMessages}
-                setSessionId={setSessionId}
-                initiateNewChat={initiateNewChat}
-                messages={messages}
-                chatStarted={chatStarted}
-                chatHistory={chatHistory}
-                isLoadingChatHistory={isLoadingChatHistory}
-                currentChatSession={currentChatSession}
-                onLoadChatSession={loadChatSession}
-                onRefreshChatHistory={fetchChatHistory}
-                onDeleteChatSession={deleteChatSession}
-              />
-            </div>
-          </motion.div>
-
           {/* Main Content - Initial Interface */}
           <div className="flex-1 flex flex-col min-w-0">
             {/* Initial Interface Content */}
             <div className="flex-1">
-        <InitialInterface 
+        <InitialInterface
           agents={agents}
           selectedAgent={selectedAgent}
           onSelectAgent={handleSelectAgent}
           onStartChatting={handleStartChatting}
           onRefreshAgents={refreshAgents}
           isLoadingAgents={isLoadingAgents}
-                isStartingChat={isStartingChat}
+          isStartingChat={isStartingChat}
         />
             </div>
           </div>
@@ -2370,38 +2392,6 @@ export default function Dashboard() {
       {/* Chat Interface Content */}
 
       <div className="flex h-screen">
-        {/* Left Sidebar - Agents & Conversations */}
-        <motion.div 
-          className={`hidden lg:flex flex-col bg-gradient-to-b from-white via-slate-50 to-white border-r border-slate-200/60 transition-all duration-300 shadow-sm ${
-            leftPanelOpen ? 'w-80' : 'w-0'
-          }`}
-          initial={false}
-          animate={{ width: leftPanelOpen ? 320 : 0 }}
-        >
-          <div className="flex-1 overflow-y-auto">
-            <LeftSidebar 
-          agents={agents} 
-          conversations={conversations} 
-          selectedAgent={selectedAgent} 
-          onSelectAgent={handleSelectAgent} 
-          isLoadingAgents={isLoadingAgents} 
-          onRefreshAgents={refreshAgents}
-          setChatStarted={setChatStarted}
-          setMessages={setMessages}
-          setSessionId={setSessionId}
-          initiateNewChat={initiateNewChat}
-          messages={messages}
-          chatStarted={chatStarted}
-          chatHistory={chatHistory}
-          isLoadingChatHistory={isLoadingChatHistory}
-          currentChatSession={currentChatSession}
-          onLoadChatSession={loadChatSession}
-          onRefreshChatHistory={fetchChatHistory}
-          onDeleteChatSession={deleteChatSession}
-        />
-          </div>
-        </motion.div>
-
         {/* Main Chat Area */}
         <div className="flex-1 flex flex-col min-w-0 bg-gradient-to-br from-slate-50 via-white to-blue-50/30 h-full">
           <div className="flex-1 w-full h-full">
@@ -2514,7 +2504,7 @@ export default function Dashboard() {
       />
         </motion.div>
       )}
-    </div>
+      </div>
   )
 }
 
@@ -2739,8 +2729,8 @@ function LeftSidebar({
           </Button>
         </div>
         <AgentSelector 
-          agents={agents}
-          selectedAgent={selectedAgent}
+          agents={agents} 
+          selectedAgent={selectedAgent} 
           onSelectAgent={onSelectAgent}
           onOpenChange={setIsAgentSelectorOpen}
           isLoading={isLoadingAgents}
@@ -2911,14 +2901,14 @@ function MobileSidebar({ agents, conversations, chatHistory, isLoadingChatHistor
         initiateNewChat={async () => true}
         messages={[]}
         chatStarted={false}
-        chatHistory={chatHistory}
-        isLoadingChatHistory={isLoadingChatHistory}
-        currentChatSession={currentChatSession}
+          chatHistory={chatHistory}
+          isLoadingChatHistory={isLoadingChatHistory}
+          currentChatSession={currentChatSession}
         onLoadChatSession={onLoadChatSession}
         onRefreshChatHistory={onRefreshChatHistory}
         onDeleteChatSession={onDeleteChatSession}
-      />
-    </div>
+        />
+          </div>
   )
 }
 
@@ -3482,7 +3472,7 @@ function LinksTab({ mediaItems, onDelete, onRefresh, setMediaItems }: any) {
           {isScraping ? 'Scraping...' : 'Add'}
         </Button>
 
-      </div>
+            </div>
       
       <div className="space-y-2">
         {webpageItems.length > 0 ? (
@@ -3498,7 +3488,7 @@ function LinksTab({ mediaItems, onDelete, onRefresh, setMediaItems }: any) {
                 <p className="text-xs text-[#929AAB]">
                   Webpage Content
                 </p>
-              </div>
+          </div>
               <div className="flex items-center space-x-2">
                 <Button
                   variant="ghost"
@@ -3513,7 +3503,7 @@ function LinksTab({ mediaItems, onDelete, onRefresh, setMediaItems }: any) {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                   </svg>
                 </Button>
-              </div>
+        </div>
             </div>
           ))
         ) : (
@@ -3757,9 +3747,9 @@ function YouTubeTab({ mediaItems, onDelete, onRefresh, setMediaItems }: any) {
             </div>
             <p className="text-sm text-gray-600 mb-2">No YouTube transcriptions yet</p>
             <p className="text-xs text-gray-500">Paste a YouTube URL to transcribe the video</p>
-          </div>
-        )}
-      </div>
+        </div>
+      )}
+    </div>
     </div>
   )
 }

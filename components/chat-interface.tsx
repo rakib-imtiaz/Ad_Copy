@@ -2,9 +2,8 @@
 
 import * as React from "react"
 import {
-  Send, User, Download, Copy, ThumbsUp,
-  ThumbsDown, RotateCcw, Zap, Star, MessageSquare,
-  Pin, Trash2, Edit, CheckCircle, Plus
+  Send, User, Download, Copy, RotateCcw, Zap, Star, MessageSquare,
+  Pin, Trash2, Edit, CheckCircle, Plus, Mic, Volume2, Bot
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -76,9 +75,28 @@ export function ChatInterface({
     }
   }
 
-  const handleCopyToClipboard = (content: string) => {
-    navigator.clipboard.writeText(content)
-    // TODO: Show toast notification
+  const handleCopyToClipboard = async (content: string) => {
+    try {
+      await navigator.clipboard.writeText(content)
+      // Show success feedback - you can replace this with a proper toast system
+      console.log('✅ Content copied to clipboard')
+      // For now, we'll use a simple visual feedback
+      // In a real app, you'd want to show a toast notification here
+    } catch (err) {
+      console.error('❌ Failed to copy content:', err)
+      // Fallback for older browsers
+      try {
+        const textArea = document.createElement('textarea')
+        textArea.value = content
+        document.body.appendChild(textArea)
+        textArea.select()
+        document.execCommand('copy')
+        document.body.removeChild(textArea)
+        console.log('✅ Content copied to clipboard (fallback)')
+      } catch (fallbackErr) {
+        console.error('❌ Fallback copy also failed:', fallbackErr)
+      }
+    }
   }
 
   const formatTimestamp = (timestamp: Date | string) => {
@@ -126,12 +144,16 @@ export function ChatInterface({
           return (
           <div key={msg.id} className={`flex ${isUser ? 'justify-end' : 'justify-start'}`}>
             <div className={`max-w-[80%] sm:max-w-[70%] ${isUser ? 'ml-3 sm:ml-12' : 'mr-3 sm:mr-12'}`}>
-              <div className={`flex items-start space-x-2 sm:space-x-3 ${isUser ? 'flex-row-reverse space-x-reverse' : ''}`}>
+              <div className={`flex items-start ${isUser ? 'flex-row-reverse space-x-reverse space-x-3 sm:space-x-4' : 'space-x-3 sm:space-x-4'}`}>
                 <Avatar className="h-7 w-7 sm:h-9 sm:w-9 flex-shrink-0 shadow-md">
                   {isUser ? (
-                    <AvatarFallback className="bg-gradient-to-br from-blue-500 to-blue-600 text-white font-semibold text-xs sm:text-sm">U</AvatarFallback>
+                    <AvatarFallback className="bg-gradient-to-br from-blue-500 to-blue-600 text-white font-semibold text-xs sm:text-sm flex items-center justify-center">
+                      <User className="h-3 w-3 sm:h-4 sm:w-4" />
+                    </AvatarFallback>
                   ) : (
-                    <AvatarFallback className="bg-gradient-to-br from-[#1ABC9C] to-emerald-500 text-white font-semibold text-xs sm:text-sm">AI</AvatarFallback>
+                    <AvatarFallback className="bg-gradient-to-br from-[#1ABC9C] to-emerald-500 text-white font-semibold text-xs sm:text-sm flex items-center justify-center">
+                      <Bot className="h-3 w-3 sm:h-4 sm:w-4" />
+                    </AvatarFallback>
                   )}
                 </Avatar>
                 
@@ -189,20 +211,6 @@ export function ChatInterface({
                         >
                           <Copy className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
                         </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="h-5 w-5 sm:h-6 sm:w-6 p-0 hover:text-green-500 hover:bg-green-50 rounded-lg"
-                        >
-                          <ThumbsUp className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="h-5 w-5 sm:h-6 sm:w-6 p-0 hover:text-red-500 hover:bg-red-50 rounded-lg"
-                        >
-                          <ThumbsDown className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
-                        </Button>
                       </div>
                     )}
                   </div>
@@ -215,9 +223,11 @@ export function ChatInterface({
         {isLoading && (
           <div className="flex justify-start">
             <div className="max-w-[80%] sm:max-w-[70%] mr-3 sm:mr-12">
-              <div className="flex items-start space-x-2 sm:space-x-3">
+              <div className="flex items-start space-x-3 sm:space-x-4">
                 <Avatar className="h-7 w-7 sm:h-9 sm:w-9 shadow-md">
-                  <AvatarFallback className="bg-gradient-to-br from-[#1ABC9C] to-emerald-500 text-white font-semibold text-xs sm:text-sm">AI</AvatarFallback>
+                  <AvatarFallback className="bg-gradient-to-br from-[#1ABC9C] to-emerald-500 text-white font-semibold text-xs sm:text-sm flex items-center justify-center">
+                    <Bot className="h-3 w-3 sm:h-4 sm:w-4" />
+                  </AvatarFallback>
                 </Avatar>
                 <div className="bg-white border border-slate-200 text-slate-800 p-2.5 sm:p-3 rounded-2xl shadow-sm">
                   <div className="flex space-x-1">
@@ -239,42 +249,55 @@ export function ChatInterface({
       {/* Input Area */}
       <div className="p-4 sm:p-6 bg-white/95 backdrop-blur-sm border-t border-slate-200 sticky bottom-0 left-0 right-0 z-10">
         <div className="max-w-4xl mx-auto">
-          <div className="flex items-end space-x-3 sm:space-x-4">
-            <div className="flex-1">
+          {/* ChatGPT-style input bar */}
+          <div className="relative">
+            <div className="flex items-center bg-white border border-gray-300 rounded-full px-4 py-3 shadow-sm hover:shadow-md transition-shadow focus-within:border-gray-300 focus-within:shadow-md focus-within:outline-none">
+              {/* Plus icon on the left */}
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={onOpenMediaSelector}
+                className="rounded-full p-2 mr-3 hover:bg-gray-100 text-gray-600"
+                title="Add attachment"
+              >
+                <Plus className="h-4 w-4" />
+              </Button>
+              
+              {/* Input field */}
               <Input
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
                 onKeyPress={handleKeyPress}
-                placeholder={currentAgent || selectedAgent ? `Ask ${currentAgent?.name || selectedAgent} to create ad copy...` : "Select an agent to start chatting..."}
+                placeholder="Ask anything"
                 disabled={!currentAgent && !selectedAgent || isLoading}
-                className="bg-white border-2 border-slate-200 text-slate-800 placeholder:text-slate-500 focus:border-[#1ABC9C] focus:ring-2 focus:ring-[#1ABC9C]/20 rounded-2xl px-4 sm:px-6 py-3 sm:py-4 text-sm sm:text-base shadow-sm"
+                className="flex-1 border-0 bg-transparent text-gray-800 placeholder:text-gray-500 focus:ring-0 focus:outline-none focus:border-0 focus-visible:ring-0 focus-visible:outline-none text-sm"
               />
+              
+              {/* Voice icons on the right */}
+              <div className="flex items-center space-x-2 ml-3">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="rounded-full p-2 hover:bg-gray-100 text-gray-600"
+                  title="Voice input"
+                >
+                  <Mic className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="rounded-full p-2 hover:bg-gray-100 text-gray-600"
+                  title="Voice output"
+                >
+                  <Volume2 className="h-4 w-4" />
+                </Button>
+              </div>
             </div>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={onOpenMediaSelector}
-              className={`rounded-xl p-2 sm:p-3 relative ${
-                selectedMediaCount > 0 
-                  ? 'text-blue-600 hover:text-blue-700 hover:bg-blue-50' 
-                  : 'text-slate-600 hover:text-slate-800 hover:bg-slate-100'
-              }`}
-              title="Select media for chat context"
-            >
-              <Plus className="h-4 w-4 sm:h-5 sm:w-5" />
-              {selectedMediaCount > 0 && (
-                <span className="absolute -top-1 -right-1 bg-blue-600 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-medium">
-                  {selectedMediaCount}
-                </span>
-              )}
-            </Button>
-            <Button
-              onClick={handleSend}
-              disabled={!message.trim() || (!currentAgent && !selectedAgent) || isLoading}
-              className="bg-gradient-to-r from-[#1ABC9C] to-emerald-500 hover:from-[#1ABC9C]/90 hover:to-emerald-500/90 text-white rounded-xl px-4 sm:px-6 py-3 shadow-lg hover:shadow-xl transition-all duration-200"
-            >
-              <Send className="h-4 w-4 sm:h-5 sm:w-5" />
-            </Button>
+            
+            {/* Disclaimer text */}
+            <p className="text-xs text-gray-600 mt-2 text-center">
+              AI can make mistakes. Check important info.
+            </p>
           </div>
           
           {!currentAgent && !selectedAgent && (
