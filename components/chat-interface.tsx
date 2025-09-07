@@ -159,8 +159,11 @@ export function ChatInterface({
                       ? 'bg-gradient-to-br from-blue-500 to-blue-600 text-white' 
                       : 'bg-white border border-slate-200 text-slate-800'
                   }`}>
-                    <div className="break-words overflow-hidden space-y-2">
-                      <MarkdownRenderer content={msg.content} />
+                    <div className={`break-words overflow-hidden space-y-2 ${isUser ? 'text-white' : ''}`}>
+                      <MarkdownRenderer 
+                        content={msg.content} 
+                        className={isUser ? 'prose-invert [&_*]:text-white [&_p]:text-white [&_strong]:text-white [&_em]:text-white [&_li]:text-white [&_ul]:text-white [&_ol]:text-white [&_h1]:text-white [&_h2]:text-white [&_h3]:text-white [&_h4]:text-white' : ''}
+                      />
                     </div>
                     
                     {/* Generated Copy Preview */}
