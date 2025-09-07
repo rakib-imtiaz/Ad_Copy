@@ -16,27 +16,17 @@ export default function KnowledgeBasePage() {
   const [uploadedFiles, setUploadedFiles] = React.useState<File[]>([])
   const [uploadProgress, setUploadProgress] = React.useState<{[key: string]: number}>({})
   const [userProfile, setUserProfile] = React.useState<any>(null)
-  const [isLoadingProfile, setIsLoadingProfile] = React.useState(false)
-  const [referralCode, setReferralCode] = React.useState('')
-  const [isApplyingReferral, setIsApplyingReferral] = React.useState(false)
   const [isKnowledgeViewerOpen, setIsKnowledgeViewerOpen] = React.useState(false)
-  
-  // Change password state
-  const [currentPassword, setCurrentPassword] = React.useState('')
-  const [newPassword, setNewPassword] = React.useState('')
-  const [isChangingPassword, setIsChangingPassword] = React.useState(false)
-  const [passwordError, setPasswordError] = React.useState('')
-  const [passwordSuccess, setPasswordSuccess] = React.useState('')
-
-  // Delete user state
-  const [isDeletingUser, setIsDeletingUser] = React.useState(false)
-  const [showDeleteConfirm, setShowDeleteConfirm] = React.useState(false)
-  const [deleteError, setDeleteError] = React.useState('')
 
   // Debug: Monitor userProfile state changes
   React.useEffect(() => {
     console.log('🔄 userProfile state changed:', userProfile)
   }, [userProfile])
+
+  // Load user profile for storage information
+  React.useEffect(() => {
+    fetchUserProfile()
+  }, [])
 
   const handleSave = async () => {
     setIsSaving(true)
@@ -44,12 +34,11 @@ export default function KnowledgeBasePage() {
     setIsSaving(false)
   }
 
-  // Function to fetch user profile from webhook
+  // Function to fetch user profile from webhook (for storage info)
   const fetchUserProfile = async () => {
     console.log('=== FETCH USER PROFILE CLIENT START ===')
     console.log('Timestamp:', new Date().toISOString())
     
-    setIsLoadingProfile(true)
     try {
       console.log('🔍 STEP 1: Getting current user and access token...')
       
@@ -57,18 +46,8 @@ export default function KnowledgeBasePage() {
       const currentUser = authService.getCurrentUser()
       const accessToken = authService.getAuthToken()
       
-      console.log('👤 CURRENT USER:')
-      console.log(JSON.stringify(currentUser, null, 2))
-      
-      console.log('🔐 ACCESS TOKEN:')
-      console.log('Token:', accessToken ? `${accessToken.substring(0, 20)}...` : 'NULL')
-      console.log('Token length:', accessToken?.length || 0)
-      console.log('Is authenticated:', authService.isAuthenticated())
-      
       if (!currentUser || !accessToken) {
         console.log('❌ ERROR: No user or access token available')
-        console.log('Current user exists:', !!currentUser)
-        console.log('Access token exists:', !!accessToken)
         return
       }
 
@@ -77,17 +56,6 @@ export default function KnowledgeBasePage() {
         user_email: currentUser.email,
         user_id: currentUser.id
       }
-      
-      console.log('📤 STEP 2: Preparing request data...')
-      console.log('Request data:', JSON.stringify(requestData, null, 2))
-      
-      console.log('🌐 STEP 3: Making API request...')
-      console.log('URL: /api/fetch-user-profile')
-      console.log('Method: POST')
-      console.log('Headers:', {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${accessToken.substring(0, 20)}...`
-      })
       
       const response = await fetch('/api/fetch-user-profile', {
         method: 'POST',
@@ -98,54 +66,20 @@ export default function KnowledgeBasePage() {
         body: JSON.stringify(requestData)
       })
 
-      console.log('📡 STEP 4: Response received...')
-      console.log('Response status:', response.status)
-      console.log('Response status text:', response.statusText)
-      console.log('Response ok:', response.ok)
-      
-      // Log response headers
-      console.log('📋 RESPONSE HEADERS:')
-      const responseHeaders: Record<string, string> = {}
-      response.headers.forEach((value, key) => {
-        responseHeaders[key] = value
-      })
-      console.log(JSON.stringify(responseHeaders, null, 2))
-
       if (response.ok) {
-        console.log('✅ STEP 5: Parsing success response...')
         try {
           const result = await response.json()
-          console.log('Raw response:', JSON.stringify(result, null, 2))
           
           if (result.success) {
-            console.log('🎉 STEP 6: Profile fetch successful!')
-            console.log('Profile data:', JSON.stringify(result.data, null, 2))
-            console.log('💰 Current credit in profile:', result.data?.total_credit)
+            console.log('🎉 Profile fetch successful!')
             setUserProfile(result.data)
-            console.log('✅ User profile state updated with data:', result.data)
-          } else {
-            console.log('❌ STEP 6: Profile fetch failed - API returned error')
-            console.log('Error details:', JSON.stringify(result.error, null, 2))
           }
         } catch (jsonError) {
           console.error('❌ Failed to parse JSON response:', jsonError)
-          try {
-            const errorText = await response.text()
-            console.error('Response text:', errorText)
-          } catch (textError) {
-            console.error('Could not read response text:', textError)
-          }
         }
-      } else {
-        console.log('❌ STEP 5: HTTP error response')
-        console.log('Status:', response.status)
-        console.log('Status text:', response.statusText)
       }
     } catch (e) {
-      console.error('❌ STEP 4: Exception during API call:', e)
-    } finally {
-      setIsLoadingProfile(false)
-      console.log('=== FETCH USER PROFILE CLIENT END ===')
+      console.error('❌ Exception during API call:', e)
     }
   }
 
@@ -475,231 +409,6 @@ export default function KnowledgeBasePage() {
 
   const handleTabChange = (tab: string) => {
     setActiveTab(tab)
-    if (tab === 'profile') {
-      fetchUserProfile()
-    }
-  }
-
-  // Function to apply referral code
-  const handleApplyReferralCode = async () => {
-    if (!referralCode.trim()) {
-      alert('Please enter a referral code')
-      return
-    }
-
-    setIsApplyingReferral(true)
-    try {
-      console.log('=== APPLY REFERRAL CODE CLIENT START ===')
-      console.log('Timestamp:', new Date().toISOString())
-      
-      // Get access token
-      const accessToken = authService.getAuthToken()
-      if (!accessToken) {
-        console.log('❌ No access token available')
-        alert('Authentication required. Please log in again.')
-        return
-      }
-
-      console.log('🔍 STEP 1: Preparing request data...')
-      const requestData = {
-        referralCode: referralCode.trim(),
-        accessToken
-      }
-      console.log('Request data:', JSON.stringify({
-        ...requestData,
-        accessToken: `${accessToken.substring(0, 20)}...`
-      }, null, 2))
-
-      console.log('🌐 STEP 2: Making API request...')
-      console.log('URL: /api/referral/apply')
-      console.log('Method: POST')
-
-      const response = await fetch('/api/referral/apply', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(requestData)
-      })
-
-      console.log('📡 STEP 3: Response received...')
-      console.log('Response status:', response.status)
-      console.log('Response status text:', response.statusText)
-      console.log('Response ok:', response.ok)
-
-      if (response.ok) {
-        try {
-          const result = await response.json()
-          console.log('✅ STEP 4: Referral code applied successfully!')
-          console.log('Response data:', JSON.stringify(result, null, 2))
-          
-          if (result.success || result.message === "credit has been added" || result.message === "Workflow was started") {
-            alert('Referral code applied successfully! Credits will be added to your account shortly.')
-            setReferralCode('') // Clear the input
-            // Refresh user profile to show updated credits with a small delay
-            if (activeTab === 'profile') {
-              setTimeout(() => {
-                console.log('🔄 Refreshing user profile after referral code application...')
-                fetchUserProfile()
-              }, 2000) // Wait 2 seconds for the credit to be updated in the database
-            }
-          } else {
-            const errorMessage = result.error?.message || 'Unknown error'
-            alert(`Failed to apply referral code: ${errorMessage}`)
-          }
-        } catch (jsonError) {
-          console.error('Failed to parse JSON response:', jsonError)
-          try {
-            const errorText = await response.text()
-            console.error('Response text:', errorText)
-          } catch (textError) {
-            console.error('Could not read response text:', textError)
-          }
-          alert('Failed to apply referral code - invalid response format')
-        }
-      } else {
-        const errorText = await response.text()
-        console.log('❌ STEP 4: HTTP error response')
-        console.log('Error details:', errorText)
-        
-        // Try to parse the error response for better error messages
-        let errorMessage = `Failed to apply referral code: ${response.status} ${response.statusText}`
-        
-        try {
-          const errorData = JSON.parse(errorText)
-          if (errorData.error && errorData.error.message) {
-            errorMessage = errorData.error.message
-          } else if (errorData.message) {
-            errorMessage = errorData.message
-          }
-        } catch (parseError) {
-          // If we can't parse JSON, use the raw text if it's meaningful
-          if (errorText.trim() && errorText.length < 200) {
-            errorMessage = errorText
-          }
-        }
-        
-        alert(errorMessage)
-      }
-    } catch (error) {
-      console.error('❌ Exception during referral code application:', error)
-      alert('An error occurred while applying the referral code. Please try again.')
-    } finally {
-      setIsApplyingReferral(false)
-      console.log('=== APPLY REFERRAL CODE CLIENT END ===')
-    }
-  }
-
-  const handleChangePassword = async () => {
-    setPasswordError('')
-    setPasswordSuccess('')
-    
-    if (!currentPassword || !newPassword) {
-      setPasswordError('Please fill in all fields')
-      return
-    }
-    
-    if (newPassword.length < 6) {
-      setPasswordError('New password must be at least 6 characters long')
-      return
-    }
-    
-    setIsChangingPassword(true)
-    try {
-      const accessToken = authService.getAuthToken()
-      if (!accessToken) {
-        setPasswordError('Authentication token not found')
-        return
-      }
-      
-      const response = await fetch('/api/user/change-password', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${accessToken}`,
-        },
-        body: JSON.stringify({
-          old_password: currentPassword,
-          new_password: newPassword
-        })
-      })
-      
-      try {
-        const data = await response.json()
-        
-        if (data.success) {
-          setPasswordSuccess('Password changed successfully!')
-          // Reset form
-          setCurrentPassword('')
-          setNewPassword('')
-        } else {
-          setPasswordError(data.error?.message || 'Failed to change password')
-        }
-      } catch (jsonError) {
-        console.error('Failed to parse JSON response:', jsonError)
-        try {
-          const errorText = await response.text()
-          console.error('Response text:', errorText)
-        } catch (textError) {
-          console.error('Could not read response text:', textError)
-        }
-        setPasswordError('Failed to change password - invalid response format')
-      }
-    } catch (error: any) {
-      setPasswordError('Network error. Please try again.')
-    } finally {
-      setIsChangingPassword(false)
-    }
-  }
-
-  const handleDeleteUser = async () => {
-    setIsDeletingUser(true)
-    setDeleteError('')
-    
-    try {
-      const accessToken = authService.getAuthToken()
-      if (!accessToken) {
-        setDeleteError('Authentication token not found')
-        return
-      }
-
-      const currentUser = authService.getCurrentUser()
-      if (!currentUser) {
-        setDeleteError('User information not found')
-        return
-      }
-
-      console.log('🗑️ Client - Deleting user ID:', currentUser.id, 'Email:', currentUser.email)
-      console.log('🔑 Client - Token exists:', !!accessToken)
-
-      const response = await fetch('/api/admin/delete-user', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          userId: currentUser.id,
-          email: currentUser.email,
-          accessToken: accessToken,
-        }),
-      })
-
-      if (!response.ok) {
-        const error = await response.json()
-        throw new Error(error.error || 'Failed to delete user')
-      }
-
-      console.log('✅ User deleted successfully')
-      
-      // Sign out the user after successful deletion
-      authService.signOut()
-      
-    } catch (error) {
-      console.error('❌ Error deleting user:', error)
-      setDeleteError(`Failed to delete user: ${error instanceof Error ? error.message : 'Unknown error'}`)
-    } finally {
-      setIsDeletingUser(false)
-    }
   }
 
   console.log('🔄 Knowledge base component rendering...')
@@ -763,16 +472,6 @@ export default function KnowledgeBasePage() {
                 }`}
               >
                 Structured Form
-              </button>
-              <button
-                onClick={() => handleTabChange('profile')}
-                className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
-                  activeTab === 'profile'
-                    ? 'bg-white text-purple-600 shadow-sm'
-                    : 'text-gray-600 hover:text-gray-900'
-                }`}
-              >
-                User Profile
               </button>
             </div>
 
@@ -932,266 +631,6 @@ export default function KnowledgeBasePage() {
               </div>
             )}
 
-            {activeTab === 'profile' && (
-              <div className="space-y-8">
-                {/* User Profile Section */}
-                <div className="bg-white rounded-xl border border-gray-200 shadow-sm">
-                  <div className="p-6 border-b border-gray-200">
-                    <h2 className="text-xl font-semibold text-gray-900">User Profile</h2>
-                    <p className="text-gray-600 mt-1">Manage your account information and settings</p>
-                  </div>
-                  <div className="p-6 space-y-6">
-                    {isLoadingProfile ? (
-                      <div className="flex items-center justify-center py-8">
-                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
-                        <span className="ml-3 text-gray-600">Loading profile...</span>
-                      </div>
-                    ) : (
-                      <>
-                        {/* Profile Information */}
-                        <div className="grid grid-cols-1 gap-6">
-                          <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">User Email</label>
-                            <div className="flex gap-2">
-                              <input 
-                                type="email" 
-                                value={userProfile?.email || ""}
-                                placeholder="Not set"
-                                className="flex-1 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 text-black"
-                                readOnly
-                              />
-                              <button className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg" disabled>
-                                Update
-                              </button>
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* Account Details */}
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                          <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">Available Credit</label>
-                            <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                              <span className="text-2xl font-bold text-blue-600">{userProfile?.total_credit || "0.00"}</span>
-                              <span className="text-sm text-blue-600 ml-2">tokens</span>
-                            </div>
-                          </div>
-                          <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">Signup Date</label>
-                            <div className="p-3 bg-gray-50 border border-gray-200 rounded-lg">
-                              <span className="text-gray-900">
-                                {userProfile?.created_at 
-                                  ? new Date(userProfile.created_at).toLocaleDateString('en-US', {
-                                      year: 'numeric',
-                                      month: 'long',
-                                      day: 'numeric'
-                                    })
-                                  : "Not available"
-                                }
-                              </span>
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* Storage Information */}
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                          <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">Knowledge Base Storage</label>
-                            <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
-                              <div className="flex items-center justify-between">
-                                <span className="text-lg font-semibold text-green-600">
-                                  {userProfile?.kb_storage || "0"} MB
-                                </span>
-                                <span className="text-sm text-green-600">
-                                  of {userProfile?.max_kb_storage_mb || "500"} MB
-                                </span>
-                              </div>
-                              <div className="w-full bg-green-200 rounded-full h-2 mt-2">
-                                <div 
-                                  className="bg-green-600 h-2 rounded-full transition-all duration-300"
-                                  style={{ 
-                                    width: `${Math.min(100, ((userProfile?.kb_storage || 0) / (userProfile?.max_kb_storage_mb || 500)) * 100)}%` 
-                                  }}
-                                ></div>
-                              </div>
-                            </div>
-                          </div>
-                          <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">Media Storage</label>
-                            <div className="p-3 bg-purple-50 border border-purple-200 rounded-lg">
-                              <div className="flex items-center justify-between">
-                                <span className="text-lg font-semibold text-purple-600">
-                                  {userProfile?.media_storage || "0"} MB
-                                </span>
-                                <span className="text-sm text-purple-600">
-                                  of {userProfile?.max_media_storage_mb || "1000"} MB
-                                </span>
-                              </div>
-                              <div className="w-full bg-purple-200 rounded-full h-2 mt-2">
-                                <div 
-                                  className="bg-purple-600 h-2 rounded-full transition-all duration-300"
-                                  style={{ 
-                                    width: `${Math.min(100, ((userProfile?.media_storage || 0) / (userProfile?.max_media_storage_mb || 1000)) * 100)}%` 
-                                  }}
-                                ></div>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* Purchase Credit */}
-                        <div className="border-t border-gray-200 pt-6">
-                          <h3 className="text-lg font-medium text-gray-900 mb-4">Purchase Credit</h3>
-                          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                            <div className="border border-gray-200 rounded-lg p-4 text-center hover:border-purple-400 transition-colors cursor-pointer">
-                              <div className="text-2xl font-bold text-purple-600 mb-2">$10</div>
-                              <div className="text-sm text-gray-600 mb-2">10,000 tokens</div>
-                              <button className="w-full bg-purple-600 hover:bg-purple-700 text-white px-3 py-2 rounded-lg text-sm">
-                                Purchase
-                              </button>
-                            </div>
-                            <div className="border border-gray-200 rounded-lg p-4 text-center hover:border-purple-400 transition-colors cursor-pointer">
-                              <div className="text-2xl font-bold text-purple-600 mb-2">$25</div>
-                              <div className="text-sm text-gray-600 mb-2">30,000 tokens</div>
-                              <button className="w-full bg-purple-600 hover:bg-purple-700 text-white px-3 py-2 rounded-lg text-sm">
-                                Purchase
-                              </button>
-                            </div>
-                            <div className="border border-gray-200 rounded-lg p-4 text-center hover:border-purple-400 transition-colors cursor-pointer">
-                              <div className="text-2xl font-bold text-purple-600 mb-2">$50</div>
-                              <div className="text-sm text-gray-600 mb-2">75,000 tokens</div>
-                              <button className="w-full bg-purple-600 hover:bg-purple-700 text-white px-3 py-2 rounded-lg text-sm">
-                                Purchase
-                              </button>
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* Password Change */}
-                        <div className="border-t border-gray-200 pt-6">
-                          <h3 className="text-lg font-medium text-gray-900 mb-4">Change Password</h3>
-                          
-                          {/* Error/Success Messages */}
-                          {passwordError && (
-                            <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
-                              <p className="text-red-600 text-sm">{passwordError}</p>
-                            </div>
-                          )}
-                          
-                          {passwordSuccess && (
-                            <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg">
-                              <p className="text-green-600 text-sm">{passwordSuccess}</p>
-                            </div>
-                          )}
-                          
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div>
-                              <label className="block text-sm font-medium text-gray-700 mb-2">Current Password</label>
-                              <input 
-                                type="password" 
-                                value={currentPassword}
-                                onChange={(e) => setCurrentPassword(e.target.value)}
-                                placeholder="Enter current password"
-                                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 text-black"
-                                disabled={isChangingPassword}
-                              />
-                            </div>
-                            <div>
-                              <label className="block text-sm font-medium text-gray-700 mb-2">New Password</label>
-                              <input 
-                                type="password" 
-                                value={newPassword}
-                                onChange={(e) => setNewPassword(e.target.value)}
-                                placeholder="Enter new password"
-                                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 text-black"
-                                disabled={isChangingPassword}
-                              />
-                            </div>
-                          </div>
-                          
-                          <div className="mt-4">
-                            <button 
-                              onClick={handleChangePassword}
-                              disabled={isChangingPassword || (!currentPassword || !newPassword)}
-                              className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-                                isChangingPassword || (!currentPassword || !newPassword)
-                                  ? 'bg-gray-400 cursor-not-allowed text-white'
-                                  : 'bg-purple-600 hover:bg-purple-700 text-white'
-                              }`}
-                            >
-                              {isChangingPassword ? 'Updating...' : 'Update Password'}
-                            </button>
-                          </div>
-                        </div>
-
-                        {/* Referral Code */}
-                        <div className="border-t border-gray-200 pt-6">
-                          <h3 className="text-lg font-medium text-gray-900 mb-4">Apply Referral Code</h3>
-                          <div className="flex gap-4">
-                            <div className="flex-1">
-                              <label className="block text-sm font-medium text-gray-700 mb-2">Referral Code</label>
-                              <input 
-                                type="text" 
-                                value={referralCode}
-                                onChange={(e) => setReferralCode(e.target.value)}
-                                placeholder="Enter referral code"
-                                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 text-black"
-                                disabled={isApplyingReferral}
-                              />
-                            </div>
-                            <div className="flex items-end">
-                              <button 
-                                onClick={handleApplyReferralCode}
-                                disabled={isApplyingReferral || !referralCode.trim()}
-                                className={`px-6 py-3 rounded-lg text-white font-medium transition-colors ${
-                                  isApplyingReferral || !referralCode.trim()
-                                    ? 'bg-gray-400 cursor-not-allowed'
-                                    : 'bg-green-600 hover:bg-green-700'
-                                }`}
-                              >
-                                {isApplyingReferral ? 'Applying...' : 'Apply Code'}
-                              </button>
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* Delete Account */}
-                        <div className="border-t border-gray-200 pt-6">
-                          <h3 className="text-lg font-medium text-gray-900 mb-4">Delete Account</h3>
-                          <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-                            <div className="flex items-start space-x-3">
-                              <div className="w-6 h-6 bg-red-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-                                <svg className="w-4 h-4 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
-                                </svg>
-                              </div>
-                              <div className="flex-1">
-                                <h4 className="text-sm font-medium text-red-800">Danger Zone</h4>
-                                <p className="text-sm text-red-700 mt-1">
-                                  Once you delete your account, there is no going back. Please be certain.
-                                </p>
-                                {deleteError && (
-                                  <div className="mt-2 p-2 bg-red-100 border border-red-300 rounded">
-                                    <p className="text-red-600 text-xs">{deleteError}</p>
-                                  </div>
-                                )}
-                                <button 
-                                  onClick={() => setShowDeleteConfirm(true)}
-                                  disabled={isDeletingUser}
-                                  className="mt-3 bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                                >
-                                  Delete My Account
-                                </button>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      </>
-                    )}
-                  </div>
-                </div>
-              </div>
-            )}
           </div>
         </div>
 
@@ -1239,54 +678,6 @@ export default function KnowledgeBasePage() {
         onClose={() => setIsKnowledgeViewerOpen(false)}
       />
 
-      {/* Delete Account Confirmation Modal */}
-      {showDeleteConfirm && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-xl p-6 max-w-md w-full mx-4">
-            <div className="flex items-center space-x-3 mb-4">
-              <div className="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
-                <svg className="text-red-600" width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
-                </svg>
-              </div>
-              <div>
-                <h3 className="text-lg font-semibold text-gray-900">Delete Account</h3>
-                <p className="text-sm text-gray-500">This action cannot be undone</p>
-              </div>
-            </div>
-            
-            <div className="text-gray-600 mb-6">
-              <p>Are you sure you want to delete your account? This will permanently remove your account and all associated data including:</p>
-              <ul className="list-disc list-inside mt-2 text-sm">
-                <li>Your profile information</li>
-                <li>All uploaded files and knowledge base</li>
-                <li>Chat history and conversations</li>
-                <li>Account credits and settings</li>
-              </ul>
-              <p className="mt-3 font-semibold text-red-600">
-                This action is irreversible!
-              </p>
-            </div>
-            
-            <div className="flex space-x-3">
-              <button
-                onClick={handleDeleteUser}
-                disabled={isDeletingUser}
-                className="flex-1 bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-              >
-                {isDeletingUser ? 'Deleting...' : 'Delete My Account'}
-              </button>
-              <button
-                onClick={() => setShowDeleteConfirm(false)}
-                disabled={isDeletingUser}
-                className="flex-1 bg-gray-200 text-gray-800 px-4 py-2 rounded-lg hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-              >
-                Cancel
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </ProtectedRoute>
   )
 }
