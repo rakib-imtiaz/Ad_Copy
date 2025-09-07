@@ -144,7 +144,8 @@ export function ChatInterface({
           return (
           <div key={msg.id} className={`flex ${isUser ? 'justify-end' : 'justify-start'}`}>
             <div className={`max-w-[80%] sm:max-w-[70%] ${isUser ? 'ml-3 sm:ml-12' : 'mr-3 sm:mr-12'}`}>
-              <div className={`flex items-start ${isUser ? 'flex-row-reverse space-x-reverse space-x-3 sm:space-x-4' : 'space-x-3 sm:space-x-4'}`}>
+              <div className={`flex items-start ${isUser ? 'flex-row-reverse' : 'space-x-3 sm:space-x-4'}`}>
+                {isUser && <div className="w-3 sm:w-4"></div>}
                 <Avatar className="h-7 w-7 sm:h-9 sm:w-9 flex-shrink-0 shadow-md">
                   {isUser ? (
                     <AvatarFallback className="bg-gradient-to-br from-blue-500 to-blue-600 text-white font-semibold text-xs sm:text-sm flex items-center justify-center">

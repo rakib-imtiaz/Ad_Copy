@@ -540,8 +540,20 @@ export default function Dashboard() {
       if (savedMessages) {
         try {
           const parsedMessages = JSON.parse(savedMessages)
-          setMessages(parsedMessages)
-          console.log('📱 Loaded saved messages from localStorage:', parsedMessages.length, 'messages')
+          // Ensure all messages have proper role assignment
+          const validatedMessages = parsedMessages.map((msg: any) => {
+            // If message has role property, keep it; otherwise assign based on type
+            if (!msg.role && msg.type) {
+              msg.role = msg.type === 'user' ? 'user' : 'assistant'
+            } else if (!msg.role && !msg.type) {
+              // Fallback: assume it's a user message if no role/type specified
+              msg.role = 'user'
+            }
+            return msg
+          })
+          setMessages(validatedMessages)
+          console.log('📱 Loaded saved messages from localStorage:', validatedMessages.length, 'messages')
+          console.log('📱 Message roles:', validatedMessages.map((m: any) => ({ id: m.id, role: m.role, type: m.type })))
         } catch (error) {
           console.error('Error parsing saved messages:', error)
         }
@@ -1007,13 +1019,32 @@ export default function Dashboard() {
       console.log('📚 Messages count:', messagesData.length)
       
       // Transform messages to match our interface
-      const transformedMessages = messagesData.map((msg: any, index: number) => ({
-        id: msg.id || `session-${sessionId}-${index}`,
-        role: msg.role || 'assistant',
-        content: msg.content || msg.message || msg.text || 'No content',
-        timestamp: msg.timestamp ? new Date(msg.timestamp).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true }) : new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true }),
-        animated: false
-      }))
+      const transformedMessages = messagesData.map((msg: any, index: number) => {
+        // Map sender field to role field
+        let role = 'assistant' // default
+        if (msg.role) {
+          role = msg.role
+        } else if (msg.sender) {
+          // Map API sender values to frontend role values
+          if (msg.sender === 'human') {
+            role = 'user'
+          } else if (msg.sender === 'ai') {
+            role = 'assistant'
+          } else if (msg.sender === 'user') {
+            role = 'user'
+          } else if (msg.sender === 'assistant') {
+            role = 'assistant'
+          }
+        }
+        
+        return {
+          id: msg.message_id || msg.id || `session-${sessionId}-${index}`,
+          role: role as 'user' | 'assistant',
+          content: msg.content || msg.message || msg.text || 'No content',
+          timestamp: msg.timestamp ? new Date(msg.timestamp).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true }) : new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true }),
+          animated: false
+        }
+      })
       
       // Update messages state
       setMessages(transformedMessages)
@@ -1550,6 +1581,7 @@ export default function Dashboard() {
       // Save messages to localStorage
       if (typeof window !== 'undefined') {
         localStorage.setItem('chat_messages', JSON.stringify(newMessages))
+        console.log('💾 Saved user message to localStorage:', userMessage.role, userMessage.content.substring(0, 50))
       }
       return newMessages
     })
@@ -1617,6 +1649,7 @@ export default function Dashboard() {
           // Save messages to localStorage
           if (typeof window !== 'undefined') {
             localStorage.setItem('chat_messages', JSON.stringify(newMessages))
+            console.log('💾 Saved AI message to localStorage:', aiMessage.role, aiMessage.content.substring(0, 50))
           }
           return newMessages
         })
