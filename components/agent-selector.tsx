@@ -73,21 +73,23 @@ export function AgentSelector({
         >
           <Card className="w-full cursor-pointer border-2 border-muted hover:border-primary/50 transition-all duration-200 shadow-sm hover:shadow-md">
             <CardContent className="p-4">
-              <div className="flex items-center space-x-4">
+              <div className="flex items-start space-x-3">
                 <div className="flex-shrink-0">
                   <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary/20 to-primary/10 flex items-center justify-center text-lg">
                     {currentAgent?.icon || "🤖"}
                   </div>
                 </div>
-                <div className="flex-1 min-w-0 text-left overflow-hidden">
-                  <div className="font-semibold text-sm text-foreground truncate">
+                <div className="flex-1 min-w-0 text-left">
+                  <div className="font-semibold text-sm text-foreground break-words">
                     {currentAgent?.name || "Select an AI Agent"}
                   </div>
                   <div className="text-xs text-muted-foreground line-clamp-2 mt-1 break-words">
                     {currentAgent?.description || "Choose your AI assistant to start creating amazing ad copy"}
                   </div>
                 </div>
-                <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                <div className="flex-shrink-0 flex items-center justify-center h-10">
+                  <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                </div>
               </div>
             </CardContent>
           </Card>

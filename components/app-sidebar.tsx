@@ -114,21 +114,28 @@ export function AppSidebar() {
   return (
     <Sidebar variant="inset" collapsible="icon" className="border-r border-slate-200/60 bg-white">
       <SidebarHeader className="border-b border-slate-200/60 bg-gradient-to-r from-slate-50 to-white px-4 py-4">
-        <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 shadow-sm">
-            <span className="text-xl font-bold text-white">C</span>
-          </div>
-          {state === 'expanded' && (
+        {state === 'expanded' ? (
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 shadow-sm">
+              <span className="text-xl font-bold text-white">C</span>
+            </div>
             <div className="flex-1 min-w-0">
               <h1 className="text-lg font-bold text-slate-900 truncate">Copy Ready</h1>
               <p className="text-xs text-slate-600 truncate">AI Ad Copy Platform</p>
             </div>
-          )}
-          <SidebarTrigger className="h-8 w-8 rounded-lg hover:bg-slate-100 transition-colors" />
-        </div>
+            <SidebarTrigger className="h-8 w-8 rounded-lg hover:bg-slate-100 transition-colors" />
+          </div>
+        ) : (
+          <div className="flex flex-col items-center gap-2">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 shadow-sm">
+              <span className="text-xl font-bold text-white">C</span>
+            </div>
+            <SidebarTrigger className="h-6 w-6 rounded-md hover:bg-slate-100 transition-colors" />
+          </div>
+        )}
       </SidebarHeader>
 
-      <SidebarContent className={`flex flex-col justify-between bg-white overflow-x-hidden ${state === 'expanded' ? 'px-3 py-4' : 'px-2 py-4'}`}>
+      <SidebarContent className={`flex flex-col justify-between bg-white ${state === 'expanded' ? 'px-3 py-4' : 'px-0 py-4'}`}>
         <div className="space-y-8">
           {/* Main Features Section */}
           <SidebarGroup>
@@ -137,7 +144,7 @@ export function AppSidebar() {
                 Main Features
               </SidebarGroupLabel>
             )}
-            <SidebarGroupContent>
+            <SidebarGroupContent className={state === 'expanded' ? '' : 'px-0'}>
               <SidebarMenu className="space-y-1">
                 {mainNav.map((item) => (
                   <SidebarMenuItem key={item.href}>
@@ -149,15 +156,19 @@ export function AppSidebar() {
                       <Button
                         variant={activeItem === item.href ? "secondary" : "ghost"}
                         onClick={() => handleNavigation(item.href)}
-                        className={`w-full justify-start h-10 px-3 rounded-lg transition-all overflow-hidden ${
-                          activeItem === item.href 
-                            ? 'bg-emerald-50 text-emerald-700 border border-emerald-200 shadow-sm' 
-                            : 'hover:bg-slate-50 text-slate-700'
+                        className={`w-full h-10 rounded-lg transition-all overflow-hidden ${
+                          state === 'expanded' 
+                            ? `justify-start px-3 ${activeItem === item.href 
+                                ? 'bg-emerald-50 text-emerald-700 border border-emerald-200 shadow-sm' 
+                                : 'hover:bg-slate-50 text-slate-700'}`
+                            : `justify-center p-0 ${activeItem === item.href 
+                                ? 'bg-emerald-50 text-emerald-700 border border-emerald-200 shadow-sm' 
+                                : 'hover:bg-slate-50 text-slate-700'}`
                         }`}
                         size="sm"
                       >
-                        <item.icon className="h-4 w-4 mr-3 flex-shrink-0" />
-                        {state === 'expanded' && <span className="font-medium truncate">{item.label}</span>}
+                        <item.icon className="h-4 w-4 flex-shrink-0" />
+                        {state === 'expanded' && <span className="font-medium truncate ml-3">{item.label}</span>}
                       </Button>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
@@ -196,7 +207,7 @@ export function AppSidebar() {
                   )}
                 </div>
                 <SidebarGroupContent>
-                  <div className="px-3 w-full overflow-hidden">
+                  <div className="px-3 w-full">
                     <AgentSelector 
                       agents={agents}
                       selectedAgent={selectedAgent}
@@ -209,7 +220,7 @@ export function AppSidebar() {
                 </SidebarGroupContent>
               </>
             ) : (
-              <SidebarGroupContent>
+              <SidebarGroupContent className={state === 'expanded' ? '' : 'px-0'}>
                 <SidebarMenu>
                   <SidebarMenuItem>
                         <TooltipProvider>
@@ -383,7 +394,7 @@ export function AppSidebar() {
                 </SidebarGroupContent>
               </>
             ) : (
-              <SidebarGroupContent>
+              <SidebarGroupContent className={state === 'expanded' ? '' : 'px-0'}>
                 <SidebarMenu className="space-y-1">
                   {/* Recent Chat History Icons - Show top 3 */}
                   {chatHistory.slice(0, 3).map((chat: any) => {
@@ -481,8 +492,8 @@ export function AppSidebar() {
 
         {/* Settings Section */}
         <div className="space-y-2">
-          <Separator className="mx-3" />
-          <SidebarMenu>
+          <Separator className={state === 'expanded' ? 'mx-3' : 'mx-0'} />
+          <SidebarMenu className={state === 'expanded' ? '' : 'flex items-center justify-center'}>
             <SidebarMenuItem>
               <SidebarMenuButton 
                 asChild 
@@ -490,12 +501,16 @@ export function AppSidebar() {
               >
                 <Button
                   variant="ghost"
-                  className="w-full justify-start h-10 px-3 rounded-lg hover:bg-slate-50 text-slate-700 overflow-hidden"
+                  className={`w-full h-10 rounded-lg hover:bg-slate-50 text-slate-700 overflow-hidden ${
+                    state === 'expanded' 
+                      ? 'justify-start px-3' 
+                      : 'justify-center p-0'
+                  }`}
                   size="sm"
                   onClick={() => handleNavigation('/profile')}
                 >
-                  <Settings className="h-4 w-4 mr-3 flex-shrink-0" />
-                  {state === 'expanded' && <span className="font-medium truncate">Settings</span>}
+                  <Settings className="h-4 w-4 flex-shrink-0" />
+                  {state === 'expanded' && <span className="font-medium truncate ml-3">Settings</span>}
                 </Button>
               </SidebarMenuButton>
             </SidebarMenuItem>
@@ -503,16 +518,16 @@ export function AppSidebar() {
         </div>
       </SidebarContent>
 
-      <SidebarFooter className="border-t border-slate-200/60 bg-gradient-to-r from-slate-50 to-white px-4 py-4">
-        <SidebarMenu className="space-y-2">
+      <SidebarFooter className={`border-t border-slate-200/60 bg-gradient-to-r from-slate-50 to-white py-4 ${state === 'expanded' ? 'px-4' : 'px-0'}`}>
+        <SidebarMenu className={`space-y-2 ${state === 'expanded' ? '' : 'flex flex-col items-center'}`}>
           <SidebarMenuItem>
-            <div className="flex items-center gap-3 min-w-0">
-              <Avatar className="h-9 w-9">
-                <AvatarFallback className="bg-gradient-to-br from-emerald-500 to-teal-600 text-white font-semibold">
-                  {user?.name ? user.name.charAt(0).toUpperCase() : 'U'}
-                </AvatarFallback>
-              </Avatar>
-              {state === 'expanded' && (
+            {state === 'expanded' ? (
+              <div className="flex items-center gap-3 min-w-0">
+                <Avatar className="h-9 w-9">
+                  <AvatarFallback className="bg-gradient-to-br from-emerald-500 to-teal-600 text-white font-semibold">
+                    {user?.name ? user.name.charAt(0).toUpperCase() : 'U'}
+                  </AvatarFallback>
+                </Avatar>
                 <div className="overflow-hidden min-w-0 flex-1">
                   <p className="text-sm font-semibold text-slate-900 truncate">
                     {user?.name || 'User'}
@@ -530,8 +545,16 @@ export function AppSidebar() {
                     </Tooltip>
                   </TooltipProvider>
                 </div>
-              )}
-            </div>
+              </div>
+            ) : (
+              <div className="flex justify-center">
+                <Avatar className="h-9 w-9">
+                  <AvatarFallback className="bg-gradient-to-br from-emerald-500 to-teal-600 text-white font-semibold">
+                    {user?.name ? user.name.charAt(0).toUpperCase() : 'U'}
+                  </AvatarFallback>
+                </Avatar>
+              </div>
+            )}
           </SidebarMenuItem>
           <SidebarMenuItem>
             <SidebarMenuButton
@@ -540,12 +563,16 @@ export function AppSidebar() {
             >
               <Button
                 variant="ghost"
-                className="w-full justify-start h-10 px-3 rounded-lg text-red-600 hover:text-red-700 hover:bg-red-50 overflow-hidden"
+                className={`w-full h-10 rounded-lg text-red-600 hover:text-red-700 hover:bg-red-50 overflow-hidden ${
+                  state === 'expanded' 
+                    ? 'justify-start px-3' 
+                    : 'justify-center p-0'
+                }`}
                 size="sm"
                 onClick={handleLogout}
               >
-                <LogOut className="h-4 w-4 mr-3 flex-shrink-0" />
-                {state === 'expanded' && <span className="font-medium truncate">Logout</span>}
+                <LogOut className="h-4 w-4 flex-shrink-0" />
+                {state === 'expanded' && <span className="font-medium truncate ml-3">Logout</span>}
               </Button>
             </SidebarMenuButton>
           </SidebarMenuItem>
