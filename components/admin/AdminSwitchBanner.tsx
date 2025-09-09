@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { LogOut, Crown, AlertTriangle, Loader2 } from 'lucide-react';
 import { adminService } from '@/lib/admin-service';
@@ -10,12 +10,21 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 export function AdminSwitchBanner() {
   const [isReturning, setIsReturning] = useState(false);
   const [showBanner, setShowBanner] = useState(true);
+  const [isClient, setIsClient] = useState(false);
+  const [isAdminSwitch, setIsAdminSwitch] = useState(false);
+  const [adminContext, setAdminContext] = useState<any>(null);
 
-  // Check if this is an admin switch session
-  const isAdminSwitch = adminService.isAdminSwitchSession();
-  const adminContext = adminService.getAdminContext();
+  // Only run on client side to prevent hydration mismatch
+  useEffect(() => {
+    setIsClient(true);
+    const adminSwitch = adminService.isAdminSwitchSession();
+    const context = adminService.getAdminContext();
+    setIsAdminSwitch(adminSwitch);
+    setAdminContext(context);
+  }, []);
 
-  if (!isAdminSwitch || !showBanner) {
+  // Don't render anything until client-side hydration is complete
+  if (!isClient || !isAdminSwitch || !showBanner) {
     return null;
   }
 

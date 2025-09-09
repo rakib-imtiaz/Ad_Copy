@@ -3339,8 +3339,6 @@ function FilesTab({ mediaItems, onUpload, onDelete, isDeleting, deletingItemId, 
   const [dragActive, setDragActive] = React.useState(false)
   const [isUploading, setIsUploading] = React.useState(false)
   const fileInputRef = React.useRef<HTMLInputElement>(null)
-  const [viewerContent, setViewerContent] = React.useState<any>(null)
-  const [isViewerOpen, setIsViewerOpen] = React.useState(false)
   
   const fileItems = mediaItems.filter((item: any) => 
     ['pdf', 'doc', 'txt', 'audio', 'video'].includes(item.type)
@@ -3450,46 +3448,36 @@ function FilesTab({ mediaItems, onUpload, onDelete, isDeleting, deletingItemId, 
             }
 
 
+            // Format file size
+            const formatFileSize = (sizeInBytes: number) => {
+              if (!sizeInBytes) return 'Unknown size'
+              const sizeInMB = sizeInBytes / (1024 * 1024)
+              if (sizeInMB >= 1) {
+                return `${sizeInMB.toFixed(1)} MB`
+              } else {
+                const sizeInKB = sizeInBytes / 1024
+                return `${sizeInKB.toFixed(1)} KB`
+              }
+            }
+
             return (
-              <div key={item.id} className="flex items-center space-x-3 p-2 rounded-lg hover:bg-white border border-transparent hover:border-[#EEEEEE] transition-colors cursor-pointer"
-                   onClick={() => {
-                     // Handle file viewing - for PDFs and documents
-                     if (item.type === 'pdf') {
-                       // Create PDF viewer content
-                       setViewerContent({
-                         title: item.filename,
-                         content: '', // PDF content will be handled differently
-                         isPdf: true,
-                         pdfUrl: item.url || `/api/media/view/${item.id}`,
-                         fileType: 'pdf'
-                       })
-                       setIsViewerOpen(true)
-                     } else if (item.type === 'image') {
-                       // Create image viewer content
-                       setViewerContent({
-                         title: item.filename,
-                         content: `<img src="${item.url || `/api/media/view/${item.id}`}" alt="${item.filename}" style="max-width: 100%; height: auto;" />`,
-                         fileType: 'image'
-                       })
-                       setIsViewerOpen(true)
-                     } else if (item.content) {
-                       // For files with text content
-                       setViewerContent({
-                         title: item.filename,
-                         content: item.content,
-                         fileType: item.type
-                       })
-                       setIsViewerOpen(true)
-                     } else {
-                       // For other files, open in new tab
-                       window.open(item.url || `/api/media/view/${item.id}`, '_blank')
-                     }
-                   }}>
+              <div key={item.id} className="flex items-center space-x-3 p-2 rounded-lg hover:bg-white border border-transparent hover:border-[#EEEEEE] transition-colors">
                 {getFileIcon(item.type)}
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium truncate text-gray-900">{item.filename}</p>
-                  <p className="text-xs text-blue-500 mt-1 opacity-75">
-                    👆 Click to view
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <p className="text-sm font-medium text-gray-900 truncate cursor-default" title={item.filename}>
+                          {item.filename}
+                        </p>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>{item.filename}</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                  <p className="text-xs text-gray-500 mt-1">
+                    {formatFileSize(item.size)}
                   </p>
                 </div>
                 <div className="flex items-center space-x-2">
@@ -3524,14 +3512,6 @@ function FilesTab({ mediaItems, onUpload, onDelete, isDeleting, deletingItemId, 
         )}
       </div>
       
-      {/* Content Viewer for PDFs and other files */}
-      {viewerContent && (
-        <ContentViewer
-          isOpen={isViewerOpen}
-          onClose={() => setIsViewerOpen(false)}
-          content={viewerContent}
-        />
-      )}
     </div>
   )
 }
