@@ -2498,67 +2498,8 @@ export default function Dashboard() {
       const data = await response.json()
       console.log('Delete successful for scraped content:', resourceName, data)
       
-      // Remove the scraped content from the local state
-      setMediaItems(prev => prev.filter(item => item.id !== resourceId))
-      
-      // Refresh the scraped contents list after successful deletion
-      console.log('🔄 Refreshing scraped contents after deletion...')
-      try {
-        const refreshResponse = await fetch('/api/scraped-contents', {
-          method: 'GET',
-          headers: {
-            'Authorization': `Bearer ${accessToken}`,
-            'Content-Type': 'application/json',
-          },
-        })
-
-        if (refreshResponse.ok) {
-          const refreshResult = await refreshResponse.json()
-          console.log('✅ Scraped contents refreshed after deletion:', refreshResult.data?.length || 0, 'items')
-          
-          if (refreshResult.data && Array.isArray(refreshResult.data)) {
-            const scrapedItems = refreshResult.data.map((item: any, index: number) => {
-              const createdDate = item.created_at ? new Date(item.created_at) : new Date()
-              const formattedDate = createdDate.toLocaleString('en-US', {
-                month: 'short',
-                day: '2-digit',
-                year: 'numeric',
-                hour: '2-digit',
-                minute: '2-digit',
-                hour12: true
-              }).replace(/[,\s]/g, '_').replace(/:/g, '.').replace(/\s/g, '')
-              
-              const filename = `sample_content_${formattedDate}.txt`
-              
-              return {
-                id: `scraped-${item.resource_id || index}`,
-                filename: filename,
-                type: 'scraped',
-                url: item.url || '',
-                uploadedAt: createdDate,
-                size: 0,
-                content: item.content,
-                resourceId: item.resource_id,
-                contentType: item.type,
-                resourceName: item.resource_name,
-                originalApiType: item.type,
-                owner: item.owner,
-                created_at: item.created_at
-              }
-            })
-            
-            setMediaItems((prevItems: any[]) => {
-              const nonScrapedItems = prevItems.filter((item: any) => !item.id.startsWith('scraped-'))
-              const updatedItems = [...nonScrapedItems, ...scrapedItems]
-              console.log('📊 Total items after deletion refresh:', updatedItems.length)
-              console.log('📊 Scraped items after deletion:', scrapedItems.length)
-              return updatedItems
-            })
-          }
-        }
-      } catch (refreshError) {
-        console.error('❌ Error refreshing scraped contents after deletion:', refreshError)
-      }
+      // Note: UI update is handled by handleDeleteItem function
+      // No need to refresh here to avoid conflicts
       
       return true
     } catch (error) {
@@ -2569,18 +2510,40 @@ export default function Dashboard() {
 
   // Unified delete function that handles both media files and scraped content
   const handleDeleteItem = async (itemId: string, itemName: string) => {
-    // Check if this is a scraped content item by looking for resource_id
-    const item = mediaItems.find(item => item.id === itemId)
-    
-    if (item && (item.type === 'scraped' || item.type === 'youtube' || item.type === 'transcript' || item.type === 'url')) {
-      // For scraped content, YouTube, transcripts, and URLs, we need to use the resource_id from the item
-      const resourceId = item.resourceId || itemId
-      console.log('🗑️ Deleting scraped content/YouTube/transcript with resource ID:', resourceId, 'and name:', itemName)
-      return await deleteScrapedContent(resourceId, itemName)
-    } else {
-      // For regular media files, use the existing delete function
-      console.log('🗑️ Deleting media file with ID:', itemId, 'and name:', itemName)
-      return await deleteMediaFile(itemId, itemName)
+    try {
+      setIsDeleting(true)
+      setDeletingItemId(itemId)
+      
+      // Check if this is a scraped content item by looking for resource_id
+      const item = mediaItems.find(item => item.id === itemId)
+      let deleteResult = false
+      
+      if (item && (item.type === 'scraped' || item.type === 'youtube' || item.type === 'transcript' || item.type === 'url')) {
+        // For scraped content, YouTube, transcripts, and URLs, we need to use the resource_id from the item
+        const resourceId = item.resourceId || itemId
+        console.log('🗑️ Deleting scraped content/YouTube/transcript with resource ID:', resourceId, 'and name:', itemName)
+        deleteResult = await deleteScrapedContent(resourceId, itemName)
+      } else {
+        // For regular media files, use the existing delete function
+        console.log('🗑️ Deleting media file with ID:', itemId, 'and name:', itemName)
+        deleteResult = await deleteMediaFile(itemId, itemName)
+      }
+      
+      if (deleteResult) {
+        console.log('🔄 Deletion successful, removing item from local state...')
+        // Immediately remove the item from local state
+        setMediaItems(prevItems => prevItems.filter(mediaItem => mediaItem.id !== itemId))
+        showToast(`Successfully deleted "${itemName}"`, 'success')
+      }
+      
+      return deleteResult
+    } catch (error) {
+      console.error('Error in handleDeleteItem:', error)
+      showToast(`Failed to delete "${itemName}"`, 'error')
+      return false
+    } finally {
+      setIsDeleting(false)
+      setDeletingItemId(null)
     }
   }
 
@@ -3311,7 +3274,7 @@ function MediaDrawer({ activeTab, onTabChange, mediaItems, setMediaItems, onRefr
       <div className="flex-1 overflow-y-auto p-4">
         {activeTab === 'files' && <FilesTab mediaItems={mediaItems} onUpload={onUpload} onDelete={onDelete} isDeleting={isDeleting} deletingItemId={deletingItemId} isLoadingTabContent={isLoadingTabContent} />}
         {activeTab === 'links' && <LinksTab mediaItems={mediaItems} onDelete={handleDeleteItem} onRefresh={onRefresh} setMediaItems={setMediaItems} />}
-        {activeTab === 'youtube' && <YouTubeTab mediaItems={mediaItems} onDelete={handleDeleteItem} onRefresh={onRefresh} setMediaItems={setMediaItems} />}
+        {activeTab === 'youtube' && <YouTubeTab mediaItems={mediaItems} onDelete={handleDeleteItem} onRefresh={onRefresh} setMediaItems={setMediaItems} isDeleting={isDeleting} deletingItemId={deletingItemId} isLoadingTabContent={isLoadingTabContent} />}
         {activeTab === 'image-analyzer' && <ImageAnalyzerTab mediaItems={mediaItems} onUpload={onUpload} onDelete={onDelete} />}
         {activeTab === 'transcripts' && <TranscriptsTab mediaItems={mediaItems} onDelete={onDelete} />}
       </div>
@@ -3918,7 +3881,7 @@ function LinksTab({ mediaItems, onDelete, onRefresh, setMediaItems }: any) {
 }
 
 // YouTube Transcription Tab Component
-function YouTubeTab({ mediaItems, onDelete, onRefresh, setMediaItems }: any) {
+function YouTubeTab({ mediaItems, onDelete, onRefresh, setMediaItems, isDeleting, deletingItemId, isLoadingTabContent }: any) {
   const youtubeItems = mediaItems.filter((item: any) => item.type === 'youtube')
   const [urlInput, setUrlInput] = React.useState("")
   const [isTranscribing, setIsTranscribing] = React.useState(false)
@@ -4099,7 +4062,20 @@ function YouTubeTab({ mediaItems, onDelete, onRefresh, setMediaItems }: any) {
       </div>
       
       <div className="space-y-2">
-        {youtubeItems.length > 0 ? (
+        {isLoadingTabContent ? (
+          <div className="space-y-3">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="flex items-center space-x-3 p-3 rounded-lg border border-gray-200 animate-pulse">
+                <div className="w-8 h-8 bg-gray-200 rounded-lg"></div>
+                <div className="flex-1">
+                  <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
+                  <div className="h-3 bg-gray-200 rounded w-1/2"></div>
+                </div>
+                <div className="w-6 h-6 bg-gray-200 rounded"></div>
+              </div>
+            ))}
+          </div>
+        ) : youtubeItems.length > 0 ? (
           youtubeItems.map((item: any, index: number) => (
             <div 
               key={item.id} 
@@ -4131,11 +4107,16 @@ function YouTubeTab({ mediaItems, onDelete, onRefresh, setMediaItems }: any) {
                     e.stopPropagation()
                     onDelete(item.id, item.filename)
                   }}
-                  className="h-6 w-6 p-0 hover:bg-red-50 hover:text-red-600"
+                  disabled={isDeleting && deletingItemId === item.id}
+                  className="h-6 w-6 p-0 hover:bg-red-50 hover:text-red-600 disabled:opacity-50"
                 >
-                  <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                  </svg>
+                  {isDeleting && deletingItemId === item.id ? (
+                    <RefreshCw className="h-3 w-3 animate-spin" />
+                  ) : (
+                    <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
+                  )}
                 </Button>
               </div>
             </div>
