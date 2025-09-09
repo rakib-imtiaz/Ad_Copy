@@ -862,6 +862,94 @@ export default function Dashboard() {
     console.log('🔄 fetchAgents completed')
   }
 
+  // Comprehensive refresh function for all media tabs
+  const refreshAllTabs = async () => {
+    console.log('🔄 refreshAllTabs function called - refreshing all media tabs')
+    setIsRefreshing(true)
+    setIsLoadingTabContent(true)
+    
+    try {
+      // 1. Refresh main media library (Files tab)
+      console.log('🔄 Refreshing main media library...')
+      await fetchMediaLibrary()
+      
+      // 2. Refresh knowledge base status
+      console.log('🔄 Refreshing knowledge base status...')
+      await fetchKnowledgeBaseStatus()
+      
+      // 3. Force refresh of scraped contents for Links and YouTube tabs
+      console.log('🔄 Refreshing scraped contents for Links and YouTube tabs...')
+      const accessToken = authService.getAuthToken()
+      
+      if (accessToken) {
+        try {
+          const response = await fetch('/api/scraped-contents', {
+            method: 'GET',
+            headers: {
+              'Authorization': `Bearer ${accessToken}`,
+              'Content-Type': 'application/json',
+            },
+          })
+
+          if (response.ok) {
+            const result = await response.json()
+            console.log('✅ Scraped contents refreshed:', result.data?.length || 0, 'items')
+            
+            if (result.data && Array.isArray(result.data)) {
+              // Transform scraped contents into media items
+              const scrapedItems = result.data.map((item: any) => ({
+                id: `scraped-${item.resource_id || item.id || Math.random()}`,
+                filename: item.resource_name || item.filename || 'Unknown',
+                type: item.type || 'scraped',
+                content: item.content,
+                transcript: item.transcript,
+                url: item.url,
+                uploadedAt: new Date(item.created_at || Date.now()),
+                size: item.content ? item.content.length : 0,
+                title: item.resource_name || item.title || 'Scraped Content',
+                resourceId: item.resource_id,
+                resourceName: item.resource_name
+              }))
+              
+              console.log('🔄 Updating media items with refreshed scraped contents...')
+              console.log('📊 Scraped items by type:', {
+                youtube: scrapedItems.filter((item: any) => item.type === 'youtube').length,
+                webpage: scrapedItems.filter((item: any) => item.type === 'webpage').length,
+                scraped: scrapedItems.filter((item: any) => item.type === 'scraped').length,
+                other: scrapedItems.filter((item: any) => !['youtube', 'webpage', 'scraped'].includes(item.type)).length
+              })
+              
+              // Update the media items state
+              setMediaItems((prevItems: any[]) => {
+                // Remove existing scraped items and add new ones
+                const nonScrapedItems = prevItems.filter((item: any) => !item.id.startsWith('scraped-'))
+                const updatedItems = [...nonScrapedItems, ...scrapedItems]
+                console.log('📊 Total items after refresh:', updatedItems.length)
+                console.log('📊 Non-scraped items:', nonScrapedItems.length)
+                console.log('📊 Scraped items added:', scrapedItems.length)
+                
+                return [...updatedItems]
+              })
+            }
+          } else {
+            console.error('❌ Failed to refresh scraped contents:', response.status, response.statusText)
+          }
+        } catch (error) {
+          console.error('❌ Error refreshing scraped contents:', error)
+        }
+      }
+      
+      console.log('✅ All tabs refreshed successfully')
+      
+    } catch (error) {
+      console.error('❌ Error during comprehensive refresh:', error)
+    } finally {
+      setIsRefreshing(false)
+      setIsLoadingTabContent(false)
+      console.log('🔄 refreshAllTabs completed')
+    }
+  }
+
   // Start new conversation function
   const startNewConversation = () => {
     console.log('🔄 Starting new conversation...')
@@ -3218,7 +3306,7 @@ export default function Dashboard() {
             onTabChange={handleTabChange} 
             mediaItems={mediaItems}
             setMediaItems={setMediaItems}
-            onRefresh={fetchMediaLibrary}
+            onRefresh={refreshAllTabs}
             onUpload={uploadMediaFiles}
             onDelete={deleteMediaFile}
             handleDeleteItem={handleDeleteItem}
@@ -3797,7 +3885,7 @@ function MediaDrawer({ activeTab, onTabChange, mediaItems, setMediaItems, onRefr
                 </Button>
               </TooltipTrigger>
               <TooltipContent>
-                <p>Refresh all media tabs (Files, Links, YouTube, Images, Transcripts)</p>
+                <p>Refresh all media tabs and content (Files, Links, YouTube, Images, Transcripts, Knowledge Base)</p>
               </TooltipContent>
             </Tooltip>
           </TooltipProvider>
