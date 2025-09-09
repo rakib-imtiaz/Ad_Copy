@@ -1881,41 +1881,11 @@ export default function Dashboard() {
         }
       })
 
-      // Transform scraped content items that don't have matching media items
-      const scrapedItemsTransformed = scrapedItems
-        .filter(scraped => !transformedItems.find(item => item.filename === scraped.resource_name))
-        .map((scraped: any, index: number) => {
-          const createdDate = scraped.created_at ? new Date(scraped.created_at) : new Date()
-          const formattedDate = createdDate.toLocaleString('en-US', {
-            month: 'short',
-            day: '2-digit',
-            year: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit',
-            hour12: true
-          }).replace(/[,\s]/g, '_').replace(/:/g, '.').replace(/\s/g, '')
-          
-          const filename = scraped.resource_name || `scraped_content_${formattedDate}.txt`
-          
-          return {
-            id: `scraped-${scraped.resource_id || index}`,
-            filename: filename,
-            type: scraped.type || 'scraped', // Preserve original type (youtube, webpage, etc.)
-            url: scraped.url || '',
-            uploadedAt: createdDate,
-            size: 0,
-            content: scraped.content,
-            resourceId: scraped.resource_id,
-            contentType: scraped.type,
-            resourceName: scraped.resource_name,
-            originalApiType: scraped.type,
-            owner: scraped.owner,
-            created_at: scraped.created_at
-          }
-        })
+      // Skip creating sample_content_ entries - scraped content will not be displayed as media items
+      const scrapedItemsTransformed: any[] = []
 
-      // Combine regular media items with scraped content items
-      const allTransformedItems = [...transformedItems, ...scrapedItemsTransformed]
+      // Only use regular media items (no scraped content items)
+      const allTransformedItems = [...transformedItems]
 
       console.log('Transformed media items:', transformedItems.length)
       console.log('Transformed scraped items:', scrapedItemsTransformed.length)
@@ -2105,40 +2075,8 @@ export default function Dashboard() {
       console.log('🔍 Result data sample:', result.data ? result.data.slice(0, 2) : 'No data')
       
       if (result.data && Array.isArray(result.data)) {
-        // Convert scraped contents to media items format
-        const scrapedItems = result.data.map((item: any, index: number) => {
-          // Format the created_at date for filename
-          const createdDate = item.created_at ? new Date(item.created_at) : new Date()
-          const formattedDate = createdDate.toLocaleString('en-US', {
-            month: 'short',
-            day: '2-digit',
-            year: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit',
-            hour12: true
-          }).replace(/[,\s]/g, '_').replace(/:/g, '.').replace(/\s/g, '')
-          
-          // Create filename in the format: sample_content_created_at.txt
-          const filename = `sample_content_${formattedDate}.txt`
-          
-          return {
-            id: `scraped-${item.resource_id || index}`,
-            filename: filename,
-            type: item.type || 'scraped', // Preserve original type (youtube, webpage, etc.)
-            url: item.url || '',
-            uploadedAt: createdDate,
-            size: 0, // Scraped content doesn't have file size
-            // Add scraped content specific properties
-            content: item.content,
-            resourceId: item.resource_id,
-            contentType: item.type,
-            resourceName: item.resource_name,
-                       // Add any other properties from the scraped content
-               owner: item.owner,
-               created_at: item.created_at,
-               originalApiType: item.type
-             }
-        })
+        // Skip creating sample_content_ entries - scraped content will not be displayed as media items
+        const scrapedItems: any[] = []
         
         console.log('🔄 Updating media items with scraped contents...')
         console.log('📊 Scraped items to add:', scrapedItems)
@@ -3589,40 +3527,8 @@ function LinksTab({ mediaItems, onDelete, onRefresh, setMediaItems, isDeleting, 
         console.log('✅ Scraped contents data received:', result.data?.length || 0, 'items')
         
         if (result.data && Array.isArray(result.data)) {
-          // Convert scraped contents to media items format
-          const scrapedItems = result.data.map((item: any, index: number) => {
-            // Format the created_at date for filename
-            const createdDate = item.created_at ? new Date(item.created_at) : new Date()
-            const formattedDate = createdDate.toLocaleString('en-US', {
-              month: 'short',
-              day: '2-digit',
-              year: 'numeric',
-              hour: '2-digit',
-              minute: '2-digit',
-              hour12: true
-            }).replace(/[,\s]/g, '_').replace(/:/g, '.').replace(/\s/g, '')
-            
-            // Create filename in the format: sample_content_created_at.txt
-            const filename = `sample_content_${formattedDate}.txt`
-            
-            return {
-              id: `scraped-${item.resource_id || index}`,
-              filename: filename,
-              type: item.type || 'webpage', // Use actual type from n8n response, fallback to 'webpage'
-              url: item.url || '',
-              uploadedAt: createdDate,
-              size: 0, // Scraped content doesn't have file size
-              // Add scraped content specific properties
-              content: item.content,
-              resourceId: item.resource_id,
-              contentType: item.type,
-              resourceName: item.resource_name,
-              // Add any other properties from the scraped content
-              owner: item.owner,
-              created_at: item.created_at,
-              originalApiType: item.type
-            }
-          })
+          // Skip creating sample_content_ entries - scraped content will not be displayed as media items
+          const scrapedItems: any[] = []
           
                      console.log('🔄 LinksTab - Updating media items with scraped contents...')
            console.log('📊 Scraped items to add:', scrapedItems.length)
@@ -3765,33 +3671,8 @@ function LinksTab({ mediaItems, onDelete, onRefresh, setMediaItems, isDeleting, 
           console.log('✅ Scraped contents refreshed after scraping:', refreshResult.data?.length || 0, 'items')
           
           if (refreshResult.data && Array.isArray(refreshResult.data)) {
-            const scrapedItems = refreshResult.data.map((item: any, index: number) => {
-              const createdDate = item.created_at ? new Date(item.created_at) : new Date()
-              const formattedDate = createdDate.toLocaleString('en-US', {
-                month: 'short',
-                day: '2-digit',
-                year: 'numeric',
-                hour: '2-digit',
-                minute: '2-digit',
-                hour12: true
-              }).replace(/[,\s]/g, '_').replace(/:/g, '.').replace(/\s/g, '')
-              
-              const filename = `sample_content_${formattedDate}.txt`
-              
-              return {
-                id: `scraped-${item.resource_id || index}`,
-                filename: filename,
-                type: 'scraped',
-                url: item.url || '',
-                uploadedAt: createdDate,
-                size: 0,
-                content: item.content,
-                resourceId: item.resource_id,
-                contentType: item.type,
-                resourceName: item.resource_name,
-                ...item
-              }
-            })
+            // Skip creating sample_content_ entries - scraped content will not be displayed as media items
+            const scrapedItems: any[] = []
             
             setMediaItems((prevItems: any[]) => {
               const nonScrapedItems = prevItems.filter((item: any) => !item.id.startsWith('scraped-'))
