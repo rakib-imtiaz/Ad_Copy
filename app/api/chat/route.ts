@@ -76,7 +76,7 @@ export async function POST(request: NextRequest) {
     const n8nEndpoint = API_ENDPOINTS.N8N_WEBHOOKS.CHAT;
     console.log('Calling n8n endpoint:', n8nEndpoint);
     
-    const chatPayload = {
+    const chatPayload: any = {
       email,
       'session-id': sessionId,
       'agent-id': agentId,

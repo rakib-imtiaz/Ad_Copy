@@ -89,7 +89,7 @@ const EditAgentPage = () => {
       
       if (!foundAgent) {
         console.error('❌ Agent not found. Looking for:', agentId);
-        console.error('❌ Available agents:', agents.map(a => ({ 
+        console.error('❌ Available agents:', agents.map((a: any) => ({ 
           agent_id: a.agent_id, 
           id: a.id, 
           agent_name: a.agent_name,
@@ -97,7 +97,7 @@ const EditAgentPage = () => {
           short_description: a.short_description
         })));
         console.error('❌ URL encoded version:', encodeURIComponent(agentId));
-        throw new Error(`Agent with ID "${agentId}" not found. Available agents: ${agents.map(a => a.agent_name || a.name || a.agent_id).join(', ')}`);
+        throw new Error(`Agent with ID "${agentId}" not found. Available agents: ${agents.map((a: any) => a.agent_name || a.name || a.agent_id).join(', ')}`);
       }
 
       const transformedAgent: Agent = {

@@ -220,7 +220,7 @@ export function AppSidebar() {
                 </SidebarGroupContent>
               </>
             ) : (
-              <SidebarGroupContent className={state === 'expanded' ? '' : 'px-0'}>
+              <SidebarGroupContent className={(state as string) === 'expanded' ? '' : 'px-0'}>
                 <SidebarMenu>
                   <SidebarMenuItem>
                         <TooltipProvider>
@@ -340,7 +340,7 @@ export function AppSidebar() {
                                   </h4>
                                   <p className="text-xs text-slate-500 mt-1 truncate">{timeAgo}</p>
                                 </div>
-                                {onDeleteChatSession && !isDeleting && (
+                                {!isDeleting && (
                                   <AlertDialog>
                                     <AlertDialogTrigger asChild>
                                       <Button
@@ -394,7 +394,7 @@ export function AppSidebar() {
                 </SidebarGroupContent>
               </>
             ) : (
-              <SidebarGroupContent className={state === 'expanded' ? '' : 'px-0'}>
+              <SidebarGroupContent className={(state as string) === 'expanded' ? '' : 'px-0'}>
                 <SidebarMenu className="space-y-1">
                   {/* Recent Chat History Icons - Show top 3 */}
                   {chatHistory.slice(0, 3).map((chat: any) => {

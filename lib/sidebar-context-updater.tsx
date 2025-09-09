@@ -1,10 +1,10 @@
 "use client"
 
 import * as React from "react"
-import { SidebarContext } from "./sidebar-context"
+import { useSidebarContext } from "./sidebar-context"
 
 export function useSidebarUpdater() {
-  const context = React.useContext(SidebarContext)
+  const context = useSidebarContext()
   
   if (!context) {
     throw new Error("useSidebarUpdater must be used within a SidebarProvider")
