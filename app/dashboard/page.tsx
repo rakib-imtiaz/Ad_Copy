@@ -3414,7 +3414,7 @@ function FilesTab({ mediaItems, onUpload, onDelete, isDeleting, deletingItemId, 
       </div>
 
       {/* File list */}
-      <div className="space-y-2">
+      <div className="space-y-1">
         {fileItems.length > 0 ? (
           fileItems.slice(0, 8).map((item: any, index: number) => {
             // Get appropriate icon based on file type
@@ -3449,28 +3449,9 @@ function FilesTab({ mediaItems, onUpload, onDelete, isDeleting, deletingItemId, 
               }
             }
 
-            // Format file size
-            const formatFileSize = (sizeInBytes: number) => {
-              const sizeInMB = sizeInBytes / (1024 * 1024)
-              if (sizeInMB >= 1) {
-                return `${sizeInMB.toFixed(1)} MB`
-              } else {
-                const sizeInKB = sizeInBytes / 1024
-                return `${sizeInKB.toFixed(1)} KB`
-              }
-            }
-
-            // Format upload date
-            const formatDate = (date: Date) => {
-              return date.toLocaleDateString('en-US', { 
-                month: 'short', 
-                day: 'numeric',
-                year: 'numeric'
-              })
-            }
 
             return (
-              <div key={item.id} className="flex items-center space-x-3 p-3 rounded-lg hover:bg-white border border-transparent hover:border-[#EEEEEE] transition-colors cursor-pointer"
+              <div key={item.id} className="flex items-center space-x-3 p-2 rounded-lg hover:bg-white border border-transparent hover:border-[#EEEEEE] transition-colors cursor-pointer"
                    onClick={() => {
                      // Handle file viewing - for PDFs and documents
                      if (item.type === 'pdf') {
@@ -3507,17 +3488,6 @@ function FilesTab({ mediaItems, onUpload, onDelete, isDeleting, deletingItemId, 
                 {getFileIcon(item.type)}
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium truncate text-gray-900">{item.filename}</p>
-                  <div className="flex items-center space-x-2 text-xs text-[#929AAB]">
-                    <span>{formatFileSize(item.size)}</span>
-                    <span>•</span>
-                    <span>{formatDate(item.uploadedAt)}</span>
-                    {item.metadata?.fileType && (
-                      <>
-                        <span>•</span>
-                        <span className="capitalize">{item.metadata.fileType}</span>
-                      </>
-                    )}
-                  </div>
                   <p className="text-xs text-blue-500 mt-1 opacity-75">
                     👆 Click to view
                   </p>
