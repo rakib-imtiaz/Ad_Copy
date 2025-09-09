@@ -2508,12 +2508,29 @@ export default function Dashboard() {
       console.log('🔍 Result data sample:', result.data ? result.data.slice(0, 2) : 'No data')
       
       if (result.data && Array.isArray(result.data)) {
-        // Skip creating sample_content_ entries - scraped content will not be displayed as media items
-        const scrapedItems: any[] = []
+        // Transform scraped contents into media items
+        const scrapedItems = result.data.map((item: any) => ({
+          id: `scraped-${item.resource_id || item.id || Math.random()}`,
+          filename: item.resource_name || item.filename || 'Unknown',
+          type: item.type || 'scraped',
+          content: item.content,
+          transcript: item.transcript,
+          url: item.url,
+          uploadedAt: new Date(item.created_at || Date.now()),
+          size: item.content ? item.content.length : 0,
+          title: item.resource_name || item.title || 'Scraped Content',
+          resourceId: item.resource_id,
+          resourceName: item.resource_name
+        }))
         
         console.log('🔄 Updating media items with scraped contents...')
-        console.log('📊 Scraped items to add:', scrapedItems)
-        console.log('📊 Scraped items count:', scrapedItems.length)
+        console.log('📊 Scraped items to add:', scrapedItems.length)
+        console.log('📊 Scraped items by type:', {
+          youtube: scrapedItems.filter((item: any) => item.type === 'youtube').length,
+          webpage: scrapedItems.filter((item: any) => item.type === 'webpage').length,
+          scraped: scrapedItems.filter((item: any) => item.type === 'scraped').length,
+          other: scrapedItems.filter((item: any) => !['youtube', 'webpage', 'scraped'].includes(item.type)).length
+        })
         
         // Update the media items state
         setMediaItems((prevItems: any[]) => {
@@ -2523,6 +2540,7 @@ export default function Dashboard() {
           console.log('📊 Total items after update:', updatedItems.length)
           console.log('📊 Non-scraped items:', nonScrapedItems.length)
           console.log('📊 Scraped items added:', scrapedItems.length)
+          console.log('📊 YouTube items in final list:', updatedItems.filter(item => item.type === 'youtube').length)
           return updatedItems
         })
       } else {
@@ -4058,26 +4076,43 @@ function LinksTab({ mediaItems, onDelete, onRefresh, setMediaItems, isDeleting, 
         console.log('✅ Scraped contents data received:', result.data?.length || 0, 'items')
         
         if (result.data && Array.isArray(result.data)) {
-          // Skip creating sample_content_ entries - scraped content will not be displayed as media items
-          const scrapedItems: any[] = []
+          // Transform scraped contents into media items
+          const scrapedItems = result.data.map((item: any) => ({
+            id: `scraped-${item.resource_id || item.id || Math.random()}`,
+            filename: item.resource_name || item.filename || 'Unknown',
+            type: item.type || 'scraped',
+            content: item.content,
+            transcript: item.transcript,
+            url: item.url,
+            uploadedAt: new Date(item.created_at || Date.now()),
+            size: item.content ? item.content.length : 0,
+            title: item.resource_name || item.title || 'Scraped Content',
+            resourceId: item.resource_id,
+            resourceName: item.resource_name
+          }))
           
-                     console.log('🔄 LinksTab - Updating media items with scraped contents...')
-           console.log('📊 Scraped items to add:', scrapedItems.length)
-           console.log('📊 Scraped items details:', scrapedItems)
-           
-           // Update the media items state
-           setMediaItems((prevItems: any[]) => {
-             // Remove existing scraped items and add new ones
-             const nonScrapedItems = prevItems.filter((item: any) => !item.id.startsWith('scraped-'))
-             const updatedItems = [...nonScrapedItems, ...scrapedItems]
-             console.log('📊 Total items after update:', updatedItems.length)
-             console.log('📊 Non-scraped items:', nonScrapedItems.length)
-             console.log('📊 Scraped items added:', scrapedItems.length)
-             console.log('📊 Updated items details:', updatedItems)
-             
-             // Force a re-render by returning a completely new array
-             return [...updatedItems]
-           })
+          console.log('🔄 LinksTab - Updating media items with scraped contents...')
+          console.log('📊 Scraped items to add:', scrapedItems.length)
+          console.log('📊 Scraped items by type:', {
+            webpage: scrapedItems.filter((item: any) => item.type === 'webpage').length,
+            youtube: scrapedItems.filter((item: any) => item.type === 'youtube').length,
+            scraped: scrapedItems.filter((item: any) => item.type === 'scraped').length,
+            other: scrapedItems.filter((item: any) => !['webpage', 'youtube', 'scraped'].includes(item.type)).length
+          })
+          
+          // Update the media items state
+          setMediaItems((prevItems: any[]) => {
+            // Remove existing scraped items and add new ones
+            const nonScrapedItems = prevItems.filter((item: any) => !item.id.startsWith('scraped-'))
+            const updatedItems = [...nonScrapedItems, ...scrapedItems]
+            console.log('📊 Total items after update:', updatedItems.length)
+            console.log('📊 Non-scraped items:', nonScrapedItems.length)
+            console.log('📊 Scraped items added:', scrapedItems.length)
+            console.log('📊 Webpage items in final list:', updatedItems.filter(item => item.type === 'webpage').length)
+            
+            // Force a re-render by returning a completely new array
+            return [...updatedItems]
+          })
         }
       } catch (error) {
         console.error('❌ Error fetching scraped contents:', error)
@@ -4452,32 +4487,52 @@ function YouTubeTab({ mediaItems, onDelete, onRefresh, setMediaItems, isDeleting
       const result = await response.json()
       console.log('✅ YouTube transcription result:', result)
       
-      if (result.success && result.data) {
-        // Create a new media item for the transcription
-        const transcriptionItem = {
-          id: `youtube-${Date.now()}`,
-          filename: result.data.resource_name || `youtube_transcription_${new Date().toISOString().split('T')[0]}.txt`,
-          type: 'youtube',
-          url: urlInput.trim(),
-          uploadedAt: new Date(),
-          size: result.data.content?.length || 0,
-          content: result.data.content || 'No transcription available',
-          title: result.data.resource_name || result.data.title || 'YouTube Video',
-          duration: result.data.duration,
-          channel: result.data.channel,
-          resourceName: result.data.resource_name
-        }
-        
-        // Add to media items
-        setMediaItems((prevItems: any[]) => [...prevItems, transcriptionItem])
-        
-        // Clear input
-        setUrlInput("")
-        
-        showToast('YouTube video transcribed successfully!', 'success')
-      } else {
-        showToast('Failed to transcribe video. Please try again.', 'error')
-      }
+       if (result.success) {
+         if (result.data && result.data.status === 'processing') {
+           // Transcription is being processed
+           showToast('YouTube transcription submitted! It will be available shortly in your media library.', 'info')
+           setUrlInput("")
+           
+           // Refresh media items to show the new transcription
+           setTimeout(() => {
+             onRefresh()
+           }, 2000)
+         } else if (result.data && result.data.content) {
+           // Transcription completed immediately
+           const transcriptionItem = {
+             id: `youtube-${Date.now()}`,
+             filename: result.data.resource_name || `youtube_transcription_${new Date().toISOString().split('T')[0]}.txt`,
+             type: 'youtube',
+             url: urlInput.trim(),
+             uploadedAt: new Date(),
+             size: result.data.content?.length || 0,
+             content: result.data.content || 'No transcription available',
+             title: result.data.resource_name || result.data.title || 'YouTube Video',
+             duration: result.data.duration,
+             channel: result.data.channel,
+             resourceName: result.data.resource_name
+           }
+           
+           // Add to media items
+           setMediaItems((prevItems: any[]) => [...prevItems, transcriptionItem])
+           
+           // Clear input
+           setUrlInput("")
+           
+           showToast('YouTube video transcribed successfully!', 'success')
+         } else {
+           // Success but no data - might be processing
+           showToast('YouTube transcription submitted! Check your media library shortly.', 'info')
+           setUrlInput("")
+           
+           // Refresh media items
+           setTimeout(() => {
+             onRefresh()
+           }, 2000)
+         }
+       } else {
+         showToast('Failed to transcribe video. Please try again.', 'error')
+       }
       
     } catch (error) {
       console.error('❌ Error transcribing YouTube video:', error)
