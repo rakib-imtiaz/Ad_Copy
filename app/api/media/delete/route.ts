@@ -38,6 +38,7 @@ export async function POST(request: NextRequest) {
     console.log('📊 Filename contains special chars:', /[^a-zA-Z0-9._-]/.test(file_name))
     console.log('🔄 Proxying media delete request to n8n...')
     console.log('Target URL:', API_ENDPOINTS.N8N_WEBHOOKS.DELETE_MEDIA_FILE)
+    console.log('🔍 Sending Authorization header:', `Bearer ${access_token?.substring(0, 20)}...`)
 
     // Forward the request to the n8n webhook with timeout
     const controller = new AbortController()
@@ -48,6 +49,7 @@ export async function POST(request: NextRequest) {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${access_token}`,
         },
         body: JSON.stringify({
           access_token,
