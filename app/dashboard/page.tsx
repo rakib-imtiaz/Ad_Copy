@@ -420,7 +420,7 @@ export default function Dashboard() {
   const { user, isAuthenticated, loading, logout } = useAuth();
   const [leftPanelOpen, setLeftPanelOpen] = React.useState(true)
   const [rightPanelOpen, setRightPanelOpen] = React.useState(true)
-  const [activeTab, setActiveTab] = React.useState<'files' | 'links' | 'transcripts'>('files')
+  const [activeTab, setActiveTab] = React.useState<'files' | 'links' | 'youtube' | 'image-analyzer' | 'transcripts'>('files')
   
   // Handle tab change with loading state
   const handleTabChange = async (newTab: 'files' | 'links' | 'youtube' | 'image-analyzer' | 'transcripts') => {
@@ -1947,9 +1947,16 @@ export default function Dashboard() {
         })))
         
         // Merge server items with local items, avoiding duplicates
+        // Use filename as the primary key for deduplication since IDs might differ
         const mergedItems = [...serverItems]
         localItems.forEach(localItem => {
-          if (!serverItems.find(serverItem => serverItem.id === localItem.id)) {
+          // Check if local item exists in server items by filename (more reliable than ID)
+          const existsInServer = serverItems.find(serverItem => 
+            serverItem.filename === localItem.filename && 
+            serverItem.type === localItem.type
+          )
+          
+          if (!existsInServer) {
             console.log('➕ Adding local item to merged list:', {
               id: localItem.id,
               type: localItem.type,
@@ -1957,7 +1964,7 @@ export default function Dashboard() {
             })
             mergedItems.push(localItem)
           } else {
-            console.log('⚠️ Local item already exists in server items:', {
+            console.log('⚠️ Local item already exists in server items (deduplicated by filename):', {
               id: localItem.id,
               type: localItem.type,
               filename: localItem.filename
@@ -1981,11 +1988,9 @@ export default function Dashboard() {
         return mergedItems
       })
 
-      // If Links tab is active, also fetch scraped contents
-      if (activeTab === 'links') {
-        console.log('🔄 Links tab is active, fetching scraped contents...')
-        await fetchScrapedContentsForTab()
-      }
+      // Always fetch scraped contents for all tabs to ensure complete refresh
+      console.log('🔄 Fetching scraped contents for all tabs...')
+      await fetchScrapedContentsForTab()
     } catch (error) {
       console.error('❌ Error fetching media library:', error)
       console.error('❌ Error details:', {
@@ -2245,10 +2250,9 @@ export default function Dashboard() {
           }
         }
         
-        // Add the new file to the media items list if we have valid data
+        // Log successful upload but don't immediately add to state to avoid duplicates
         if (newMediaItem) {
-          setMediaItems(prev => [newMediaItem, ...prev])
-          console.log('Added new file to media items:', newMediaItem)
+          console.log('Upload successful, file will appear after refresh:', newMediaItem)
         } else {
           console.warn('Could not create media item from upload response:', data)
         }
@@ -2256,12 +2260,12 @@ export default function Dashboard() {
 
       console.log('All uploads completed')
       
-      // Fallback: Refresh the media library to ensure all files are visible
-      // This ensures that even if the immediate state update fails, the files will appear
+      // Refresh the media library to show the newly uploaded files
+      // This ensures all uploaded files are visible and properly integrated
       setTimeout(() => {
-        console.log('Performing fallback refresh of media library...')
+        console.log('Refreshing media library to show uploaded files...')
         fetchMediaLibrary()
-      }, 1000)
+      }, 500)
       
     } catch (error) {
       console.error('Error uploading files:', error)
@@ -3291,16 +3295,25 @@ function MediaDrawer({ activeTab, onTabChange, mediaItems, setMediaItems, onRefr
       <div className="border-b border-[#EEEEEE] p-4">
         <div className="flex items-center justify-between mb-3">
           <SlideInText text="Media Library" className="font-medium" />
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={onRefresh}
-            disabled={isRefreshing}
-            className="flex items-center space-x-2 bg-[#1ABC9C] hover:bg-[#1ABC9C]/90 text-white border-0 shadow-md hover:shadow-lg transition-all duration-200"
-          >
-            <RefreshCw className={`h-3 w-3 ${isRefreshing ? 'animate-spin' : ''}`} />
-            <span className="text-xs font-medium">Refresh</span>
-          </Button>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={onRefresh}
+                  disabled={isRefreshing}
+                  className="flex items-center space-x-2 bg-[#1ABC9C] hover:bg-[#1ABC9C]/90 text-white border-0 shadow-md hover:shadow-lg transition-all duration-200"
+                >
+                  <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+                  <span className="text-sm font-medium">Refresh All</span>
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Refresh all media tabs (Files, Links, YouTube, Images, Transcripts)</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
         </div>
         <div className="bg-[#EEEEEE] p-1 rounded-lg overflow-x-auto scrollbar-thin scrollbar-thumb-[#929AAB] scrollbar-track-transparent">
           <div className="flex space-x-1 min-w-max">
