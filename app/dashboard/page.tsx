@@ -2518,7 +2518,7 @@ export default function Dashboard() {
       const item = mediaItems.find(item => item.id === itemId)
       let deleteResult = false
       
-      if (item && (item.type === 'scraped' || item.type === 'youtube' || item.type === 'transcript' || item.type === 'url')) {
+      if (item && (item.type === 'scraped' || item.type === 'youtube' || item.type === 'transcript' || item.type === 'url' || item.type === 'webpage')) {
         // For scraped content, YouTube, transcripts, and URLs, we need to use the resource_id from the item
         const resourceId = item.resourceId || itemId
         console.log('🗑️ Deleting scraped content/YouTube/transcript with resource ID:', resourceId, 'and name:', itemName)
@@ -3273,7 +3273,7 @@ function MediaDrawer({ activeTab, onTabChange, mediaItems, setMediaItems, onRefr
       {/* Content */}
       <div className="flex-1 overflow-y-auto p-4">
         {activeTab === 'files' && <FilesTab mediaItems={mediaItems} onUpload={onUpload} onDelete={onDelete} isDeleting={isDeleting} deletingItemId={deletingItemId} isLoadingTabContent={isLoadingTabContent} />}
-        {activeTab === 'links' && <LinksTab mediaItems={mediaItems} onDelete={handleDeleteItem} onRefresh={onRefresh} setMediaItems={setMediaItems} />}
+        {activeTab === 'links' && <LinksTab mediaItems={mediaItems} onDelete={handleDeleteItem} onRefresh={onRefresh} setMediaItems={setMediaItems} isDeleting={isDeleting} deletingItemId={deletingItemId} isLoadingTabContent={isLoadingTabContent} />}
         {activeTab === 'youtube' && <YouTubeTab mediaItems={mediaItems} onDelete={handleDeleteItem} onRefresh={onRefresh} setMediaItems={setMediaItems} isDeleting={isDeleting} deletingItemId={deletingItemId} isLoadingTabContent={isLoadingTabContent} />}
         {activeTab === 'image-analyzer' && <ImageAnalyzerTab mediaItems={mediaItems} onUpload={onUpload} onDelete={onDelete} />}
         {activeTab === 'transcripts' && <TranscriptsTab mediaItems={mediaItems} onDelete={onDelete} />}
@@ -3498,7 +3498,7 @@ function FilesTab({ mediaItems, onUpload, onDelete, isDeleting, deletingItemId, 
   )
 }
 
-function LinksTab({ mediaItems, onDelete, onRefresh, setMediaItems }: any) {
+function LinksTab({ mediaItems, onDelete, onRefresh, setMediaItems, isDeleting, deletingItemId, isLoadingTabContent }: any) {
   // Filter to show only webpage type items
   const webpageItems = mediaItems.filter((item: any) => item.type === 'webpage')
   const [urlInput, setUrlInput] = React.useState("")
@@ -3834,7 +3834,20 @@ function LinksTab({ mediaItems, onDelete, onRefresh, setMediaItems }: any) {
             </div>
       
       <div className="space-y-2">
-        {webpageItems.length > 0 ? (
+        {isLoadingTabContent ? (
+          <div className="space-y-3">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="flex items-center space-x-3 p-2 rounded-lg border border-gray-200 animate-pulse">
+                <div className="w-4 h-4 bg-gray-200 rounded"></div>
+                <div className="flex-1">
+                  <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
+                  <div className="h-3 bg-gray-200 rounded w-1/2"></div>
+                </div>
+                <div className="w-6 h-6 bg-gray-200 rounded"></div>
+              </div>
+            ))}
+          </div>
+        ) : webpageItems.length > 0 ? (
           webpageItems.map((item: any, index: number) => (
             <div 
               key={item.id} 
@@ -3859,11 +3872,16 @@ function LinksTab({ mediaItems, onDelete, onRefresh, setMediaItems }: any) {
                     e.stopPropagation()
                     onDelete(item.id, item.filename)
                   }}
-                  className="h-6 w-6 p-0 hover:bg-red-50 hover:text-red-600"
+                  disabled={isDeleting && deletingItemId === item.id}
+                  className="h-6 w-6 p-0 hover:bg-red-50 hover:text-red-600 disabled:opacity-50"
                 >
-                  <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                  </svg>
+                  {isDeleting && deletingItemId === item.id ? (
+                    <RefreshCw className="h-3 w-3 animate-spin" />
+                  ) : (
+                    <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
+                  )}
                 </Button>
         </div>
             </div>
