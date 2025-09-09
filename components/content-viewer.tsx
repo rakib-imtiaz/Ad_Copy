@@ -14,6 +14,9 @@ interface ContentViewerProps {
     sourceUrl?: string
     scrapedAt?: string
     filename?: string
+    isPdf?: boolean
+    pdfUrl?: string
+    fileType?: string
   }
 }
 
@@ -101,12 +104,37 @@ export function ContentViewer({ isOpen, onClose, content }: ContentViewerProps) 
             </div>
 
             {/* Content Body */}
-            <div 
-              className="prose prose-lg max-w-none"
-              dangerouslySetInnerHTML={{ 
-                __html: formatContent(content.content) 
-              }}
-            />
+            {content.isPdf && content.pdfUrl ? (
+              <div className="w-full h-[600px] border border-gray-300 rounded-lg overflow-hidden">
+                <iframe
+                  src={content.pdfUrl}
+                  className="w-full h-full"
+                  title={content.title}
+                  style={{ border: 'none' }}
+                >
+                  <p>
+                    Your browser doesn't support PDFs. 
+                    <a href={content.pdfUrl} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline ml-1">
+                      Download the PDF
+                    </a>
+                  </p>
+                </iframe>
+              </div>
+            ) : content.fileType === 'image' ? (
+              <div 
+                className="text-center"
+                dangerouslySetInnerHTML={{ 
+                  __html: content.content 
+                }}
+              />
+            ) : (
+              <div 
+                className="prose prose-lg max-w-none"
+                dangerouslySetInnerHTML={{ 
+                  __html: formatContent(content.content) 
+                }}
+              />
+            )}
           </div>
         </div>
       </div>

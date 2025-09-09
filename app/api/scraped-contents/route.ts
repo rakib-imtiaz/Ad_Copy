@@ -1,6 +1,77 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { API_ENDPOINTS } from '@/lib/api-config'
 
+export async function DELETE(request: NextRequest) {
+  try {
+    const accessToken = request.headers.get('authorization')?.replace('Bearer ', '')
+    const body = await request.json()
+    const { file_name } = body
+    
+    console.log('🗑️ Scraped content delete API route called')
+    console.log('📡 Request headers:', Object.fromEntries(request.headers.entries()))
+    console.log('🔍 Access token present:', !!accessToken)
+    console.log('🔍 Access token length:', accessToken?.length || 0)
+    console.log('🔍 File name to delete:', file_name)
+
+    if (!accessToken) {
+      console.error('❌ No access token provided')
+      return NextResponse.json({ error: 'Access token required' }, { status: 401 })
+    }
+
+    if (!file_name) {
+      console.error('❌ No file name provided')
+      return NextResponse.json({ error: 'File name is required' }, { status: 400 })
+    }
+
+    console.log('🔄 Deleting scraped content from n8n...')
+    console.log('Target URL:', API_ENDPOINTS.N8N_WEBHOOKS.DELETE_SCRAPED_CONTENT)
+
+    const response = await fetch(API_ENDPOINTS.N8N_WEBHOOKS.DELETE_SCRAPED_CONTENT, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${accessToken}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        file_name: file_name
+      }),
+    })
+
+    console.log('📡 n8n delete response status:', response.status)
+    console.log('📡 n8n delete response status text:', response.statusText)
+
+    if (!response.ok) {
+      console.error('❌ n8n delete webhook failed:', response.status, response.statusText)
+      const errorText = await response.text().catch(() => 'Unable to read error response')
+      console.error('Error response:', errorText)
+      
+      return NextResponse.json(
+        { 
+          error: `Failed to delete scraped content: ${response.status} ${response.statusText}`,
+          details: errorText
+        },
+        { status: response.status }
+      )
+    }
+
+    const data = await response.json()
+    console.log('✅ Scraped content deleted successfully:', data)
+    
+    return NextResponse.json({
+      success: true,
+      message: 'Scraped content deleted successfully',
+      data: data
+    })
+
+  } catch (error) {
+    console.error('❌ Error in scraped content delete:', error)
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    )
+  }
+}
+
 export async function GET(request: NextRequest) {
   try {
     const accessToken = request.headers.get('authorization')?.replace('Bearer ', '')

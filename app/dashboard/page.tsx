@@ -7,7 +7,7 @@ import {
   Bot, Settings, Upload, FileText, Link2, Mic, 
   PanelLeftClose, PanelRightClose, Send, Paperclip,
   ChevronRight, MoreHorizontal, Star, Clock, Zap, RefreshCw, Image, Activity,
-  Sparkles, ArrowRight, ChevronDown, Check, Power
+  Sparkles, ArrowRight, ChevronDown, Check, Power, Headphones, Video
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -421,6 +421,22 @@ export default function Dashboard() {
   const [leftPanelOpen, setLeftPanelOpen] = React.useState(true)
   const [rightPanelOpen, setRightPanelOpen] = React.useState(true)
   const [activeTab, setActiveTab] = React.useState<'files' | 'links' | 'transcripts'>('files')
+  
+  // Handle tab change with loading state
+  const handleTabChange = async (newTab: 'files' | 'links' | 'youtube' | 'image-analyzer' | 'transcripts') => {
+    if (newTab === activeTab) return
+    
+    // Show loading immediately
+    setIsLoadingTabContent(true)
+    setActiveTab(newTab)
+    
+    // Wait for content to be ready (simulate async loading)
+    await new Promise(resolve => setTimeout(resolve, 500))
+    
+    // Hide loading
+    setIsLoadingTabContent(false)
+  }
+  
   const [selectedAgent, setSelectedAgent] = React.useState("")
   
   // Get sidebar state updaters
@@ -462,6 +478,9 @@ export default function Dashboard() {
   const [mediaItems, setMediaItems] = React.useState<any[]>([])
   const [isRefreshing, setIsRefreshing] = React.useState(false)
   const [isLoadingMedia, setIsLoadingMedia] = React.useState(false)
+  const [isLoadingTabContent, setIsLoadingTabContent] = React.useState(false)
+  const [isDeleting, setIsDeleting] = React.useState(false)
+  const [deletingItemId, setDeletingItemId] = React.useState<string | null>(null)
   const [isAgentSelectorOpen, setIsAgentSelectorOpen] = React.useState(false)
   const [isMediaSelectorOpen, setIsMediaSelectorOpen] = React.useState(false)
   const [selectedMediaItems, setSelectedMediaItems] = React.useState<Set<string>>(new Set())
@@ -1339,8 +1358,8 @@ export default function Dashboard() {
     }
   }
 
-  // Fetch chat history from n8n webhook
-  const fetchChatHistory = async () => {
+  // Fetch chat history from n8n webhook with retry mechanism
+  const fetchChatHistory = async (retryCount = 0) => {
     console.log('=== FETCH CHAT HISTORY CLIENT START ===')
     console.log('Timestamp:', new Date().toISOString())
     
@@ -1364,6 +1383,8 @@ export default function Dashboard() {
           'Authorization': `Bearer ${accessToken}`,
           'Content-Type': 'application/json',
         },
+        // Add timeout to prevent hanging requests
+        signal: AbortSignal.timeout(10000), // 10 second timeout
       })
 
       console.log('📡 Chat history response received:')
@@ -1425,6 +1446,15 @@ export default function Dashboard() {
       console.log('📚 Processed chat history data:', chatHistoryData)
       console.log('📚 Chat history count:', chatHistoryData.length)
       
+      // Sort chat history by creation date (newest first)
+      chatHistoryData.sort((a: any, b: any) => {
+        const dateA = new Date(a.created_at).getTime()
+        const dateB = new Date(b.created_at).getTime()
+        return dateB - dateA // Newest first
+      })
+      
+      console.log('📚 Sorted chat history (newest first):', chatHistoryData)
+      
       // Update chat history state
       setChatHistory(chatHistoryData)
       updateChatHistory(chatHistoryData)
@@ -1444,6 +1474,42 @@ export default function Dashboard() {
       console.error('  - Error:', error)
       console.error('  - Error message:', error instanceof Error ? error.message : 'Unknown error')
       console.error('  - Error stack:', error instanceof Error ? error.stack : 'No stack trace')
+      
+      // Handle specific error types and retry logic
+      if (error instanceof Error) {
+        if (error.name === 'AbortError') {
+          console.error('❌ Request timed out after 10 seconds')
+          if (retryCount < 2) {
+            console.log(`🔄 Retrying chat history fetch (attempt ${retryCount + 1}/2)...`)
+            setTimeout(() => fetchChatHistory(retryCount + 1), 2000) // Retry after 2 seconds
+            return null
+          }
+          showToast('Chat history request timed out. Please try again.', 'error')
+        } else if (error.message.includes('Failed to fetch')) {
+          console.error('❌ Network error - unable to reach the server')
+          console.error('❌ This could be due to:')
+          console.error('  - Network connectivity issues')
+          console.error('  - n8n webhook server being down')
+          console.error('  - CORS issues')
+          console.error('  - Firewall blocking the request')
+          
+          if (retryCount < 2) {
+            console.log(`🔄 Retrying chat history fetch (attempt ${retryCount + 1}/2)...`)
+            setTimeout(() => fetchChatHistory(retryCount + 1), 2000) // Retry after 2 seconds
+            return null
+          }
+          showToast('Unable to load chat history. Please check your connection and try again.', 'error')
+        } else {
+          showToast('Failed to load chat history. Please try again.', 'error')
+        }
+      } else {
+        showToast('An unexpected error occurred while loading chat history.', 'error')
+      }
+      
+      // Return empty chat history instead of null to prevent UI errors
+      console.log('🔄 Returning empty chat history due to error')
+      setChatHistory([])
+      updateChatHistory([])
       
       console.log('=== FETCH CHAT HISTORY CLIENT END (EXCEPTION) ===')
       return null
@@ -1696,6 +1762,10 @@ export default function Dashboard() {
   // Fetch media library data
   const fetchMediaLibrary = async () => {
     try {
+      console.log('🔄 FETCH MEDIA LIBRARY STARTED')
+      console.log('📊 Current mediaItems before fetch:', mediaItems.length)
+      console.log('📊 Current mediaItems types:', mediaItems.map(item => item.type))
+      
       setIsRefreshing(true)
       setIsLoadingMedia(true)
       const accessToken = authService.getAuthToken()
@@ -1814,7 +1884,62 @@ export default function Dashboard() {
       console.log('Transformed media items:', transformedItems)
       console.log('📊 Items with content:', transformedItems.filter(item => item.content).length)
       console.log('📊 File items to display:', transformedItems.filter(item => ['pdf', 'doc', 'txt', 'audio', 'video', 'image'].includes(item.type)))
-      setMediaItems(transformedItems)
+      console.log('📊 YouTube items:', transformedItems.filter(item => item.type === 'youtube').length)
+      console.log('📊 Transcript items:', transformedItems.filter(item => item.type === 'transcript').length)
+      
+      // Preserve locally created items (like YouTube transcripts) that might not be on the server
+      setMediaItems(prevItems => {
+        const serverItems = transformedItems
+        const localItems = prevItems.filter(item => 
+          item.type === 'youtube' || item.type === 'transcript' || item.type === 'scraped'
+        )
+        
+        console.log('🔄 MERGING PROCESS:')
+        console.log('📊 Server items count:', serverItems.length)
+        console.log('📊 Server items types:', serverItems.map(item => item.type))
+        console.log('📊 Local items count:', localItems.length)
+        console.log('📊 Local items types:', localItems.map(item => item.type))
+        console.log('📊 Local items details:', localItems.map(item => ({
+          id: item.id,
+          type: item.type,
+          filename: item.filename,
+          title: item.title
+        })))
+        
+        // Merge server items with local items, avoiding duplicates
+        const mergedItems = [...serverItems]
+        localItems.forEach(localItem => {
+          if (!serverItems.find(serverItem => serverItem.id === localItem.id)) {
+            console.log('➕ Adding local item to merged list:', {
+              id: localItem.id,
+              type: localItem.type,
+              filename: localItem.filename
+            })
+            mergedItems.push(localItem)
+          } else {
+            console.log('⚠️ Local item already exists in server items:', {
+              id: localItem.id,
+              type: localItem.type,
+              filename: localItem.filename
+            })
+          }
+        })
+        
+        console.log('📊 Final merged items count:', mergedItems.length)
+        console.log('📊 Final merged items types:', mergedItems.map(item => item.type))
+        console.log('📊 Final merged items by type:', {
+          youtube: mergedItems.filter(item => item.type === 'youtube').length,
+          transcript: mergedItems.filter(item => item.type === 'transcript').length,
+          scraped: mergedItems.filter(item => item.type === 'scraped').length,
+          audio: mergedItems.filter(item => item.type === 'audio').length,
+          video: mergedItems.filter(item => item.type === 'video').length,
+          image: mergedItems.filter(item => item.type === 'image').length,
+          file: mergedItems.filter(item => ['pdf', 'doc', 'txt'].includes(item.type)).length,
+          url: mergedItems.filter(item => item.type === 'url').length
+        })
+        
+        return mergedItems
+      })
 
       // If Links tab is active, also fetch scraped contents
       if (activeTab === 'links') {
@@ -1850,6 +1975,10 @@ export default function Dashboard() {
     if (fileType === 'image') return 'image'
     if (fileType === 'video') return 'video'
     if (fileType === 'audio') return 'audio'
+    if (fileType === 'youtube') return 'youtube'
+    if (fileType === 'transcript') return 'transcript'
+    if (fileType === 'scraped') return 'scraped'
+    if (fileType === 'url') return 'url'
     
     // Handle MIME types
     if (fileType.startsWith('image/')) return 'image'
@@ -2109,38 +2238,93 @@ export default function Dashboard() {
         return
       }
 
-      console.log('Deleting file:', filename, 'with media ID:', mediaId)
-      console.log('Request URL:', API_ENDPOINTS.N8N_WEBHOOKS.DELETE_MEDIA_FILE)
-      console.log('Request headers:', {
-        'Authorization': `Bearer ${accessToken}`,
-        'Content-Type': 'application/json',
+      // Find the media item to determine its type
+      const mediaItem = mediaItems.find(item => 
+        item.id === mediaId || 
+        item.filename === filename || 
+        item.title === filename
+      )
+
+      console.log('🗑️ Deleting file:', filename, 'with media ID:', mediaId)
+      console.log('🔍 Found media item for deletion:', mediaItem)
+
+      // Determine if this is scraped content or regular media
+      const isScrapedContent = mediaItem?.type === 'scraped' || 
+                              mediaItem?.type === 'url' || 
+                              mediaItem?.type === 'youtube' ||
+                              mediaItem?.type === 'transcript' ||
+                              filename.includes('scraped') ||
+                              filename.includes('sample_content')
+
+      console.log('🎯 File type determination:', {
+        isScrapedContent,
+        mediaItemType: mediaItem?.type,
+        filename
       })
+
+      let response
+      if (isScrapedContent) {
+        // Use the scraped content delete webhook directly
+        console.log('🔄 Using scraped content delete webhook')
+        console.log('Request URL:', API_ENDPOINTS.N8N_WEBHOOKS.DELETE_SCRAPED_CONTENT)
+        response = await fetch(API_ENDPOINTS.N8N_WEBHOOKS.DELETE_SCRAPED_CONTENT, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${accessToken}`,
+          },
+          body: JSON.stringify({
+            access_token: accessToken,
+            file_name: filename
+          }),
+        })
+      } else {
+        // Use the regular media delete webhook directly
+        console.log('🔄 Using regular media delete webhook')
+        console.log('Request URL:', API_ENDPOINTS.N8N_WEBHOOKS.DELETE_MEDIA_FILE)
+        response = await fetch(API_ENDPOINTS.N8N_WEBHOOKS.DELETE_MEDIA_FILE, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${accessToken}`,
+          },
+          body: JSON.stringify({
+            access_token: accessToken,
+            file_name: filename
+          }),
+        })
+      }
+
+      console.log('Access token present:', !!accessToken)
+      console.log('Access token length:', accessToken?.length || 0)
+      console.log('Filename length:', filename.length)
+      console.log('Filename contains special chars:', /[^a-zA-Z0-9._-]/.test(filename))
       console.log('Request body:', {
         access_token: accessToken,
         file_name: filename
       })
-
-      const response = await fetch(API_ENDPOINTS.N8N_WEBHOOKS.DELETE_MEDIA_FILE, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${accessToken}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          access_token: accessToken,
-          file_name: filename
-        }),
-      })
+      console.log('Webhook URL being called:', isScrapedContent ? API_ENDPOINTS.N8N_WEBHOOKS.DELETE_SCRAPED_CONTENT : API_ENDPOINTS.N8N_WEBHOOKS.DELETE_MEDIA_FILE)
 
       if (!response.ok) {
         console.error('Delete failed for file:', filename, 'Status:', response.status)
         console.error('Response headers:', response.headers)
-        const errorData = await response.json().catch(() => ({}))
-        console.error('Error details:', errorData)
+        
+        let errorMessage = 'Failed to delete file'
+        try {
+          const errorData = await response.json()
+          console.error('Error details:', errorData)
+          errorMessage = errorData.message || errorData.error || errorData.details || `Server error (${response.status})`
+        } catch (parseError) {
+          console.error('Could not parse error response:', parseError)
+          errorMessage = `Server error (${response.status})`
+        }
+        
         console.error('Request body sent:', {
-          access_token: accessToken,
           file_name: filename
         })
+        
+        // Show user-friendly error message
+        showToast(`Failed to delete "${filename}": ${errorMessage}`, 'error')
         return false
       }
 
@@ -2150,28 +2334,51 @@ export default function Dashboard() {
       // Remove the file from the local state
       setMediaItems(prev => prev.filter(item => item.id !== mediaId))
       
+      // Show success message
+      showToast(`Successfully deleted "${filename}"`, 'success')
+      
       return true
     } catch (error) {
       console.error('Error deleting file:', error)
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred'
+      showToast(`Failed to delete "${filename}": ${errorMessage}`, 'error')
       return false
     }
   }
 
-  // Handle media item selection for RAG
+  // Handle media item selection for RAG with optimistic updates
   const handleMediaSelection = async (itemId: string, isSelected: boolean) => {
+    const accessToken = authService.getAuthToken()
+    if (!accessToken) {
+      console.error("No access token available")
+      return
+    }
+
+    const item = mediaItems.find(item => item.id === itemId)
+    if (!item) {
+      console.error("Item not found:", itemId)
+      return
+    }
+
+    // Prevent rapid clicking on the same item
+    const currentSelection = selectedMediaItems.has(itemId)
+    if (currentSelection === isSelected) {
+      return // Already in the desired state
+    }
+
+    // Optimistic update - update UI immediately
+    if (isSelected) {
+      setSelectedMediaItems(prev => new Set([...prev, itemId]))
+    } else {
+      setSelectedMediaItems(prev => {
+        const newSet = new Set(prev)
+        newSet.delete(itemId)
+        return newSet
+      })
+    }
+
+    // Make API call in background
     try {
-      const accessToken = authService.getAuthToken()
-      if (!accessToken) {
-        console.error("No access token available")
-        return
-      }
-
-      const item = mediaItems.find(item => item.id === itemId)
-      if (!item) {
-        console.error("Item not found:", itemId)
-        return
-      }
-
       if (isSelected) {
         // Add item to RAG
         console.log('🔗 Adding item to RAG:', item.filename)
@@ -2187,14 +2394,19 @@ export default function Dashboard() {
           })
         })
 
-        if (response.ok) {
-          setSelectedMediaItems(prev => new Set([...prev, itemId]))
-          showToast('Item added to chat context', 'success')
-        } else {
+        if (!response.ok) {
+          // Revert optimistic update on failure
+          setSelectedMediaItems(prev => {
+            const newSet = new Set(prev)
+            newSet.delete(itemId)
+            return newSet
+          })
           console.error('Failed to add item to RAG:', response.status, response.statusText)
           const errorText = await response.text().catch(() => 'Unable to read error response')
           console.error('Error response body:', errorText)
           showToast('Failed to add item to chat context', 'error')
+        } else {
+          showToast('Item added to chat context', 'success')
         }
       } else {
         // Remove item from RAG
@@ -2211,21 +2423,28 @@ export default function Dashboard() {
           })
         })
 
-        if (response.ok) {
-          setSelectedMediaItems(prev => {
-            const newSet = new Set(prev)
-            newSet.delete(itemId)
-            return newSet
-          })
-          showToast('Item removed from chat context', 'success')
-        } else {
+        if (!response.ok) {
+          // Revert optimistic update on failure
+          setSelectedMediaItems(prev => new Set([...prev, itemId]))
           console.error('Failed to remove item from RAG:', response.status, response.statusText)
           const errorText = await response.text().catch(() => 'Unable to read error response')
           console.error('Error response body:', errorText)
           showToast('Failed to remove item from chat context', 'error')
+        } else {
+          showToast('Item removed from chat context', 'success')
         }
       }
     } catch (error) {
+      // Revert optimistic update on error
+      if (isSelected) {
+        setSelectedMediaItems(prev => {
+          const newSet = new Set(prev)
+          newSet.delete(itemId)
+          return newSet
+        })
+      } else {
+        setSelectedMediaItems(prev => new Set([...prev, itemId]))
+      }
       console.error('Error handling media selection:', error)
       showToast('Error updating chat context', 'error')
     }
@@ -2353,10 +2572,10 @@ export default function Dashboard() {
     // Check if this is a scraped content item by looking for resource_id
     const item = mediaItems.find(item => item.id === itemId)
     
-    if (item && item.type === 'scraped') {
-      // For scraped content, we need to use the resource_id from the item
+    if (item && (item.type === 'scraped' || item.type === 'youtube' || item.type === 'transcript' || item.type === 'url')) {
+      // For scraped content, YouTube, transcripts, and URLs, we need to use the resource_id from the item
       const resourceId = item.resourceId || itemId
-      console.log('🗑️ Deleting scraped content with resource ID:', resourceId, 'and name:', itemName)
+      console.log('🗑️ Deleting scraped content/YouTube/transcript with resource ID:', resourceId, 'and name:', itemName)
       return await deleteScrapedContent(resourceId, itemName)
     } else {
       // For regular media files, use the existing delete function
@@ -2433,12 +2652,49 @@ export default function Dashboard() {
               selectedAgent={selectedAgent}
               onSendMessage={handleSendMessage}
               isLoading={isLoading}
-              onOpenMediaSelector={async () => {
-                // Refresh media items when opening the selector
-                await fetchMediaLibrary()
+              onOpenMediaSelector={() => {
+                console.log('🚀 MEDIA SELECTOR OPENED - Starting debug...')
+                console.log('📊 Current mediaItems count:', mediaItems.length)
+                console.log('📊 Current mediaItems:', mediaItems)
+                console.log('📊 MediaItems by type:', {
+                  youtube: mediaItems.filter(item => item.type === 'youtube').length,
+                  transcript: mediaItems.filter(item => item.type === 'transcript').length,
+                  scraped: mediaItems.filter(item => item.type === 'scraped').length,
+                  audio: mediaItems.filter(item => item.type === 'audio').length,
+                  video: mediaItems.filter(item => item.type === 'video').length,
+                  image: mediaItems.filter(item => item.type === 'image').length,
+                  file: mediaItems.filter(item => ['pdf', 'doc', 'txt'].includes(item.type)).length,
+                  url: mediaItems.filter(item => item.type === 'url').length
+                })
+                
+                // Log each item with full details
+                mediaItems.forEach((item, index) => {
+                  console.log(`📄 Item ${index + 1}:`, {
+                    id: item.id,
+                    type: item.type,
+                    filename: item.filename,
+                    title: item.title,
+                    content: item.content ? `${item.content.substring(0, 100)}...` : 'No content',
+                    transcript: item.transcript ? `${item.transcript.substring(0, 100)}...` : 'No transcript',
+                    resourceName: item.resourceName,
+                    url: item.url,
+                    allKeys: Object.keys(item)
+                  })
+                })
+                
+                // Open the media selector immediately for better UX
                 setIsMediaSelectorOpen(true)
+                // Only refresh if we don't have media items or they're stale
+                if (mediaItems.length === 0) {
+                  console.log('🔄 No media items found, fetching from server...')
+                  fetchMediaLibrary()
+                } else {
+                  console.log('✅ Using existing media items, no server fetch needed')
+                }
               }}
               selectedMediaCount={selectedMediaItems.size}
+              selectedMediaItems={selectedMediaItems}
+              onUploadFiles={uploadMediaFiles}
             />
           </div>
         </div>
@@ -2454,7 +2710,7 @@ export default function Dashboard() {
                   <div className="flex-1 overflow-y-auto">
           <MediaDrawer 
             activeTab={activeTab} 
-            onTabChange={setActiveTab} 
+            onTabChange={handleTabChange} 
             mediaItems={mediaItems}
             setMediaItems={setMediaItems}
             onRefresh={fetchMediaLibrary}
@@ -2462,6 +2718,9 @@ export default function Dashboard() {
             onDelete={deleteMediaFile}
             handleDeleteItem={handleDeleteItem}
             isRefreshing={isRefreshing}
+            isLoadingTabContent={isLoadingTabContent}
+            isDeleting={isDeleting}
+            deletingItemId={deletingItemId}
           />
         </div>
         </motion.div>
@@ -2559,20 +2818,64 @@ function MediaSelector({
 }) {
   if (!isOpen) return null
 
+  console.log('🎯 MEDIA SELECTOR COMPONENT RENDERED')
+  console.log('🔍 MediaSelector - All mediaItems count:', mediaItems.length)
   console.log('🔍 MediaSelector - All mediaItems:', mediaItems)
   console.log('🔍 MediaSelector - Items with type "scraped":', mediaItems.filter(item => item.type === 'scraped'))
+  console.log('🔍 MediaSelector - Items with type "youtube":', mediaItems.filter(item => item.type === 'youtube'))
+  console.log('🔍 MediaSelector - Items with type "transcript":', mediaItems.filter(item => item.type === 'transcript'))
+  console.log('🔍 MediaSelector - Items with type "url":', mediaItems.filter(item => item.type === 'url'))
+  console.log('🔍 MediaSelector - Items with type "audio":', mediaItems.filter(item => item.type === 'audio'))
+  console.log('🔍 MediaSelector - Items with type "video":', mediaItems.filter(item => item.type === 'video'))
 
-  const availableItems = mediaItems.filter(item => {
-    const shouldInclude = item.content || item.type === 'url' || item.type === 'scraped' || 
-      item.type === 'file' || item.type === 'document' || item.type === 'pdf' ||
-      item.type === 'text' || item.type === 'image' || item.filename
+  const availableItems = mediaItems.filter((item, index) => {
+    // Only include content types that should pass context to chat
+    // Exclude media files (pdf, doc, txt, audio, video, image) but include scraped content, transcriptions, and YouTube links
+    const contextTypes = ['url', 'transcript', 'scraped', 'youtube']
+    const hasValidType = contextTypes.includes(item.type)
+    const hasContent = !!item.content
+    const hasTranscript = !!item.transcript
+    const hasResourceName = !!item.resourceName
+    const hasTitle = !!item.title
+    const hasFilename = !!item.filename
     
-    if (item.type === 'scraped') {
-      console.log('🔍 Scraped item found:', item)
-      console.log('🔍 Should include:', shouldInclude)
+    const shouldInclude = hasValidType || hasContent || hasTranscript || hasResourceName || hasTitle || hasFilename
+    
+    console.log(`🔍 Filtering item ${index + 1}:`, {
+      id: item.id,
+      type: item.type,
+      filename: item.filename,
+      hasValidType,
+      hasContent,
+      hasTranscript,
+      hasResourceName,
+      hasTitle,
+      hasFilename,
+      shouldInclude,
+      allKeys: Object.keys(item)
+    })
+    
+    if (item.type === 'scraped' || item.type === 'transcript' || item.type === 'audio' || item.type === 'video' || item.type === 'youtube' || item.type === 'url') {
+      console.log('🎯 SPECIAL ITEM DETAILS:', {
+        type: item.type,
+        filename: item.filename,
+        content: item.content ? `${item.content.substring(0, 50)}...` : 'No content',
+        transcript: item.transcript ? `${item.transcript.substring(0, 50)}...` : 'No transcript',
+        resourceName: item.resourceName,
+        title: item.title,
+        url: item.url
+      })
     }
     
     return shouldInclude
+  })
+
+  console.log('🔍 MediaSelector - Available items after filtering:', availableItems.length)
+  console.log('🔍 MediaSelector - Available items by type (context-enabled only):', {
+    youtube: availableItems.filter(item => item.type === 'youtube').length,
+    transcript: availableItems.filter(item => item.type === 'transcript').length,
+    scraped: availableItems.filter(item => item.type === 'scraped').length,
+    url: availableItems.filter(item => item.type === 'url').length
   })
 
   return (
@@ -2615,11 +2918,19 @@ function MediaSelector({
             </div>
           ) : (
             <div className="space-y-3">
-              {availableItems.map((item) => {
+              {availableItems.map((item, index) => {
+                console.log(`🎨 Rendering item ${index + 1}:`, {
+                  id: item.id,
+                  type: item.type,
+                  filename: item.filename,
+                  title: item.title,
+                  content: item.content ? `${item.content.substring(0, 30)}...` : 'No content',
+                  transcript: item.transcript ? `${item.transcript.substring(0, 30)}...` : 'No transcript'
+                })
+                
                 const isSelected = selectedMediaItems.has(item.id)
-                const isImage = ['image', 'jpg', 'jpeg', 'png', 'gif', 'webp'].includes(item.type)
                 const isLink = item.type === 'url' || item.type === 'scraped'
-                const isFile = item.type === 'file' || item.type === 'document' || item.type === 'pdf' || item.type === 'text'
+                const isTranscript = item.type === 'transcript' || item.type === 'youtube'
                 
                 return (
                   <div 
@@ -2636,31 +2947,35 @@ function MediaSelector({
                         <div className={`p-2 rounded-lg ${
                           isSelected ? 'bg-blue-100' : 'bg-gray-100'
                         }`}>
-                          {isImage ? (
-                            <Image className={`h-4 w-4 ${isSelected ? 'text-blue-600' : 'text-gray-600'}`} />
-                          ) : isLink ? (
+                          {isLink ? (
                             <Link2 className={`h-4 w-4 ${isSelected ? 'text-blue-600' : 'text-gray-600'}`} />
-                          ) : isFile ? (
-                            <FileText className={`h-4 w-4 ${isSelected ? 'text-blue-600' : 'text-gray-600'}`} />
+                          ) : isTranscript ? (
+                            <Mic className={`h-4 w-4 ${isSelected ? 'text-blue-600' : 'text-gray-600'}`} />
                           ) : (
                             <FileText className={`h-4 w-4 ${isSelected ? 'text-blue-600' : 'text-gray-600'}`} />
                           )}
                         </div>
                         
                         <div className="flex-1 min-w-0">
-                          <h4 className="font-medium text-gray-900 truncate">{item.filename}</h4>
+                          <h4 className="font-medium text-gray-900 truncate">
+                            {item.filename || item.title || item.url || `Media Item ${item.id.slice(0, 8)}`}
+                          </h4>
                           <div className="flex items-center space-x-2 mt-1">
                             <span className={`text-xs px-2 py-1 rounded-full ${
-                              isImage ? 'bg-green-100 text-green-800' :
                               isLink ? 'bg-blue-100 text-blue-800' :
-                              isFile ? 'bg-purple-100 text-purple-800' :
+                              isTranscript ? 'bg-indigo-100 text-indigo-800' :
                               'bg-gray-100 text-gray-800'
                             }`}>
-                              {isImage ? 'Image' : isLink ? 'Link' : isFile ? 'File' : 'Document'}
+                              {isLink ? 'Link' : 
+                               isTranscript ? 'Transcript' :
+                               'Content'}
                             </span>
-                            {item.content ? (
+                            {(item.content || item.transcript || item.resourceName || item.title) ? (
                               <span className="text-xs text-gray-500">
-                                {item.content.length > 100 ? `${item.content.substring(0, 100)}...` : item.content}
+                                {(() => {
+                                  const content = item.content || item.transcript || item.resourceName || item.title || ''
+                                  return content.length > 100 ? `${content.substring(0, 100)}...` : content
+                                })()}
                               </span>
                             ) : item.filename && (
                               <span className="text-xs text-gray-500">
@@ -2946,7 +3261,7 @@ function MobileSidebar({ agents, conversations, chatHistory, isLoadingChatHistor
 }
 
 // Media Drawer Component  
-function MediaDrawer({ activeTab, onTabChange, mediaItems, setMediaItems, onRefresh, onUpload, onDelete, handleDeleteItem, isRefreshing }: any) {
+function MediaDrawer({ activeTab, onTabChange, mediaItems, setMediaItems, onRefresh, onUpload, onDelete, handleDeleteItem, isRefreshing, isLoadingTabContent, isDeleting, deletingItemId }: any) {
   const tabs = [
     { id: 'files' as const, label: 'Files', icon: FileText },
     { id: 'links' as const, label: 'Links', icon: Link2 },
@@ -2994,7 +3309,7 @@ function MediaDrawer({ activeTab, onTabChange, mediaItems, setMediaItems, onRefr
 
       {/* Content */}
       <div className="flex-1 overflow-y-auto p-4">
-        {activeTab === 'files' && <FilesTab mediaItems={mediaItems} onUpload={onUpload} onDelete={onDelete} />}
+        {activeTab === 'files' && <FilesTab mediaItems={mediaItems} onUpload={onUpload} onDelete={onDelete} isDeleting={isDeleting} deletingItemId={deletingItemId} isLoadingTabContent={isLoadingTabContent} />}
         {activeTab === 'links' && <LinksTab mediaItems={mediaItems} onDelete={handleDeleteItem} onRefresh={onRefresh} setMediaItems={setMediaItems} />}
         {activeTab === 'youtube' && <YouTubeTab mediaItems={mediaItems} onDelete={handleDeleteItem} onRefresh={onRefresh} setMediaItems={setMediaItems} />}
         {activeTab === 'image-analyzer' && <ImageAnalyzerTab mediaItems={mediaItems} onUpload={onUpload} onDelete={onDelete} />}
@@ -3005,10 +3320,12 @@ function MediaDrawer({ activeTab, onTabChange, mediaItems, setMediaItems, onRefr
 }
 
 // Media Tab Components
-function FilesTab({ mediaItems, onUpload, onDelete }: any) {
+function FilesTab({ mediaItems, onUpload, onDelete, isDeleting, deletingItemId, isLoadingTabContent }: any) {
   const [dragActive, setDragActive] = React.useState(false)
   const [isUploading, setIsUploading] = React.useState(false)
   const fileInputRef = React.useRef<HTMLInputElement>(null)
+  const [viewerContent, setViewerContent] = React.useState<any>(null)
+  const [isViewerOpen, setIsViewerOpen] = React.useState(false)
   
   const fileItems = mediaItems.filter((item: any) => 
     ['pdf', 'doc', 'txt', 'audio', 'video'].includes(item.type)
@@ -3138,7 +3455,40 @@ function FilesTab({ mediaItems, onUpload, onDelete }: any) {
             }
 
             return (
-              <div key={item.id} className="flex items-center space-x-3 p-3 rounded-lg hover:bg-white border border-transparent hover:border-[#EEEEEE] transition-colors">
+              <div key={item.id} className="flex items-center space-x-3 p-3 rounded-lg hover:bg-white border border-transparent hover:border-[#EEEEEE] transition-colors cursor-pointer"
+                   onClick={() => {
+                     // Handle file viewing - for PDFs and documents
+                     if (item.type === 'pdf') {
+                       // Create PDF viewer content
+                       setViewerContent({
+                         title: item.filename,
+                         content: '', // PDF content will be handled differently
+                         isPdf: true,
+                         pdfUrl: item.url || `/api/media/view/${item.id}`,
+                         fileType: 'pdf'
+                       })
+                       setIsViewerOpen(true)
+                     } else if (item.type === 'image') {
+                       // Create image viewer content
+                       setViewerContent({
+                         title: item.filename,
+                         content: `<img src="${item.url || `/api/media/view/${item.id}`}" alt="${item.filename}" style="max-width: 100%; height: auto;" />`,
+                         fileType: 'image'
+                       })
+                       setIsViewerOpen(true)
+                     } else if (item.content) {
+                       // For files with text content
+                       setViewerContent({
+                         title: item.filename,
+                         content: item.content,
+                         fileType: item.type
+                       })
+                       setIsViewerOpen(true)
+                     } else {
+                       // For other files, open in new tab
+                       window.open(item.url || `/api/media/view/${item.id}`, '_blank')
+                     }
+                   }}>
                 {getFileIcon(item.type)}
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium truncate text-gray-900">{item.filename}</p>
@@ -3153,9 +3503,13 @@ function FilesTab({ mediaItems, onUpload, onDelete }: any) {
                       </>
                     )}
                   </div>
+                  <p className="text-xs text-blue-500 mt-1 opacity-75">
+                    👆 Click to view
+                  </p>
                 </div>
                 <ThreeDotsMenu 
                   onDelete={() => onDelete(item.id, item.filename)}
+                  isDeleting={isDeleting && deletingItemId === item.id}
                 />
               </div>
             )
@@ -3168,6 +3522,15 @@ function FilesTab({ mediaItems, onUpload, onDelete }: any) {
           </div>
         )}
       </div>
+      
+      {/* Content Viewer for PDFs and other files */}
+      {viewerContent && (
+        <ContentViewer
+          isOpen={isViewerOpen}
+          onClose={() => setIsViewerOpen(false)}
+          content={viewerContent}
+        />
+      )}
     </div>
   )
 }
@@ -3521,6 +3884,9 @@ function LinksTab({ mediaItems, onDelete, onRefresh, setMediaItems }: any) {
                 <p className="text-xs text-[#929AAB]">
                   Webpage Content
                 </p>
+                <p className="text-xs text-blue-500 mt-1 opacity-75">
+                  👆 Click to view
+                </p>
           </div>
               <div className="flex items-center space-x-2">
                 <Button
@@ -3752,6 +4118,9 @@ function YouTubeTab({ mediaItems, onDelete, onRefresh, setMediaItems }: any) {
                 <p className="text-xs text-gray-500">
                   {item.channel && `Channel: ${item.channel}`}
                   {item.duration && ` • ${item.duration}`}
+                </p>
+                <p className="text-xs text-blue-500 mt-1 opacity-75">
+                  👆 Click to view
                 </p>
               </div>
               <div className="flex items-center space-x-2">
@@ -4071,6 +4440,9 @@ function ImageAnalyzerTab({ mediaItems, onUpload, onDelete }: any) {
                         </span>
                       )}
                     </div>
+                      <p className="text-xs text-blue-500 mt-1 opacity-75">
+                        👆 Click buttons to view/analyze
+                      </p>
                       
                       {/* Buttons moved under the filename */}
                       <div className="flex items-center space-x-2">

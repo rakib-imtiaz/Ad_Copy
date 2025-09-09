@@ -3,7 +3,7 @@
 import * as React from "react"
 import {
   Send, User, Download, Copy, RotateCcw, Zap, Star, MessageSquare,
-  Pin, Trash2, Edit, CheckCircle, Plus, Mic, Volume2, Bot
+  Pin, Trash2, Edit, CheckCircle, Plus, Mic, Volume2, Bot, Upload
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -34,6 +34,9 @@ interface ChatInterfaceProps {
   // Media selector props
   onOpenMediaSelector?: () => void
   selectedMediaCount?: number
+  selectedMediaItems?: Set<string>
+  // File upload props
+  onUploadFiles?: (files: File[]) => void
 }
 
 export function ChatInterface({
@@ -47,9 +50,13 @@ export function ChatInterface({
   messages,
   selectedAgent,
   onOpenMediaSelector,
-  selectedMediaCount = 0
+  selectedMediaCount = 0,
+  selectedMediaItems,
+  onUploadFiles
 }: ChatInterfaceProps) {
   const [message, setMessage] = React.useState("")
+  const [isDragOver, setIsDragOver] = React.useState(false)
+  const [isUploading, setIsUploading] = React.useState(false)
 
   const messagesEndRef = React.useRef<HTMLDivElement>(null)
 
@@ -112,8 +119,53 @@ export function ChatInterface({
     }).format(timestamp)
   }
 
+  // Drag and drop handlers
+  const handleDragEnter = (e: React.DragEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setIsDragOver(true)
+  }
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    // Only set drag over to false if we're leaving the main container
+    if (!e.currentTarget.contains(e.relatedTarget as Node)) {
+      setIsDragOver(false)
+    }
+  }
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+  }
+
+  const handleDrop = async (e: React.DragEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setIsDragOver(false)
+
+    const files = Array.from(e.dataTransfer.files)
+    if (files.length > 0 && onUploadFiles) {
+      setIsUploading(true)
+      try {
+        await onUploadFiles(files)
+      } finally {
+        setIsUploading(false)
+      }
+    }
+  }
+
   return (
-    <div className="relative flex flex-col h-full bg-gradient-to-br from-slate-50 via-white to-blue-50/30">
+    <div 
+      className={`relative flex flex-col h-full bg-gradient-to-br from-slate-50 via-white to-blue-50/30 transition-all duration-200 ${
+        isDragOver ? 'bg-blue-50 border-2 border-dashed border-blue-400' : ''
+      }`}
+      onDragEnter={handleDragEnter}
+      onDragLeave={handleDragLeave}
+      onDragOver={handleDragOver}
+      onDrop={handleDrop}
+    >
       {/* Chat Header */}
       <div className="p-3 sm:p-4 border-b border-slate-200/60 bg-white/80 backdrop-blur-sm">
         <div className="flex items-center justify-between">
@@ -245,6 +297,54 @@ export function ChatInterface({
 
 
 
+      {/* Drag Overlay */}
+      {isDragOver && (
+        <div className="absolute inset-0 bg-blue-500/10 border-2 border-dashed border-blue-400 rounded-lg flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 shadow-lg text-center">
+            <Upload className="h-12 w-12 text-blue-500 mx-auto mb-4" />
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">Drop files to upload</h3>
+            <p className="text-gray-600">Files will be added to your media library</p>
+          </div>
+        </div>
+      )}
+
+      {/* Upload Status */}
+      {isUploading && (
+        <div className="absolute inset-0 bg-white/80 backdrop-blur-sm flex items-center justify-center z-40">
+          <div className="bg-white rounded-lg p-6 shadow-lg text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto mb-4"></div>
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">Uploading files...</h3>
+            <p className="text-gray-600">Please wait while your files are being uploaded</p>
+          </div>
+        </div>
+      )}
+
+      {/* Selected Files Indicator */}
+      {selectedMediaCount > 0 && (
+        <div className="px-4 sm:px-6 py-2 bg-blue-50 border-t border-blue-200 sticky bottom-0 left-0 right-0 z-20">
+          <div className="max-w-4xl mx-auto">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-2">
+                <div className="flex items-center space-x-1">
+                  <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                  <span className="text-sm font-medium text-blue-700">
+                    {selectedMediaCount} file{selectedMediaCount !== 1 ? 's' : ''} selected for context
+                  </span>
+                </div>
+              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={onOpenMediaSelector}
+                className="text-blue-600 hover:text-blue-700 hover:bg-blue-100 text-xs"
+              >
+                View Selected
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Input Area */}
       <div className="p-4 sm:p-6 bg-white/95 backdrop-blur-sm border-t border-slate-200 sticky bottom-0 left-0 right-0 z-10">
         <div className="max-w-4xl mx-auto">
@@ -252,22 +352,29 @@ export function ChatInterface({
           <div className="relative">
             <div className="flex items-center bg-white border border-gray-300 rounded-full px-4 py-3 shadow-sm hover:shadow-md transition-shadow focus-within:border-gray-300 focus-within:shadow-md focus-within:outline-none">
               {/* Plus icon on the left */}
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={onOpenMediaSelector}
-                className="rounded-full p-2 mr-3 hover:bg-gray-100 text-gray-600"
-                title="Add attachment"
-              >
-                <Plus className="h-4 w-4" />
-              </Button>
+              <div className="relative mr-3">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={onOpenMediaSelector}
+                  className="rounded-full p-2 hover:bg-gray-100 text-gray-600"
+                  title="Add attachment or drag & drop files anywhere in chat"
+                >
+                  <Plus className="h-4 w-4" />
+                </Button>
+                {selectedMediaCount > 0 && (
+                  <div className="absolute -top-1 -right-1 bg-blue-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-medium">
+                    {selectedMediaCount}
+                  </div>
+                )}
+              </div>
               
               {/* Input field */}
               <Input
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
                 onKeyPress={handleKeyPress}
-                placeholder="Ask anything"
+                placeholder="Ask anything or drag & drop files here"
                 disabled={!currentAgent && !selectedAgent || isLoading}
                 className="flex-1 border-0 bg-transparent text-gray-800 placeholder:text-gray-500 focus:ring-0 focus:outline-none focus:border-0 focus-visible:ring-0 focus-visible:outline-none text-sm"
               />
@@ -293,8 +400,19 @@ export function ChatInterface({
               </div>
             </div>
             
+            {/* Drag & Drop Hint */}
+            <div className="flex items-center justify-center mt-2 space-x-2">
+              <Upload className="h-3 w-3 text-gray-400" />
+              <p className="text-xs text-gray-500">
+                {selectedMediaCount > 0 
+                  ? `Drag & drop more files or use selected ${selectedMediaCount} file${selectedMediaCount !== 1 ? 's' : ''} for context`
+                  : "Drag & drop files here to upload to your media library"
+                }
+              </p>
+            </div>
+            
             {/* Disclaimer text */}
-            <p className="text-xs text-gray-600 mt-2 text-center">
+            <p className="text-xs text-gray-600 mt-1 text-center">
               AI can make mistakes. Check important info.
             </p>
           </div>
