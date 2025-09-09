@@ -48,13 +48,38 @@ export async function POST(request: NextRequest) {
 
     if (!response.ok) {
       console.error('❌ Webhook error:', response.status, response.statusText)
+      const errorText = await response.text().catch(() => 'Unable to read error response')
+      console.error('❌ Error response body:', errorText)
       return NextResponse.json(
-        { error: `Webhook error: ${response.status} ${response.statusText}` },
+        { error: `Webhook error: ${response.status} ${response.statusText}`, details: errorText },
         { status: response.status }
       )
     }
 
-    const result = await response.json()
+    // Check if response has content before parsing
+    const responseText = await response.text()
+    console.log('🔍 Raw response:', responseText)
+    
+    if (!responseText || responseText.trim() === '') {
+      console.error('❌ Empty response from webhook')
+      return NextResponse.json(
+        { error: 'Empty response from image analysis webhook' },
+        { status: 500 }
+      )
+    }
+
+    let result
+    try {
+      result = JSON.parse(responseText)
+    } catch (parseError) {
+      console.error('❌ JSON parse error:', parseError)
+      console.error('❌ Response text that failed to parse:', responseText)
+      return NextResponse.json(
+        { error: 'Invalid JSON response from webhook', response: responseText },
+        { status: 500 }
+      )
+    }
+    
     console.log('✅ Image analysis completed:', result)
 
     return NextResponse.json({

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { API_ENDPOINTS } from '@/lib/api-config'
 
 export async function POST(request: NextRequest) {
   try {
@@ -35,13 +36,15 @@ export async function POST(request: NextRequest) {
     console.log('🗑️ Deleting media file:', file_name)
     console.log('📊 Filename length:', file_name.length)
     console.log('📊 Filename contains special chars:', /[^a-zA-Z0-9._-]/.test(file_name))
+    console.log('🔄 Proxying media delete request to n8n...')
+    console.log('Target URL:', API_ENDPOINTS.N8N_WEBHOOKS.DELETE_MEDIA_FILE)
 
     // Forward the request to the n8n webhook with timeout
     const controller = new AbortController()
     const timeoutId = setTimeout(() => controller.abort(), 30000) // 30 second timeout
 
     try {
-      const n8nResponse = await fetch('https://n8n.srv934833.hstgr.cloud/webhook/delete-media-file', {
+      const n8nResponse = await fetch(API_ENDPOINTS.N8N_WEBHOOKS.DELETE_MEDIA_FILE, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -54,6 +57,9 @@ export async function POST(request: NextRequest) {
       })
 
       clearTimeout(timeoutId)
+
+      console.log('📡 n8n response status:', n8nResponse.status)
+      console.log('📡 n8n response status text:', n8nResponse.statusText)
 
       if (!n8nResponse.ok) {
         const errorText = await n8nResponse.text()
@@ -69,8 +75,34 @@ export async function POST(request: NextRequest) {
         )
       }
 
-      const result = await n8nResponse.json()
-      console.log('✅ File deleted successfully:', result)
+      // Check if response has content before parsing JSON
+      const responseText = await n8nResponse.text()
+      console.log('Response text length:', responseText.length)
+      console.log('Response text preview:', responseText.substring(0, 200))
+
+      if (!responseText || responseText.trim() === '') {
+        console.log('n8n webhook returned empty response - treating as successful deletion')
+        return NextResponse.json({
+          success: true,
+          message: 'File deleted successfully (empty response from server)',
+          data: { deleted: true }
+        })
+      }
+
+      let result
+      try {
+        result = JSON.parse(responseText)
+        console.log('✅ File deleted successfully:', result)
+      } catch (parseError) {
+        console.error('❌ Failed to parse JSON response:', parseError)
+        console.log('Raw response text:', responseText)
+        // Even if JSON parsing fails, if we got a 200 status, consider it successful
+        return NextResponse.json({
+          success: true,
+          message: 'File deleted successfully (non-JSON response)',
+          data: { deleted: true, rawResponse: responseText }
+        })
+      }
 
       return NextResponse.json({
         success: true,

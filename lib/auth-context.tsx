@@ -160,13 +160,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         console.log('🔐 Login failed:', result.error?.message)
         setIsAuthenticated(false)
         setUser(null)
+        
+        // Throw error with the specific message so the signin page can handle it
+        if (result.error?.message) {
+          throw new Error(result.error.message)
+        }
+        
         return false
       }
     } catch (error) {
       console.error('Login error:', error)
       setIsAuthenticated(false)
       setUser(null)
-      return false
+      
+      // Re-throw the error so the signin page can handle it
+      throw error
     }
   }
 

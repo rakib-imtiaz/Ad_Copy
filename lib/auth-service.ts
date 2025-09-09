@@ -167,6 +167,18 @@ class AuthService {
         };
       }
 
+      // Check for account frozen (423 status)
+      if (response.status === 423) {
+        const data = await response.json();
+        return {
+          success: false,
+          error: {
+            code: data.error?.code || 'ACCOUNT_FROZEN',
+            message: data.error?.message || 'Your account has been temporarily frozen.'
+          }
+        };
+      }
+
       // Check for authentication failure (401 status)
       if (response.status === 401) {
         const data = await response.json();

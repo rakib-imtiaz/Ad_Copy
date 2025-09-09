@@ -145,11 +145,11 @@ export async function GET(request: NextRequest) {
     console.log('Response text preview:', responseText.substring(0, 200))
 
     if (!responseText || responseText.trim() === '') {
-      console.error('❌ Empty response from n8n webhook')
-      return NextResponse.json(
-        { error: 'Empty response from scraping service' },
-        { status: 500 }
-      )
+      console.log('n8n webhook returned empty response - returning empty scraped contents')
+      return NextResponse.json({
+        success: true,
+        data: []
+      })
     }
 
     let data

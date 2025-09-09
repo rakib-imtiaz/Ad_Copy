@@ -79,12 +79,33 @@ export default function SignInPage() {
         sessionStorage.setItem('explicit_login', 'true');
         router.push("/dashboard");
       } else {
+        // If login returns false, it might be due to account freeze or other issues
+        // The error should have been thrown, but if not, show a generic message
         setError('Invalid email or password. Please check your credentials and try again.');
       }
       
     } catch (error: any) {
       console.error("Sign in failed", error);
-      setError(`Sign in failed: ${error.message}`);
+      console.error("Error message:", error.message);
+      console.error("Error type:", typeof error);
+      console.error("Error keys:", Object.keys(error));
+      
+      // Handle specific error types
+      if (error.message && (
+        error.message.includes('Account is freeze') || 
+        error.message.includes('ACCOUNT_FROZEN') ||
+        error.message.includes('frozen') ||
+        error.message.includes('freeze')
+      )) {
+        console.log("Account freeze detected, showing freeze message");
+        setError('Your account has been temporarily frozen. Please contact support for assistance.');
+      } else if (error.message) {
+        console.log("Showing generic error message:", error.message);
+        setError(`Sign in failed: ${error.message}`);
+      } else {
+        console.log("No error message, showing default message");
+        setError('Sign in failed. Please check your credentials and try again.');
+      }
     } finally {
       setIsLoading(false);
     }
@@ -156,14 +177,26 @@ export default function SignInPage() {
                   {/* Error Display */}
                   {error && (
                     <motion.div 
-                      className="p-4 text-sm bg-red-50 border border-red-200 rounded-xl text-red-700 mb-4"
+                      className={`p-4 text-sm rounded-xl mb-4 ${
+                        error.includes('frozen') || error.includes('freeze') 
+                          ? 'bg-orange-50 border border-orange-200 text-orange-700' 
+                          : 'bg-red-50 border border-red-200 text-red-700'
+                      }`}
                       initial={{ opacity: 0, scale: 0.95, y: -10 }}
                       animate={{ opacity: 1, scale: 1, y: 0 }}
                       transition={{ duration: 0.3 }}
                     >
                       <div className="flex items-start space-x-3">
-                        <div className="flex-shrink-0 w-5 h-5 bg-red-100 rounded-full flex items-center justify-center">
-                          <svg className="w-3 h-3 text-red-600" fill="currentColor" viewBox="0 0 20 20">
+                        <div className={`flex-shrink-0 w-5 h-5 rounded-full flex items-center justify-center ${
+                          error.includes('frozen') || error.includes('freeze') 
+                            ? 'bg-orange-100' 
+                            : 'bg-red-100'
+                        }`}>
+                          <svg className={`w-3 h-3 ${
+                            error.includes('frozen') || error.includes('freeze') 
+                              ? 'text-orange-600' 
+                              : 'text-red-600'
+                          }`} fill="currentColor" viewBox="0 0 20 20">
                             <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
                           </svg>
                         </div>
@@ -176,6 +209,11 @@ export default function SignInPage() {
                             >
                               Click here to create a new account
                             </Link>
+                          )}
+                          {(error.includes('frozen') || error.includes('freeze')) && (
+                            <div className="text-sm mt-2 text-orange-600">
+                              <p>If you believe this is an error, please contact our support team.</p>
+                            </div>
                           )}
                         </div>
                       </div>

@@ -87,6 +87,21 @@ export async function POST(request: NextRequest) {
         data = JSON.parse(responseText);
         console.log('N8N Response Data:', JSON.stringify(data, null, 2));
         
+        // Check for account freeze response from n8n
+        if (data.status && data.status.includes('Account is freeze')) {
+          console.log('Account freeze detected:', data.status);
+          return NextResponse.json(
+            { 
+              success: false, 
+              error: { 
+                code: 'ACCOUNT_FROZEN',
+                message: data.status 
+              } 
+            },
+            { status: 423 } // 423 Locked - appropriate for frozen accounts
+          );
+        }
+        
         // Check for wrong password response from n8n
         if (data.status === 'wrong password') {
           console.log('Wrong password detected');

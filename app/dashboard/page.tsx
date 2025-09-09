@@ -1881,17 +1881,57 @@ export default function Dashboard() {
         }
       })
 
-      console.log('Transformed media items:', transformedItems)
-      console.log('📊 Items with content:', transformedItems.filter(item => item.content).length)
-      console.log('📊 File items to display:', transformedItems.filter(item => ['pdf', 'doc', 'txt', 'audio', 'video', 'image'].includes(item.type)))
-      console.log('📊 YouTube items:', transformedItems.filter(item => item.type === 'youtube').length)
-      console.log('📊 Transcript items:', transformedItems.filter(item => item.type === 'transcript').length)
+      // Transform scraped content items that don't have matching media items
+      const scrapedItemsTransformed = scrapedItems
+        .filter(scraped => !transformedItems.find(item => item.filename === scraped.resource_name))
+        .map((scraped: any, index: number) => {
+          const createdDate = scraped.created_at ? new Date(scraped.created_at) : new Date()
+          const formattedDate = createdDate.toLocaleString('en-US', {
+            month: 'short',
+            day: '2-digit',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: true
+          }).replace(/[,\s]/g, '_').replace(/:/g, '.').replace(/\s/g, '')
+          
+          const filename = scraped.resource_name || `scraped_content_${formattedDate}.txt`
+          
+          return {
+            id: `scraped-${scraped.resource_id || index}`,
+            filename: filename,
+            type: scraped.type || 'scraped', // Preserve original type (youtube, webpage, etc.)
+            url: scraped.url || '',
+            uploadedAt: createdDate,
+            size: 0,
+            content: scraped.content,
+            resourceId: scraped.resource_id,
+            contentType: scraped.type,
+            resourceName: scraped.resource_name,
+            originalApiType: scraped.type,
+            owner: scraped.owner,
+            created_at: scraped.created_at
+          }
+        })
+
+      // Combine regular media items with scraped content items
+      const allTransformedItems = [...transformedItems, ...scrapedItemsTransformed]
+
+      console.log('Transformed media items:', transformedItems.length)
+      console.log('Transformed scraped items:', scrapedItemsTransformed.length)
+      console.log('Total items:', allTransformedItems.length)
+      console.log('📊 Items with content:', allTransformedItems.filter(item => item.content).length)
+      console.log('📊 File items to display:', allTransformedItems.filter(item => ['pdf', 'doc', 'txt', 'audio', 'video', 'image'].includes(item.type)))
+      console.log('📊 YouTube items:', allTransformedItems.filter(item => item.type === 'youtube').length)
+      console.log('📊 Transcript items:', allTransformedItems.filter(item => item.type === 'transcript').length)
+      console.log('📊 Image items:', allTransformedItems.filter(item => item.type === 'image').length)
       
       // Preserve locally created items (like YouTube transcripts) that might not be on the server
       setMediaItems(prevItems => {
-        const serverItems = transformedItems
+        const serverItems = allTransformedItems
         const localItems = prevItems.filter(item => 
-          item.type === 'youtube' || item.type === 'transcript' || item.type === 'scraped'
+          item.type === 'youtube' || item.type === 'transcript' || item.type === 'scraped' || 
+          item.type === 'webpage' || item.type === 'url' || item.type === 'image'
         )
         
         console.log('🔄 MERGING PROCESS:')
@@ -2079,7 +2119,7 @@ export default function Dashboard() {
           return {
             id: `scraped-${item.resource_id || index}`,
             filename: filename,
-            type: 'scraped', // Use 'scraped' type instead of 'url' to avoid filtering
+            type: item.type || 'scraped', // Preserve original type (youtube, webpage, etc.)
             url: item.url || '',
             uploadedAt: createdDate,
             size: 0, // Scraped content doesn't have file size
@@ -2088,7 +2128,7 @@ export default function Dashboard() {
             resourceId: item.resource_id,
             contentType: item.type,
             resourceName: item.resource_name,
-                       // Add any other properties from the scraped content (but preserve our type override)
+                       // Add any other properties from the scraped content
                owner: item.owner,
                created_at: item.created_at,
                originalApiType: item.type
@@ -2264,32 +2304,30 @@ export default function Dashboard() {
 
       let response
       if (isScrapedContent) {
-        // Use the scraped content delete webhook directly
-        console.log('🔄 Using scraped content delete webhook')
-        console.log('Request URL:', API_ENDPOINTS.N8N_WEBHOOKS.DELETE_SCRAPED_CONTENT)
-        response = await fetch(API_ENDPOINTS.N8N_WEBHOOKS.DELETE_SCRAPED_CONTENT, {
-          method: 'POST',
+        // Use the scraped content delete API endpoint
+        console.log('🔄 Using scraped content delete API endpoint')
+        console.log('Request URL:', '/api/scraped-contents')
+        response = await fetch('/api/scraped-contents', {
+          method: 'DELETE',
           headers: {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${accessToken}`,
           },
           body: JSON.stringify({
-            access_token: accessToken,
             file_name: filename
           }),
         })
       } else {
-        // Use the regular media delete webhook directly
-        console.log('🔄 Using regular media delete webhook')
-        console.log('Request URL:', API_ENDPOINTS.N8N_WEBHOOKS.DELETE_MEDIA_FILE)
-        response = await fetch(API_ENDPOINTS.N8N_WEBHOOKS.DELETE_MEDIA_FILE, {
+        // Use the regular media delete API endpoint
+        console.log('🔄 Using regular media delete API endpoint')
+        console.log('Request URL:', '/api/media/delete')
+        response = await fetch('/api/media/delete', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${accessToken}`,
           },
           body: JSON.stringify({
-            access_token: accessToken,
             file_name: filename
           }),
         })
@@ -2300,27 +2338,39 @@ export default function Dashboard() {
       console.log('Filename length:', filename.length)
       console.log('Filename contains special chars:', /[^a-zA-Z0-9._-]/.test(filename))
       console.log('Request body:', {
-        access_token: accessToken,
         file_name: filename
       })
-      console.log('Webhook URL being called:', isScrapedContent ? API_ENDPOINTS.N8N_WEBHOOKS.DELETE_SCRAPED_CONTENT : API_ENDPOINTS.N8N_WEBHOOKS.DELETE_MEDIA_FILE)
+      console.log('API endpoint being called:', isScrapedContent ? '/api/scraped-contents' : '/api/media/delete')
 
       if (!response.ok) {
         console.error('Delete failed for file:', filename, 'Status:', response.status)
         console.error('Response headers:', response.headers)
         
+        // Get the raw response text for better debugging
+        let responseText = ''
+        try {
+          responseText = await response.text()
+          console.error('Raw error response:', responseText)
+        } catch (textError) {
+          console.error('Could not read response text:', textError)
+        }
+        
         let errorMessage = 'Failed to delete file'
         try {
-          const errorData = await response.json()
+          const errorData = responseText ? JSON.parse(responseText) : {}
           console.error('Error details:', errorData)
           errorMessage = errorData.message || errorData.error || errorData.details || `Server error (${response.status})`
         } catch (parseError) {
           console.error('Could not parse error response:', parseError)
-          errorMessage = `Server error (${response.status})`
+          console.error('Response text that failed to parse:', responseText)
+          errorMessage = `Server error (${response.status}): ${responseText || 'No response body'}`
         }
         
-        console.error('Request body sent:', {
-          file_name: filename
+        console.error('Request details:', {
+          webhook_url: isScrapedContent ? API_ENDPOINTS.N8N_WEBHOOKS.DELETE_SCRAPED_CONTENT : API_ENDPOINTS.N8N_WEBHOOKS.DELETE_MEDIA_FILE,
+          file_name: filename,
+          is_scraped_content: isScrapedContent,
+          media_item: mediaItem
         })
         
         // Show user-friendly error message
@@ -2518,7 +2568,7 @@ export default function Dashboard() {
       const item = mediaItems.find(item => item.id === itemId)
       let deleteResult = false
       
-      if (item && (item.type === 'scraped' || item.type === 'youtube' || item.type === 'transcript' || item.type === 'url' || item.type === 'webpage')) {
+      if (item && (item.resourceId || item.type === 'scraped' || item.type === 'youtube' || item.type === 'transcript' || item.type === 'url' || item.type === 'webpage')) {
         // For scraped content, YouTube, transcripts, and URLs, we need to use the resource_id from the item
         const resourceId = item.resourceId || itemId
         console.log('🗑️ Deleting scraped content/YouTube/transcript with resource ID:', resourceId, 'and name:', itemName)
@@ -2623,6 +2673,7 @@ export default function Dashboard() {
                   youtube: mediaItems.filter(item => item.type === 'youtube').length,
                   transcript: mediaItems.filter(item => item.type === 'transcript').length,
                   scraped: mediaItems.filter(item => item.type === 'scraped').length,
+                  webpage: mediaItems.filter(item => item.type === 'webpage').length,
                   audio: mediaItems.filter(item => item.type === 'audio').length,
                   video: mediaItems.filter(item => item.type === 'video').length,
                   image: mediaItems.filter(item => item.type === 'image').length,
@@ -2794,7 +2845,7 @@ function MediaSelector({
   const availableItems = mediaItems.filter((item, index) => {
     // Only include content types that should pass context to chat
     // Exclude media files (pdf, doc, txt, audio, video, image) but include scraped content, transcriptions, and YouTube links
-    const contextTypes = ['url', 'transcript', 'scraped', 'youtube']
+    const contextTypes = ['url', 'transcript', 'scraped', 'youtube', 'webpage']
     const hasValidType = contextTypes.includes(item.type)
     const hasContent = !!item.content
     const hasTranscript = !!item.transcript
@@ -2838,7 +2889,8 @@ function MediaSelector({
     youtube: availableItems.filter(item => item.type === 'youtube').length,
     transcript: availableItems.filter(item => item.type === 'transcript').length,
     scraped: availableItems.filter(item => item.type === 'scraped').length,
-    url: availableItems.filter(item => item.type === 'url').length
+    url: availableItems.filter(item => item.type === 'url').length,
+    webpage: availableItems.filter(item => item.type === 'webpage').length
   })
 
   return (
@@ -3272,11 +3324,11 @@ function MediaDrawer({ activeTab, onTabChange, mediaItems, setMediaItems, onRefr
 
       {/* Content */}
       <div className="flex-1 overflow-y-auto p-4">
-        {activeTab === 'files' && <FilesTab mediaItems={mediaItems} onUpload={onUpload} onDelete={onDelete} isDeleting={isDeleting} deletingItemId={deletingItemId} isLoadingTabContent={isLoadingTabContent} />}
+        {activeTab === 'files' && <FilesTab mediaItems={mediaItems} onUpload={onUpload} onDelete={handleDeleteItem} isDeleting={isDeleting} deletingItemId={deletingItemId} isLoadingTabContent={isLoadingTabContent} />}
         {activeTab === 'links' && <LinksTab mediaItems={mediaItems} onDelete={handleDeleteItem} onRefresh={onRefresh} setMediaItems={setMediaItems} isDeleting={isDeleting} deletingItemId={deletingItemId} isLoadingTabContent={isLoadingTabContent} />}
         {activeTab === 'youtube' && <YouTubeTab mediaItems={mediaItems} onDelete={handleDeleteItem} onRefresh={onRefresh} setMediaItems={setMediaItems} isDeleting={isDeleting} deletingItemId={deletingItemId} isLoadingTabContent={isLoadingTabContent} />}
-        {activeTab === 'image-analyzer' && <ImageAnalyzerTab mediaItems={mediaItems} onUpload={onUpload} onDelete={onDelete} />}
-        {activeTab === 'transcripts' && <TranscriptsTab mediaItems={mediaItems} onDelete={onDelete} />}
+        {activeTab === 'image-analyzer' && <ImageAnalyzerTab mediaItems={mediaItems} onUpload={onUpload} onDelete={handleDeleteItem} isDeleting={isDeleting} deletingItemId={deletingItemId} isLoadingTabContent={isLoadingTabContent} />}
+        {activeTab === 'transcripts' && <TranscriptsTab mediaItems={mediaItems} onDelete={handleDeleteItem} isDeleting={isDeleting} deletingItemId={deletingItemId} isLoadingTabContent={isLoadingTabContent} />}
       </div>
     </div>
   )
@@ -3470,10 +3522,26 @@ function FilesTab({ mediaItems, onUpload, onDelete, isDeleting, deletingItemId, 
                     👆 Click to view
                   </p>
                 </div>
-                <ThreeDotsMenu 
-                  onDelete={() => onDelete(item.id, item.filename)}
-                  isDeleting={isDeleting && deletingItemId === item.id}
-                />
+                <div className="flex items-center space-x-2">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      onDelete(item.id, item.filename)
+                    }}
+                    disabled={isDeleting && deletingItemId === item.id}
+                    className="h-6 w-6 p-0 hover:bg-red-50 hover:text-red-600 disabled:opacity-50"
+                  >
+                    {isDeleting && deletingItemId === item.id ? (
+                      <RefreshCw className="h-3 w-3 animate-spin" />
+                    ) : (
+                      <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                      </svg>
+                    )}
+                  </Button>
+                </div>
               </div>
             )
           })
@@ -4155,7 +4223,7 @@ function YouTubeTab({ mediaItems, onDelete, onRefresh, setMediaItems, isDeleting
   )
 }
 
-function ImageAnalyzerTab({ mediaItems, onUpload, onDelete }: any) {
+function ImageAnalyzerTab({ mediaItems, onUpload, onDelete, isDeleting, deletingItemId, isLoadingTabContent }: any) {
   const [dragActive, setDragActive] = React.useState(false)
   const [isUploading, setIsUploading] = React.useState(false)
   const [isAnalyzing, setIsAnalyzing] = React.useState(false)
@@ -4752,7 +4820,7 @@ function ImageAnalyzerTab({ mediaItems, onUpload, onDelete }: any) {
   )
 }
 
-function TranscriptsTab({ mediaItems, onDelete }: any) {
+function TranscriptsTab({ mediaItems, onDelete, isDeleting, deletingItemId, isLoadingTabContent }: any) {
   const audioVideoItems = mediaItems.filter((item: any) => 
     ['audio', 'video'].includes(item.type)
   )
