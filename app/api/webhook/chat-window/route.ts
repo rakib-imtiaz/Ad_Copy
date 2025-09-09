@@ -15,7 +15,7 @@ export async function POST(request: NextRequest) {
 
     // Get the request body
     const body = await request.json()
-    const { session_id, user_prompt, agent_id } = body
+    const { session_id, user_prompt, agent_id, scraped_content, knowledge_base } = body
 
     if (!session_id || !user_prompt) {
       return NextResponse.json(
@@ -33,6 +33,32 @@ export async function POST(request: NextRequest) {
     console.log('User Prompt:', user_prompt)
     console.log('Agent ID:', agent_id || 'Not provided')
     console.log('Access Token:', accessToken ? '***' + accessToken.slice(-4) : 'Not provided')
+    
+    // Log scraped content if present
+    if (scraped_content && scraped_content.length > 0) {
+      console.log('📄 SCRAPED CONTENT BEING SENT TO N8N:')
+      console.log('  - Scraped content count:', scraped_content.length)
+      scraped_content.forEach((item: any, index: number) => {
+        console.log(`  ${index + 1}. ${item.filename} (${item.type})`)
+        console.log(`     Content length: ${item.content ? item.content.length : 0}`)
+        console.log(`     Transcript length: ${item.transcript ? item.transcript.length : 0}`)
+      })
+    } else {
+      console.log('📄 No scraped content in this request')
+    }
+    
+    // Log knowledge base if present
+    if (knowledge_base && knowledge_base.length > 0) {
+      console.log('📚 KNOWLEDGE BASE BEING SENT TO N8N:')
+      console.log('  - Knowledge base count:', knowledge_base.length)
+      knowledge_base.forEach((item: any, index: number) => {
+        console.log(`  ${index + 1}. ${item.filename} (${item.type})`)
+        console.log(`     Content length: ${item.content ? item.content.length : 0}`)
+        console.log(`     Transcript length: ${item.transcript ? item.transcript.length : 0}`)
+      })
+    } else {
+      console.log('📚 No knowledge base in this request')
+    }
 
     // Forward the request to n8n webhook
     const response = await fetch(API_ENDPOINTS.N8N_WEBHOOKS.CHAT_WINDOW, {
@@ -44,7 +70,9 @@ export async function POST(request: NextRequest) {
       body: JSON.stringify({
         session_id,
         user_prompt,
-        agent_id
+        agent_id,
+        scraped_content: scraped_content || undefined,
+        knowledge_base: knowledge_base || undefined
       }),
       signal: AbortSignal.timeout(30000), // 30 second timeout for chat
     })

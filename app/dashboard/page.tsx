@@ -498,6 +498,15 @@ export default function Dashboard() {
   const [isLoadingChatHistory, setIsLoadingChatHistory] = React.useState(false)
   const [currentChatSession, setCurrentChatSession] = React.useState<string | null>(null)
   const [isStartingChat, setIsStartingChat] = React.useState(false)
+  const [knowledgeBaseStatus, setKnowledgeBaseStatus] = React.useState<{
+    isLoaded: boolean;
+    contentLength: number;
+    lastFetched: string | null;
+  }>({
+    isLoaded: false,
+    contentLength: 0,
+    lastFetched: null
+  })
 
   const showToast = (message: string, type: 'success' | 'error' | 'info') => {
     setToast({
@@ -513,6 +522,63 @@ export default function Dashboard() {
   const hideToast = () => {
     setToast(prev => ({ ...prev, isVisible: false }))
   }
+
+  // Fetch knowledge base status
+  const fetchKnowledgeBaseStatus = async () => {
+    try {
+      const accessToken = authService.getAuthToken()
+      if (!accessToken) return
+
+      const response = await fetch('/api/knowledge-base', {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+          'Content-Type': 'application/json'
+        }
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        if (data.success && data.data?.content) {
+          setKnowledgeBaseStatus({
+            isLoaded: true,
+            contentLength: data.data.content.length,
+            lastFetched: new Date().toISOString()
+          })
+          console.log('✅ Knowledge base status updated:', {
+            isLoaded: true,
+            contentLength: data.data.content.length
+          })
+        } else {
+          setKnowledgeBaseStatus({
+            isLoaded: false,
+            contentLength: 0,
+            lastFetched: new Date().toISOString()
+          })
+        }
+      } else {
+        setKnowledgeBaseStatus({
+          isLoaded: false,
+          contentLength: 0,
+          lastFetched: new Date().toISOString()
+        })
+      }
+    } catch (error) {
+      console.log('⚠️ Failed to fetch knowledge base status:', error)
+      setKnowledgeBaseStatus({
+        isLoaded: false,
+        contentLength: 0,
+        lastFetched: new Date().toISOString()
+      })
+    }
+  }
+
+  // Fetch knowledge base status when user is authenticated
+  React.useEffect(() => {
+    if (isAuthenticated && user) {
+      fetchKnowledgeBaseStatus()
+    }
+  }, [isAuthenticated, user])
 
   // Load session data from localStorage on component mount
   React.useEffect(() => {
@@ -1270,6 +1336,16 @@ export default function Dashboard() {
   // Handle new chat webhook - just get session ID
   const initiateNewChat = async (forceNew = false) => {
     try {
+      console.log('🎯 ===== INITIATE NEW CHAT START =====')
+      console.log('🎯 Force new:', forceNew)
+      console.log('🎯 Current session ID:', sessionId || 'None')
+      console.log('🎯 Chat started:', chatStarted)
+      console.log('🎯 Messages count:', messages.length)
+      console.log('🎯 Selected agent:', selectedAgent)
+      console.log('🎯 Available agents:', agents.length)
+      console.log('🎯 Media items count:', mediaItems.length)
+      console.log('🎯 Selected media items:', selectedMediaItems.size)
+      
       const accessToken = authService.getAuthToken()
       
       if (!accessToken) {
@@ -1297,12 +1373,61 @@ export default function Dashboard() {
       console.log('Request URL:', '/api/webhook/new-chat')
       console.log('Selected Agent Name:', selectedAgent)
       console.log('Selected Agent ID:', agentId)
+      console.log('🎯 KNOWLEDGE BASE DATA BEING SENT:')
+      console.log('  - Media items count:', mediaItems.length)
+      console.log('  - Media items by type:', {
+        pdf: mediaItems.filter(item => item.type === 'pdf').length,
+        doc: mediaItems.filter(item => item.type === 'doc').length,
+        txt: mediaItems.filter(item => item.type === 'txt').length,
+        audio: mediaItems.filter(item => item.type === 'audio').length,
+        video: mediaItems.filter(item => item.type === 'video').length,
+        url: mediaItems.filter(item => item.type === 'url').length,
+        transcript: mediaItems.filter(item => item.type === 'transcript').length,
+        image: mediaItems.filter(item => item.type === 'image').length,
+        scraped: mediaItems.filter(item => item.type === 'scraped').length,
+        webpage: mediaItems.filter(item => item.type === 'webpage').length,
+        youtube: mediaItems.filter(item => item.type === 'youtube').length
+      })
+      
+      if (mediaItems.length > 0) {
+        console.log('  - Media items details:')
+        mediaItems.forEach((item, index) => {
+          console.log(`    ${index + 1}. ${item.filename || item.title} (${item.type})`)
+          console.log(`       ID: ${item.id}`)
+          console.log(`       Content length: ${item.content ? item.content.length : 0}`)
+          console.log(`       Transcript length: ${item.transcript ? item.transcript.length : 0}`)
+        })
+      }
+
+      // Prepare knowledge base data for new chat
+      const knowledgeBaseData = mediaItems.map(item => ({
+        id: item.id,
+        filename: item.filename || item.title,
+        type: item.type,
+        content: item.content,
+        transcript: item.transcript,
+        url: item.url,
+        resource_id: item.resource_id
+      }))
+
+      console.log('🎯 SENDING KNOWLEDGE BASE TO NEW-CHAT WEBHOOK:')
+      console.log('  - Knowledge base items count:', knowledgeBaseData.length)
+      console.log('  - Items with content:', knowledgeBaseData.filter(item => item.content).length)
+      console.log('  - Items with transcript:', knowledgeBaseData.filter(item => item.transcript).length)
+      if (knowledgeBaseData.length > 0) {
+        knowledgeBaseData.forEach((item, index) => {
+          console.log(`    ${index + 1}. ${item.filename} (${item.type})`)
+          console.log(`       Content length: ${item.content ? item.content.length : 0}`)
+          console.log(`       Transcript length: ${item.transcript ? item.transcript.length : 0}`)
+        })
+      }
 
       const response = await fetch('/api/webhook/new-chat', {
         method: 'POST',
         headers: getAuthHeaders(accessToken),
         body: JSON.stringify({
-          agent_id: agentId
+          agent_id: agentId,
+          knowledge_base: knowledgeBaseData.length > 0 ? knowledgeBaseData : undefined
         }),
         signal: AbortSignal.timeout(10000), // 10 second timeout
       })
@@ -1334,6 +1459,7 @@ export default function Dashboard() {
       console.log('✅ New chat webhook success:', data)
       
       // Store session ID from webhook response
+      let finalSessionId = sessionId
       if (data.session_id) {
         setSessionId(data.session_id)
         // Save to localStorage
@@ -1342,18 +1468,29 @@ export default function Dashboard() {
         }
         console.log('🎯 SESSION ID STORED:', data.session_id)
         console.log('📋 Full webhook response:', data)
+        finalSessionId = data.session_id
       } else {
         console.warn('⚠️ No session_id in webhook response')
         console.log('📋 Full webhook response:', data)
+        // Create a fallback session ID
+        const fallbackSessionId = `fallback_${Date.now()}`
+        setSessionId(fallbackSessionId)
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('chat_session_id', fallbackSessionId)
+        }
+        console.log('🎯 FALLBACK SESSION ID STORED:', fallbackSessionId)
+        finalSessionId = fallbackSessionId
       }
       
       // Fetch chat history when new chat is initiated
       console.log('📚 Fetching chat history for new chat...')
       await fetchChatHistory()
       
-      return true
+      console.log('🎯 ===== INITIATE NEW CHAT END (SUCCESS) =====')
+      return finalSessionId
     } catch (error) {
       console.error('Error initiating new chat:', error)
+      console.log('🎯 ===== INITIATE NEW CHAT END (ERROR) =====')
       return false
     }
   }
@@ -1541,8 +1678,10 @@ export default function Dashboard() {
   }, [setActionRefs, handleSelectAgent, refreshAgents, loadChatSession, fetchChatHistory, deleteChatSession])
 
   // Send message to chat window webhook
-  const sendMessageToChatWindow = async (userPrompt: string) => {
+  const sendMessageToChatWindow = async (userPrompt: string, isFirstMessage: boolean = false, sessionIdParam?: string) => {
     try {
+      console.log('🌐 ===== SEND MESSAGE TO CHAT WINDOW START =====')
+      console.log('🌐 Is First Message:', isFirstMessage)
       const accessToken = authService.getAuthToken()
       
       if (!accessToken) {
@@ -1550,7 +1689,8 @@ export default function Dashboard() {
         return null
       }
 
-      if (!sessionId) {
+      const currentSessionId = sessionIdParam || sessionId
+      if (!currentSessionId) {
         console.error("No session ID available")
         return null
       }
@@ -1561,19 +1701,207 @@ export default function Dashboard() {
 
       console.log('💬 Sending message to chat window...')
       console.log('Request URL:', '/api/webhook/chat-window')
-      console.log('Session ID:', sessionId)
+      console.log('Session ID:', currentSessionId)
       console.log('User Prompt:', userPrompt)
       console.log('Selected Agent Name:', selectedAgent)
       console.log('Selected Agent ID:', agentId)
+      
+      // Log what context is being sent
+      console.log('📊 CONTEXT BEING SENT TO CHAT:')
+      console.log('  - Session ID:', currentSessionId)
+      console.log('  - User Prompt:', userPrompt)
+      console.log('  - Agent ID:', agentId)
+      console.log('  - Selected Media Items Count:', selectedMediaItems.size)
+      
+      if (selectedMediaItems.size > 0) {
+        console.log('  - Selected Media Items:')
+        selectedMediaItems.forEach(itemId => {
+          const item = mediaItems.find(m => m.id === itemId)
+          if (item) {
+            console.log(`    * ${item.filename || item.title} (${item.type})`)
+            console.log(`      ID: ${itemId}`)
+            if (item.content) {
+              console.log(`      Content length: ${item.content.length} chars`)
+            }
+            if (item.transcript) {
+              console.log(`      Transcript length: ${item.transcript.length} chars`)
+            }
+          }
+        })
+      } else {
+        console.log('  - No media items selected for context')
+      }
+
+      // Prepare scraped content for direct message passing
+      interface ScrapedContentItem {
+        id: string;
+        filename: string;
+        type: string;
+        content?: string;
+        transcript?: string;
+        url?: string;
+      }
+      const scrapedContentForMessage: ScrapedContentItem[] = []
+      if (selectedMediaItems.size > 0) {
+        selectedMediaItems.forEach(itemId => {
+          const item = mediaItems.find(m => m.id === itemId)
+          if (item && ((item.content && item.resource_id) || item.type === 'scraped' || item.id.startsWith('scraped-'))) {
+            scrapedContentForMessage.push({
+              id: item.id,
+              filename: item.filename || item.title,
+              type: item.type,
+              content: item.content,
+              transcript: item.transcript,
+              url: item.url
+            })
+          }
+        })
+      }
+
+      console.log('📄 ===== SCRAPED CONTENT ANALYSIS =====')
+      console.log('📄 Selected media items count:', selectedMediaItems.size)
+      console.log('📄 Selected media items:', Array.from(selectedMediaItems))
+      console.log('📄 Available media items:', mediaItems.map(item => ({
+        id: item.id,
+        filename: item.filename,
+        type: item.type,
+        hasContent: !!item.content,
+        hasResourceId: !!item.resource_id
+      })))
+      
+      console.log('📄 Scraped content being sent with message:', scrapedContentForMessage.length, 'items')
+      if (scrapedContentForMessage.length > 0) {
+        scrapedContentForMessage.forEach((item, index) => {
+          console.log(`  ${index + 1}. ${item.filename} (${item.type})`)
+          console.log(`     Content length: ${item.content ? item.content.length : 0}`)
+          console.log(`     Transcript length: ${item.transcript ? item.transcript.length : 0}`)
+        })
+      } else {
+        console.log('📄 No scraped content found - checking why...')
+        selectedMediaItems.forEach(itemId => {
+          const item = mediaItems.find(m => m.id === itemId)
+          if (item) {
+            console.log(`📄 Item ${itemId} (${item.filename}):`)
+            console.log(`  - Type: ${item.type}`)
+            console.log(`  - Has content: ${!!item.content}`)
+            console.log(`  - Has resource_id: ${!!item.resource_id}`)
+            console.log(`  - Content length: ${item.content ? item.content.length : 0}`)
+            console.log(`  - Resource ID: ${item.resource_id || 'N/A'}`)
+            console.log(`  - Would be scraped: ${!!((item.content && item.resource_id) || item.type === 'scraped' || item.id.startsWith('scraped-'))}`)
+          } else {
+            console.log(`📄 Item ${itemId}: NOT FOUND in mediaItems`)
+          }
+        })
+      }
+      console.log('📄 ===== END SCRAPED CONTENT ANALYSIS =====')
+
+      // Prepare knowledge base data for every message
+      let knowledgeBaseForMessage: ScrapedContentItem[] = []
+      console.log('📚 ===== FETCHING KNOWLEDGE BASE FOR MESSAGE =====')
+      try {
+        // Fetch knowledge base data from n8n webhook
+        const kbResponse = await fetch('/api/webhook/see-knowledge-base', {
+          method: 'GET',
+          headers: getAuthHeaders(accessToken),
+          signal: AbortSignal.timeout(10000), // 10 second timeout
+        })
+        
+        if (kbResponse.ok) {
+          const kbData = await kbResponse.json()
+          console.log('📚 Knowledge base API response:', kbData)
+          
+          // Extract knowledge base items from the response
+          if (kbData && Array.isArray(kbData)) {
+            knowledgeBaseForMessage = kbData.map((item: any) => ({
+              id: item.id || item.resource_id || `kb-${Math.random()}`,
+              filename: item.filename || item.resource_name || item.title || 'Unknown',
+              type: item.type || 'document',
+              content: item.content,
+              transcript: item.transcript,
+              url: item.url
+            }))
+          } else if (kbData && kbData.data && Array.isArray(kbData.data)) {
+            knowledgeBaseForMessage = kbData.data.map((item: any) => ({
+              id: item.id || item.resource_id || `kb-${Math.random()}`,
+              filename: item.filename || item.resource_name || item.title || 'Unknown',
+              type: item.type || 'document',
+              content: item.content,
+              transcript: item.transcript,
+              url: item.url
+            }))
+          }
+          
+          console.log('📚 Knowledge base items fetched:', knowledgeBaseForMessage.length)
+          if (knowledgeBaseForMessage.length > 0) {
+            knowledgeBaseForMessage.forEach((item, index) => {
+              console.log(`  ${index + 1}. ${item.filename} (${item.type})`)
+              console.log(`     Content length: ${item.content ? item.content.length : 0}`)
+              console.log(`     Transcript length: ${item.transcript ? item.transcript.length : 0}`)
+            })
+          } else {
+            console.log('📚 No knowledge base items found in API response')
+          }
+        } else {
+          console.error('📚 Failed to fetch knowledge base:', kbResponse.status, kbResponse.statusText)
+        }
+      } catch (error) {
+        console.error('📚 Error fetching knowledge base:', error)
+      }
+      console.log('📚 ===== END KNOWLEDGE BASE FOR MESSAGE =====')
+
+      // Enhance user prompt with scraped content context if available
+      let enhancedUserPrompt = userPrompt
+      if (scrapedContentForMessage.length > 0) {
+        const contentContext = scrapedContentForMessage.map(item => {
+          let context = `\n\n--- ${item.filename} (${item.type}) ---\n`
+          if (item.content) {
+            context += item.content
+          }
+          if (item.transcript) {
+            context += `\n\nTranscript: ${item.transcript}`
+          }
+          if (item.url) {
+            context += `\n\nSource URL: ${item.url}`
+          }
+          return context
+        }).join('\n')
+        
+        enhancedUserPrompt = `${userPrompt}\n\nPlease refer to the following attached content for context:${contentContext}`
+        console.log('📝 Enhanced user prompt with scraped content context')
+        console.log('📝 Original prompt length:', userPrompt.length)
+        console.log('📝 Enhanced prompt length:', enhancedUserPrompt.length)
+      }
+
+      const requestPayload = {
+        session_id: currentSessionId,
+        user_prompt: enhancedUserPrompt,
+        agent_id: agentId,
+        scraped_content: scrapedContentForMessage.length > 0 ? scrapedContentForMessage : undefined,
+        knowledge_base: knowledgeBaseForMessage.length > 0 ? knowledgeBaseForMessage : undefined
+      }
+      
+      console.log('📤 ===== REQUEST PAYLOAD TO N8N =====')
+      console.log('📤 Full payload:', JSON.stringify(requestPayload, null, 2))
+      console.log('📤 Scraped content included:', !!requestPayload.scraped_content)
+      console.log('📤 Knowledge base included:', !!requestPayload.knowledge_base)
+      if (requestPayload.scraped_content) {
+        console.log('📤 Scraped content count:', requestPayload.scraped_content.length)
+        requestPayload.scraped_content.forEach((item, index) => {
+          console.log(`📤   ${index + 1}. ${item.filename} - Content: ${item.content ? item.content.substring(0, 100) + '...' : 'No content'}`)
+        })
+      }
+      if (requestPayload.knowledge_base) {
+        console.log('📤 Knowledge base count:', requestPayload.knowledge_base.length)
+        requestPayload.knowledge_base.forEach((item, index) => {
+          console.log(`📤   ${index + 1}. ${item.filename} - Content: ${item.content ? item.content.substring(0, 100) + '...' : 'No content'}`)
+        })
+      }
+      console.log('📤 ===== END REQUEST PAYLOAD =====')
 
       const response = await fetch('/api/webhook/chat-window', {
         method: 'POST',
         headers: getAuthHeaders(accessToken),
-        body: JSON.stringify({
-          session_id: sessionId,
-          user_prompt: userPrompt,
-          agent_id: agentId
-        }),
+        body: JSON.stringify(requestPayload),
         signal: AbortSignal.timeout(30000), // 30 second timeout for chat
       })
 
@@ -1602,9 +1930,11 @@ export default function Dashboard() {
 
       const data = await response.json()
       console.log('✅ Chat window webhook success:', data)
+      console.log('🌐 ===== SEND MESSAGE TO CHAT WINDOW END =====')
       return data
     } catch (error) {
       console.error('Error sending message to chat window:', error)
+      console.log('🌐 ===== SEND MESSAGE TO CHAT WINDOW END (ERROR) =====')
       return null
     }
   }
@@ -1613,8 +1943,37 @@ export default function Dashboard() {
   const handleSendMessage = async (content: string) => {
     if (!content.trim() || !currentUser) return
 
-        // Mark chat as started on first message
+    console.log('🚀 ===== CHAT MESSAGE FLOW START =====')
+    console.log('📝 User message content:', content.trim())
+    console.log('👤 Current user:', currentUser?.email || 'Unknown')
+    console.log('🤖 Selected agent:', selectedAgent)
+    console.log('🆔 Session ID:', sessionId || 'Not set')
+    console.log('💬 Chat started:', chatStarted)
+    console.log('📊 Current messages count:', messages.length)
+    console.log('📎 Selected media items count:', selectedMediaItems.size)
+    console.log('📎 Selected media items:', Array.from(selectedMediaItems))
+    
+    // Log selected media details
+    if (selectedMediaItems.size > 0) {
+      console.log('📎 Selected media details:')
+      selectedMediaItems.forEach(itemId => {
+        const item = mediaItems.find(m => m.id === itemId)
+        if (item) {
+          console.log(`  - ${item.filename || item.title} (${item.type}) - ID: ${itemId}`)
+          if (item.content) {
+            console.log(`    Content preview: ${item.content.substring(0, 100)}...`)
+          }
+          if (item.transcript) {
+            console.log(`    Transcript preview: ${item.transcript.substring(0, 100)}...`)
+          }
+        }
+      })
+    }
+
+    // Mark chat as started on first message
+    let currentSessionId = sessionId
     if (!chatStarted) {
+      console.log('🎯 FIRST MESSAGE - Initializing chat session...')
       setChatStarted(true)
       // Save chat state to localStorage
       if (typeof window !== 'undefined') {
@@ -1624,8 +1983,11 @@ export default function Dashboard() {
       // Call webhook to get session ID only when user actually starts chatting
       if (!sessionId) {
         console.log('🎯 User started first conversation - calling new chat webhook...')
-        const webhookSuccess = await initiateNewChat()
-        if (!webhookSuccess) {
+        const newSessionId = await initiateNewChat()
+        if (newSessionId && typeof newSessionId === 'string') {
+          currentSessionId = newSessionId
+          console.log('🎯 New session ID obtained:', newSessionId)
+        } else {
           console.warn('New chat webhook failed, but continuing with conversation')
         }
       } else {
@@ -1655,8 +2017,11 @@ export default function Dashboard() {
 
     try {
       // Send message to chat window webhook
-      console.log('💬 Sending message with Session ID:', sessionId || 'new-session')
-      const response = await sendMessageToChatWindow(content.trim())
+      console.log('💬 Sending message with Session ID:', currentSessionId || 'new-session')
+      console.log('📤 About to call sendMessageToChatWindow with content:', content.trim())
+      const isFirstMessage = !chatStarted
+      const response = await sendMessageToChatWindow(content.trim(), isFirstMessage, currentSessionId)
+      console.log('📥 Response received from sendMessageToChatWindow:', response)
 
       if (response) {
         // Add AI response to chat
@@ -1710,6 +2075,12 @@ export default function Dashboard() {
           timestamp: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true }),
           animated: false
         }
+        
+        console.log('🤖 AI Response processed:')
+        console.log('  - Message ID:', aiMessage.id)
+        console.log('  - Content length:', content.length)
+        console.log('  - Content preview:', content.substring(0, 200) + (content.length > 200 ? '...' : ''))
+        
         setMessages(prev => {
           const newMessages = [...prev, aiMessage]
           // Save messages to localStorage
@@ -1755,16 +2126,44 @@ export default function Dashboard() {
         return newMessages
       })
     } finally {
+      // Clear scraped content from selection after sending message
+      if (selectedMediaItems.size > 0) {
+        const scrapedItemsToRemove = new Set<string>()
+        selectedMediaItems.forEach(itemId => {
+          const item = mediaItems.find(m => m.id === itemId)
+          if (item && ((item.content && item.resource_id) || item.type === 'scraped' || item.id.startsWith('scraped-'))) {
+            scrapedItemsToRemove.add(itemId)
+          }
+        })
+        
+        if (scrapedItemsToRemove.size > 0) {
+          console.log('🧹 Clearing scraped content from selection after message sent:', scrapedItemsToRemove.size, 'items')
+          setSelectedMediaItems(prev => {
+            const newSet = new Set(prev)
+            scrapedItemsToRemove.forEach(itemId => newSet.delete(itemId))
+            return newSet
+          })
+        }
+      }
+      
       setIsLoading(false)
+      console.log('🏁 ===== CHAT MESSAGE FLOW END =====')
     }
   }
 
   // Fetch media library data
   const fetchMediaLibrary = async () => {
     try {
-      console.log('🔄 FETCH MEDIA LIBRARY STARTED')
+      console.log('📚 ===== FETCH MEDIA LIBRARY START =====')
       console.log('📊 Current mediaItems before fetch:', mediaItems.length)
       console.log('📊 Current mediaItems types:', mediaItems.map(item => item.type))
+      console.log('📊 Current mediaItems details:', mediaItems.map(item => ({
+        id: item.id,
+        filename: item.filename || item.title,
+        type: item.type,
+        hasContent: !!item.content,
+        hasTranscript: !!item.transcript
+      })))
       
       setIsRefreshing(true)
       setIsLoadingMedia(true)
@@ -1778,8 +2177,13 @@ export default function Dashboard() {
 
       console.log('🔍 Fetching media library from: /api/media/list (proxied to n8n)')
       console.log('🔍 Access token:', accessToken ? 'Present' : 'Missing')
+      console.log('🔍 Session ID:', sessionId || 'Not set')
 
       // Fetch both media library and scraped contents
+      console.log('📡 Making parallel requests to:')
+      console.log('  - /api/media/list (media library)')
+      console.log('  - /api/scraped-contents (scraped content)')
+      
       const [mediaResponse, scrapedResponse] = await Promise.all([
         fetch('/api/media/list', {
           method: 'GET',
@@ -1802,7 +2206,13 @@ export default function Dashboard() {
 
       const response = mediaResponse
 
-      console.log('🔍 Response status:', response.status, response.statusText)
+      console.log('📡 Media Library Response:')
+      console.log('  - Status:', response.status, response.statusText)
+      console.log('  - OK:', response.ok)
+      
+      console.log('📡 Scraped Contents Response:')
+      console.log('  - Status:', scrapedResponse?.status || 'No response')
+      console.log('  - OK:', scrapedResponse?.ok || false)
       
       if (!response.ok) {
         if (response.status === 401) {
@@ -1823,11 +2233,16 @@ export default function Dashboard() {
       }
 
       const result = await response.json()
-      console.log('Media library API response:', result)
+      console.log('📊 Media library API response:', result)
+      console.log('📊 Media response type:', typeof result)
+      console.log('📊 Media response is array:', Array.isArray(result))
       
       // Extract the data array from the response
       const data = result.data || result
-      console.log('Extracted data:', data)
+      console.log('📊 Extracted data:', data)
+      console.log('📊 Extracted data type:', typeof data)
+      console.log('📊 Extracted data is array:', Array.isArray(data))
+      console.log('📊 Extracted data length:', Array.isArray(data) ? data.length : 'N/A')
       
       // Handle case where data might be empty or null
       if (!data || !Array.isArray(data)) {
@@ -1844,9 +2259,17 @@ export default function Dashboard() {
         try {
           const scrapedData = await scrapedResponse.json()
           console.log('📊 Scraped content data:', scrapedData)
+          console.log('📊 Scraped data type:', typeof scrapedData)
+          console.log('📊 Scraped data is array:', Array.isArray(scrapedData))
           if (scrapedData && scrapedData.data && Array.isArray(scrapedData.data)) {
             scrapedItems = scrapedData.data
             console.log('📊 Found scraped items:', scrapedItems.length)
+            console.log('📊 Scraped items details:', scrapedItems.map(item => ({
+              resource_id: item.resource_id,
+              resource_name: item.resource_name,
+              type: item.type,
+              content_length: item.content ? item.content.length : 0
+            })))
           }
         } catch (err) {
           console.log('Error parsing scraped content:', err)
@@ -1854,11 +2277,20 @@ export default function Dashboard() {
       }
 
       // Transform the API response to match our MediaItem interface
+      console.log('🔄 Transforming media items...')
       const transformedItems = data.map((item: any) => {
         // Find matching scraped content by filename
         const matchingScraped = scrapedItems.find(scraped => 
           scraped.resource_name === (item.file_name || item.filename || item.name)
         )
+        
+        console.log(`🔄 Processing item: ${item.file_name || item.filename || item.name}`)
+        console.log(`  - Media ID: ${item.media_id}`)
+        console.log(`  - File type: ${item.file_type}`)
+        console.log(`  - Has matching scraped content: ${!!matchingScraped}`)
+        if (matchingScraped) {
+          console.log(`  - Scraped content length: ${matchingScraped.content ? matchingScraped.content.length : 0}`)
+        }
         
         return {
           id: item.media_id?.toString() || item.id?.toString() || `item-${Math.random()}`,
@@ -1979,6 +2411,7 @@ export default function Dashboard() {
     } finally {
       setIsRefreshing(false)
       setIsLoadingMedia(false)
+      console.log('📚 ===== FETCH MEDIA LIBRARY END =====')
     }
   }
 
@@ -2340,6 +2773,11 @@ export default function Dashboard() {
 
   // Handle media item selection for RAG with optimistic updates
   const handleMediaSelection = async (itemId: string, isSelected: boolean) => {
+    console.log('📎 ===== MEDIA SELECTION START =====')
+    console.log('📎 Item ID:', itemId)
+    console.log('📎 Is Selected:', isSelected)
+    console.log('📎 Current selected items count:', selectedMediaItems.size)
+    
     const accessToken = authService.getAuthToken()
     if (!accessToken) {
       console.error("No access token available")
@@ -2352,9 +2790,21 @@ export default function Dashboard() {
       return
     }
 
+    console.log('📎 Media item details:')
+    console.log('  - Filename:', item.filename || item.title)
+    console.log('  - Type:', item.type)
+    console.log('  - ID:', item.id)
+    console.log('  - Content length:', item.content ? item.content.length : 0)
+    console.log('  - Transcript length:', item.transcript ? item.transcript.length : 0)
+    console.log('  - URL:', item.url || 'N/A')
+    console.log('  - Resource ID:', item.resource_id || 'N/A')
+    console.log('  - Has content:', !!item.content)
+    console.log('  - Has resource_id:', !!item.resource_id)
+
     // Prevent rapid clicking on the same item
     const currentSelection = selectedMediaItems.has(itemId)
     if (currentSelection === isSelected) {
+      console.log('📎 Item already in desired state, skipping')
       return // Already in the desired state
     }
 
@@ -2371,59 +2821,98 @@ export default function Dashboard() {
 
     // Make API call in background
     try {
+      // Check if this is scraped content (including images) that should be passed directly with messages
+      // Items with scraped content have a 'content' property and 'resource_id' property
+      const isScrapedContent = (item.content && item.resource_id) || item.type === 'scraped' || item.id.startsWith('scraped-')
+      console.log('📎 Scraped content detection:')
+      console.log('  - Has content and resource_id:', !!(item.content && item.resource_id))
+      console.log('  - Type is scraped:', item.type === 'scraped')
+      console.log('  - ID starts with scraped-:', item.id.startsWith('scraped-'))
+      console.log('  - Final decision - isScrapedContent:', isScrapedContent)
+      
       if (isSelected) {
-        // Add item to RAG
-        console.log('🔗 Adding item to RAG:', item.filename)
-        const response = await fetch('/api/rag/upload', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            access_token: accessToken,
-            session_id: sessionId,
-            media_id: itemId
-          })
-        })
-
-        if (!response.ok) {
-          // Revert optimistic update on failure
-          setSelectedMediaItems(prev => {
-            const newSet = new Set(prev)
-            newSet.delete(itemId)
-            return newSet
-          })
-          console.error('Failed to add item to RAG:', response.status, response.statusText)
-          const errorText = await response.text().catch(() => 'Unable to read error response')
-          console.error('Error response body:', errorText)
-          showToast('Failed to add item to chat context', 'error')
+        if (isScrapedContent) {
+          // For scraped content (including images), just mark as selected for direct message passing
+          console.log('📄 Adding scraped content for direct message passing:', item.filename)
+          console.log('📄 Content will be passed directly with the next message')
+          console.log('📄 Content preview:', item.content ? item.content.substring(0, 100) + '...' : 'No content')
+          showToast('Scraped content added - will be included with your next message', 'success')
         } else {
-          showToast('Item added to chat context', 'success')
+          // For regular media files, add to RAG
+          console.log('🔗 Adding item to RAG:', item.filename)
+          console.log('🔗 RAG Upload Request Details:')
+          console.log('  - URL: /api/rag/upload')
+          console.log('  - Session ID:', sessionId)
+          console.log('  - Media ID:', itemId)
+          console.log('  - Item Type:', item.type)
+          console.log('  - Item Name:', item.filename || item.title)
+          
+          const response = await fetch('/api/rag/upload', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              access_token: accessToken,
+              session_id: sessionId,
+              media_id: itemId
+            })
+          })
+
+          if (!response.ok) {
+            // Revert optimistic update on failure
+            setSelectedMediaItems(prev => {
+              const newSet = new Set(prev)
+              newSet.delete(itemId)
+              return newSet
+            })
+            console.error('❌ Failed to add item to RAG:', response.status, response.statusText)
+            const errorText = await response.text().catch(() => 'Unable to read error response')
+            console.error('❌ Error response body:', errorText)
+            showToast('Failed to add item to chat context', 'error')
+          } else {
+            console.log('✅ Successfully added item to RAG context')
+            showToast('Item added to chat context', 'success')
+          }
         }
       } else {
-        // Remove item from RAG
-        console.log('🗑️ Removing item from RAG:', item.filename)
-        const response = await fetch('/api/rag/delete', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            access_token: accessToken,
-            session_id: sessionId,
-            media_id: itemId
-          })
-        })
-
-        if (!response.ok) {
-          // Revert optimistic update on failure
-          setSelectedMediaItems(prev => new Set([...prev, itemId]))
-          console.error('Failed to remove item from RAG:', response.status, response.statusText)
-          const errorText = await response.text().catch(() => 'Unable to read error response')
-          console.error('Error response body:', errorText)
-          showToast('Failed to remove item from chat context', 'error')
+        if (isScrapedContent) {
+          // For scraped content, just remove from selection
+          console.log('📄 Removing scraped content from direct message passing:', item.filename)
+          showToast('Scraped content removed from next message', 'success')
         } else {
-          showToast('Item removed from chat context', 'success')
+          // For regular media files, remove from RAG
+          console.log('🗑️ Removing item from RAG:', item.filename)
+          console.log('🗑️ RAG Delete Request Details:')
+          console.log('  - URL: /api/rag/delete')
+          console.log('  - Session ID:', sessionId)
+          console.log('  - Media ID:', itemId)
+          console.log('  - Item Type:', item.type)
+          console.log('  - Item Name:', item.filename || item.title)
+          
+          const response = await fetch('/api/rag/delete', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              access_token: accessToken,
+              session_id: sessionId,
+              media_id: itemId
+            })
+          })
+
+          if (!response.ok) {
+            // Revert optimistic update on failure
+            setSelectedMediaItems(prev => new Set([...prev, itemId]))
+            console.error('❌ Failed to remove item from RAG:', response.status, response.statusText)
+            const errorText = await response.text().catch(() => 'Unable to read error response')
+            console.error('❌ Error response body:', errorText)
+            showToast('Failed to remove item from chat context', 'error')
+          } else {
+            console.log('✅ Successfully removed item from RAG context')
+            showToast('Item removed from chat context', 'success')
+          }
         }
       }
     } catch (error) {
@@ -2437,9 +2926,11 @@ export default function Dashboard() {
       } else {
         setSelectedMediaItems(prev => new Set([...prev, itemId]))
       }
-      console.error('Error handling media selection:', error)
+      console.error('❌ Error handling media selection:', error)
       showToast('Error updating chat context', 'error')
     }
+    
+    console.log('📎 ===== MEDIA SELECTION END =====')
   }
 
   // Delete scraped content via n8n webhook
@@ -2514,11 +3005,13 @@ export default function Dashboard() {
         // For scraped content, YouTube, transcripts, and URLs, we need to use the resource_id from the item
         const resourceId = item.resourceId || itemId
         console.log('🗑️ Deleting scraped content/YouTube/transcript with resource ID:', resourceId, 'and name:', itemName)
-        deleteResult = await deleteScrapedContent(resourceId, itemName)
+        const result = await deleteScrapedContent(resourceId, itemName)
+        deleteResult = result === true
       } else {
         // For regular media files, use the existing delete function
         console.log('🗑️ Deleting media file with ID:', itemId, 'and name:', itemName)
-        deleteResult = await deleteMediaFile(itemId, itemName)
+        const result = await deleteMediaFile(itemId, itemName)
+        deleteResult = result === true
       }
       
       if (deleteResult) {
@@ -2601,6 +3094,44 @@ export default function Dashboard() {
       <div className="flex h-screen">
         {/* Main Chat Area */}
         <div className="flex-1 flex flex-col min-w-0 bg-gradient-to-br from-slate-50 via-white to-blue-50/30 h-full">
+          {/* Knowledge Base Status Indicator */}
+          {knowledgeBaseStatus.isLoaded && (
+            <div className="bg-green-50 border-b border-green-200 px-4 py-2">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-2">
+                  <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                  <span className="text-sm text-green-700 font-medium">
+                    Knowledge Base Active
+                  </span>
+                  <span className="text-xs text-green-600">
+                    ({knowledgeBaseStatus.contentLength.toLocaleString()} characters)
+                  </span>
+                </div>
+                <button
+                  onClick={fetchKnowledgeBaseStatus}
+                  className="text-xs text-green-600 hover:text-green-800 underline"
+                >
+                  Refresh
+                </button>
+              </div>
+            </div>
+          )}
+          {!knowledgeBaseStatus.isLoaded && knowledgeBaseStatus.lastFetched && (
+            <div className="bg-yellow-50 border-b border-yellow-200 px-4 py-2">
+              <div className="flex items-center space-x-2">
+                <div className="w-2 h-2 bg-yellow-500 rounded-full"></div>
+                <span className="text-sm text-yellow-700 font-medium">
+                  Knowledge Base Not Available
+                </span>
+                <button
+                  onClick={fetchKnowledgeBaseStatus}
+                  className="text-xs text-yellow-600 hover:text-yellow-800 underline"
+                >
+                  Retry
+                </button>
+              </div>
+            </div>
+          )}
           <div className="flex-1 w-full h-full">
             <ChatInterface 
               messages={messages} 

@@ -41,10 +41,53 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Forward the request to n8n webhook
+    // Fetch knowledge base content first
+    console.log('📚 Fetching knowledge base content...');
+    let knowledgeBaseContent = "";
+    
+    try {
+      const kbResponse = await fetch(`${request.nextUrl.origin}/api/knowledge-base`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (kbResponse.ok) {
+        const kbData = await kbResponse.json();
+        if (kbData.success && kbData.data?.content) {
+          knowledgeBaseContent = kbData.data.content;
+          console.log('✅ Knowledge base content fetched successfully');
+          console.log('📄 Knowledge base content length:', knowledgeBaseContent.length);
+          console.log('📄 Knowledge base content preview:', knowledgeBaseContent.substring(0, 200) + '...');
+        } else {
+          console.log('⚠️ Knowledge base fetch returned no content');
+        }
+      } else {
+        console.log('⚠️ Knowledge base fetch failed with status:', kbResponse.status);
+      }
+    } catch (kbError) {
+      console.log('⚠️ Knowledge base fetch error:', kbError);
+    }
+
+    // Forward the request to n8n webhook with knowledge base content
     const { API_ENDPOINTS } = await import('@/lib/api-config');
     const n8nEndpoint = API_ENDPOINTS.N8N_WEBHOOKS.CHAT;
     console.log('Calling n8n endpoint:', n8nEndpoint);
+    
+    const chatPayload = {
+      email,
+      'session-id': sessionId,
+      'agent-id': agentId,
+      'user-prompt': userPrompt
+    };
+
+    // Include knowledge base content if available
+    if (knowledgeBaseContent) {
+      chatPayload['knowledge-base'] = knowledgeBaseContent;
+      console.log('📚 Including knowledge base content in chat request');
+    }
     
     const n8nResponse = await fetch(n8nEndpoint, {
       method: 'POST',
@@ -52,12 +95,7 @@ export async function POST(request: NextRequest) {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${accessToken}`
       },
-      body: JSON.stringify({
-        email,
-        'session-id': sessionId,
-        'agent-id': agentId,
-        'user-prompt': userPrompt
-      }),
+      body: JSON.stringify(chatPayload),
     });
 
     console.log('=== N8N CHAT RESPONSE ===');
