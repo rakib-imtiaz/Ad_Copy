@@ -44,6 +44,11 @@ export function SidebarStateProvider({ children }: { children: React.ReactNode }
   const [isLoadingAgents, setIsLoadingAgents] = React.useState<boolean>(false)
   const [chatHistory, setChatHistory] = React.useState<any[]>([])
   const [currentChatSession, setCurrentChatSession] = React.useState<string | null>(null)
+
+  // Debug log for sidebar context currentChatSession changes
+  React.useEffect(() => {
+    console.log('🎯 Sidebar context currentChatSession changed:', currentChatSession)
+  }, [currentChatSession])
   const [isLoadingChatHistory, setIsLoadingChatHistory] = React.useState<boolean>(false)
   
   // Action function refs that will be set by the dashboard
@@ -77,7 +82,10 @@ export function SidebarStateProvider({ children }: { children: React.ReactNode }
     updateAgents: setAgents,
     updateSelectedAgent: setSelectedAgent,
     updateChatHistory: setChatHistory,
-    updateCurrentChatSession: setCurrentChatSession,
+    updateCurrentChatSession: (sessionId: string | null) => {
+      console.log('🔄 Sidebar context updateCurrentChatSession called with:', sessionId)
+      setCurrentChatSession(sessionId)
+    },
     updateIsLoadingAgents: setIsLoadingAgents,
     updateIsLoadingChatHistory: setIsLoadingChatHistory,
     

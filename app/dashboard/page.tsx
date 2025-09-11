@@ -497,6 +497,11 @@ export default function Dashboard() {
   }>>([])
   const [isLoadingChatHistory, setIsLoadingChatHistory] = React.useState(false)
   const [currentChatSession, setCurrentChatSession] = React.useState<string | null>(null)
+
+  // Debug log for currentChatSession changes
+  React.useEffect(() => {
+    console.log('🎯 Dashboard currentChatSession changed:', currentChatSession)
+  }, [currentChatSession])
   const [isLoadingChat, setIsLoadingChat] = React.useState(false)
   
   const [isStartingChat, setIsStartingChat] = React.useState(false)
@@ -960,6 +965,7 @@ export default function Dashboard() {
     setChatStarted(false) // Reset chat state
     setMessages([]) // Clear messages
     setCurrentChatSession(null) // Clear current chat session
+    updateCurrentChatSession(null) // Also clear sidebar context state
     
     // Clear localStorage
     if (typeof window !== 'undefined') {
@@ -978,17 +984,30 @@ export default function Dashboard() {
 
   // Load specific chat session
   const loadChatSession = async (sessionId: string) => {
+    console.log('🔄 loadChatSession called with sessionId:', sessionId)
+    console.log('📊 Current state before loading:', {
+      currentChatSession,
+      sessionId: sessionId,
+      isLoadingChat
+    })
+
     // Prevent multiple clicks
     if (isLoadingChat) {
+      console.log('⚠️ Already loading chat, skipping...')
       return
     }
-    
+
     setIsLoadingChat(true)
-    
+
     try {
       // Set the session ID and current chat session immediately
+      console.log('✅ Setting sessionId and currentChatSession to:', sessionId)
       setSessionId(sessionId)
       setCurrentChatSession(sessionId)
+      
+      // Also update the sidebar context state
+      console.log('🔄 Syncing sidebar context currentChatSession to:', sessionId)
+      updateCurrentChatSession(sessionId)
       
       // Save to localStorage
       if (typeof window !== 'undefined') {
@@ -1076,6 +1095,7 @@ export default function Dashboard() {
       // If the deleted chat was the current one, clear the current session
       if (currentChatSession === sessionId) {
         setCurrentChatSession(null)
+        updateCurrentChatSession(null)
         setSessionId('')
         setChatStarted(false)
         setMessages([])
@@ -1267,6 +1287,7 @@ export default function Dashboard() {
         // Set the current chat session to the newly created session
         if (sessionId) {
           setCurrentChatSession(sessionId)
+          updateCurrentChatSession(sessionId)
           
           // Update URL with the new chat ID
           if (typeof window !== 'undefined') {
@@ -1686,10 +1707,20 @@ export default function Dashboard() {
       })
       
       console.log('📚 Sorted chat history (newest first):', chatHistoryData)
-      
+      console.log('🎯 Current chat session after fetch:', currentChatSession)
+
+      // Check if current chat session exists in the loaded data
+      const currentSessionExists = chatHistoryData.some((chat: any) => chat.session_id === currentChatSession)
+      console.log('✅ Current session exists in loaded data:', currentSessionExists)
+
       // Update chat history state
       setChatHistory(chatHistoryData)
       updateChatHistory(chatHistoryData)
+      
+      // Sync current chat session with sidebar context
+      if (currentChatSession) {
+        updateCurrentChatSession(currentChatSession)
+      }
       
       // Set current chat session if none is set and we have history
       // Only auto-select if no current session AND no URL parameter
@@ -3850,11 +3881,24 @@ function LeftSidebar({
               {chatHistory.map((chat: any) => {
                 const chatDate = new Date(chat.created_at)
                 const timeAgo = formatTimeAgo(chatDate)
-                
+                const isSelected = currentChatSession === chat.session_id
+
+                // Debug logs
+                console.log('Chat item:', {
+                  session_id: chat.session_id,
+                  title: chat.title,
+                  currentChatSession,
+                  isSelected
+                })
+
                 return (
                 <div
                     key={chat.session_id}
-                    className="p-4 rounded-lg border transition-all duration-150 bg-gray-50 border-gray-200 hover:bg-gray-100 hover:border-gray-300"
+                    className={`p-4 rounded-lg border transition-all duration-150 ${
+                      isSelected
+                        ? 'bg-emerald-50 border-emerald-200 shadow-sm ring-2 ring-emerald-500/20'
+                        : 'bg-gray-50 border-gray-200 hover:bg-gray-100 hover:border-gray-300'
+                    }`}
               >
                 <div className="flex items-start justify-between mb-2">
                       <div 

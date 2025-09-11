@@ -320,6 +320,14 @@ export function AppSidebar() {
                           const chatDate = new Date(chat.created_at)
                           const timeAgo = formatTimeAgo(chatDate)
                           const isDeleting = deletingChatId === chat.session_id
+
+                          // Debug logs for sidebar
+                          console.log('Sidebar Chat item:', {
+                            session_id: chat.session_id,
+                            title: chat.title,
+                            currentChatSession,
+                            isActive
+                          })
                           
                           return (
                             <div
