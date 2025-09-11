@@ -282,6 +282,24 @@
     backface-visibility: hidden;
     transform: translateZ(0);
   }
+  
+  /* Prevent any white flashes during component initialization */
+  main#home * {
+    backface-visibility: hidden;
+    transform: translateZ(0);
+  }
+  
+  /* Ensure text renders smoothly without flashing */
+  .text-ink, h1, h2, h3, p {
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  
+  /* Prevent layout shifts during loading */
+  main#home {
+    contain: layout style paint;
+  }
 }
 
 @layer utilities {

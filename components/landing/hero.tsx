@@ -90,9 +90,9 @@ export function LandingHero() {
   };
   
   return (
-    <main id="home" className="relative flex flex-col h-[100vh] items-center justify-center bg-hero-gradient transition-all duration-500">
+    <main id="home" className="relative flex flex-col h-[100vh] items-center justify-center bg-hero-gradient transition-all duration-500" style={{ backgroundColor: 'var(--yellow-300)' }}>
       {/* Iridescence animation layer */}
-      <div className="absolute inset-0 w-full h-full -z-5 pointer-events-none">
+      <div className="absolute inset-0 w-full h-full -z-5 pointer-events-none" style={{ background: 'transparent' }}>
         <Iridescence
           color={[0.95, 0.81, 0.25]} // RFA yellow colors
           mouseReact={false}

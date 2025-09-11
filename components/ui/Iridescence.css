@@ -2,20 +2,37 @@
   width: 100%;
   height: 100%;
   position: relative;
+  background: transparent;
 }
 
 .iridescence-container.loading {
-  opacity: 0;
-  transition: opacity 0.3s ease-in-out;
+  opacity: 1;
+  transition: opacity 0.5s ease-in-out;
 }
 
 .iridescence-container.loaded {
   opacity: 1;
-  transition: opacity 0.3s ease-in-out;
+  transition: opacity 0.5s ease-in-out;
 }
 
-/* Ensure canvas has proper blending */
+/* Ensure canvas has proper blending and no white flash */
 .iridescence-container canvas {
   mix-blend-mode: normal;
+  background: transparent !important;
+  opacity: 0;
+  transition: opacity 0.5s ease-in-out;
+  will-change: opacity;
+}
+
+/* Prevent any potential white flash during WebGL initialization */
+.iridescence-container::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
   background: transparent;
+  z-index: 1;
+  pointer-events: none;
 }

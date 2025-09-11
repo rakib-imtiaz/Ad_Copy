@@ -1,5 +1,5 @@
 .shiny-text {
-  color: white; /* White text for glassmorphic backgrounds */
+  color: white; /* Fallback color to prevent white flash */
   background: linear-gradient(
     120deg,
     rgba(255, 255, 255, 0.8) 40%,
@@ -11,9 +11,17 @@
   background-clip: text;
   display: inline-block;
   animation: shine 5s linear infinite;
-  -webkit-text-fill-color: transparent;
+  /* Apply text-fill-color after a brief delay to prevent flash */
+  -webkit-text-fill-color: white;
   text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
   font-weight: bold;
+  /* Smooth transition to prevent flash */
+  transition: -webkit-text-fill-color 0.1s ease;
+}
+
+/* Apply transparent fill after component is ready */
+.shiny-text.ready {
+  -webkit-text-fill-color: transparent;
 }
 
 @keyframes shine {

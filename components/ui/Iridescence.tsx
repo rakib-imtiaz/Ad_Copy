@@ -70,6 +70,10 @@ export default function Iridescence({
     const renderer = new Renderer();
     const gl = renderer.gl;
     
+    // Immediately set canvas style to prevent white flash
+    gl.canvas.style.background = 'transparent';
+    gl.canvas.style.opacity = '0';
+    
     // Set transparent background instead of white to prevent flash
     gl.clearColor(0, 0, 0, 0);
     gl.enable(gl.BLEND);
@@ -120,11 +124,18 @@ export default function Iridescence({
       renderer.render({ scene: mesh });
     }
     
-    // Start animation and mark as loaded
-    animateId = requestAnimationFrame(update);
-    setIsLoaded(true);
-    
+    // Append canvas first (still hidden)
     ctn.appendChild(gl.canvas);
+    
+    // Start animation and gradually fade in canvas
+    animateId = requestAnimationFrame(update);
+    
+    // Small delay to ensure first frame is rendered, then fade in
+    setTimeout(() => {
+      gl.canvas.style.transition = 'opacity 0.5s ease-in-out';
+      gl.canvas.style.opacity = '1';
+      setIsLoaded(true);
+    }, 100);
 
     function handleMouseMove(e: MouseEvent) {
       const rect = ctn.getBoundingClientRect();
