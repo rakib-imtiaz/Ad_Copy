@@ -7,7 +7,8 @@ import {
   Bot, Settings, Upload, FileText, Link2, Mic, 
   PanelLeftClose, PanelRightClose, Send, Paperclip,
   ChevronRight, MoreHorizontal, Star, Clock, Zap, RefreshCw, Image, Activity,
-  Sparkles, ArrowRight, ChevronDown, Check, Power, Headphones, Video
+  Sparkles, ArrowRight, ChevronDown, Check, Power, Headphones, Video,
+  Library, X, PanelRight, PanelRightOpen, Layers, Archive
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -3324,6 +3325,22 @@ export default function Dashboard() {
               </div>
             </div>
           )}
+          
+          {/* Media Library Toggle Header */}
+          <div className="bg-white border-b border-slate-200 px-4 py-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-3">
+                <h2 className="text-lg font-semibold text-slate-900">Chat Interface</h2>
+                <Badge variant="secondary" className="text-xs">
+                  {selectedAgent || 'No Agent Selected'}
+                </Badge>
+              </div>
+              <div className="flex items-center space-x-2">
+                {/* Placeholder for layout - actual button is now fixed positioned */}
+              </div>
+            </div>
+          </div>
+          
           <div className="flex-1 w-full h-full">
             <ChatInterface 
               messages={messages} 
@@ -3400,6 +3417,7 @@ export default function Dashboard() {
             handleDeleteItem={handleDeleteItem}
             isRefreshing={isRefreshing}
             isLoadingTabContent={isLoadingTabContent}
+            onClose={() => setRightPanelOpen(false)}
             isDeleting={isDeleting}
             deletingItemId={deletingItemId}
           />
@@ -3551,6 +3569,7 @@ export default function Dashboard() {
           isLoading={isLoadingMedia}
         />
 
+
       {/* Toast Notification */}
       <Toast
         message={toast.message}
@@ -3559,6 +3578,34 @@ export default function Dashboard() {
         onClose={hideToast}
       />
         </motion.div>
+      )}
+
+      {/* Fixed Floating Media Library Button */}
+      {chatStarted && (
+        <div className="fixed bottom-6 right-6 z-50">
+          <Button
+            variant="outline"
+            size="lg"
+            onClick={() => setRightPanelOpen(!rightPanelOpen)}
+            className={`flex items-center space-x-3 font-semibold transition-all duration-300 transform hover:scale-105 border-0 px-6 py-3 rounded-2xl ${
+              rightPanelOpen 
+                ? 'bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white shadow-2xl hover:shadow-red-500/30 hover:-translate-y-1' 
+                : 'bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white shadow-2xl hover:shadow-emerald-500/30 hover:-translate-y-1'
+            }`}
+          >
+            {rightPanelOpen ? (
+              <>
+                <PanelRightClose className="h-5 w-5" />
+                <span>Collapse Media Library</span>
+              </>
+            ) : (
+              <>
+                <Layers className="h-5 w-5" />
+                <span>Open Media Library</span>
+              </>
+            )}
+          </Button>
+        </div>
       )}
       </div>
   )
@@ -3942,8 +3989,8 @@ function LeftSidebar({
               >
                 <div className="flex items-start justify-between mb-2">
                       <div 
-                        className={`flex-1 min-w-0 ${isLoadingChat ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}`}
-                        onClick={() => !isLoadingChat && onLoadChatSession(chat.session_id)}
+                        className="flex-1 min-w-0 cursor-pointer"
+                        onClick={() => onLoadChatSession(chat.session_id)}
                       >
                         <h4 className="font-medium text-sm truncate text-gray-900">
                           {chat.title || `Chat ${chat.session_id}`}
@@ -4032,7 +4079,7 @@ function MobileSidebar({ agents, conversations, chatHistory, isLoadingChatHistor
 }
 
 // Media Drawer Component  
-function MediaDrawer({ activeTab, onTabChange, mediaItems, setMediaItems, onRefresh, onUpload, onDelete, handleDeleteItem, isRefreshing, isLoadingTabContent, isDeleting, deletingItemId }: any) {
+function MediaDrawer({ activeTab, onTabChange, mediaItems, setMediaItems, onRefresh, onUpload, onDelete, handleDeleteItem, isRefreshing, isLoadingTabContent, isDeleting, deletingItemId, onClose }: any) {
   const tabs = [
     { id: 'files' as const, label: 'Files', icon: FileText },
     { id: 'links' as const, label: 'Links', icon: Link2 },
