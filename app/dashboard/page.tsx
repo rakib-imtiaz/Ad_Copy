@@ -3300,7 +3300,7 @@ export default function Dashboard() {
           initial={false}
           animate={{ width: rightPanelOpen ? 384 : 0 }}
         >
-                  <div className="flex-1 overflow-y-auto">
+                  <div className="flex-1">
           <MediaDrawer 
             activeTab={activeTab} 
             onTabChange={handleTabChange} 
@@ -3867,31 +3867,33 @@ function MediaDrawer({ activeTab, onTabChange, mediaItems, setMediaItems, onRefr
   return (
     <div className="h-full flex flex-col">
       {/* Header with tabs */}
-      <div className="border-b border-[#EEEEEE] p-4">
-        <div className="flex items-center justify-between mb-3">
-          <SlideInText text="Media Library" className="font-medium" />
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={onRefresh}
-                  disabled={isRefreshing}
-                  className="flex items-center space-x-2 bg-[#1ABC9C] hover:bg-[#1ABC9C]/90 text-white border-0 shadow-md hover:shadow-lg transition-all duration-200"
-                >
-                  <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
-                  <span className="text-sm font-medium">Refresh All</span>
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>Refresh all media tabs and content (Files, Links, YouTube, Images, Transcripts, Knowledge Base)</p>
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
+      <div className="border-b border-[#EEEEEE] p-6 pt-12">
+        <div className="flex flex-col space-y-4 mb-6">
+          <div className="flex items-center justify-between">
+            <SlideInText text="Media Library" className="font-semibold text-lg" />
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={onRefresh}
+                    disabled={isRefreshing}
+                    className="flex items-center space-x-2 bg-[#1ABC9C] hover:bg-[#1ABC9C]/90 text-white border-0 shadow-md hover:shadow-lg transition-all duration-200"
+                  >
+                    <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+                    <span className="text-sm font-medium">Refresh All</span>
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Refresh all media tabs and content (Files, Links, YouTube, Images, Transcripts, Knowledge Base)</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          </div>
         </div>
-        <div className="bg-[#EEEEEE] p-1 rounded-lg overflow-x-auto scrollbar-thin scrollbar-thumb-[#929AAB] scrollbar-track-transparent">
-          <div className="flex space-x-1 min-w-max">
+        <div className="bg-[#EEEEEE] p-1 rounded-lg">
+          <div className="flex space-x-1 flex-wrap justify-center">
             {tabs.map((tab) => (
               <button
                 key={tab.id}
