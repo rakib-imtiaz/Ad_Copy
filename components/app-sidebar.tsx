@@ -12,7 +12,9 @@ import {
   ChevronDown,
   Bot,
   Trash2,
-  Loader2
+  Loader2,
+  Database,
+  BookOpen
 } from "lucide-react"
 
 import {
@@ -52,7 +54,7 @@ import {
 import { Separator } from "@/components/ui/separator"
 
 const mainNav = [
-  { href: "/knowledge-base", icon: Search, label: "Knowledge Base" },
+  // Knowledge Base moved to bottom section for better placement
 ]
 
 export function AppSidebar() {
@@ -137,45 +139,6 @@ export function AppSidebar() {
 
       <SidebarContent className={`flex flex-col justify-between bg-white ${state === 'expanded' ? 'px-3 py-4' : 'px-0 py-4'}`}>
         <div className="space-y-8">
-          {/* Main Features Section */}
-          <SidebarGroup>
-            {state === 'expanded' && (
-              <SidebarGroupLabel className="px-3 text-slate-700 font-semibold text-sm mb-3">
-                Main Features
-              </SidebarGroupLabel>
-            )}
-            <SidebarGroupContent className={state === 'expanded' ? '' : 'px-0'}>
-              <SidebarMenu className="space-y-1">
-                {mainNav.map((item) => (
-                  <SidebarMenuItem key={item.href}>
-                    <SidebarMenuButton 
-                      asChild 
-                      isActive={activeItem === item.href}
-                      tooltip={item.label}
-                    >
-                      <Button
-                        variant={activeItem === item.href ? "secondary" : "ghost"}
-                        onClick={() => handleNavigation(item.href)}
-                        className={`w-full h-10 rounded-lg transition-all overflow-hidden ${
-                          state === 'expanded' 
-                            ? `justify-start px-3 ${activeItem === item.href 
-                                ? 'bg-emerald-50 text-emerald-700 border border-emerald-200 shadow-sm' 
-                                : 'hover:bg-slate-50 text-slate-700'}`
-                            : `justify-center p-0 ${activeItem === item.href 
-                                ? 'bg-emerald-50 text-emerald-700 border border-emerald-200 shadow-sm' 
-                                : 'hover:bg-slate-50 text-slate-700'}`
-                        }`}
-                        size="sm"
-                      >
-                        <item.icon className="h-4 w-4 flex-shrink-0" />
-                        {state === 'expanded' && <span className="font-medium truncate ml-3">{item.label}</span>}
-                      </Button>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                ))}
-              </SidebarMenu>
-            </SidebarGroupContent>
-          </SidebarGroup>
 
           {/* Agent Selector Section */}
           <SidebarGroup>
@@ -498,10 +461,45 @@ export function AppSidebar() {
           </SidebarGroup>
         </div>
 
-        {/* Settings Section */}
+        {/* Knowledge Base & Settings Section */}
         <div className="space-y-2">
           <Separator className={state === 'expanded' ? 'mx-3' : 'mx-0'} />
-          <SidebarMenu className={state === 'expanded' ? '' : 'flex items-center justify-center'}>
+          <SidebarMenu className={state === 'expanded' ? 'space-y-1' : 'flex flex-col items-center space-y-1'}>
+            {/* Knowledge Base Button */}
+            <SidebarMenuItem>
+              <SidebarMenuButton 
+                asChild 
+                isActive={activeItem === '/knowledge-base'}
+                tooltip="Knowledge Base"
+              >
+                <Button
+                  variant={activeItem === '/knowledge-base' ? "secondary" : "ghost"}
+                  className={`w-full h-11 rounded-xl transition-all duration-200 overflow-hidden group ${
+                    state === 'expanded' 
+                      ? `justify-start px-4 ${activeItem === '/knowledge-base' 
+                          ? 'bg-gradient-to-r from-purple-50 to-indigo-50 text-purple-700 border border-purple-200 shadow-sm hover:shadow-md' 
+                          : 'hover:bg-gradient-to-r hover:from-purple-50 hover:to-indigo-50 text-slate-700 hover:text-purple-700'}`
+                      : `justify-center p-0 ${activeItem === '/knowledge-base' 
+                          ? 'bg-gradient-to-r from-purple-50 to-indigo-50 text-purple-700 border border-purple-200 shadow-sm' 
+                          : 'hover:bg-gradient-to-r hover:from-purple-50 hover:to-indigo-50 text-slate-700 hover:text-purple-700'}`
+                  }`}
+                  size="sm"
+                  onClick={() => handleNavigation('/knowledge-base')}
+                >
+                  <div className="relative">
+                    <Database className="h-5 w-5 flex-shrink-0 transition-all duration-200 group-hover:scale-110" />
+                    <div className="absolute -top-1 -right-1 w-2 h-2 bg-gradient-to-r from-purple-500 to-indigo-500 rounded-full animate-pulse"></div>
+                  </div>
+                  {state === 'expanded' && (
+                    <span className="font-semibold truncate ml-3 bg-gradient-to-r from-purple-700 to-indigo-700 bg-clip-text text-transparent">
+                      Knowledge Base
+                    </span>
+                  )}
+                </Button>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+            
+            {/* Settings Button */}
             <SidebarMenuItem>
               <SidebarMenuButton 
                 asChild 
