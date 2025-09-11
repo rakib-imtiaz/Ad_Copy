@@ -65,6 +65,13 @@ interface BrandFormData {
       others: string[]
     }
   }
+  // Additional fields used in the form
+  productName: string
+  productPrice: string
+  productDescription: string
+  socialInstagram: string
+  socialLinkedIn: string
+  testimonial: string
 }
 
 const defaultFormData: BrandFormData = {
@@ -121,7 +128,14 @@ const defaultFormData: BrandFormData = {
       brickMortar: [""],
       others: [""]
     }
-  }
+  },
+  // Additional fields
+  productName: "",
+  productPrice: "",
+  productDescription: "",
+  socialInstagram: "",
+  socialLinkedIn: "",
+  testimonial: ""
 }
 
 interface BrandFormProps {
@@ -157,6 +171,14 @@ export function BrandFormClean({ onSuccess }: BrandFormProps) {
     if (step <= currentStep || completedSteps.includes(step - 1)) {
       setCurrentStep(step)
     }
+  }
+
+  // Update simple fields
+  const updateField = (field: string, value: string) => {
+    setFormData(prev => ({
+      ...prev,
+      [field]: value
+    }))
   }
 
   // Update nested object fields
