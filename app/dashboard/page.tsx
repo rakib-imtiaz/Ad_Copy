@@ -22,6 +22,7 @@ import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, Command
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card"
 import { Skeleton } from "@/components/ui/skeleton"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
 import { authService } from "@/lib/auth-service"
 import { ChatInterface } from "@/components/chat-interface"
@@ -4044,7 +4045,7 @@ function MediaDrawer({ activeTab, onTabChange, mediaItems, setMediaItems, onRefr
     <div className="h-full flex flex-col overflow-hidden">
       {/* Header with tabs */}
       <div className="border-b border-[#EEEEEE] p-6 pt-12">
-        <div className="flex flex-col space-y-4 mb-6">
+        <div className="flex flex-col space-y-6 mb-8">
           <div className="flex items-center justify-between">
             <SlideInText text="Media Library" className="font-semibold text-lg" />
             <TooltipProvider>
@@ -4068,20 +4069,22 @@ function MediaDrawer({ activeTab, onTabChange, mediaItems, setMediaItems, onRefr
             </TooltipProvider>
           </div>
         </div>
-        <div className="bg-[#EEEEEE] p-1 rounded-lg">
+        <div className="bg-[#EEEEEE] p-1.5 rounded-xl shadow-inner">
           <div className="flex space-x-1 flex-wrap justify-center">
             {tabs.map((tab) => (
               <button
                 key={tab.id}
                 onClick={() => onTabChange(tab.id)}
-                className={`flex items-center justify-center space-x-1.5 py-2.5 px-3 rounded-md text-sm font-medium transition-colors whitespace-nowrap ${
+                className={`flex items-center justify-center space-x-2 py-3 px-4 rounded-lg text-sm font-semibold transition-all duration-200 whitespace-nowrap ${
                   activeTab === tab.id
-                    ? 'bg-white text-[#393E46] shadow-sm'
-                    : 'text-[#929AAB] hover:text-[#393E46]'
+                    ? 'bg-white text-[#393E46] shadow-md border border-[#E0E0E0] transform scale-105'
+                    : 'text-[#929AAB] hover:text-[#393E46] hover:bg-white/50 hover:shadow-sm'
                 }`}
               >
-                <tab.icon className="h-4 w-4 flex-shrink-0" />
-                <span>{tab.label}</span>
+                <tab.icon className={`h-4 w-4 flex-shrink-0 transition-colors duration-200 ${
+                  activeTab === tab.id ? 'text-[#1ABC9C]' : 'text-[#929AAB]'
+                }`} />
+                <span className="tracking-wide">{tab.label}</span>
               </button>
             ))}
           </div>
@@ -4144,12 +4147,12 @@ function FilesTab({ mediaItems, onUpload, onDelete, isDeleting, deletingItemId, 
 
   return (
     <div className="space-y-4">
-      {/* Dropzone */}
+      {/* Enhanced Dropzone */}
       <div 
-        className={`border-2 border-dashed rounded-lg p-6 text-center transition-colors cursor-pointer ${
+        className={`border-2 border-dashed rounded-xl p-12 text-center transition-all duration-200 cursor-pointer ${
           dragActive 
-            ? 'border-[#1ABC9C] bg-[#1ABC9C]/10' 
-            : 'border-[#EEEEEE] hover:border-[#1ABC9C] hover:bg-[#1ABC9C]/5'
+            ? 'border-[#1ABC9C] bg-[#1ABC9C]/10 scale-[1.02] shadow-lg' 
+            : 'border-[#EEEEEE] hover:border-[#1ABC9C] hover:bg-[#1ABC9C]/5 hover:shadow-md'
         }`}
         onDragEnter={handleDrag}
         onDragLeave={handleDrag}
@@ -4157,16 +4160,30 @@ function FilesTab({ mediaItems, onUpload, onDelete, isDeleting, deletingItemId, 
         onDrop={handleDrop}
         onClick={() => fileInputRef.current?.click()}
       >
-        <Upload className={`h-6 w-6 mx-auto mb-2 ${isUploading ? 'animate-bounce' : ''} ${dragActive ? 'text-[#1ABC9C]' : 'text-[#929AAB]'}`} />
-        <FadeInText 
-          text={isUploading ? "Uploading files..." : "Drop files here"} 
-          className={`text-sm font-medium mb-1 text-center ${isUploading ? 'text-[#1ABC9C]' : ''}`} 
-        />
-        <FadeInText 
-          text={isUploading ? "Please wait..." : "or click to browse"} 
-          className="text-xs text-[#929AAB] text-center" 
-          delay={0.1} 
-        />
+        <div className="flex flex-col items-center space-y-4">
+          <div className={`p-4 rounded-full transition-all duration-200 ${
+            dragActive 
+              ? 'bg-gradient-to-br from-[#1ABC9C] to-[#16A085] shadow-lg' 
+              : 'bg-gradient-to-br from-[#EEEEEE] to-[#F5F5F5]'
+          }`}>
+            <Upload className={`h-8 w-8 transition-all duration-200 ${isUploading ? 'animate-bounce' : ''} ${
+              dragActive ? 'text-white' : 'text-[#929AAB]'
+            }`} />
+          </div>
+          <div className="space-y-2">
+            <FadeInText 
+              text={isUploading ? "Uploading files..." : "Drop files here or click to browse"} 
+              className={`text-lg font-semibold text-center transition-colors duration-200 ${
+                isUploading ? 'text-[#1ABC9C]' : dragActive ? 'text-[#1ABC9C]' : 'text-[#393E46]'
+              }`} 
+            />
+            <FadeInText 
+              text={isUploading ? "Please wait..." : "Supports PDF, DOC, TXT, MP3, MP4, and more"} 
+              className="text-sm text-[#929AAB] text-center" 
+              delay={0.1} 
+            />
+          </div>
+        </div>
         <input
           ref={fileInputRef}
           type="file"

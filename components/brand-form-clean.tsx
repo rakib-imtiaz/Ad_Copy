@@ -1,0 +1,1115 @@
+"use client"
+
+import * as React from "react"
+import { motion } from "framer-motion"
+import { authService } from "@/lib/auth-service"
+import { Toast } from "@/components/ui/toast"
+import { API_ENDPOINTS } from "@/lib/api-config"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Input } from "@/components/ui/input"
+import { Textarea } from "@/components/ui/textarea"
+import { Badge } from "@/components/ui/badge"
+import { ChevronLeft, ChevronRight, Check, Save, Plus, Trash2 } from "lucide-react"
+
+interface BrandFormData {
+  brandIdentity: {
+    businessNameTagline: {
+      name: string
+      tagline: string
+    }
+    founderNameBackstory: {
+      founders: string
+      backstory: string
+    }
+    missionStatement: {
+      whyWeExist: string
+      principles: string
+    }
+    businessModelType: string
+    uniqueSellingProposition: string
+    tonePersonality: {
+      style: string[]
+    }
+    examplePhrases: string[]
+    brandPowerWords: string[]
+    thingsToAvoid: string[]
+  }
+  targetAudience: {
+    idealCustomerProfile: {
+      description: string[]
+    }
+    primaryPainPoints: string[]
+    primaryDesiresGoals: string[]
+    commonObjections: string[]
+    audienceVocabulary: string[]
+  }
+  offers: {
+    name: string
+    price: string
+    description: string
+  }[]
+  clientAssets: {
+    socialMediaProfiles: {
+      instagram: string
+      youtube: string
+      facebook: string
+      tiktok: string
+    }
+    testimonialsCaseStudies: {
+      ecommerce: string[]
+      financialServices: string[]
+      entertainment: string[]
+      coachesConsultants: string[]
+      brickMortar: string[]
+      others: string[]
+    }
+  }
+}
+
+const defaultFormData: BrandFormData = {
+  brandIdentity: {
+    businessNameTagline: {
+      name: "",
+      tagline: ""
+    },
+    founderNameBackstory: {
+      founders: "",
+      backstory: ""
+    },
+    missionStatement: {
+      whyWeExist: "",
+      principles: ""
+    },
+    businessModelType: "",
+    uniqueSellingProposition: "",
+    tonePersonality: {
+      style: [""]
+    },
+    examplePhrases: [""],
+    brandPowerWords: [""],
+    thingsToAvoid: [""]
+  },
+  targetAudience: {
+    idealCustomerProfile: {
+      description: [""]
+    },
+    primaryPainPoints: [""],
+    primaryDesiresGoals: [""],
+    commonObjections: [""],
+    audienceVocabulary: [""]
+  },
+  offers: [
+    {
+      name: "",
+      price: "",
+      description: ""
+    }
+  ],
+  clientAssets: {
+    socialMediaProfiles: {
+      instagram: "",
+      youtube: "",
+      facebook: "",
+      tiktok: ""
+    },
+    testimonialsCaseStudies: {
+      ecommerce: [""],
+      financialServices: [""],
+      entertainment: [""],
+      coachesConsultants: [""],
+      brickMortar: [""],
+      others: [""]
+    }
+  }
+}
+
+interface BrandFormProps {
+  onSuccess?: () => void
+}
+
+export function BrandFormClean({ onSuccess }: BrandFormProps) {
+  const [formData, setFormData] = React.useState<BrandFormData>(defaultFormData)
+  const [isSubmitting, setIsSubmitting] = React.useState(false)
+  const [showToast, setShowToast] = React.useState(false)
+  const [toastMessage, setToastMessage] = React.useState("")
+  const [toastType, setToastType] = React.useState<'success' | 'error' | 'info'>('success')
+  const [currentStep, setCurrentStep] = React.useState(1)
+  const [completedSteps, setCompletedSteps] = React.useState<number[]>([])
+
+  const totalSteps = 10
+
+  // Step navigation functions
+  const nextStep = () => {
+    if (currentStep < totalSteps) {
+      setCompletedSteps(prev => [...new Set([...prev, currentStep])])
+      setCurrentStep(prev => prev + 1)
+    }
+  }
+
+  const prevStep = () => {
+    if (currentStep > 1) {
+      setCurrentStep(prev => prev - 1)
+    }
+  }
+
+  const goToStep = (step: number) => {
+    if (step <= currentStep || completedSteps.includes(step - 1)) {
+      setCurrentStep(step)
+    }
+  }
+
+  // Update nested object fields
+  const updateNestedField = (path: string[], value: any) => {
+    setFormData(prev => {
+      const newData = JSON.parse(JSON.stringify(prev))
+      let current = newData
+      for (let i = 0; i < path.length - 1; i++) {
+        current = current[path[i]]
+      }
+      current[path[path.length - 1]] = value
+      return newData
+    })
+  }
+
+  // Update array fields
+  const updateArrayField = (path: string[], index: number, value: string) => {
+    setFormData(prev => {
+      const newData = JSON.parse(JSON.stringify(prev))
+      let current = newData
+      for (let i = 0; i < path.length - 1; i++) {
+        current = current[path[i]]
+      }
+      current[path[path.length - 1]][index] = value
+      return newData
+    })
+  }
+
+  // Add item to array
+  const addArrayItem = (path: string[]) => {
+    console.log('Adding array item to path:', path)
+    setFormData(prev => {
+      console.log('Previous data:', prev)
+      const newData = JSON.parse(JSON.stringify(prev))
+      let current = newData
+      for (let i = 0; i < path.length - 1; i++) {
+        current = current[path[i]]
+      }
+      if (Array.isArray(current[path[path.length - 1]])) {
+        current[path[path.length - 1]].push("")
+        console.log('Added item, new array:', current[path[path.length - 1]])
+      } else {
+        console.log('Target is not an array:', current[path[path.length - 1]])
+      }
+      return newData
+    })
+  }
+
+  // Remove item from array
+  const removeArrayItem = (path: string[], index: number) => {
+    setFormData(prev => {
+      const newData = JSON.parse(JSON.stringify(prev))
+      let current = newData
+      for (let i = 0; i < path.length - 1; i++) {
+        current = current[path[i]]
+      }
+      current[path[path.length - 1]].splice(index, 1)
+      return newData
+    })
+  }
+
+  // Add new offer
+  const addOffer = () => {
+    setFormData(prev => ({
+      ...prev,
+      offers: [...prev.offers, { name: "", price: "", description: "" }]
+    }))
+  }
+
+  // Remove offer
+  const removeOffer = (index: number) => {
+    setFormData(prev => ({
+      ...prev,
+      offers: prev.offers.filter((_, i) => i !== index)
+    }))
+  }
+
+  // Update offer field
+  const updateOfferField = (index: number, field: 'name' | 'price' | 'description', value: string) => {
+    setFormData(prev => ({
+      ...prev,
+      offers: prev.offers.map((offer, i) => 
+        i === index ? { ...offer, [field]: value } : offer
+      )
+    }))
+  }
+
+  // Submit form
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setIsSubmitting(true)
+
+    try {
+      const accessToken = authService.getAuthToken()
+      if (!accessToken) {
+        setToastMessage("Authentication required. Please log in again.")
+        setToastType('error')
+        setShowToast(true)
+        return
+      }
+
+      // Filter out empty fields from form data
+      const filterEmptyFields = (data: any): any => {
+        if (Array.isArray(data)) {
+          return data
+            .map(item => filterEmptyFields(item))
+            .filter(item => {
+              if (typeof item === 'object' && item !== null) {
+                return Object.keys(item).length > 0
+              }
+              return item !== '' && item != null
+            })
+        }
+        
+        if (typeof data === 'object' && data !== null) {
+          const filtered: any = {}
+          for (const [key, value] of Object.entries(data)) {
+            const filteredValue = filterEmptyFields(value)
+            if (Array.isArray(filteredValue)) {
+              if (filteredValue.length > 0) {
+                filtered[key] = filteredValue
+              }
+            } else if (typeof filteredValue === 'object' && filteredValue !== null) {
+              if (Object.keys(filteredValue).length > 0) {
+                filtered[key] = filteredValue
+              }
+            } else if (filteredValue !== '' && filteredValue != null) {
+              filtered[key] = filteredValue
+            }
+          }
+          return filtered
+        }
+        
+        return data
+      }
+
+      const transformedData = filterEmptyFields(formData)
+
+      const response = await fetch(API_ENDPOINTS.N8N_WEBHOOKS.UPLOAD_KNOWLEDGE_BASE_BY_FIELD, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${accessToken}`,
+        },
+        body: JSON.stringify(transformedData),
+      })
+
+      if (response.ok) {
+        setToastMessage("Brand information updated successfully!")
+        setToastType('success')
+        setShowToast(true)
+        onSuccess?.()
+      } else {
+        setToastMessage("Failed to update brand information")
+        setToastType('error')
+        setShowToast(true)
+      }
+    } catch (error: any) {
+      setToastMessage(`Network error: ${error.message}`)
+      setToastType('error')
+      setShowToast(true)
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.1
+      }
+    }
+  }
+
+  const itemVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: { duration: 0.5 }
+    }
+  }
+
+  // Step indicator component
+  const StepIndicator = () => (
+    <div className="flex items-center justify-center mb-8">
+      <div className="flex items-center space-x-3">
+        {Array.from({ length: totalSteps }, (_, index) => {
+          const stepNumber = index + 1
+          const isCompleted = completedSteps.includes(stepNumber)
+          const isCurrent = currentStep === stepNumber
+          const isAccessible = stepNumber <= currentStep || completedSteps.includes(stepNumber - 1)
+          
+          return (
+            <React.Fragment key={stepNumber}>
+              <div className="flex flex-col items-center">
+                <button
+                  type="button"
+                  onClick={() => goToStep(stepNumber)}
+                  disabled={!isAccessible}
+                  className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-semibold transition-all duration-200 ${
+                    isCompleted
+                      ? 'bg-green-500 text-white shadow-lg'
+                      : isCurrent
+                      ? 'bg-purple-600 text-white shadow-lg scale-110'
+                      : isAccessible
+                      ? 'bg-slate-200 text-slate-600 hover:bg-slate-300'
+                      : 'bg-slate-100 text-slate-400 cursor-not-allowed'
+                  }`}
+                >
+                  {isCompleted ? <Check className="w-5 h-5" /> : stepNumber}
+                </button>
+                <span className={`mt-2 text-xs font-medium text-center ${
+                  isCurrent ? 'text-purple-600' : isCompleted ? 'text-green-600' : 'text-slate-500'
+                }`}>
+                  {stepNumber === 1 && 'Basic Info'}
+                  {stepNumber === 2 && 'Mission'}
+                  {stepNumber === 3 && 'Brand Voice'}
+                  {stepNumber === 4 && 'Audience'}
+                  {stepNumber === 5 && 'Pain Points'}
+                  {stepNumber === 6 && 'Goals'}
+                  {stepNumber === 7 && 'Products'}
+                  {stepNumber === 8 && 'Social'}
+                  {stepNumber === 9 && 'Testimonials'}
+                  {stepNumber === 10 && 'Founders'}
+                </span>
+              </div>
+              {stepNumber < totalSteps && (
+                <div className={`w-8 h-0.5 ${
+                  completedSteps.includes(stepNumber) ? 'bg-green-500' : 'bg-slate-200'
+                }`} />
+              )}
+            </React.Fragment>
+          )
+        })}
+      </div>
+    </div>
+  )
+
+  return (
+    <motion.div 
+      className="max-w-2xl mx-auto space-y-8"
+      variants={containerVariants}
+      initial="hidden"
+      animate="visible"
+    >
+      <StepIndicator />
+      
+      <form onSubmit={handleSubmit} className="space-y-8">
+        
+        {/* Step 1: Basic Business Information */}
+        {currentStep === 1 && (
+          <motion.div 
+            variants={itemVariants}
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -20 }}
+            transition={{ duration: 0.3 }}
+          >
+            <Card className="border-0 shadow-xl bg-white">
+              <CardHeader className="text-center pb-6">
+                <div className="w-16 h-16 bg-gradient-to-r from-purple-500 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <span className="text-white text-xl font-bold">1</span>
+                </div>
+                <CardTitle className="text-2xl font-bold text-slate-900">Basic Information</CardTitle>
+                <CardDescription className="text-slate-600">Let's start with your business basics</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-3">Business Name *</label>
+                  <Input
+                    type="text"
+                    value={formData.brandIdentity.businessNameTagline.name}
+                    onChange={(e) => updateNestedField(['brandIdentity', 'businessNameTagline', 'name'], e.target.value)}
+                    placeholder="e.g., TechCorp Solutions"
+                    className="text-lg h-12 focus:ring-purple-500 focus:border-purple-500"
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-3">Tagline</label>
+                  <Input
+                    type="text"
+                    value={formData.brandIdentity.businessNameTagline.tagline}
+                    onChange={(e) => updateNestedField(['brandIdentity', 'businessNameTagline', 'tagline'], e.target.value)}
+                    placeholder="e.g., Innovation at its finest"
+                    className="h-12 focus:ring-purple-500 focus:border-purple-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-3">Business Model *</label>
+                  <Input
+                    type="text"
+                    value={formData.brandIdentity.businessModelType}
+                    onChange={(e) => updateNestedField(['brandIdentity', 'businessModelType'], e.target.value)}
+                    placeholder="e.g., B2B SaaS, E-commerce, Consulting"
+                    className="h-12 focus:ring-purple-500 focus:border-purple-500"
+                  />
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
+        )}
+
+        {/* Step 2: Mission & Values */}
+        {currentStep === 2 && (
+          <motion.div 
+            variants={itemVariants}
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -20 }}
+            transition={{ duration: 0.3 }}
+          >
+            <Card className="border-0 shadow-xl bg-white">
+              <CardHeader className="text-center pb-6">
+                <div className="w-16 h-16 bg-gradient-to-r from-blue-500 to-blue-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <span className="text-white text-xl font-bold">2</span>
+                </div>
+                <CardTitle className="text-2xl font-bold text-slate-900">Mission & Values</CardTitle>
+                <CardDescription className="text-slate-600">Define your company's purpose</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-3">Mission Statement</label>
+                  <Textarea
+                    value={formData.brandIdentity.missionStatement.whyWeExist}
+                    onChange={(e) => updateNestedField(['brandIdentity', 'missionStatement', 'whyWeExist'], e.target.value)}
+                    rows={4}
+                    placeholder="Why does your company exist? What's your purpose..."
+                    className="focus:ring-purple-500 focus:border-purple-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-3">Core Values</label>
+                  <Textarea
+                    value={formData.brandIdentity.missionStatement.principles}
+                    onChange={(e) => updateNestedField(['brandIdentity', 'missionStatement', 'principles'], e.target.value)}
+                    rows={4}
+                    placeholder="What principles guide your business..."
+                    className="focus:ring-purple-500 focus:border-purple-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-3">What Makes You Unique (USP)</label>
+                  <Textarea
+                    value={formData.brandIdentity.uniqueSellingProposition}
+                    onChange={(e) => updateNestedField(['brandIdentity', 'uniqueSellingProposition'], e.target.value)}
+                    rows={3}
+                    placeholder="What sets you apart from competitors..."
+                    className="focus:ring-purple-500 focus:border-purple-500"
+                  />
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
+        )}
+
+        {/* Step 3: Brand Voice */}
+        {currentStep === 3 && (
+          <motion.div 
+            variants={itemVariants}
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -20 }}
+            transition={{ duration: 0.3 }}
+          >
+            <Card className="border-0 shadow-xl bg-white">
+              <CardHeader className="text-center pb-6">
+                <div className="w-16 h-16 bg-gradient-to-r from-green-500 to-green-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <span className="text-white text-xl font-bold">3</span>
+                </div>
+                <CardTitle className="text-2xl font-bold text-slate-900">Brand Voice</CardTitle>
+                <CardDescription className="text-slate-600">How does your brand communicate?</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                
+                {/* Tone & Personality Style */}
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-3">Communication Style</label>
+                  {formData.brandIdentity.tonePersonality.style.map((style, index) => (
+                    <div key={index} className="flex gap-2 mb-3">
+                      <Input
+                        type="text"
+                        value={style}
+                        onChange={(e) => updateArrayField(['brandIdentity', 'tonePersonality', 'style'], index, e.target.value)}
+                        placeholder="e.g., Professional yet friendly, authoritative..."
+                        className="flex-1 focus:ring-purple-500 focus:border-purple-500"
+                      />
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={(e) => {
+                          e.preventDefault()
+                          e.stopPropagation()
+                          console.log('Remove button clicked for style', index)
+                          removeArrayItem(['brandIdentity', 'tonePersonality', 'style'], index)
+                        }}
+                        className="text-red-600 border-red-300 hover:bg-red-50"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  ))}
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={(e) => {
+                      e.preventDefault()
+                      e.stopPropagation()
+                      console.log('Add button clicked for style')
+                      addArrayItem(['brandIdentity', 'tonePersonality', 'style'])
+                    }}
+                    className="text-purple-600 border-purple-300 hover:bg-purple-50 w-full"
+                  >
+                    <Plus className="w-4 h-4 mr-2" />
+                    Add Communication Style
+                  </Button>
+                </div>
+
+                {/* Example Phrases */}
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-3">Example Phrases</label>
+                  {formData.brandIdentity.examplePhrases.map((phrase, index) => (
+                    <div key={index} className="flex gap-2 mb-3">
+                      <Input
+                        type="text"
+                        value={phrase}
+                        onChange={(e) => updateArrayField(['brandIdentity', 'examplePhrases'], index, e.target.value)}
+                        placeholder="e.g., 'Innovating for tomorrow', 'Your success is our mission'"
+                        className="flex-1 focus:ring-purple-500 focus:border-purple-500"
+                      />
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={(e) => {
+                          e.preventDefault()
+                          e.stopPropagation()
+                          removeArrayItem(['brandIdentity', 'examplePhrases'], index)
+                        }}
+                        className="text-red-600 border-red-300 hover:bg-red-50"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  ))}
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={(e) => {
+                      e.preventDefault()
+                      e.stopPropagation()
+                      addArrayItem(['brandIdentity', 'examplePhrases'])
+                    }}
+                    className="text-purple-600 border-purple-300 hover:bg-purple-50 w-full"
+                  >
+                    <Plus className="w-4 h-4 mr-2" />
+                    Add Example Phrase
+                  </Button>
+                </div>
+
+                {/* Brand Power Words */}
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-3">Brand Power Words</label>
+                  {formData.brandIdentity.brandPowerWords.map((word, index) => (
+                    <div key={index} className="flex gap-2 mb-3">
+                      <Input
+                        type="text"
+                        value={word}
+                        onChange={(e) => updateArrayField(['brandIdentity', 'brandPowerWords'], index, e.target.value)}
+                        placeholder="e.g., innovative, reliable, cutting-edge, transformative"
+                        className="flex-1 focus:ring-purple-500 focus:border-purple-500"
+                      />
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={(e) => {
+                          e.preventDefault()
+                          e.stopPropagation()
+                          removeArrayItem(['brandIdentity', 'brandPowerWords'], index)
+                        }}
+                        className="text-red-600 border-red-300 hover:bg-red-50"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  ))}
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={(e) => {
+                      e.preventDefault()
+                      e.stopPropagation()
+                      addArrayItem(['brandIdentity', 'brandPowerWords'])
+                    }}
+                    className="text-purple-600 border-purple-300 hover:bg-purple-50 w-full"
+                  >
+                    <Plus className="w-4 h-4 mr-2" />
+                    Add Power Word
+                  </Button>
+                </div>
+
+                {/* Things to Avoid */}
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-3">Things to Avoid</label>
+                  {formData.brandIdentity.thingsToAvoid.map((thing, index) => (
+                    <div key={index} className="flex gap-2 mb-3">
+                      <Input
+                        type="text"
+                        value={thing}
+                        onChange={(e) => updateArrayField(['brandIdentity', 'thingsToAvoid'], index, e.target.value)}
+                        placeholder="e.g., overly technical jargon, aggressive sales language"
+                        className="flex-1 focus:ring-purple-500 focus:border-purple-500"
+                      />
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={(e) => {
+                          e.preventDefault()
+                          e.stopPropagation()
+                          removeArrayItem(['brandIdentity', 'thingsToAvoid'], index)
+                        }}
+                        className="text-red-600 border-red-300 hover:bg-red-50"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  ))}
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={(e) => {
+                      e.preventDefault()
+                      e.stopPropagation()
+                      addArrayItem(['brandIdentity', 'thingsToAvoid'])
+                    }}
+                    className="text-purple-600 border-purple-300 hover:bg-purple-50 w-full"
+                  >
+                    <Plus className="w-4 h-4 mr-2" />
+                    Add Thing to Avoid
+                  </Button>
+                </div>
+
+              </CardContent>
+            </Card>
+          </motion.div>
+        )}
+
+        {/* Step 4: Target Audience */}
+        {currentStep === 4 && (
+          <motion.div 
+            variants={itemVariants}
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -20 }}
+            transition={{ duration: 0.3 }}
+          >
+            <Card className="border-0 shadow-xl bg-white">
+              <CardHeader className="text-center pb-6">
+                <div className="w-16 h-16 bg-gradient-to-r from-orange-500 to-orange-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <span className="text-white text-xl font-bold">4</span>
+                </div>
+                <CardTitle className="text-2xl font-bold text-slate-900">Target Audience</CardTitle>
+                <CardDescription className="text-slate-600">Who are your ideal customers?</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                
+                {/* Ideal Customer Profile */}
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-3">Ideal Customer Descriptions</label>
+                  {formData.targetAudience.idealCustomerProfile.description.map((desc, index) => (
+                    <div key={index} className="flex gap-2 mb-3">
+                      <Textarea
+                        value={desc}
+                        onChange={(e) => updateArrayField(['targetAudience', 'idealCustomerProfile', 'description'], index, e.target.value)}
+                        rows={3}
+                        placeholder="Describe one type of ideal customer: demographics, job roles, company size, etc..."
+                        className="flex-1 focus:ring-purple-500 focus:border-purple-500"
+                      />
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={(e) => {
+                          e.preventDefault()
+                          e.stopPropagation()
+                          removeArrayItem(['targetAudience', 'idealCustomerProfile', 'description'], index)
+                        }}
+                        className="text-red-600 border-red-300 hover:bg-red-50 self-start mt-2"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  ))}
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={(e) => {
+                      e.preventDefault()
+                      e.stopPropagation()
+                      addArrayItem(['targetAudience', 'idealCustomerProfile', 'description'])
+                    }}
+                    className="text-purple-600 border-purple-300 hover:bg-purple-50 w-full"
+                  >
+                    <Plus className="w-4 h-4 mr-2" />
+                    Add Customer Type
+                  </Button>
+                </div>
+
+                {/* Audience Vocabulary */}
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-3">Audience Vocabulary</label>
+                  {formData.targetAudience.audienceVocabulary.map((word, index) => (
+                    <div key={index} className="flex gap-2 mb-3">
+                      <Input
+                        type="text"
+                        value={word}
+                        onChange={(e) => updateArrayField(['targetAudience', 'audienceVocabulary'], index, e.target.value)}
+                        placeholder="e.g., ROI, scalability, efficiency, KPIs"
+                        className="flex-1 focus:ring-purple-500 focus:border-purple-500"
+                      />
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={(e) => {
+                          e.preventDefault()
+                          e.stopPropagation()
+                          removeArrayItem(['targetAudience', 'audienceVocabulary'], index)
+                        }}
+                        className="text-red-600 border-red-300 hover:bg-red-50"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  ))}
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={(e) => {
+                      e.preventDefault()
+                      e.stopPropagation()
+                      addArrayItem(['targetAudience', 'audienceVocabulary'])
+                    }}
+                    className="text-purple-600 border-purple-300 hover:bg-purple-50 w-full"
+                  >
+                    <Plus className="w-4 h-4 mr-2" />
+                    Add Vocabulary Word
+                  </Button>
+                </div>
+
+              </CardContent>
+            </Card>
+          </motion.div>
+        )}
+
+        {/* Step 5: Pain Points */}
+        {currentStep === 5 && (
+          <motion.div 
+            variants={itemVariants}
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -20 }}
+            transition={{ duration: 0.3 }}
+          >
+            <Card className="border-0 shadow-xl bg-white">
+              <CardHeader className="text-center pb-6">
+                <div className="w-16 h-16 bg-gradient-to-r from-red-500 to-red-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <span className="text-white text-xl font-bold">5</span>
+                </div>
+                <CardTitle className="text-2xl font-bold text-slate-900">Pain Points</CardTitle>
+                <CardDescription className="text-slate-600">What problems do you solve?</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                
+                {/* Primary Pain Points */}
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-3">Customer Pain Points</label>
+                  {formData.targetAudience.primaryPainPoints.map((pain, index) => (
+                    <div key={index} className="flex gap-2 mb-3">
+                      <Input
+                        type="text"
+                        value={pain}
+                        onChange={(e) => updateArrayField(['targetAudience', 'primaryPainPoints'], index, e.target.value)}
+                        placeholder="e.g., Wasting time on manual processes, struggling with scalability"
+                        className="flex-1 focus:ring-purple-500 focus:border-purple-500"
+                      />
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={(e) => {
+                          e.preventDefault()
+                          e.stopPropagation()
+                          removeArrayItem(['targetAudience', 'primaryPainPoints'], index)
+                        }}
+                        className="text-red-600 border-red-300 hover:bg-red-50"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  ))}
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={(e) => {
+                      e.preventDefault()
+                      e.stopPropagation()
+                      addArrayItem(['targetAudience', 'primaryPainPoints'])
+                    }}
+                    className="text-purple-600 border-purple-300 hover:bg-purple-50 w-full"
+                  >
+                    <Plus className="w-4 h-4 mr-2" />
+                    Add Pain Point
+                  </Button>
+                </div>
+
+                {/* Common Objections */}
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-3">Common Objections</label>
+                  {formData.targetAudience.commonObjections.map((objection, index) => (
+                    <div key={index} className="flex gap-2 mb-3">
+                      <Input
+                        type="text"
+                        value={objection}
+                        onChange={(e) => updateArrayField(['targetAudience', 'commonObjections'], index, e.target.value)}
+                        placeholder="e.g., It's too expensive, We don't have time to implement"
+                        className="flex-1 focus:ring-purple-500 focus:border-purple-500"
+                      />
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={(e) => {
+                          e.preventDefault()
+                          e.stopPropagation()
+                          removeArrayItem(['targetAudience', 'commonObjections'], index)
+                        }}
+                        className="text-red-600 border-red-300 hover:bg-red-50"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  ))}
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={(e) => {
+                      e.preventDefault()
+                      e.stopPropagation()
+                      addArrayItem(['targetAudience', 'commonObjections'])
+                    }}
+                    className="text-purple-600 border-purple-300 hover:bg-purple-50 w-full"
+                  >
+                    <Plus className="w-4 h-4 mr-2" />
+                    Add Objection
+                  </Button>
+                </div>
+
+              </CardContent>
+            </Card>
+          </motion.div>
+        )}
+
+        {/* Step 6: Products */}
+        {currentStep === 6 && (
+          <motion.div 
+            variants={itemVariants}
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -20 }}
+            transition={{ duration: 0.3 }}
+          >
+            <Card className="border-0 shadow-xl bg-white">
+              <CardHeader className="text-center pb-6">
+                <div className="w-16 h-16 bg-gradient-to-r from-indigo-500 to-indigo-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <span className="text-white text-xl font-bold">6</span>
+                </div>
+                <CardTitle className="text-2xl font-bold text-slate-900">Main Product/Service</CardTitle>
+                <CardDescription className="text-slate-600">Tell us about your primary offering</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-3">Product/Service Name</label>
+                  <Input
+                    type="text"
+                    value={formData.productName}
+                    onChange={(e) => updateField('productName', e.target.value)}
+                    placeholder="e.g., Premium Business Consulting"
+                    className="h-12 focus:ring-purple-500 focus:border-purple-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-3">Price</label>
+                  <Input
+                    type="text"
+                    value={formData.productPrice}
+                    onChange={(e) => updateField('productPrice', e.target.value)}
+                    placeholder="e.g., $2,999, Starting at $99/month"
+                    className="h-12 focus:ring-purple-500 focus:border-purple-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-3">Description</label>
+                  <Textarea
+                    value={formData.productDescription}
+                    onChange={(e) => updateField('productDescription', e.target.value)}
+                    rows={4}
+                    placeholder="Describe what this product/service includes and its key benefits..."
+                    className="focus:ring-purple-500 focus:border-purple-500"
+                  />
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
+        )}
+
+        {/* Step 7: Social Media */}
+        {currentStep === 7 && (
+          <motion.div 
+            variants={itemVariants}
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -20 }}
+            transition={{ duration: 0.3 }}
+          >
+            <Card className="border-0 shadow-xl bg-white">
+              <CardHeader className="text-center pb-6">
+                <div className="w-16 h-16 bg-gradient-to-r from-pink-500 to-pink-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <span className="text-white text-xl font-bold">7</span>
+                </div>
+                <CardTitle className="text-2xl font-bold text-slate-900">Social Media</CardTitle>
+                <CardDescription className="text-slate-600">Your online presence</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-3">Instagram Profile</label>
+                  <Input
+                    type="url"
+                    value={formData.socialInstagram}
+                    onChange={(e) => updateField('socialInstagram', e.target.value)}
+                    placeholder="https://instagram.com/yourbusiness"
+                    className="h-12 focus:ring-purple-500 focus:border-purple-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-3">LinkedIn Profile</label>
+                  <Input
+                    type="url"
+                    value={formData.socialLinkedIn}
+                    onChange={(e) => updateField('socialLinkedIn', e.target.value)}
+                    placeholder="https://linkedin.com/company/yourbusiness"
+                    className="h-12 focus:ring-purple-500 focus:border-purple-500"
+                  />
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
+        )}
+
+        {/* Step 8: Testimonials */}
+        {currentStep === 8 && (
+          <motion.div 
+            variants={itemVariants}
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -20 }}
+            transition={{ duration: 0.3 }}
+          >
+            <Card className="border-0 shadow-xl bg-white">
+              <CardHeader className="text-center pb-6">
+                <div className="w-16 h-16 bg-gradient-to-r from-teal-500 to-teal-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <span className="text-white text-xl font-bold">8</span>
+                </div>
+                <CardTitle className="text-2xl font-bold text-slate-900">Social Proof</CardTitle>
+                <CardDescription className="text-slate-600">Share a customer testimonial</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-3">Customer Testimonial</label>
+                  <Textarea
+                    value={formData.testimonial}
+                    onChange={(e) => updateField('testimonial', e.target.value)}
+                    rows={4}
+                    placeholder="Share a positive review or testimonial from a happy customer..."
+                    className="focus:ring-purple-500 focus:border-purple-500"
+                  />
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
+        )}
+
+        {/* Navigation Buttons */}
+        <motion.div 
+          className="flex items-center justify-between pt-8"
+          variants={itemVariants}
+        >
+          <Button
+            type="button"
+            variant="outline"
+            onClick={prevStep}
+            disabled={currentStep === 1}
+            className="flex items-center space-x-2 px-6 py-3"
+          >
+            <ChevronLeft className="w-4 h-4" />
+            <span>Back</span>
+          </Button>
+
+          <Badge variant="secondary" className="px-4 py-2 text-sm">
+            Step {currentStep} of {totalSteps}
+          </Badge>
+
+          {currentStep < totalSteps ? (
+            <Button
+              type="button"
+              onClick={nextStep}
+              className="bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white px-6 py-3"
+            >
+              <span>Next</span>
+              <ChevronRight className="w-4 h-4 ml-2" />
+            </Button>
+          ) : (
+            <Button
+              type="submit"
+              disabled={isSubmitting}
+              className="bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white px-6 py-3"
+            >
+              <Save className="w-4 h-4 mr-2" />
+              {isSubmitting ? 'Saving...' : 'Complete Setup'}
+            </Button>
+          )}
+        </motion.div>
+      </form>
+
+      {/* Toast Notification */}
+      <Toast
+        message={toastMessage}
+        type={toastType}
+        isVisible={showToast}
+        onClose={() => setShowToast(false)}
+      />
+    </motion.div>
+  )
+}

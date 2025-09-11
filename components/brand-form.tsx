@@ -1,9 +1,17 @@
 "use client"
 
 import * as React from "react"
+import { motion } from "framer-motion"
 import { authService } from "@/lib/auth-service"
 import { Toast } from "@/components/ui/toast"
 import { API_ENDPOINTS } from "@/lib/api-config"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Input } from "@/components/ui/input"
+import { Textarea } from "@/components/ui/textarea"
+import { Badge } from "@/components/ui/badge"
+import { Separator } from "@/components/ui/separator"
+import { Plus, Trash2, Save, ChevronLeft, ChevronRight, Check } from "lucide-react"
 
 interface BrandFormData {
   brandIdentity: {
@@ -55,6 +63,7 @@ interface BrandFormData {
       entertainment: string[]
       coachesConsultants: string[]
       brickMortar: string[]
+      others: string[]
     }
   }
 }
@@ -110,7 +119,8 @@ const defaultFormData: BrandFormData = {
       financialServices: [""],
       entertainment: [""],
       coachesConsultants: [""],
-      brickMortar: [""]
+      brickMortar: [""],
+      others: [""]
     }
   }
 }
@@ -125,6 +135,30 @@ export function BrandForm({ onSuccess }: BrandFormProps) {
   const [showToast, setShowToast] = React.useState(false)
   const [toastMessage, setToastMessage] = React.useState("")
   const [toastType, setToastType] = React.useState<'success' | 'error' | 'info'>('success')
+  const [currentStep, setCurrentStep] = React.useState(1)
+  const [completedSteps, setCompletedSteps] = React.useState<number[]>([])
+
+  const totalSteps = 8
+
+  // Step navigation functions
+  const nextStep = () => {
+    if (currentStep < totalSteps) {
+      setCompletedSteps(prev => [...prev, currentStep])
+      setCurrentStep(prev => prev + 1)
+    }
+  }
+
+  const prevStep = () => {
+    if (currentStep > 1) {
+      setCurrentStep(prev => prev - 1)
+    }
+  }
+
+  const goToStep = (step: number) => {
+    if (step <= currentStep || completedSteps.includes(step - 1)) {
+      setCurrentStep(step)
+    }
+  }
 
   // Update nested object fields
   const updateNestedField = (path: string[], value: any) => {
@@ -132,7 +166,7 @@ export function BrandForm({ onSuccess }: BrandFormProps) {
       const newData = { ...prev }
       let current: any = newData
       for (let i = 0; i < path.length - 1; i++) {
-        current = current[path[i]]
+        current = { ...current, [path[i]]: { ...current[path[i]] } }
       }
       current[path[path.length - 1]] = value
       return newData
@@ -145,9 +179,11 @@ export function BrandForm({ onSuccess }: BrandFormProps) {
       const newData = { ...prev }
       let current: any = newData
       for (let i = 0; i < path.length - 1; i++) {
-        current = current[path[i]]
+        current = { ...current, [path[i]]: { ...current[path[i]] } }
       }
-      current[path[path.length - 1]][index] = value
+      const newArray = [...current[path[path.length - 1]]]
+      newArray[index] = value
+      current[path[path.length - 1]] = newArray
       return newData
     })
   }
@@ -158,11 +194,11 @@ export function BrandForm({ onSuccess }: BrandFormProps) {
       const newData = { ...prev }
       let current: any = newData
       for (let i = 0; i < path.length - 1; i++) {
-        current = current[path[i]]
+        current = { ...current, [path[i]]: { ...current[path[i]] } }
       }
       // Only add if we can access the array properly
       if (Array.isArray(current[path[path.length - 1]])) {
-        current[path[path.length - 1]].push("")
+        current[path[path.length - 1]] = [...current[path[path.length - 1]], ""]
       }
       return newData
     })
@@ -174,9 +210,11 @@ export function BrandForm({ onSuccess }: BrandFormProps) {
       const newData = { ...prev }
       let current: any = newData
       for (let i = 0; i < path.length - 1; i++) {
-        current = current[path[i]]
+        current = { ...current, [path[i]]: { ...current[path[i]] } }
       }
-      current[path[path.length - 1]].splice(index, 1)
+      const newArray = [...current[path[path.length - 1]]]
+      newArray.splice(index, 1)
+      current[path[path.length - 1]] = newArray
       return newData
     })
   }
@@ -340,271 +378,224 @@ export function BrandForm({ onSuccess }: BrandFormProps) {
     }
   }
 
-  return (
-    <div className="max-w-6xl mx-auto space-y-8">
-      <form onSubmit={handleSubmit} className="space-y-8">
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.1
+      }
+    }
+  }
 
-        {/* Brand & Identity Section */}
-        <div className="bg-white rounded-xl border border-gray-200 shadow-sm">
-          <div className="p-6 border-b border-gray-200">
-            <h2 className="text-xl font-semibold text-gray-900">1. Brand & Identity</h2>
-            <p className="text-gray-600 mt-1">Define your brand's core identity and personality</p>
-          </div>
-          <div className="p-6 space-y-6">
+  const itemVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: { duration: 0.5 }
+    }
+  }
 
-            {/* Business Name & Tagline */}
-            <div className="space-y-4">
-              <h3 className="text-lg font-medium text-gray-900">Business Name & Tagline</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Name</label>
-                  <input
-                    type="text"
-                    value={formData.brandIdentity.businessNameTagline.name}
-                    onChange={(e) => updateNestedField(['brandIdentity', 'businessNameTagline', 'name'], e.target.value)}
-                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
-                    placeholder="Enter business name"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Tagline</label>
-                  <input
-                    type="text"
-                    value={formData.brandIdentity.businessNameTagline.tagline}
-                    onChange={(e) => updateNestedField(['brandIdentity', 'businessNameTagline', 'tagline'], e.target.value)}
-                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
-                    placeholder="Enter tagline"
-                  />
-                </div>
-              </div>
-            </div>
-
-            {/* Founder Name & Backstory */}
-            <div className="space-y-4">
-              <h3 className="text-lg font-medium text-gray-900">Founder Name & Backstory</h3>
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Founders</label>
-                  <input
-                    type="text"
-                    value={formData.brandIdentity.founderNameBackstory.founders}
-                    onChange={(e) => updateNestedField(['brandIdentity', 'founderNameBackstory', 'founders'], e.target.value)}
-                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
-                    placeholder="Enter founder names"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Backstory</label>
-                  <textarea
-                    value={formData.brandIdentity.founderNameBackstory.backstory}
-                    onChange={(e) => updateNestedField(['brandIdentity', 'founderNameBackstory', 'backstory'], e.target.value)}
-                    rows={6}
-                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
-                    placeholder="Enter founder backstory"
-                  />
-                </div>
-              </div>
-            </div>
-
-            {/* Mission Statement */}
-            <div className="space-y-4">
-              <h3 className="text-lg font-medium text-gray-900">Mission Statement</h3>
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Why We Exist</label>
-                  <textarea
-                    value={formData.brandIdentity.missionStatement.whyWeExist}
-                    onChange={(e) => updateNestedField(['brandIdentity', 'missionStatement', 'whyWeExist'], e.target.value)}
-                    rows={3}
-                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
-                    placeholder="Enter mission statement"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Principles</label>
-                  <textarea
-                    value={formData.brandIdentity.missionStatement.principles}
-                    onChange={(e) => updateNestedField(['brandIdentity', 'missionStatement', 'principles'], e.target.value)}
-                    rows={3}
-                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
-                    placeholder="Enter core principles"
-                  />
-                </div>
-              </div>
-            </div>
-
-            {/* Business Model Type */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Business Model Type</label>
-              <input
-                type="text"
-                value={formData.brandIdentity.businessModelType}
-                onChange={(e) => updateNestedField(['brandIdentity', 'businessModelType'], e.target.value)}
-                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
-                placeholder="Enter business model type"
-              />
-            </div>
-
-            {/* Unique Selling Proposition */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Unique Selling Proposition (USP)</label>
-              <textarea
-                value={formData.brandIdentity.uniqueSellingProposition}
-                onChange={(e) => updateNestedField(['brandIdentity', 'uniqueSellingProposition'], e.target.value)}
-                rows={3}
-                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
-                placeholder="Enter USP"
-              />
-            </div>
-
-            {/* Tone & Personality */}
-            <div className="space-y-4">
-              <h3 className="text-lg font-medium text-gray-900">Tone & Personality</h3>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Style</label>
-                {formData.brandIdentity.tonePersonality.style.map((style, index) => (
-                  <div key={index} className="flex gap-2 mb-2">
-                    <input
-                      type="text"
-                      value={style}
-                      onChange={(e) => updateArrayField(['brandIdentity', 'tonePersonality', 'style'], index, e.target.value)}
-                      className="flex-1 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
-                      placeholder="Enter style description"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => removeArrayItem(['brandIdentity', 'tonePersonality', 'style'], index)}
-                      className="px-3 py-2 text-red-600 border border-red-300 rounded-lg hover:bg-red-50"
-                    >
-                      Remove
-                    </button>
-                  </div>
-                ))}
+  // Step indicator component
+  const StepIndicator = () => (
+    <div className="flex items-center justify-center mb-8">
+      <div className="flex items-center space-x-4">
+        {Array.from({ length: totalSteps }, (_, index) => {
+          const stepNumber = index + 1
+          const isCompleted = completedSteps.includes(stepNumber)
+          const isCurrent = currentStep === stepNumber
+          const isAccessible = stepNumber <= currentStep || completedSteps.includes(stepNumber - 1)
+          
+          return (
+            <React.Fragment key={stepNumber}>
+              <div className="flex items-center">
                 <button
                   type="button"
-                  onClick={(e) => {
-                    e.preventDefault()
-                    e.stopPropagation()
-                    addArrayItem(['brandIdentity', 'tonePersonality', 'style'])
-                  }}
-                  className="px-4 py-2 text-purple-600 border border-purple-300 rounded-lg hover:bg-purple-50"
+                  onClick={() => goToStep(stepNumber)}
+                  disabled={!isAccessible}
+                  className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-semibold transition-all duration-200 ${
+                    isCompleted
+                      ? 'bg-green-500 text-white'
+                      : isCurrent
+                      ? 'bg-purple-600 text-white'
+                      : isAccessible
+                      ? 'bg-slate-200 text-slate-600 hover:bg-slate-300'
+                      : 'bg-slate-100 text-slate-400 cursor-not-allowed'
+                  }`}
                 >
-                  Add Style
+                  {isCompleted ? <Check className="w-5 h-5" /> : stepNumber}
                 </button>
+                <span className={`ml-2 text-sm font-medium ${
+                  isCurrent ? 'text-purple-600' : isCompleted ? 'text-green-600' : 'text-slate-500'
+                }`}>
+                  {stepNumber === 1 && 'Basic Info'}
+                  {stepNumber === 2 && 'Mission & Values'}
+                  {stepNumber === 3 && 'Brand Voice'}
+                  {stepNumber === 4 && 'Target Audience'}
+                  {stepNumber === 5 && 'Pain Points'}
+                  {stepNumber === 6 && 'Products'}
+                  {stepNumber === 7 && 'Social Media'}
+                  {stepNumber === 8 && 'Testimonials'}
+                </span>
               </div>
-            </div>
+              {stepNumber < totalSteps && (
+                <div className={`w-12 h-0.5 ${
+                  completedSteps.includes(stepNumber) ? 'bg-green-500' : 'bg-slate-200'
+                }`} />
+              )}
+            </React.Fragment>
+          )
+        })}
+      </div>
+    </div>
+  )
 
-            {/* Example Phrases */}
-            <div className="space-y-4">
-              <h3 className="text-lg font-medium text-gray-900">Example Phrases</h3>
-              {formData.brandIdentity.examplePhrases.map((phrase, index) => (
-                <div key={index} className="flex gap-2">
-                  <input
-                    type="text"
-                    value={phrase}
-                    onChange={(e) => updateArrayField(['brandIdentity', 'examplePhrases'], index, e.target.value)}
-                    className="flex-1 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
-                    placeholder="Enter example phrase"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => removeArrayItem(['brandIdentity', 'examplePhrases'], index)}
-                    className="px-3 py-2 text-red-600 border border-red-300 rounded-lg hover:bg-red-50"
-                  >
-                    Remove
-                  </button>
+  return (
+    <motion.div 
+      className="max-w-4xl mx-auto space-y-8"
+      variants={containerVariants}
+      initial="hidden"
+      animate="visible"
+    >
+      <StepIndicator />
+      
+      <form onSubmit={handleSubmit} className="space-y-8">
+        
+        {/* Step 1: Basic Business Information */}
+        {currentStep === 1 && (
+          <motion.div 
+            variants={itemVariants}
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -20 }}
+            transition={{ duration: 0.3 }}
+          >
+            <Card className="border-0 shadow-lg bg-white/90 backdrop-blur-sm">
+              <CardHeader>
+                <CardTitle className="text-xl font-semibold text-slate-900 flex items-center space-x-2">
+                  <span className="p-2 bg-gradient-to-r from-purple-500 to-purple-600 rounded-lg text-white text-sm font-bold">1</span>
+                  <span>Basic Business Information</span>
+                </CardTitle>
+                <CardDescription>Let's start with your basic business details</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+
+                {/* Business Name & Tagline */}
+                <div className="space-y-6">
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-3">Business Name *</label>
+                    <Input
+                      type="text"
+                      value={formData.brandIdentity.businessNameTagline.name}
+                      onChange={(e) => updateNestedField(['brandIdentity', 'businessNameTagline', 'name'], e.target.value)}
+                      placeholder="e.g., TechCorp Solutions"
+                      className="text-lg h-12 focus:ring-purple-500 focus:border-purple-500"
+                    />
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-3">Tagline</label>
+                    <Input
+                      type="text"
+                      value={formData.brandIdentity.businessNameTagline.tagline}
+                      onChange={(e) => updateNestedField(['brandIdentity', 'businessNameTagline', 'tagline'], e.target.value)}
+                      placeholder="e.g., Innovation at its finest"
+                      className="h-12 focus:ring-purple-500 focus:border-purple-500"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-3">Business Model Type *</label>
+                    <Input
+                      type="text"
+                      value={formData.brandIdentity.businessModelType}
+                      onChange={(e) => updateNestedField(['brandIdentity', 'businessModelType'], e.target.value)}
+                      placeholder="e.g., B2B SaaS, E-commerce, Consulting"
+                      className="h-12 focus:ring-purple-500 focus:border-purple-500"
+                    />
+                  </div>
                 </div>
-              ))}
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.preventDefault()
-                  e.stopPropagation()
-                  addArrayItem(['brandIdentity', 'examplePhrases'])
-                }}
-                className="px-4 py-2 text-purple-600 border border-purple-300 rounded-lg hover:bg-purple-50"
-              >
-                Add Example Phrase
-              </button>
-            </div>
+              </CardContent>
+            </Card>
+          </motion.div>
+        )}
 
-            {/* Brand Power Words */}
-            <div className="space-y-4">
-              <h3 className="text-lg font-medium text-gray-900">Brand Power Words/Phrases</h3>
-              {formData.brandIdentity.brandPowerWords.map((word, index) => (
-                <div key={index} className="flex gap-2">
-                  <input
-                    type="text"
-                    value={word}
-                    onChange={(e) => updateArrayField(['brandIdentity', 'brandPowerWords'], index, e.target.value)}
-                    className="flex-1 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
-                    placeholder="Enter power word or phrase"
+        {/* Step 2: Mission & Values */}
+        {currentStep === 2 && (
+          <motion.div 
+            variants={itemVariants}
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -20 }}
+            transition={{ duration: 0.3 }}
+          >
+            <Card className="border-0 shadow-lg bg-white/90 backdrop-blur-sm">
+              <CardHeader>
+                <CardTitle className="text-xl font-semibold text-slate-900 flex items-center space-x-2">
+                  <span className="p-2 bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg text-white text-sm font-bold">2</span>
+                  <span>Mission & Values</span>
+                </CardTitle>
+                <CardDescription>Define your company's purpose and core principles</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-3">Why We Exist (Mission Statement)</label>
+                  <Textarea
+                    value={formData.brandIdentity.missionStatement.whyWeExist}
+                    onChange={(e) => updateNestedField(['brandIdentity', 'missionStatement', 'whyWeExist'], e.target.value)}
+                    rows={4}
+                    placeholder="Describe your company's purpose and mission..."
+                    className="focus:ring-purple-500 focus:border-purple-500"
                   />
-                  <button
-                    type="button"
-                    onClick={() => removeArrayItem(['brandIdentity', 'brandPowerWords'], index)}
-                    className="px-3 py-2 text-red-600 border border-red-300 rounded-lg hover:bg-red-50"
-                  >
-                    Remove
-                  </button>
                 </div>
-              ))}
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.preventDefault()
-                  e.stopPropagation()
-                  addArrayItem(['brandIdentity', 'brandPowerWords'])
-                }}
-                className="px-4 py-2 text-purple-600 border border-purple-300 rounded-lg hover:bg-purple-50"
-              >
-                Add Power Word
-              </button>
-            </div>
 
-            {/* Things to Avoid */}
-            <div className="space-y-4">
-              <h3 className="text-lg font-medium text-gray-900">Things to Avoid</h3>
-              {formData.brandIdentity.thingsToAvoid.map((thing, index) => (
-                <div key={index} className="flex gap-2">
-                  <input
-                    type="text"
-                    value={thing}
-                    onChange={(e) => updateArrayField(['brandIdentity', 'thingsToAvoid'], index, e.target.value)}
-                    className="flex-1 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
-                    placeholder="Enter thing to avoid"
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-3">Core Principles & Values</label>
+                  <Textarea
+                    value={formData.brandIdentity.missionStatement.principles}
+                    onChange={(e) => updateNestedField(['brandIdentity', 'missionStatement', 'principles'], e.target.value)}
+                    rows={4}
+                    placeholder="List your core values and principles..."
+                    className="focus:ring-purple-500 focus:border-purple-500"
                   />
-                  <button
-                    type="button"
-                    onClick={() => removeArrayItem(['brandIdentity', 'thingsToAvoid'], index)}
-                    className="px-3 py-2 text-red-600 border border-red-300 rounded-lg hover:bg-red-50"
-                  >
-                    Remove
-                  </button>
                 </div>
-              ))}
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.preventDefault()
-                  e.stopPropagation()
-                  addArrayItem(['brandIdentity', 'thingsToAvoid'])
-                }}
-                className="px-4 py-2 text-purple-600 border border-purple-300 rounded-lg hover:bg-purple-50"
-              >
-                Add Thing to Avoid
-              </button>
-            </div>
-          </div>
-        </div>
 
-        {/* Target Audience Section */}
-        <div className="bg-white rounded-xl border border-gray-200 shadow-sm">
-          <div className="p-6 border-b border-gray-200">
-            <h2 className="text-xl font-semibold text-gray-900">2. Target Audience</h2>
-            <p className="text-gray-600 mt-1">Define your ideal customers and their characteristics</p>
-          </div>
-          <div className="p-6 space-y-6">
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-3">Unique Selling Proposition (USP)</label>
+                  <Textarea
+                    value={formData.brandIdentity.uniqueSellingProposition}
+                    onChange={(e) => updateNestedField(['brandIdentity', 'uniqueSellingProposition'], e.target.value)}
+                    rows={3}
+                    placeholder="What makes your business unique and different from competitors..."
+                    className="focus:ring-purple-500 focus:border-purple-500"
+                  />
+                </div>
+
+              </CardContent>
+            </Card>
+          </motion.div>
+        )}
+
+        {/* Step 3: Brand Voice */}
+        {currentStep === 3 && (
+          <motion.div 
+            variants={itemVariants}
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -20 }}
+            transition={{ duration: 0.3 }}
+          >
+            <Card className="border-0 shadow-lg bg-white/90 backdrop-blur-sm">
+              <CardHeader>
+                <CardTitle className="text-xl font-semibold text-slate-900 flex items-center space-x-2">
+                  <span className="p-2 bg-gradient-to-r from-green-500 to-green-600 rounded-lg text-white text-sm font-bold">3</span>
+                  <span>Brand Voice</span>
+                </CardTitle>
+                <CardDescription>Define how your brand communicates and sounds</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
 
             {/* Ideal Customer Profile */}
             <div className="space-y-4">
@@ -778,16 +769,29 @@ export function BrandForm({ onSuccess }: BrandFormProps) {
                 Add Vocabulary Word
               </button>
             </div>
-          </div>
-        </div>
+              </CardContent>
+            </Card>
+          </motion.div>
+        )}
 
-        {/* Offers Section */}
-        <div className="bg-white rounded-xl border border-gray-200 shadow-sm">
-          <div className="p-6 border-b border-gray-200">
-            <h2 className="text-xl font-semibold text-gray-900">3. Offers</h2>
-            <p className="text-gray-600 mt-1">Define your products and services</p>
-          </div>
-          <div className="p-6 space-y-6">
+        {/* Step 3: Products & Services */}
+        {currentStep === 3 && (
+          <motion.div 
+            variants={itemVariants}
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -20 }}
+            transition={{ duration: 0.3 }}
+          >
+            <Card className="border-0 shadow-lg bg-white/90 backdrop-blur-sm">
+              <CardHeader>
+                <CardTitle className="text-xl font-semibold text-slate-900 flex items-center space-x-2">
+                  <span className="p-2 bg-gradient-to-r from-green-500 to-green-600 rounded-lg text-white text-sm font-bold">3</span>
+                  <span>Products & Services</span>
+                </CardTitle>
+                <CardDescription>Define your products and services</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
             {formData.offers.map((offer, index) => (
               <div key={index} className="border border-gray-200 rounded-lg p-6 space-y-4">
                 <div className="flex items-center justify-between">
@@ -852,16 +856,29 @@ export function BrandForm({ onSuccess }: BrandFormProps) {
             >
               + Add New Offer
             </button>
-          </div>
-        </div>
+              </CardContent>
+            </Card>
+          </motion.div>
+        )}
 
-        {/* Client Assets Section */}
-        <div className="bg-white rounded-xl border border-gray-200 shadow-sm">
-          <div className="p-6 border-b border-gray-200">
-            <h2 className="text-xl font-semibold text-gray-900">4. Client Assets</h2>
-            <p className="text-gray-600 mt-1">Define your social media profiles and testimonials</p>
-          </div>
-          <div className="p-6 space-y-8">
+        {/* Step 4: Social Assets */}
+        {currentStep === 4 && (
+          <motion.div 
+            variants={itemVariants}
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -20 }}
+            transition={{ duration: 0.3 }}
+          >
+            <Card className="border-0 shadow-lg bg-white/90 backdrop-blur-sm">
+              <CardHeader>
+                <CardTitle className="text-xl font-semibold text-slate-900 flex items-center space-x-2">
+                  <span className="p-2 bg-gradient-to-r from-orange-500 to-orange-600 rounded-lg text-white text-sm font-bold">4</span>
+                  <span>Social Assets</span>
+                </CardTitle>
+                <CardDescription>Define your social media profiles and testimonials</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
 
             {/* Social Media Profiles */}
             <div className="space-y-4">
@@ -1083,24 +1100,88 @@ export function BrandForm({ onSuccess }: BrandFormProps) {
                   Add Brick & Mortar Testimonial
                 </button>
               </div>
-            </div>
-          </div>
-        </div>
 
-        {/* Submit Button */}
-        <div className="flex justify-end">
-          <button
-            type="submit"
-            disabled={isSubmitting}
-            className={`px-8 py-3 rounded-lg font-medium transition-colors ${
-              isSubmitting
-                ? 'bg-gray-400 cursor-not-allowed text-white'
-                : 'bg-purple-600 hover:bg-purple-700 text-white'
-            }`}
+              {/* Others */}
+              <div className="space-y-4">
+                <h4 className="text-md font-medium text-gray-800">Others</h4>
+                {formData.clientAssets.testimonialsCaseStudies.others.map((testimonial, index) => (
+                  <div key={index} className="flex gap-2">
+                    <textarea
+                      value={testimonial}
+                      onChange={(e) => updateArrayField(['clientAssets', 'testimonialsCaseStudies', 'others'], index, e.target.value)}
+                      rows={2}
+                      className="flex-1 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                      placeholder="Enter other testimonial or case study"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => removeArrayItem(['clientAssets', 'testimonialsCaseStudies', 'others'], index)}
+                      className="px-3 py-2 text-red-600 border border-red-300 rounded-lg hover:bg-red-50"
+                    >
+                      Remove
+                    </button>
+                  </div>
+                ))}
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.preventDefault()
+                    e.stopPropagation()
+                    addArrayItem(['clientAssets', 'testimonialsCaseStudies', 'others'])
+                  }}
+                  className="px-4 py-2 text-purple-600 border border-purple-300 rounded-lg hover:bg-purple-50"
+                >
+                  Add Other Testimonial
+                </button>
+              </div>
+            </div>
+              </CardContent>
+            </Card>
+          </motion.div>
+        )}
+
+        {/* Navigation Buttons */}
+        <motion.div 
+          className="flex items-center justify-between pt-6"
+          variants={itemVariants}
+        >
+          <Button
+            type="button"
+            variant="outline"
+            onClick={prevStep}
+            disabled={currentStep === 1}
+            className="flex items-center space-x-2"
           >
-            {isSubmitting ? 'Updating...' : 'Update Brand Information'}
-          </button>
-        </div>
+            <ChevronLeft className="w-4 h-4" />
+            <span>Back</span>
+          </Button>
+
+          <div className="flex items-center space-x-2">
+            <span className="text-sm text-slate-500">
+              Step {currentStep} of {totalSteps}
+            </span>
+          </div>
+
+          {currentStep < totalSteps ? (
+            <Button
+              type="button"
+              onClick={nextStep}
+              className="bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white"
+            >
+              <span>Next</span>
+              <ChevronRight className="w-4 h-4 ml-2" />
+            </Button>
+          ) : (
+            <Button
+              type="submit"
+              disabled={isSubmitting}
+              className="bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white"
+            >
+              <Save className="w-4 h-4 mr-2" />
+              {isSubmitting ? 'Updating...' : 'Complete & Save'}
+            </Button>
+          )}
+        </motion.div>
       </form>
 
       {/* Toast Notification */}
@@ -1110,6 +1191,6 @@ export function BrandForm({ onSuccess }: BrandFormProps) {
         isVisible={showToast}
         onClose={() => setShowToast(false)}
       />
-    </div>
+    </motion.div>
   )
 }
