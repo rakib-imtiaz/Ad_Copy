@@ -37,6 +37,13 @@ interface ChatInterfaceProps {
   selectedMediaItems?: Set<string>
   // File upload props
   onUploadFiles?: (files: File[]) => void
+  // Chat history props
+  currentChatSession?: string | null
+  chatHistory?: Array<{
+    session_id: string
+    title: string
+    created_at: string
+  }>
 }
 
 export function ChatInterface({
@@ -52,7 +59,9 @@ export function ChatInterface({
   onOpenMediaSelector,
   selectedMediaCount = 0,
   selectedMediaItems,
-  onUploadFiles
+  onUploadFiles,
+  currentChatSession,
+  chatHistory = []
 }: ChatInterfaceProps) {
   const [message, setMessage] = React.useState("")
   const [isDragOver, setIsDragOver] = React.useState(false)
@@ -61,6 +70,11 @@ export function ChatInterface({
   const messagesEndRef = React.useRef<HTMLDivElement>(null)
 
   const currentAgent = availableAgents.find(agent => agent.id === conversation?.agentId)
+
+  // Get the current chat session title from chat history
+  const currentChatTitle = currentChatSession
+    ? chatHistory.find(chat => chat.session_id === currentChatSession)?.title
+    : null
 
 
 
@@ -172,7 +186,7 @@ export function ChatInterface({
           <div>
               <div className="flex items-center space-x-2">
                 <h3 className="font-semibold text-slate-800 text-base sm:text-lg">
-                  {conversation?.title || "New Conversation"}
+                  {currentChatTitle || conversation?.title || "New Conversation"}
                 </h3>
                 {conversation?.pinnedMessages && conversation.pinnedMessages.length > 0 && (
                   <Badge variant="secondary" className="text-xs bg-amber-100 text-amber-700 border-amber-200">

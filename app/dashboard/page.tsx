@@ -3288,6 +3288,8 @@ export default function Dashboard() {
               selectedMediaCount={selectedMediaItems.size}
               selectedMediaItems={selectedMediaItems}
               onUploadFiles={uploadMediaFiles}
+              currentChatSession={currentChatSession}
+              chatHistory={chatHistory}
             />
           </div>
         </div>
@@ -3300,7 +3302,7 @@ export default function Dashboard() {
           initial={false}
           animate={{ width: rightPanelOpen ? 384 : 0 }}
         >
-                  <div className="flex-1">
+                  <div className="flex-1 h-[80vh] overflow-hidden">
           <MediaDrawer 
             activeTab={activeTab} 
             onTabChange={handleTabChange} 
@@ -3865,7 +3867,7 @@ function MediaDrawer({ activeTab, onTabChange, mediaItems, setMediaItems, onRefr
   ]
 
   return (
-    <div className="h-full flex flex-col">
+    <div className="h-full flex flex-col overflow-hidden">
       {/* Header with tabs */}
       <div className="border-b border-[#EEEEEE] p-6 pt-12">
         <div className="flex flex-col space-y-4 mb-6">
@@ -3913,7 +3915,7 @@ function MediaDrawer({ activeTab, onTabChange, mediaItems, setMediaItems, onRefr
       </div>
 
       {/* Content */}
-      <div className="flex-1 overflow-y-auto p-4">
+      <div className="flex-1 overflow-y-auto p-4 scrollbar-hide">
         {activeTab === 'files' && <FilesTab mediaItems={mediaItems} onUpload={onUpload} onDelete={handleDeleteItem} isDeleting={isDeleting} deletingItemId={deletingItemId} isLoadingTabContent={isLoadingTabContent} />}
         {activeTab === 'links' && <LinksTab mediaItems={mediaItems} onDelete={handleDeleteItem} onRefresh={onRefresh} setMediaItems={setMediaItems} isDeleting={isDeleting} deletingItemId={deletingItemId} isLoadingTabContent={isLoadingTabContent} />}
         {activeTab === 'youtube' && <YouTubeTab mediaItems={mediaItems} onDelete={handleDeleteItem} onRefresh={onRefresh} setMediaItems={setMediaItems} isDeleting={isDeleting} deletingItemId={deletingItemId} isLoadingTabContent={isLoadingTabContent} />}
