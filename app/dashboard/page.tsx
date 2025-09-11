@@ -497,6 +497,8 @@ export default function Dashboard() {
   }>>([])
   const [isLoadingChatHistory, setIsLoadingChatHistory] = React.useState(false)
   const [currentChatSession, setCurrentChatSession] = React.useState<string | null>(null)
+  const [isLoadingChat, setIsLoadingChat] = React.useState(false)
+  
   const [isStartingChat, setIsStartingChat] = React.useState(false)
   const [knowledgeBaseStatus, setKnowledgeBaseStatus] = React.useState<{
     isLoaded: boolean;
@@ -976,10 +978,15 @@ export default function Dashboard() {
 
   // Load specific chat session
   const loadChatSession = async (sessionId: string) => {
-    console.log('🔄 Loading chat session:', sessionId)
+    // Prevent multiple clicks
+    if (isLoadingChat) {
+      return
+    }
+    
+    setIsLoadingChat(true)
     
     try {
-      // Set the session ID
+      // Set the session ID and current chat session immediately
       setSessionId(sessionId)
       setCurrentChatSession(sessionId)
       
@@ -996,10 +1003,10 @@ export default function Dashboard() {
       
       // Load messages for this specific session
       await loadMessagesForSession(sessionId)
-      
-      console.log('✅ Chat session loaded:', sessionId)
     } catch (error) {
       console.error('❌ Error loading chat session:', error)
+    } finally {
+      setIsLoadingChat(false)
     }
   }
 
@@ -1685,11 +1692,19 @@ export default function Dashboard() {
       updateChatHistory(chatHistoryData)
       
       // Set current chat session if none is set and we have history
+      // Only auto-select if no current session AND no URL parameter
       if (!currentChatSession && chatHistoryData.length > 0) {
-        const latestSession = chatHistoryData[0] // Assuming newest first
-        setCurrentChatSession(latestSession.session_id)
-        updateCurrentChatSession(latestSession.session_id)
-        console.log('🎯 Set current chat session to latest:', latestSession.session_id)
+        const urlParams = new URLSearchParams(window.location.search)
+        const chatIdFromUrl = urlParams.get('chatid')
+        
+        if (!chatIdFromUrl) {
+          const latestSession = chatHistoryData[0] // Assuming newest first
+          setCurrentChatSession(latestSession.session_id)
+          updateCurrentChatSession(latestSession.session_id)
+          console.log('🎯 Set current chat session to latest:', latestSession.session_id)
+        } else {
+          console.log('🎯 URL has chatid parameter, not auto-selecting latest session')
+        }
       }
       
       console.log('=== FETCH CHAT HISTORY CLIENT END (SUCCESS) ===')
@@ -3321,6 +3336,89 @@ export default function Dashboard() {
         </motion.div>
       </div>
 
+      {/* Professional Chat Loading Overlay */}
+      {isLoadingChat && (
+        <motion.div 
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.2 }}
+          className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center"
+        >
+          <motion.div 
+            initial={{ scale: 0.8, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            exit={{ scale: 0.8, opacity: 0 }}
+            transition={{ duration: 0.3, ease: "easeOut" }}
+            className="bg-white rounded-2xl p-8 shadow-2xl max-w-sm w-full mx-4"
+          >
+            <div className="text-center">
+              {/* Animated loader with Framer Motion */}
+              <div className="relative mb-6">
+                <motion.div 
+                  className="w-16 h-16 mx-auto relative"
+                  animate={{ rotate: 360 }}
+                  transition={{ 
+                    duration: 1, 
+                    repeat: Infinity, 
+                    ease: "linear" 
+                  }}
+                >
+                  <div className="absolute inset-0 border-4 border-blue-100 rounded-full"></div>
+                  <motion.div 
+                    className="absolute inset-0 border-4 border-transparent border-t-blue-600 rounded-full"
+                    animate={{ rotate: 360 }}
+                    transition={{ 
+                      duration: 1, 
+                      repeat: Infinity, 
+                      ease: "linear" 
+                    }}
+                  ></motion.div>
+                </motion.div>
+              </div>
+              
+              {/* Loading text with fade animation */}
+              <motion.h3 
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2, duration: 0.3 }}
+                className="text-xl font-semibold text-gray-900 mb-2"
+              >
+                Loading Chat
+              </motion.h3>
+              <motion.p 
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.3, duration: 0.3 }}
+                className="text-gray-600 text-sm"
+              >
+                Please wait while we load your conversation...
+              </motion.p>
+              
+              {/* Progress dots with staggered animation */}
+              <div className="flex justify-center space-x-2 mt-6">
+                {[0, 1, 2].map((index) => (
+                  <motion.div
+                    key={index}
+                    className="w-2 h-2 bg-blue-600 rounded-full"
+                    animate={{
+                      scale: [1, 1.2, 1],
+                      opacity: [0.5, 1, 0.5]
+                    }}
+                    transition={{
+                      duration: 1.5,
+                      repeat: Infinity,
+                      delay: index * 0.2,
+                      ease: "easeInOut"
+                    }}
+                  />
+                ))}
+              </div>
+            </div>
+          </motion.div>
+        </motion.div>
+      )}
+
       {/* Mobile New Chat FAB */}
       <div className="lg:hidden fixed bottom-6 right-6 z-50">
         <Button 
@@ -3748,29 +3846,22 @@ function LeftSidebar({
               <span className="ml-2 text-sm text-gray-600">Loading chat history...</span>
               </div>
           ) : chatHistory.length > 0 ? (
-            <div className="space-y-3">
+            <div className="space-y-3" key={`chat-history-${currentChatSession}`}>
               {chatHistory.map((chat: any) => {
-                const isActive = currentChatSession === chat.session_id
                 const chatDate = new Date(chat.created_at)
                 const timeAgo = formatTimeAgo(chatDate)
                 
                 return (
                 <div
                     key={chat.session_id}
-                    className={`p-4 rounded-lg border transition-all duration-150 ${
-                      isActive 
-                        ? 'bg-blue-50 border-blue-200 shadow-sm' 
-                        : 'bg-gray-50 border-gray-200 hover:bg-gray-100 hover:border-gray-300'
-                    }`}
+                    className="p-4 rounded-lg border transition-all duration-150 bg-gray-50 border-gray-200 hover:bg-gray-100 hover:border-gray-300"
               >
                 <div className="flex items-start justify-between mb-2">
                       <div 
-                        className="flex-1 min-w-0 cursor-pointer"
-                        onClick={() => onLoadChatSession(chat.session_id)}
+                        className={`flex-1 min-w-0 ${isLoadingChat ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}`}
+                        onClick={() => !isLoadingChat && onLoadChatSession(chat.session_id)}
                       >
-                        <h4 className={`font-medium text-sm truncate ${
-                          isActive ? 'text-blue-700' : 'text-gray-900'
-                        }`}>
+                        <h4 className="font-medium text-sm truncate text-gray-900">
                           {chat.title || `Chat ${chat.session_id}`}
                         </h4>
                         <p className="text-xs text-gray-500 mt-1">{timeAgo}</p>
