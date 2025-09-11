@@ -1220,11 +1220,18 @@ export default function Dashboard() {
       
       // Transform messages to match our interface
       const transformedMessages = messagesData.map((msg: any, index: number) => {
+        console.log(`\n🔍 DEBUGGING MESSAGE ${index + 1}/${messagesData.length}:`)
+        console.log('📝 Raw message object:', msg)
+        console.log('📝 Message keys:', Object.keys(msg))
+        console.log('📝 Message type:', typeof msg)
+        
         // Map sender field to role field
         let role = 'assistant' // default
         if (msg.role) {
           role = msg.role
+          console.log('👤 Role from msg.role:', role)
         } else if (msg.sender) {
+          console.log('👤 Sender from msg.sender:', msg.sender)
           // Map API sender values to frontend role values
           if (msg.sender === 'human') {
             role = 'user'
@@ -1235,25 +1242,57 @@ export default function Dashboard() {
           } else if (msg.sender === 'assistant') {
             role = 'assistant'
           }
+          console.log('👤 Mapped role:', role)
+        } else {
+          console.log('👤 No role/sender found, using default:', role)
         }
         
-        return {
-          id: msg.message_id || msg.id || `session-${sessionId}-${index}`,
+        const messageId = msg.message_id || msg.id || `session-${sessionId}-${index}`
+        const content = msg.content || msg.message || msg.text || 'No content'
+        const timestamp = msg.timestamp ? new Date(msg.timestamp).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true }) : new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true })
+        
+        console.log('🆔 Message ID:', messageId)
+        console.log('💬 Content length:', content.length)
+        console.log('💬 Content preview:', content.substring(0, 100) + (content.length > 100 ? '...' : ''))
+        console.log('⏰ Timestamp:', timestamp)
+        console.log('⏰ Original timestamp:', msg.timestamp)
+        
+        const transformedMessage = {
+          id: messageId,
           role: role as 'user' | 'assistant',
-          content: msg.content || msg.message || msg.text || 'No content',
-          timestamp: msg.timestamp ? new Date(msg.timestamp).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true }) : new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true }),
+          content: content,
+          timestamp: timestamp,
+          originalTimestamp: msg.timestamp, // Keep original timestamp for sorting
           animated: false
         }
+        
+        console.log('✅ Transformed message:', transformedMessage)
+        console.log('---')
+        
+        return transformedMessage
+      })
+      
+      // Sort messages by timestamp to ensure proper chronological order
+      const sortedMessages = transformedMessages.sort((a, b) => {
+        // Use original timestamp for accurate sorting
+        const timeA = new Date((a as any).originalTimestamp).getTime()
+        const timeB = new Date((b as any).originalTimestamp).getTime()
+        return timeA - timeB // Oldest first (chronological order)
+      })
+      
+      console.log('🔄 Messages sorted by timestamp:')
+      sortedMessages.forEach((msg, index) => {
+        console.log(`  ${index + 1}. ${msg.role} - ${msg.timestamp} - ${msg.content.substring(0, 50)}...`)
       })
       
       // Update messages state
-      setMessages(transformedMessages)
+      setMessages(sortedMessages)
       if (typeof window !== 'undefined') {
-        localStorage.setItem('chat_messages', JSON.stringify(transformedMessages))
+        localStorage.setItem('chat_messages', JSON.stringify(sortedMessages))
       }
       
       console.log('✅ Messages loaded for session:', sessionId)
-      console.log('✅ Transformed messages:', transformedMessages)
+      console.log('✅ Final sorted messages:', sortedMessages)
       
     } catch (error) {
       console.error('❌ Error loading messages for session:', error)

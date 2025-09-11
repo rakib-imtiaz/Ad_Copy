@@ -124,6 +124,19 @@ export async function GET(request: NextRequest) {
     if (Array.isArray(result.messages)) {
       console.log('  - Messages array length:', result.messages.length)
       console.log('  - First message:', result.messages[0])
+      
+      // Debug each message individually
+      result.messages.forEach((msg: any, index: number) => {
+        console.log(`\n🔍 API ROUTE - MESSAGE ${index + 1}/${result.messages.length}:`)
+        console.log('📝 Raw message from n8n:', msg)
+        console.log('📝 Message keys:', Object.keys(msg))
+        console.log('📝 Message type:', typeof msg)
+        console.log('👤 Role/Sender:', msg.role || msg.sender || 'undefined')
+        console.log('💬 Content preview:', (msg.content || msg.message || msg.text || 'No content').substring(0, 100))
+        console.log('⏰ Timestamp:', msg.timestamp)
+        console.log('🆔 Message ID:', msg.message_id || msg.id || 'undefined')
+        console.log('---')
+      })
     }
 
     console.log('=== CHAT MESSAGES API ROUTE END ===')
