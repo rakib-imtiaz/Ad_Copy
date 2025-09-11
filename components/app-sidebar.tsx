@@ -469,33 +469,25 @@ export function AppSidebar() {
             <SidebarMenuItem>
               <SidebarMenuButton 
                 asChild 
-                isActive={activeItem === '/knowledge-base'}
                 tooltip="Knowledge Base"
               >
-                <Button
-                  variant={activeItem === '/knowledge-base' ? "secondary" : "ghost"}
-                  className={`w-full h-11 rounded-xl transition-all duration-200 overflow-hidden group ${
-                    state === 'expanded' 
-                      ? `justify-start px-4 ${activeItem === '/knowledge-base' 
-                          ? 'bg-gradient-to-r from-purple-50 to-indigo-50 text-purple-700 border border-purple-200 shadow-sm hover:shadow-md' 
-                          : 'hover:bg-gradient-to-r hover:from-purple-50 hover:to-indigo-50 text-slate-700 hover:text-purple-700'}`
-                      : `justify-center p-0 ${activeItem === '/knowledge-base' 
-                          ? 'bg-gradient-to-r from-purple-50 to-indigo-50 text-purple-700 border border-purple-200 shadow-sm' 
-                          : 'hover:bg-gradient-to-r hover:from-purple-50 hover:to-indigo-50 text-slate-700 hover:text-purple-700'}`
-                  }`}
-                  size="sm"
-                  onClick={() => handleNavigation('/knowledge-base')}
-                >
-                  <div className="relative">
-                    <Database className="h-5 w-5 flex-shrink-0 transition-all duration-200 group-hover:scale-110" />
-                    <div className="absolute -top-1 -right-1 w-2 h-2 bg-gradient-to-r from-purple-500 to-indigo-500 rounded-full animate-pulse"></div>
-                  </div>
-                  {state === 'expanded' && (
-                    <span className="font-semibold truncate ml-3 bg-gradient-to-r from-purple-700 to-indigo-700 bg-clip-text text-transparent">
-                      Knowledge Base
-                    </span>
-                  )}
-                </Button>
+                 <Button
+                   variant="ghost"
+                   className={`w-full h-10 rounded-lg transition-all duration-200 overflow-hidden group ${
+                     state === 'expanded' 
+                       ? `justify-start px-3 hover:bg-slate-50 text-slate-700 hover:text-slate-900`
+                       : `justify-center p-0 hover:bg-slate-50 text-slate-700 hover:text-slate-900`
+                   }`}
+                   size="sm"
+                   onClick={() => handleNavigation('/knowledge-base')}
+                 >
+                   <Database className="h-4 w-4 flex-shrink-0 transition-all duration-200 group-hover:scale-110" />
+                   {state === 'expanded' && (
+                     <span className="font-medium truncate ml-3">
+                       Knowledge Base
+                     </span>
+                   )}
+                 </Button>
               </SidebarMenuButton>
             </SidebarMenuItem>
             

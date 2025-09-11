@@ -406,8 +406,8 @@ export function BrandForm({ onSuccess }: BrandFormProps) {
           const isCompleted = completedSteps.includes(stepNumber)
           const isCurrent = currentStep === stepNumber
           const isAccessible = stepNumber <= currentStep || completedSteps.includes(stepNumber - 1)
-          
-          return (
+
+  return (
             <React.Fragment key={stepNumber}>
               <div className="flex items-center">
                 <button
@@ -461,7 +461,7 @@ export function BrandForm({ onSuccess }: BrandFormProps) {
       <StepIndicator />
       
       <form onSubmit={handleSubmit} className="space-y-8">
-        
+
         {/* Step 1: Basic Business Information */}
         {currentStep === 1 && (
           <motion.div 
@@ -481,40 +481,40 @@ export function BrandForm({ onSuccess }: BrandFormProps) {
               </CardHeader>
               <CardContent className="space-y-6">
 
-                {/* Business Name & Tagline */}
+            {/* Business Name & Tagline */}
                 <div className="space-y-6">
-                  <div>
+                <div>
                     <label className="block text-sm font-medium text-slate-700 mb-3">Business Name *</label>
                     <Input
-                      type="text"
-                      value={formData.brandIdentity.businessNameTagline.name}
-                      onChange={(e) => updateNestedField(['brandIdentity', 'businessNameTagline', 'name'], e.target.value)}
+                    type="text"
+                    value={formData.brandIdentity.businessNameTagline.name}
+                    onChange={(e) => updateNestedField(['brandIdentity', 'businessNameTagline', 'name'], e.target.value)}
                       placeholder="e.g., TechCorp Solutions"
                       className="text-lg h-12 focus:ring-purple-500 focus:border-purple-500"
-                    />
-                  </div>
+                  />
+                </div>
                   
-                  <div>
+                <div>
                     <label className="block text-sm font-medium text-slate-700 mb-3">Tagline</label>
                     <Input
-                      type="text"
-                      value={formData.brandIdentity.businessNameTagline.tagline}
-                      onChange={(e) => updateNestedField(['brandIdentity', 'businessNameTagline', 'tagline'], e.target.value)}
+                    type="text"
+                    value={formData.brandIdentity.businessNameTagline.tagline}
+                    onChange={(e) => updateNestedField(['brandIdentity', 'businessNameTagline', 'tagline'], e.target.value)}
                       placeholder="e.g., Innovation at its finest"
                       className="h-12 focus:ring-purple-500 focus:border-purple-500"
-                    />
-                  </div>
+                  />
+            </div>
 
-                  <div>
+                <div>
                     <label className="block text-sm font-medium text-slate-700 mb-3">Business Model Type *</label>
                     <Input
-                      type="text"
+                    type="text"
                       value={formData.brandIdentity.businessModelType}
                       onChange={(e) => updateNestedField(['brandIdentity', 'businessModelType'], e.target.value)}
                       placeholder="e.g., B2B SaaS, E-commerce, Consulting"
                       className="h-12 focus:ring-purple-500 focus:border-purple-500"
-                    />
-                  </div>
+                  />
+                </div>
                 </div>
               </CardContent>
             </Card>
@@ -560,18 +560,18 @@ export function BrandForm({ onSuccess }: BrandFormProps) {
                     placeholder="List your core values and principles..."
                     className="focus:ring-purple-500 focus:border-purple-500"
                   />
-                </div>
+            </div>
 
-                <div>
+            <div>
                   <label className="block text-sm font-medium text-slate-700 mb-3">Unique Selling Proposition (USP)</label>
                   <Textarea
-                    value={formData.brandIdentity.uniqueSellingProposition}
-                    onChange={(e) => updateNestedField(['brandIdentity', 'uniqueSellingProposition'], e.target.value)}
-                    rows={3}
+                value={formData.brandIdentity.uniqueSellingProposition}
+                onChange={(e) => updateNestedField(['brandIdentity', 'uniqueSellingProposition'], e.target.value)}
+                rows={3}
                     placeholder="What makes your business unique and different from competitors..."
                     className="focus:ring-purple-500 focus:border-purple-500"
-                  />
-                </div>
+              />
+            </div>
 
               </CardContent>
             </Card>
@@ -1120,7 +1120,7 @@ export function BrandForm({ onSuccess }: BrandFormProps) {
                     >
                       Remove
                     </button>
-                  </div>
+            </div>
                 ))}
                 <button
                   type="button"
@@ -1133,8 +1133,8 @@ export function BrandForm({ onSuccess }: BrandFormProps) {
                 >
                   Add Other Testimonial
                 </button>
-              </div>
-            </div>
+          </div>
+        </div>
               </CardContent>
             </Card>
           </motion.div>
@@ -1173,8 +1173,8 @@ export function BrandForm({ onSuccess }: BrandFormProps) {
             </Button>
           ) : (
             <Button
-              type="submit"
-              disabled={isSubmitting}
+            type="submit"
+            disabled={isSubmitting}
               className="bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white"
             >
               <Save className="w-4 h-4 mr-2" />
