@@ -28,10 +28,10 @@ export function KnowledgeBaseComponent({ knowledgeBase, onSave, isLoading }: Kno
   React.useEffect(() => {
     if (knowledgeBase) {
       setFormData({
-        companyName: knowledgeBase.companyName,
-        service: knowledgeBase.service,
-        industry: knowledgeBase.industry,
-        niche: knowledgeBase.niche
+        companyName: knowledgeBase.companyName || "",
+        service: knowledgeBase.service || "",
+        industry: knowledgeBase.industry || "",
+        niche: knowledgeBase.niche || ""
       })
     }
   }, [knowledgeBase])
@@ -52,10 +52,10 @@ export function KnowledgeBaseComponent({ knowledgeBase, onSave, isLoading }: Kno
   const handleCancel = () => {
     if (knowledgeBase) {
       setFormData({
-        companyName: knowledgeBase.companyName,
-        service: knowledgeBase.service,
-        industry: knowledgeBase.industry,
-        niche: knowledgeBase.niche
+        companyName: knowledgeBase.companyName || "",
+        service: knowledgeBase.service || "",
+        industry: knowledgeBase.industry || "",
+        niche: knowledgeBase.niche || ""
       })
     }
     setIsEditing(false)
