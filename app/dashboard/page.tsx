@@ -2,13 +2,13 @@
 
 import * as React from "react"
 import { motion } from "motion/react"
-import { 
-  Menu, Search, Bell, User, MessageSquare, Plus, 
-  Bot, Settings, Upload, FileText, Link2, Mic, 
-  PanelLeftClose, PanelRightClose, Send, Paperclip,
+import {
+  Menu, Search, Bell, User, MessageSquare, Plus,
+  Bot, Settings, Upload, FileText, Link2, Mic,
+  PanelLeftClose, Send, Paperclip,
   ChevronRight, MoreHorizontal, Star, Clock, Zap, RefreshCw, Image, Activity,
   Sparkles, ArrowRight, ChevronDown, Check, Power, Headphones, Video,
-  Library, X, PanelRight, PanelRightOpen, Layers, Archive
+  Library, X, PanelRight, PanelRightOpen, Archive
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -3580,33 +3580,6 @@ export default function Dashboard() {
         </motion.div>
       )}
 
-      {/* Fixed Floating Media Library Button */}
-      {chatStarted && (
-        <div className="fixed bottom-6 right-6 z-50">
-          <Button
-            variant="outline"
-            size="lg"
-            onClick={() => setRightPanelOpen(!rightPanelOpen)}
-            className={`flex items-center space-x-3 font-semibold transition-all duration-300 transform hover:scale-105 border-0 px-6 py-3 rounded-2xl ${
-              rightPanelOpen 
-                ? 'bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white shadow-2xl hover:shadow-red-500/30 hover:-translate-y-1' 
-                : 'bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white shadow-2xl hover:shadow-emerald-500/30 hover:-translate-y-1'
-            }`}
-          >
-            {rightPanelOpen ? (
-              <>
-                <PanelRightClose className="h-5 w-5" />
-                <span>Collapse Media Library</span>
-              </>
-            ) : (
-              <>
-                <Layers className="h-5 w-5" />
-                <span>Open Media Library</span>
-              </>
-            )}
-          </Button>
-        </div>
-      )}
       </div>
   )
 }

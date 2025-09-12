@@ -18,7 +18,6 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import Iridescence from "@/components/ui/Iridescence";
 import { LandingHeader } from "@/components/landing/header";
 
 export default function SignInPage() {
@@ -115,15 +114,6 @@ export default function SignInPage() {
     <div className="rfa-theme bg-rfa-white text-rfa-black min-h-screen">
       <LandingHeader />
       <div className="relative min-h-screen bg-hero-gradient">
-        {/* Iridescence animation layer */}
-        <div className="absolute inset-0 w-full h-full -z-5 pointer-events-none">
-          <Iridescence
-            color={[0.95, 0.81, 0.25]}
-            mouseReact={false}
-            amplitude={0.15}
-            speed={0.8}
-          />
-        </div>
         
         <div className="relative z-10 container flex items-center justify-center min-h-screen px-4 py-12">
           <motion.div 
