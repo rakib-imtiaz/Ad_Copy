@@ -151,7 +151,7 @@ export function BrandFormClean({ onSuccess }: BrandFormProps) {
   const [currentStep, setCurrentStep] = React.useState(1)
   const [completedSteps, setCompletedSteps] = React.useState<number[]>([])
 
-  const totalSteps = 10
+  const totalSteps = 11
 
   // Step navigation functions
   const nextStep = () => {
@@ -406,6 +406,7 @@ export function BrandFormClean({ onSuccess }: BrandFormProps) {
                   {stepNumber === 8 && 'Social'}
                   {stepNumber === 9 && 'Testimonials'}
                   {stepNumber === 10 && 'Founders'}
+                  {stepNumber === 11 && 'Complete'}
                 </span>
               </div>
               {stepNumber < totalSteps && (
@@ -951,7 +952,7 @@ export function BrandFormClean({ onSuccess }: BrandFormProps) {
           </motion.div>
         )}
 
-        {/* Step 6: Products */}
+        {/* Step 6: Primary Desires & Goals */}
         {currentStep === 6 && (
           <motion.div 
             variants={itemVariants}
@@ -962,8 +963,74 @@ export function BrandFormClean({ onSuccess }: BrandFormProps) {
           >
             <Card className="border-0 shadow-xl bg-white">
               <CardHeader className="text-center pb-6">
-                <div className="w-16 h-16 bg-gradient-to-r from-indigo-500 to-indigo-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                <div className="w-16 h-16 bg-gradient-to-r from-emerald-500 to-emerald-600 rounded-full flex items-center justify-center mx-auto mb-4">
                   <span className="text-white text-xl font-bold">6</span>
+                </div>
+                <CardTitle className="text-2xl font-bold text-slate-900">Customer Goals & Desires</CardTitle>
+                <CardDescription className="text-slate-600">What do your customers want to achieve?</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                
+                {/* Primary Desires & Goals */}
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-3">Customer Goals & Desires</label>
+                  {formData.targetAudience.primaryDesiresGoals.map((goal, index) => (
+                    <div key={index} className="flex gap-2 mb-3">
+                      <Input
+                        type="text"
+                        value={goal}
+                        onChange={(e) => updateArrayField(['targetAudience', 'primaryDesiresGoals'], index, e.target.value)}
+                        placeholder="e.g., Increase revenue by 50%, Scale to 100+ employees, Reduce operational costs"
+                        className="flex-1 focus:ring-purple-500 focus:border-purple-500"
+                      />
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={(e) => {
+                          e.preventDefault()
+                          e.stopPropagation()
+                          removeArrayItem(['targetAudience', 'primaryDesiresGoals'], index)
+                        }}
+                        className="text-red-600 border-red-300 hover:bg-red-50"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  ))}
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={(e) => {
+                      e.preventDefault()
+                      e.stopPropagation()
+                      addArrayItem(['targetAudience', 'primaryDesiresGoals'])
+                    }}
+                    className="text-purple-600 border-purple-300 hover:bg-purple-50 w-full"
+                  >
+                    <Plus className="w-4 h-4 mr-2" />
+                    Add Customer Goal
+                  </Button>
+                </div>
+
+              </CardContent>
+            </Card>
+          </motion.div>
+        )}
+
+        {/* Step 7: Products */}
+        {currentStep === 7 && (
+          <motion.div 
+            variants={itemVariants}
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -20 }}
+            transition={{ duration: 0.3 }}
+          >
+            <Card className="border-0 shadow-xl bg-white">
+              <CardHeader className="text-center pb-6">
+                <div className="w-16 h-16 bg-gradient-to-r from-indigo-500 to-indigo-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <span className="text-white text-xl font-bold">7</span>
                 </div>
                 <CardTitle className="text-2xl font-bold text-slate-900">Main Product/Service</CardTitle>
                 <CardDescription className="text-slate-600">Tell us about your primary offering</CardDescription>
@@ -1006,8 +1073,8 @@ export function BrandFormClean({ onSuccess }: BrandFormProps) {
           </motion.div>
         )}
 
-        {/* Step 7: Social Media */}
-        {currentStep === 7 && (
+        {/* Step 8: Social Media */}
+        {currentStep === 8 && (
           <motion.div 
             variants={itemVariants}
             initial={{ opacity: 0, x: 20 }}
@@ -1018,7 +1085,7 @@ export function BrandFormClean({ onSuccess }: BrandFormProps) {
             <Card className="border-0 shadow-xl bg-white">
               <CardHeader className="text-center pb-6">
                 <div className="w-16 h-16 bg-gradient-to-r from-pink-500 to-pink-600 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <span className="text-white text-xl font-bold">7</span>
+                  <span className="text-white text-xl font-bold">8</span>
                 </div>
                 <CardTitle className="text-2xl font-bold text-slate-900">Social Media</CardTitle>
                 <CardDescription className="text-slate-600">Your online presence</CardDescription>
@@ -1050,8 +1117,8 @@ export function BrandFormClean({ onSuccess }: BrandFormProps) {
           </motion.div>
         )}
 
-        {/* Step 8: Testimonials */}
-        {currentStep === 8 && (
+        {/* Step 9: Testimonials */}
+        {currentStep === 9 && (
           <motion.div 
             variants={itemVariants}
             initial={{ opacity: 0, x: 20 }}
@@ -1062,7 +1129,7 @@ export function BrandFormClean({ onSuccess }: BrandFormProps) {
             <Card className="border-0 shadow-xl bg-white">
               <CardHeader className="text-center pb-6">
                 <div className="w-16 h-16 bg-gradient-to-r from-teal-500 to-teal-600 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <span className="text-white text-xl font-bold">8</span>
+                  <span className="text-white text-xl font-bold">9</span>
                 </div>
                 <CardTitle className="text-2xl font-bold text-slate-900">Social Proof</CardTitle>
                 <CardDescription className="text-slate-600">Share a customer testimonial</CardDescription>
@@ -1077,6 +1144,83 @@ export function BrandFormClean({ onSuccess }: BrandFormProps) {
                     placeholder="Share a positive review or testimonial from a happy customer..."
                     className="focus:ring-purple-500 focus:border-purple-500"
                   />
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
+        )}
+
+        {/* Step 10: Founders */}
+        {currentStep === 10 && (
+          <motion.div 
+            variants={itemVariants}
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -20 }}
+            transition={{ duration: 0.3 }}
+          >
+            <Card className="border-0 shadow-xl bg-white">
+              <CardHeader className="text-center pb-6">
+                <div className="w-16 h-16 bg-gradient-to-r from-amber-500 to-amber-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <span className="text-white text-xl font-bold">10</span>
+                </div>
+                <CardTitle className="text-2xl font-bold text-slate-900">Founders & Backstory</CardTitle>
+                <CardDescription className="text-slate-600">Tell us about the people behind the brand</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-3">Founder(s) Name(s)</label>
+                  <Input
+                    type="text"
+                    value={formData.brandIdentity.founderNameBackstory.founders}
+                    onChange={(e) => updateNestedField(['brandIdentity', 'founderNameBackstory', 'founders'], e.target.value)}
+                    placeholder="e.g., John Smith & Jane Doe"
+                    className="h-12 focus:ring-purple-500 focus:border-purple-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-3">Founder's Backstory</label>
+                  <Textarea
+                    value={formData.brandIdentity.founderNameBackstory.backstory}
+                    onChange={(e) => updateNestedField(['brandIdentity', 'founderNameBackstory', 'backstory'], e.target.value)}
+                    rows={6}
+                    placeholder="Share the story of how your company started, the challenges you faced, and what drives you..."
+                    className="focus:ring-purple-500 focus:border-purple-500"
+                  />
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
+        )}
+
+        {/* Step 11: Completion */}
+        {currentStep === 11 && (
+          <motion.div 
+            variants={itemVariants}
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -20 }}
+            transition={{ duration: 0.3 }}
+          >
+            <Card className="border-0 shadow-xl bg-white">
+              <CardHeader className="text-center pb-6">
+                <div className="w-16 h-16 bg-gradient-to-r from-green-500 to-green-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Check className="w-8 h-8 text-white" />
+                </div>
+                <CardTitle className="text-2xl font-bold text-slate-900">Ready to Complete!</CardTitle>
+                <CardDescription className="text-slate-600">Review your information and submit to save your brand profile</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="text-center">
+                  <p className="text-slate-600 mb-4">
+                    You've provided comprehensive information about your brand. This will help our AI create more personalized and effective ad copy for your business.
+                  </p>
+                  <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                    <p className="text-green-800 text-sm">
+                      <strong>Next:</strong> Click "Complete Setup" to save your brand information and start creating amazing ad copy!
+                    </p>
+                  </div>
                 </div>
               </CardContent>
             </Card>

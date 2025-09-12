@@ -76,7 +76,7 @@ export async function POST(request: NextRequest) {
     n8nFormData.append('file', file)
 
     console.log('Sending to n8n webhook:', {
-      url: API_ENDPOINTS.N8N_WEBHOOKS.UPLOAD_KNOWLEDGE_BASE,
+      url: API_ENDPOINTS.N8N_WEBHOOKS.UPLOAD_KNOWLEDGE_BASE_BY_FIELD,
       file_name: file.name,
       file_size: file.size,
       file_type: file.type,
@@ -89,7 +89,7 @@ export async function POST(request: NextRequest) {
     const timeoutId = setTimeout(() => controller.abort(), 30000) // 30 second timeout
     
     try {
-      const response = await fetch(API_ENDPOINTS.N8N_WEBHOOKS.UPLOAD_KNOWLEDGE_BASE, {
+      const response = await fetch(API_ENDPOINTS.N8N_WEBHOOKS.UPLOAD_KNOWLEDGE_BASE_BY_FIELD, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${accessToken}`,

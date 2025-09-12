@@ -6,16 +6,16 @@ import { ProtectedRoute } from "@/components/protected-route"
 import { BrandFormClean } from "@/components/brand-form-clean"
 import { KnowledgeBaseViewer } from "@/components/knowledge-base-viewer"
 import { Button } from "@/components/ui/button"
-import { ArrowLeft, Sparkles, Eye } from "lucide-react"
+import { ArrowLeft, Sparkles, Eye, CheckCircle } from "lucide-react"
 
 export default function KnowledgeBasePage() {
   const [isSaving, setIsSaving] = React.useState(false)
   const [isKnowledgeViewerOpen, setIsKnowledgeViewerOpen] = React.useState(false)
+  const [isFormCompleted, setIsFormCompleted] = React.useState(false)
 
-  const handleSave = async () => {
-    setIsSaving(true)
-    await new Promise(resolve => setTimeout(resolve, 2000))
-    setIsSaving(false)
+  const handleFormSuccess = () => {
+    setIsFormCompleted(true)
+    setIsKnowledgeViewerOpen(true)
   }
 
   const containerVariants = {
@@ -72,7 +72,18 @@ export default function KnowledgeBasePage() {
                     <h1 className="text-3xl font-bold bg-gradient-to-r from-slate-900 to-slate-700 bg-clip-text text-transparent">
                       Brand Information
                     </h1>
-                    <p className="text-slate-600 mt-1">Fill out your comprehensive brand information to enhance AI copy generation</p>
+                    <p className="text-slate-600 mt-1">
+                      {isFormCompleted 
+                        ? "Your brand profile has been saved successfully!" 
+                        : "Fill out your comprehensive brand information to enhance AI copy generation"
+                      }
+                    </p>
+                    {isFormCompleted && (
+                      <div className="flex items-center space-x-2 text-green-600 mt-2">
+                        <CheckCircle className="h-4 w-4" />
+                        <span className="text-sm font-medium">Profile completed</span>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
@@ -91,7 +102,7 @@ export default function KnowledgeBasePage() {
         {/* Clean Form Container */}
         <div className="max-w-4xl mx-auto p-6">
           <motion.div variants={itemVariants}>
-            <BrandFormClean />
+            <BrandFormClean onSuccess={handleFormSuccess} />
           </motion.div>
       </div>
 

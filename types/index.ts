@@ -1,16 +1,78 @@
 // Core CopyForge platform types
 
-// Knowledge Base - Per User (FR-3.1)
+// Knowledge Base - Per User (FR-3.1) - Comprehensive Brand Information
 export interface KnowledgeBase {
   id: string
   userId: string
-  companyName: string
-  service: string
-  industry: string
-  niche: string
   createdAt: Date
   updatedAt: Date
   version: number
+  
+  // Brand Identity
+  brandIdentity: {
+    businessNameTagline: {
+      name: string
+      tagline: string
+    }
+    founderNameBackstory: {
+      founders: string
+      backstory: string
+    }
+    missionStatement: {
+      whyWeExist: string
+      principles: string
+    }
+    businessModelType: string
+    uniqueSellingProposition: string
+    tonePersonality: {
+      style: string[]
+    }
+    examplePhrases: string[]
+    brandPowerWords: string[]
+    thingsToAvoid: string[]
+  }
+  
+  // Target Audience
+  targetAudience: {
+    idealCustomerProfile: {
+      description: string[]
+    }
+    primaryPainPoints: string[]
+    primaryDesiresGoals: string[]
+    commonObjections: string[]
+    audienceVocabulary: string[]
+  }
+  
+  // Offers
+  offers: {
+    name: string
+    price: string
+    description: string
+  }[]
+  
+  // Client Assets
+  clientAssets: {
+    socialMediaProfiles: {
+      instagram: string
+      youtube: string
+      facebook: string
+      tiktok: string
+    }
+    testimonialsCaseStudies: {
+      ecommerce: string[]
+      financialServices: string[]
+      entertainment: string[]
+      coachesConsultants: string[]
+      brickMortar: string[]
+      others: string[]
+    }
+  }
+  
+  // Legacy fields for backward compatibility
+  companyName?: string
+  service?: string
+  industry?: string
+  niche?: string
 }
 
 // Media Library (FR-3.2)
