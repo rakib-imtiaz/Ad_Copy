@@ -31,6 +31,8 @@ export async function POST(request: NextRequest) {
     console.log('📋 Content-Type:', contentType)
     
     let brandData
+    let file: File | null = null
+    
     if (contentType?.includes('application/json')) {
       brandData = await request.json()
       console.log('📋 Brand data received (JSON):')
@@ -38,7 +40,7 @@ export async function POST(request: NextRequest) {
     } else {
       // Fallback for form data (file uploads)
       const formData = await request.formData()
-      const file = formData.get('file') as File
+      file = formData.get('file') as File
       const content = formData.get('content') as string
       
       if (!file) {
@@ -88,7 +90,7 @@ export async function POST(request: NextRequest) {
     const accessToken = authHeader.replace('Bearer ', '')
     
     let requestBody
-    let requestHeaders = {
+    let requestHeaders: Record<string, string> = {
       'Authorization': `Bearer ${accessToken}`,
     }
 
@@ -104,7 +106,7 @@ export async function POST(request: NextRequest) {
         auth_method: 'Bearer',
         access_token_length: accessToken.length
       })
-    } else {
+    } else if (file) {
       // Handle file upload (existing logic)
       const n8nFormData = new FormData()
       n8nFormData.append('file', file)
@@ -118,6 +120,17 @@ export async function POST(request: NextRequest) {
         auth_method: 'Bearer',
         access_token_length: accessToken.length
       })
+    } else {
+      return NextResponse.json(
+        {
+          success: false,
+          error: {
+            code: "VALIDATION_ERROR",
+            message: "Either brand data or file is required"
+          }
+        },
+        { status: 400 }
+      )
     }
 
     // Call the n8n webhook with Bearer token authentication
@@ -184,11 +197,13 @@ export async function POST(request: NextRequest) {
         console.log('Empty response from webhook, providing default success response')
         data = { 
           success: true,
-          message: 'File uploaded successfully',
-          data: {
+          message: file ? 'File uploaded successfully' : 'Data uploaded successfully',
+          data: file ? {
             file_name: file.name,
             file_size: file.size,
             file_type: file.type,
+            uploaded_at: new Date().toISOString()
+          } : {
             uploaded_at: new Date().toISOString()
           }
         }
@@ -197,11 +212,13 @@ export async function POST(request: NextRequest) {
       console.log('Response is not JSON, treating as text:', responseText)
       data = { 
         success: true,
-        message: responseText || 'File uploaded successfully',
-        data: {
+        message: responseText || (file ? 'File uploaded successfully' : 'Data uploaded successfully'),
+        data: file ? {
           file_name: file.name,
           file_size: file.size,
           file_type: file.type,
+          uploaded_at: new Date().toISOString()
+        } : {
           uploaded_at: new Date().toISOString()
         }
       }
@@ -212,11 +229,15 @@ export async function POST(request: NextRequest) {
       console.log('N8N webhook returned error or empty response, providing fallback success response for testing')
       return NextResponse.json({
         success: true,
-        message: 'File uploaded successfully (test mode)',
-        data: {
+        message: file ? 'File uploaded successfully (test mode)' : 'Data uploaded successfully (test mode)',
+        data: file ? {
           file_name: file.name,
           file_size: file.size,
           file_type: file.type,
+          uploaded_at: new Date().toISOString(),
+          status: 'test_upload',
+          original_response: responseText || 'No response from webhook'
+        } : {
           uploaded_at: new Date().toISOString(),
           status: 'test_upload',
           original_response: responseText || 'No response from webhook'
