@@ -272,75 +272,186 @@ export function BrandFormClean({ onSuccess }: BrandFormProps) {
     setIsSubmitting(true)
 
     try {
+      console.log('=== FORM SUBMISSION START ===')
+      console.log('Timestamp:', new Date().toISOString())
+      
       const accessToken = authService.getAuthToken()
       if (!accessToken) {
+        console.log('❌ No access token found')
         setToastMessage("Authentication required. Please log in again.")
         setToastType('error')
         setShowToast(true)
         return
       }
 
-      // Filter out empty fields from form data
-      const filterEmptyFields = (data: any): any => {
-        if (Array.isArray(data)) {
-          return data
-            .map(item => filterEmptyFields(item))
-            .filter(item => {
-              if (typeof item === 'object' && item !== null) {
-                return Object.keys(item).length > 0
+      console.log('✅ Access token found, length:', accessToken.length)
+      console.log('🔗 API Route: /api/upload-knowledge-base')
+
+      // Log raw form data
+      console.log('📋 Raw Form Data:')
+      console.log(JSON.stringify(formData, null, 2))
+
+      // Transform form data to match expected webhook structure
+      const transformToWebhookFormat = (data: any): any => {
+        return {
+          "1. Brand & Identity": {
+            "Business Name & Tagline": {
+              "Name": data.brandIdentity?.businessNameTagline?.name || null,
+              "Tagline": data.brandIdentity?.businessNameTagline?.tagline || null
+            },
+            "Founder's Name & Backstory": {
+              "Founders": data.brandIdentity?.founderNameBackstory?.founders || null,
+              "Backstory": data.brandIdentity?.founderNameBackstory?.backstory || null
+            },
+            "Mission Statement": {
+              "Why We Exist": data.brandIdentity?.missionStatement?.whyWeExist || null,
+              "Principles": data.brandIdentity?.missionStatement?.principles || null
+            },
+            "Business Model Type": data.brandIdentity?.businessModelType || null,
+            "Unique Selling Proposition (USP)": data.brandIdentity?.uniqueSellingProposition || null,
+            "Tone & Personality": {
+              "Style": data.brandIdentity?.tonePersonality?.style?.filter((s: string) => s.trim() !== '') || []
+            },
+            "Example Phrases": data.brandIdentity?.examplePhrases?.filter((p: string) => p.trim() !== '') || [],
+            "Brand Power Words/Phrases": data.brandIdentity?.brandPowerWords?.filter((w: string) => w.trim() !== '') || [],
+            "Things to Avoid": data.brandIdentity?.thingsToAvoid?.filter((t: string) => t.trim() !== '') || []
+          },
+          "2. Target Audience": {
+            "Ideal Customer Profile(s)": {
+              "Description": data.targetAudience?.idealCustomerProfile?.description?.filter((d: string) => d.trim() !== '') || []
+            },
+            "Primary Pain Points": data.targetAudience?.primaryPainPoints?.filter((p: string) => p.trim() !== '') || [],
+            "Primary Desires & Goals": data.targetAudience?.primaryDesiresGoals?.filter((g: string) => g.trim() !== '') || [],
+            "Common Objections": data.targetAudience?.commonObjections?.filter((o: string) => o.trim() !== '') || [],
+            "Audience Vocabulary": data.targetAudience?.audienceVocabulary?.filter((v: string) => v.trim() !== '') || []
+          },
+          "3. Offers": (() => {
+            const offers: any = {}
+            
+            // Add offers from the offers array
+            data.offers?.forEach((offer: any) => {
+              if (offer.name && offer.name.trim() !== '') {
+                if (offer.price && offer.price.trim() !== '') {
+                  offers[`${offer.name} – ${offer.price}`] = offer.description || null
+                } else {
+                  offers[offer.name] = offer.description || null
+                }
               }
-              return item !== '' && item != null
             })
-        }
-        
-        if (typeof data === 'object' && data !== null) {
-          const filtered: any = {}
-          for (const [key, value] of Object.entries(data)) {
-            const filteredValue = filterEmptyFields(value)
-            if (Array.isArray(filteredValue)) {
-              if (filteredValue.length > 0) {
-                filtered[key] = filteredValue
+            
+            // Add main product if it exists
+            if (data.productName && data.productName.trim() !== '') {
+              if (data.productPrice && data.productPrice.trim() !== '') {
+                offers[`${data.productName} – ${data.productPrice}`] = data.productDescription || null
+              } else {
+                offers[data.productName] = data.productDescription || null
               }
-            } else if (typeof filteredValue === 'object' && filteredValue !== null) {
-              if (Object.keys(filteredValue).length > 0) {
-                filtered[key] = filteredValue
-              }
-            } else if (filteredValue !== '' && filteredValue != null) {
-              filtered[key] = filteredValue
+            }
+            
+            return offers
+          })(),
+          "4. Client Assets": {
+            "Links to All Social Media Profiles": {
+              "Instagram": data.socialInstagram || data.clientAssets?.socialMediaProfiles?.instagram || null,
+              "YouTube": data.clientAssets?.socialMediaProfiles?.youtube || null,
+              "Facebook": data.clientAssets?.socialMediaProfiles?.facebook || null,
+              "TikTok": data.clientAssets?.socialMediaProfiles?.tiktok || null
+            },
+            "Testimonials & Case Studies": {
+              "Ecommerce": data.clientAssets?.testimonialsCaseStudies?.ecommerce?.filter((t: string) => t.trim() !== '') || [],
+              "Financial Services": data.clientAssets?.testimonialsCaseStudies?.financialServices?.filter((t: string) => t.trim() !== '') || [],
+              "Entertainment": data.clientAssets?.testimonialsCaseStudies?.entertainment?.filter((t: string) => t.trim() !== '') || [],
+              "Coaches / Consultants": data.clientAssets?.testimonialsCaseStudies?.coachesConsultants?.filter((t: string) => t.trim() !== '') || [],
+              "Brick & Mortar": data.clientAssets?.testimonialsCaseStudies?.brickMortar?.filter((t: string) => t.trim() !== '') || [],
+              "Others": data.testimonial && data.testimonial.trim() !== '' ? [data.testimonial] : []
             }
           }
-          return filtered
         }
-        
-        return data
       }
 
-      const transformedData = filterEmptyFields(formData)
+      const transformedData = transformToWebhookFormat(formData)
+      
+      // Log filtered/transformed data
+      console.log('🔄 Filtered/Transformed Data:')
+      console.log(JSON.stringify(transformedData, null, 2))
 
-      const response = await fetch(API_ENDPOINTS.N8N_WEBHOOKS.UPLOAD_KNOWLEDGE_BASE_BY_FIELD, {
+      // Log request details
+      console.log('📤 Making request to API route:')
+      console.log('  - URL: /api/upload-knowledge-base')
+      console.log('  - Method: POST')
+      console.log('  - Headers:', {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${accessToken.substring(0, 20)}...`
+      })
+      console.log('  - Body size:', JSON.stringify(transformedData).length, 'characters')
+
+      // Add timeout and more detailed error handling
+      const controller = new AbortController()
+      const timeoutId = setTimeout(() => {
+        console.log('⏰ Request timeout after 30 seconds')
+        controller.abort()
+      }, 30000)
+
+      // Call our Next.js API route instead of the webhook directly
+      const response = await fetch('/api/upload-knowledge-base', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${accessToken}`,
         },
         body: JSON.stringify(transformedData),
+        signal: controller.signal,
       })
 
+      clearTimeout(timeoutId)
+
+      console.log('📊 Webhook Response:')
+      console.log('  - Status:', response.status)
+      console.log('  - Status Text:', response.statusText)
+      console.log('  - OK:', response.ok)
+      console.log('  - Headers:', Object.fromEntries(response.headers.entries()))
+
+      // Try to get response text
+      const responseText = await response.text()
+      console.log('  - Response Text:', responseText)
+      console.log('  - Response Length:', responseText.length)
+
       if (response.ok) {
+        console.log('✅ Form submission successful!')
         setToastMessage("Brand information updated successfully!")
         setToastType('success')
         setShowToast(true)
         onSuccess?.()
       } else {
-        setToastMessage("Failed to update brand information")
+        console.log('❌ Form submission failed with status:', response.status)
+        setToastMessage(`Failed to update brand information (${response.status})`)
         setToastType('error')
         setShowToast(true)
       }
     } catch (error: any) {
-      setToastMessage(`Network error: ${error.message}`)
+      console.log('💥 Form submission error:')
+      console.log('  - Error type:', error.constructor.name)
+      console.log('  - Error message:', error.message)
+      console.log('  - Error stack:', error.stack)
+      console.log('  - Full error object:', error)
+      
+      // Handle specific error types
+      let errorMessage = 'Network error: '
+      if (error.name === 'AbortError') {
+        errorMessage += 'Request timed out (30 seconds)'
+      } else if (error.message.includes('Failed to fetch')) {
+        errorMessage += 'Unable to connect to server. Please check your internet connection and try again.'
+      } else if (error.message.includes('CORS')) {
+        errorMessage += 'CORS error - server configuration issue'
+      } else {
+        errorMessage += error.message
+      }
+      
+      setToastMessage(errorMessage)
       setToastType('error')
       setShowToast(true)
     } finally {
+      console.log('=== FORM SUBMISSION END ===')
       setIsSubmitting(false)
     }
   }

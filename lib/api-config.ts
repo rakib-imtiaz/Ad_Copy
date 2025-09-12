@@ -81,7 +81,7 @@ export const API_ENDPOINTS = {
           UPDATE_SYSTEM_PROMPT: 'https://n8n.srv934833.hstgr.cloud/webhook/update-system-prompt',
           ACTIVATE_AGENT: 'https://n8n.srv934833.hstgr.cloud/webhook/activate-agent',
     UPLOAD_KNOWLEDGE_BASE: 'https://n8n.srv934833.hstgr.cloud/webhook/upload-knowledge-base',
-    UPLOAD_KNOWLEDGE_BASE_BY_FIELD: 'https://n8n.srv934833.hstgr.cloud/webhook/upload-knowledge-base-by-field',
+    UPLOAD_KNOWLEDGE_BASE_BY_FIELD: 'https://n8n.srv934833.hstgr.cloud/webhook/upload-knowledgebase-by-field',
     SEE_KNOWLEDGE_BASE: 'https://n8n.srv934833.hstgr.cloud/webhook/see-knowledgebase-data',
     MODIFY_KNOWLEDGE_BASE: 'https://n8n.srv934833.hstgr.cloud/webhook/modify-knowledge-base',
     UPLOAD_MEDIA_FILE: 'https://n8n.srv934833.hstgr.cloud/webhook/upload-media-file',

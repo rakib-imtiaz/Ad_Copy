@@ -3,10 +3,14 @@ import { API_ENDPOINTS } from '@/lib/api-config'
 
 export async function POST(request: NextRequest) {
   try {
+    console.log('=== UPLOAD KNOWLEDGE BASE API START ===')
+    console.log('Timestamp:', new Date().toISOString())
+    
     // Get the authorization header from the request
     const authHeader = request.headers.get('authorization')
     
     if (!authHeader) {
+      console.log('❌ No authorization header found')
       return NextResponse.json(
         {
           success: false,
@@ -19,70 +23,102 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    console.log('Knowledge base upload API called')
+    console.log('✅ Authorization header found')
+    console.log('🔗 Webhook URL being used:', API_ENDPOINTS.N8N_WEBHOOKS.UPLOAD_KNOWLEDGE_BASE_BY_FIELD)
 
-    // Parse the form data
-    const formData = await request.formData()
-    const file = formData.get('file') as File
-    const content = formData.get('content') as string
+    // Parse the JSON data from brand form
+    const contentType = request.headers.get('content-type')
+    console.log('📋 Content-Type:', contentType)
     
-    if (!file) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: {
-            code: "VALIDATION_ERROR",
-            message: "File is required"
-          }
-        },
-        { status: 400 }
-      )
+    let brandData
+    if (contentType?.includes('application/json')) {
+      brandData = await request.json()
+      console.log('📋 Brand data received (JSON):')
+      console.log(JSON.stringify(brandData, null, 2))
+    } else {
+      // Fallback for form data (file uploads)
+      const formData = await request.formData()
+      const file = formData.get('file') as File
+      const content = formData.get('content') as string
+      
+      if (!file) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: {
+              code: "VALIDATION_ERROR",
+              message: "File is required"
+            }
+          },
+          { status: 400 }
+        )
+      }
+
+      // Validate file properties
+      if (!file.name || !file.size || file.size === 0) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: {
+              code: "VALIDATION_ERROR",
+              message: "Invalid file: file must have a name and size"
+            }
+          },
+          { status: 400 }
+        )
+      }
+
+      console.log('Form data received:', {
+        hasFile: !!file,
+        hasContent: !!content,
+        fileName: file?.name,
+        fileSize: file?.size,
+        fileType: file?.type,
+        contentLength: content?.length
+      })
+
+      console.log('File received:', {
+        name: file.name,
+        size: file.size,
+        type: file.type
+      })
     }
-
-    // Validate file properties
-    if (!file.name || !file.size || file.size === 0) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: {
-            code: "VALIDATION_ERROR",
-            message: "Invalid file: file must have a name and size"
-          }
-        },
-        { status: 400 }
-      )
-    }
-
-    console.log('Form data received:', {
-      hasFile: !!file,
-      hasContent: !!content,
-      fileName: file?.name,
-      fileSize: file?.size,
-      fileType: file?.type,
-      contentLength: content?.length
-    })
-
-    console.log('File received:', {
-      name: file.name,
-      size: file.size,
-      type: file.type
-    })
 
     // Extract access token from authorization header
     const accessToken = authHeader.replace('Bearer ', '')
     
-    // Create form data for n8n webhook - just the file
-    const n8nFormData = new FormData()
-    n8nFormData.append('file', file)
+    let requestBody
+    let requestHeaders = {
+      'Authorization': `Bearer ${accessToken}`,
+    }
 
-    console.log('Sending to n8n webhook:', {
-      url: API_ENDPOINTS.N8N_WEBHOOKS.UPLOAD_KNOWLEDGE_BASE_BY_FIELD,
-      file_name: file.name,
-      file_size: file.size,
-      file_type: file.type,
-      auth_method: 'Bearer',
-      access_token_length: accessToken.length
-    })
+    if (brandData) {
+      // Handle JSON data from brand form
+      requestBody = JSON.stringify(brandData)
+      requestHeaders['Content-Type'] = 'application/json'
+      
+      console.log('📤 Sending brand data to n8n webhook:', {
+        url: API_ENDPOINTS.N8N_WEBHOOKS.UPLOAD_KNOWLEDGE_BASE_BY_FIELD,
+        data_type: 'JSON',
+        data_size: requestBody.length,
+        auth_method: 'Bearer',
+        access_token_length: accessToken.length
+      })
+    } else {
+      // Handle file upload (existing logic)
+      const n8nFormData = new FormData()
+      n8nFormData.append('file', file)
+      requestBody = n8nFormData
+      
+      console.log('📤 Sending file to n8n webhook:', {
+        url: API_ENDPOINTS.N8N_WEBHOOKS.UPLOAD_KNOWLEDGE_BASE,
+        file_name: file.name,
+        file_size: file.size,
+        file_type: file.type,
+        auth_method: 'Bearer',
+        access_token_length: accessToken.length
+      })
+    }
 
     // Call the n8n webhook with Bearer token authentication
     const controller = new AbortController()
@@ -91,27 +127,25 @@ export async function POST(request: NextRequest) {
     try {
       const response = await fetch(API_ENDPOINTS.N8N_WEBHOOKS.UPLOAD_KNOWLEDGE_BASE_BY_FIELD, {
         method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${accessToken}`,
-        },
-        body: n8nFormData,
+        headers: requestHeaders,
+        body: requestBody,
         signal: controller.signal,
       })
       
       clearTimeout(timeoutId)
 
-    console.log('N8N webhook response status:', response.status)
-    console.log('N8N webhook response headers:', Object.fromEntries(response.headers.entries()))
+    console.log('📊 N8N webhook response status:', response.status)
+    console.log('📊 N8N webhook response headers:', Object.fromEntries(response.headers.entries()))
 
     // Try to get response text first
     const responseText = await response.text()
-    console.log('N8N webhook response text length:', responseText.length)
-    console.log('N8N webhook response text:', responseText)
-    console.log('N8N webhook response is empty:', responseText.trim() === '')
+    console.log('📊 N8N webhook response text length:', responseText.length)
+    console.log('📊 N8N webhook response text:', responseText)
+    console.log('📊 N8N webhook response is empty:', responseText.trim() === '')
 
     if (!response.ok) {
-      console.error('N8N webhook failed with status:', response.status)
-      console.error('N8N webhook error response:', responseText)
+      console.error('❌ N8N webhook failed with status:', response.status)
+      console.error('❌ N8N webhook error response:', responseText)
       
       // Try to parse as JSON if possible
       let errorDetails = responseText
