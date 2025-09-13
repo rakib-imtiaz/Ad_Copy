@@ -136,14 +136,34 @@ export async function GET(request: NextRequest) {
       console.log('📄 Text content preview:', knowledgeBaseContent.substring(0, 200) + '...');
     }
 
-    // Return the knowledge base content
+    // Transform and return the knowledge base content wrapped under body
+    let transformedContent = knowledgeBaseContent;
+    
+    try {
+      // Try to parse as JSON and transform if needed
+      const parsedContent = JSON.parse(knowledgeBaseContent);
+      
+      // If it's already wrapped under body, use as is
+      if (parsedContent.body) {
+        transformedContent = JSON.stringify(parsedContent);
+      } else {
+        // Wrap the content under body object
+        const wrappedContent = { body: parsedContent };
+        transformedContent = JSON.stringify(wrappedContent);
+      }
+    } catch (parseError) {
+      // If not JSON, wrap the text content under body
+      const wrappedContent = { body: { content: knowledgeBaseContent } };
+      transformedContent = JSON.stringify(wrappedContent);
+    }
+
     const responseData = {
       success: true,
       data: {
-        content: knowledgeBaseContent,
+        content: transformedContent,
         type: 'knowledge_base',
         timestamp: new Date().toISOString(),
-        length: knowledgeBaseContent.length
+        length: transformedContent.length
       }
     };
     

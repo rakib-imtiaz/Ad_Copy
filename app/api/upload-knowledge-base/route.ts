@@ -1,6 +1,128 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { API_ENDPOINTS } from '@/lib/api-config'
 
+// Transformation function to convert old format to new format
+function transformKnowledgeBaseData(oldData: any): any {
+  const transformed: any = {
+    brandIdentity: {},
+    targetAudience: {},
+    offers: [],
+    clientAssets: {}
+  }
+
+  // Transform Brand Identity
+  if (oldData['1. Brand & Identity']) {
+    const brandData = oldData['1. Brand & Identity']
+    
+    // Business Name & Tagline
+    if (brandData['Business Name & Tagline']) {
+      transformed.brandIdentity.businessNameTagline = {
+        name: brandData['Business Name & Tagline']['Name'] || '',
+        tagline: brandData['Business Name & Tagline']['Tagline'] || ''
+      }
+    }
+    
+    // Founder's Name & Backstory
+    if (brandData['Founder\'s Name & Backstory']) {
+      transformed.brandIdentity.founderNameBackstory = {
+        founders: brandData['Founder\'s Name & Backstory']['Founders'] || '',
+        backstory: brandData['Founder\'s Name & Backstory']['Backstory'] || ''
+      }
+    }
+    
+    // Mission Statement
+    if (brandData['Mission Statement']) {
+      transformed.brandIdentity.missionStatement = {
+        whyWeExist: brandData['Mission Statement']['Why We Exist'] || '',
+        principles: brandData['Mission Statement']['Principles'] || ''
+      }
+    }
+    
+    // Other brand fields
+    transformed.brandIdentity.businessModelType = brandData['Business Model Type'] || ''
+    transformed.brandIdentity.uniqueSellingProposition = brandData['Unique Selling Proposition (USP)'] || ''
+    
+    // Tone & Personality
+    if (brandData['Tone & Personality']) {
+      transformed.brandIdentity.tonePersonality = {
+        style: brandData['Tone & Personality']['Style'] || []
+      }
+    }
+    
+    // Arrays
+    transformed.brandIdentity.examplePhrases = brandData['Example Phrases'] || []
+    transformed.brandIdentity.brandPowerWords = brandData['Brand Power Words/Phrases'] || []
+    transformed.brandIdentity.thingsToAvoid = brandData['Things to Avoid'] || []
+  }
+
+  // Transform Target Audience
+  if (oldData['2. Target Audience']) {
+    const audienceData = oldData['2. Target Audience']
+    
+    // Ideal Customer Profile
+    if (audienceData['Ideal Customer Profile(s)']) {
+      transformed.targetAudience.idealCustomerProfile = {
+        description: audienceData['Ideal Customer Profile(s)']['Description'] || []
+      }
+    }
+    
+    // Other audience fields
+    transformed.targetAudience.primaryPainPoints = audienceData['Primary Pain Points'] || []
+    transformed.targetAudience.primaryDesiresGoals = audienceData['Primary Desires & Goals'] || []
+    transformed.targetAudience.commonObjections = audienceData['Common Objections'] || []
+    transformed.targetAudience.audienceVocabulary = audienceData['Audience Vocabulary'] || []
+  }
+
+  // Transform Offers
+  if (oldData['3. Offers']) {
+    const offersData = oldData['3. Offers']
+    transformed.offers = []
+    
+    // Convert offers object to array format
+    Object.keys(offersData).forEach(key => {
+      if (offersData[key] && typeof offersData[key] === 'string') {
+        // Split the value to extract name and description
+        const parts = offersData[key].split(' — ')
+        transformed.offers.push({
+          name: key,
+          price: '', // Default empty price
+          description: parts.length > 1 ? parts.slice(1).join(' — ') : offersData[key]
+        })
+      }
+    })
+  }
+
+  // Transform Client Assets
+  if (oldData['4. Client Assets']) {
+    const assetsData = oldData['4. Client Assets']
+    
+    // Social Media Profiles
+    if (assetsData['Links to All Social Media Profiles']) {
+      const socialData = assetsData['Links to All Social Media Profiles']
+      transformed.clientAssets.socialMediaProfiles = {
+        instagram: socialData['Instagram'] || '',
+        youtube: socialData['YouTube'] || '',
+        facebook: socialData['Facebook'] || '',
+        tiktok: socialData['TikTok'] || ''
+      }
+    }
+    
+    // Testimonials & Case Studies
+    if (assetsData['Testimonials & Case Studies']) {
+      const testimonialsData = assetsData['Testimonials & Case Studies']
+      transformed.clientAssets.testimonialsCaseStudies = {
+        ecommerce: testimonialsData['Ecommerce'] || [],
+        financialServices: testimonialsData['Financial Services'] || [],
+        entertainment: testimonialsData['Entertainment'] || [],
+        coachesConsultants: testimonialsData['Coaches / Consultants'] || [],
+        brickMortar: testimonialsData['Brick & Mortar'] || []
+      }
+    }
+  }
+
+  return transformed
+}
+
 export async function POST(request: NextRequest) {
   try {
     console.log('=== UPLOAD KNOWLEDGE BASE API START ===')
@@ -95,17 +217,23 @@ export async function POST(request: NextRequest) {
     }
 
     if (brandData) {
-      // Handle JSON data from brand form
-      requestBody = JSON.stringify(brandData)
+      // Transform the old format to new format (don't wrap under body - n8n will do that)
+      const transformedData = transformKnowledgeBaseData(brandData)
+      requestBody = JSON.stringify(transformedData)
       requestHeaders['Content-Type'] = 'application/json'
       
-      console.log('📤 Sending brand data to n8n webhook:', {
+      console.log('📤 Sending transformed brand data to n8n webhook:', {
         url: API_ENDPOINTS.N8N_WEBHOOKS.UPLOAD_KNOWLEDGE_BASE_BY_FIELD,
         data_type: 'JSON',
         data_size: requestBody.length,
         auth_method: 'Bearer',
-        access_token_length: accessToken.length
+        access_token_length: accessToken.length,
+        transformed: true
       })
+      
+      // Debug: Log the actual transformed data being sent
+      console.log('🔍 Transformed data being sent to webhook:')
+      console.log(JSON.stringify(JSON.parse(requestBody), null, 2))
     } else if (file) {
       // Handle file upload (existing logic)
       const n8nFormData = new FormData()
@@ -224,25 +352,25 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // If n8n webhook returns an error or empty response, provide a fallback success response for testing
+    // If n8n webhook returns an error, return the error
     if (response.status === 500 || responseText.trim() === '' || !data.success) {
-      console.log('N8N webhook returned error or empty response, providing fallback success response for testing')
-      return NextResponse.json({
-        success: true,
-        message: file ? 'File uploaded successfully (test mode)' : 'Data uploaded successfully (test mode)',
-        data: file ? {
-          file_name: file.name,
-          file_size: file.size,
-          file_type: file.type,
-          uploaded_at: new Date().toISOString(),
-          status: 'test_upload',
-          original_response: responseText || 'No response from webhook'
-        } : {
-          uploaded_at: new Date().toISOString(),
-          status: 'test_upload',
-          original_response: responseText || 'No response from webhook'
-        }
-      }, { status: 200 })
+      console.log('🔍 Webhook error details:', {
+        status: response.status,
+        responseText: responseText,
+        data: data
+      })
+      
+      return NextResponse.json(
+        {
+          success: false,
+          error: {
+            code: "N8N_WEBHOOK_ERROR",
+            message: `N8N webhook failed with status ${response.status}`,
+            details: responseText || 'No response from webhook'
+          }
+        },
+        { status: response.status }
+      )
     }
 
     return NextResponse.json(data, { status: 200 })
