@@ -342,7 +342,7 @@ const AgentsPage = () => {
                       
                       <div className="bg-muted/50 p-3 rounded-lg">
                         <p className="text-xs font-medium text-muted-foreground mb-2 uppercase tracking-wide">
-                          System Prompt
+                          Agent Prompt
                         </p>
                         <p className="text-xs text-foreground leading-relaxed text-truncate-3">
                           {agent.systemPrompt}

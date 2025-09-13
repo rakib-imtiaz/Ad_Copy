@@ -247,7 +247,7 @@ const EditAgentPage = () => {
               <Bot size={24} className="text-indigo-600" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">Edit System Prompt</h1>
+              <h1 className="text-2xl font-bold text-gray-900">Edit Agent Prompt</h1>
               <p className="text-gray-500">Update the system prompt for {agent.name}</p>
             </div>
           </div>
@@ -285,7 +285,7 @@ const EditAgentPage = () => {
           <form onSubmit={handleSubmit}>
             <div className="mb-6">
               <label htmlFor="system-prompt" className="text-sm font-medium text-gray-700">
-                System Prompt <span className="text-red-500">*</span>
+                Agent Prompt <span className="text-red-500">*</span>
               </label>
               <textarea
                 id="system-prompt"

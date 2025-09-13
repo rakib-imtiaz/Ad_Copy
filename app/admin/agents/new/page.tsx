@@ -131,7 +131,7 @@ const NewAgentPage = () => {
 
               <div>
                 <label htmlFor="system-prompt" className="text-sm font-medium text-gray-700">
-                  System Prompt <span className="text-red-500">*</span>
+                  Agent Prompt <span className="text-red-500">*</span>
                 </label>
                 <textarea
                   id="system-prompt"
