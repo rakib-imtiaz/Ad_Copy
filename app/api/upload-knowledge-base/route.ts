@@ -7,7 +7,8 @@ function transformKnowledgeBaseData(oldData: any): any {
     brandIdentity: {},
     targetAudience: {},
     offers: [],
-    clientAssets: {}
+    clientAssets: {},
+    otherInformation: ''
   }
 
   // Transform Brand Identity
@@ -118,6 +119,11 @@ function transformKnowledgeBaseData(oldData: any): any {
         brickMortar: testimonialsData['Brick & Mortar'] || []
       }
     }
+  }
+
+  // Transform Other Information
+  if (oldData['6. Other Information']) {
+    transformed.otherInformation = oldData['6. Other Information']
   }
 
   return transformed

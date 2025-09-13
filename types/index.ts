@@ -132,6 +132,9 @@ export interface KnowledgeBase {
     }
   }
   
+  // Other Information
+  otherInformation?: string
+  
   // Legacy fields for backward compatibility
   companyName?: string
   service?: string

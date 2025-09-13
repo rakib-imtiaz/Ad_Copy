@@ -66,6 +66,7 @@ interface BrandFormData {
       others: string[]
     }
   }
+  otherInformation: string
 }
 
 const defaultFormData: BrandFormData = {
@@ -122,7 +123,8 @@ const defaultFormData: BrandFormData = {
       brickMortar: [""],
       others: [""]
     }
-  }
+  },
+  otherInformation: ""
 }
 
 interface BrandFormProps {
@@ -138,7 +140,7 @@ export function BrandForm({ onSuccess }: BrandFormProps) {
   const [currentStep, setCurrentStep] = React.useState(1)
   const [completedSteps, setCompletedSteps] = React.useState<number[]>([])
 
-  const totalSteps = 8
+  const totalSteps = 9
 
   // Step navigation functions
   const nextStep = () => {
@@ -297,6 +299,11 @@ export function BrandForm({ onSuccess }: BrandFormProps) {
       // Filter out empty fields before sending
       const filteredFormData = filterEmptyFields(formData)
       
+      // Add other information to the filtered data if it exists
+      if (formData.otherInformation && formData.otherInformation.trim() !== '') {
+        filteredFormData["6. Other Information"] = formData.otherInformation
+      }
+      
       console.log('📤 Submitting brand form data to webhook...')
       console.log('URL:', API_ENDPOINTS.N8N_WEBHOOKS.UPLOAD_KNOWLEDGE_BASE_BY_FIELD)
       console.log('📋 Filtered form data:', filteredFormData)
@@ -437,6 +444,7 @@ export function BrandForm({ onSuccess }: BrandFormProps) {
                   {stepNumber === 6 && 'Products'}
                   {stepNumber === 7 && 'Social Media'}
                   {stepNumber === 8 && 'Testimonials'}
+                  {stepNumber === 9 && 'Other Info'}
                 </span>
               </div>
               {stepNumber < totalSteps && (
@@ -1135,6 +1143,39 @@ export function BrandForm({ onSuccess }: BrandFormProps) {
                 </button>
           </div>
         </div>
+              </CardContent>
+            </Card>
+          </motion.div>
+        )}
+
+        {/* Step 9: Other Information */}
+        {currentStep === 9 && (
+          <motion.div 
+            variants={itemVariants}
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -20 }}
+            transition={{ duration: 0.3 }}
+          >
+            <Card className="border-0 shadow-lg bg-white/90 backdrop-blur-sm">
+              <CardHeader>
+                <CardTitle className="text-xl font-semibold text-slate-900 flex items-center space-x-2">
+                  <span className="p-2 bg-gradient-to-r from-violet-500 to-violet-600 rounded-lg text-white text-sm font-bold">9</span>
+                  <span>Other Information</span>
+                </CardTitle>
+                <CardDescription>Any additional information about your business</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-3">Additional Information</label>
+                  <Textarea
+                    value={formData.otherInformation}
+                    onChange={(e) => updateNestedField(['otherInformation'], e.target.value)}
+                    rows={6}
+                    placeholder="Share any other relevant information about your business, industry insights, special considerations, or anything else that might help create better ad copy..."
+                    className="focus:ring-purple-500 focus:border-purple-500"
+                  />
+                </div>
               </CardContent>
             </Card>
           </motion.div>

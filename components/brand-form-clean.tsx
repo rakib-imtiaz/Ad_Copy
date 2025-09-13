@@ -72,6 +72,7 @@ interface BrandFormData {
   socialInstagram: string
   socialLinkedIn: string
   testimonial: string
+  otherInformation: string
 }
 
 const defaultFormData: BrandFormData = {
@@ -135,7 +136,8 @@ const defaultFormData: BrandFormData = {
   productDescription: "",
   socialInstagram: "",
   socialLinkedIn: "",
-  testimonial: ""
+  testimonial: "",
+  otherInformation: ""
 }
 
 interface BrandFormProps {
@@ -151,7 +153,7 @@ export function BrandFormClean({ onSuccess }: BrandFormProps) {
   const [currentStep, setCurrentStep] = React.useState(1)
   const [completedSteps, setCompletedSteps] = React.useState<number[]>([])
 
-  const totalSteps = 11
+  const totalSteps = 12
 
   // Step navigation functions
   const nextStep = () => {
@@ -365,7 +367,8 @@ export function BrandFormClean({ onSuccess }: BrandFormProps) {
               "Brick & Mortar": data.clientAssets?.testimonialsCaseStudies?.brickMortar?.filter((t: string) => t.trim() !== '') || [],
               "Others": data.testimonial && data.testimonial.trim() !== '' ? [data.testimonial] : []
             }
-          }
+          },
+          "6. Other Information": data.otherInformation && data.otherInformation.trim() !== '' ? data.otherInformation : null
         }
       }
 
@@ -517,7 +520,8 @@ export function BrandFormClean({ onSuccess }: BrandFormProps) {
                   {stepNumber === 8 && 'Social'}
                   {stepNumber === 9 && 'Testimonials'}
                   {stepNumber === 10 && 'Founders'}
-                  {stepNumber === 11 && 'Complete'}
+                  {stepNumber === 11 && 'Other Info'}
+                  {stepNumber === 12 && 'Complete'}
                 </span>
               </div>
               {stepNumber < totalSteps && (
@@ -1305,8 +1309,41 @@ export function BrandFormClean({ onSuccess }: BrandFormProps) {
           </motion.div>
         )}
 
-        {/* Step 11: Completion */}
+        {/* Step 11: Other Information */}
         {currentStep === 11 && (
+          <motion.div 
+            variants={itemVariants}
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -20 }}
+            transition={{ duration: 0.3 }}
+          >
+            <Card className="border-0 shadow-xl bg-white">
+              <CardHeader className="text-center pb-6">
+                <div className="w-16 h-16 bg-gradient-to-r from-violet-500 to-violet-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <span className="text-white text-xl font-bold">11</span>
+                </div>
+                <CardTitle className="text-2xl font-bold text-slate-900">Other Information</CardTitle>
+                <CardDescription className="text-slate-600">Any additional information about your business</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-3">Additional Information</label>
+                  <Textarea
+                    value={formData.otherInformation}
+                    onChange={(e) => updateField('otherInformation', e.target.value)}
+                    rows={6}
+                    placeholder="Share any other relevant information about your business, industry insights, special considerations, or anything else that might help create better ad copy..."
+                    className="focus:ring-purple-500 focus:border-purple-500"
+                  />
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
+        )}
+
+        {/* Step 12: Completion */}
+        {currentStep === 12 && (
           <motion.div 
             variants={itemVariants}
             initial={{ opacity: 0, x: 20 }}
