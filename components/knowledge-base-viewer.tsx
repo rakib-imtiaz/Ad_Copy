@@ -3,7 +3,6 @@
 import * as React from "react"
 import { authService } from "@/lib/auth-service"
 import { API_ENDPOINTS } from "@/lib/api-config"
-import { Toast } from "@/components/ui/toast"
 
 interface KnowledgeBaseViewerProps {
   isOpen: boolean
@@ -13,14 +12,7 @@ interface KnowledgeBaseViewerProps {
 export function KnowledgeBaseViewer({ isOpen, onClose }: KnowledgeBaseViewerProps) {
   const [content, setContent] = React.useState("")
   const [isLoading, setIsLoading] = React.useState(false)
-  const [isUpdating, setIsUpdating] = React.useState(false)
   const [error, setError] = React.useState("")
-  const [success, setSuccess] = React.useState("")
-  const [hasChanges, setHasChanges] = React.useState(false)
-  const [originalContent, setOriginalContent] = React.useState("")
-  const [showToast, setShowToast] = React.useState(false)
-  const [toastMessage, setToastMessage] = React.useState("")
-  const [toastType, setToastType] = React.useState<'success' | 'error' | 'info'>('success')
 
   // Fetch knowledge base content
   const fetchKnowledgeBaseContent = async () => {
@@ -75,8 +67,6 @@ export function KnowledgeBaseViewer({ isOpen, onClose }: KnowledgeBaseViewerProp
           console.log('📄 Content preview:', contentText.substring(0, 100) + '...')
           
           setContent(contentText)
-          setOriginalContent(contentText)
-          setHasChanges(false)
           
         } catch (jsonError) {
           console.log('📄 JSON parse failed, trying as text...')
@@ -85,8 +75,6 @@ export function KnowledgeBaseViewer({ isOpen, onClose }: KnowledgeBaseViewerProp
           console.log('📄 Text content preview:', textContent.substring(0, 100) + '...')
           
           setContent(textContent)
-          setOriginalContent(textContent)
-          setHasChanges(false)
         }
       } else {
         const errorText = await response.text()
@@ -102,85 +90,6 @@ export function KnowledgeBaseViewer({ isOpen, onClose }: KnowledgeBaseViewerProp
     }
   }
 
-  // Update knowledge base content
-  const updateKnowledgeBaseContent = async () => {
-    setIsUpdating(true)
-    setError("")
-    setSuccess("")
-    
-    try {
-      const accessToken = authService.getAuthToken()
-      if (!accessToken) {
-        setError("Authentication required. Please log in again.")
-        return
-      }
-
-      console.log('💾 Updating knowledge base content...')
-      console.log('URL:', API_ENDPOINTS.N8N_WEBHOOKS.MODIFY_KNOWLEDGE_BASE)
-      console.log('Content length:', content.length)
-      console.log('Content preview:', content.substring(0, 100) + '...')
-
-      const response = await fetch(API_ENDPOINTS.N8N_WEBHOOKS.MODIFY_KNOWLEDGE_BASE, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${accessToken}`,
-        },
-        body: JSON.stringify({
-          business_info: content
-        })
-      })
-
-      console.log('📡 Update response status:', response.status)
-      console.log('📡 Update response ok:', response.ok)
-
-      if (response.ok) {
-        try {
-          const result = await response.json()
-          console.log('📄 Update response:', result)
-          if (result.success || result.status === "success") {
-            setToastMessage("Knowledge Base Updated Successfully!")
-            setToastType('success')
-            setShowToast(true)
-            setOriginalContent(content)
-            setHasChanges(false)
-          } else {
-            setToastMessage(result.message || "Failed to update knowledge base")
-            setToastType('error')
-            setShowToast(true)
-          }
-        } catch (jsonError) {
-          console.log('📄 Update response is not JSON, treating as success')
-          setToastMessage("Knowledge Base Updated Successfully!")
-          setToastType('success')
-          setShowToast(true)
-          setOriginalContent(content)
-          setHasChanges(false)
-        }
-      } else {
-        const errorText = await response.text()
-        console.error('❌ Update failed:', response.status, response.statusText)
-        console.error('❌ Update error response:', errorText)
-        setToastMessage(`Failed to update: ${response.status} ${response.statusText}`)
-        setToastType('error')
-        setShowToast(true)
-      }
-    } catch (error: any) {
-      console.error('❌ Update network error:', error)
-      setToastMessage(`Network error: ${error.message}`)
-      setToastType('error')
-      setShowToast(true)
-    } finally {
-      setIsUpdating(false)
-    }
-  }
-
-  // Handle content changes
-  const handleContentChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    const newContent = e.target.value
-    setContent(newContent)
-    setHasChanges(newContent !== originalContent)
-  }
 
   // Load content when modal opens
   React.useEffect(() => {
@@ -198,7 +107,7 @@ export function KnowledgeBaseViewer({ isOpen, onClose }: KnowledgeBaseViewerProp
         <div className="flex items-center justify-between p-6 border-b border-gray-200">
           <div>
             <h2 className="text-xl font-semibold text-gray-900">Knowledge Base Viewer</h2>
-            <p className="text-sm text-gray-600">View and edit your knowledge base content</p>
+            <p className="text-sm text-gray-600">View your knowledge base content</p>
           </div>
           <button
             onClick={onClose}
@@ -241,10 +150,9 @@ export function KnowledgeBaseViewer({ isOpen, onClose }: KnowledgeBaseViewerProp
                  </div>
                                    <textarea
                     value={content}
-                    onChange={handleContentChange}
-                    placeholder="Enter your knowledge base content here..."
-                    className="flex-1 p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 resize-none text-sm font-mono leading-relaxed overflow-y-auto text-black"
-                    disabled={isUpdating}
+                    placeholder="Knowledge base content will appear here..."
+                    className="flex-1 p-4 border border-gray-300 rounded-lg resize-none text-sm font-mono leading-relaxed overflow-y-auto text-black bg-gray-50"
+                    readOnly
                     style={{ minHeight: '400px' }}
                   />
                </div>
@@ -258,57 +166,23 @@ export function KnowledgeBaseViewer({ isOpen, onClose }: KnowledgeBaseViewerProp
             <button
               onClick={fetchKnowledgeBaseContent}
               disabled={isLoading}
-              className="px-4 py-2 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50"
+              className="px-4 py-2 text-white bg-blue-600 border border-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:bg-gray-400 disabled:border-gray-400"
             >
               {isLoading ? 'Loading...' : 'Refresh'}
             </button>
-            {hasChanges && (
-              <span className="text-sm text-orange-600 flex items-center">
-                <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-                </svg>
-                You have unsaved changes
-              </span>
-            )}
-            {isUpdating && (
-              <span className="text-sm text-blue-600 flex items-center">
-                <svg className="w-4 h-4 mr-1 animate-spin" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clipRule="evenodd" />
-                </svg>
-                Saving changes...
-              </span>
-            )}
           </div>
           
           <div className="flex items-center space-x-3">
             <button
               onClick={onClose}
-              className="px-4 py-2 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50"
+              className="px-4 py-2 text-white bg-purple-600 border border-purple-600 rounded-lg hover:bg-purple-700"
             >
-              Cancel
-            </button>
-            <button
-              onClick={updateKnowledgeBaseContent}
-              disabled={isUpdating || !hasChanges}
-              className={`px-6 py-2 rounded-lg font-medium transition-colors ${
-                isUpdating || !hasChanges
-                  ? 'bg-gray-400 cursor-not-allowed text-white'
-                  : 'bg-purple-600 hover:bg-purple-700 text-white'
-              }`}
-            >
-              {isUpdating ? 'Updating...' : 'Update'}
+              Close
             </button>
           </div>
                  </div>
        </div>
 
-       {/* Toast Notification */}
-       <Toast
-         message={toastMessage}
-         type={toastType}
-         isVisible={showToast}
-         onClose={() => setShowToast(false)}
-       />
      </div>
    )
  }
