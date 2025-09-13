@@ -843,7 +843,7 @@ export function BrandFormClean({ onSuccess }: BrandFormProps) {
                   {stepNumber === 4 && 'Audience'}
                   {stepNumber === 5 && 'Pain Points'}
                   {stepNumber === 6 && 'Goals'}
-                  {stepNumber === 7 && 'Products'}
+                  {stepNumber === 7 && 'Products & Services'}
                   {stepNumber === 8 && 'Social'}
                   {stepNumber === 9 && 'Testimonials'}
                   {stepNumber === 10 && 'Founders'}
@@ -1487,41 +1487,112 @@ export function BrandFormClean({ onSuccess }: BrandFormProps) {
                 <div className="w-16 h-16 bg-gradient-to-r from-indigo-500 to-indigo-600 rounded-full flex items-center justify-center mx-auto mb-4">
                   <span className="text-white text-xl font-bold">7</span>
                 </div>
-                <CardTitle className="text-2xl font-bold text-slate-900">Main Product/Service</CardTitle>
-                <CardDescription className="text-slate-600">Tell us about your primary offering</CardDescription>
+                <CardTitle className="text-2xl font-bold text-slate-900">Products & Services</CardTitle>
+                <CardDescription className="text-slate-600">Tell us about your offerings</CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
+                {/* Multiple Products Section */}
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-3">Product/Service Name</label>
-                  <Input
-                    type="text"
-                    value={formData.productName}
-                    onChange={(e) => updateField('productName', e.target.value)}
-                    placeholder="e.g., Premium Business Consulting"
-                    className="h-12 focus:ring-purple-500 focus:border-purple-500"
-                  />
+                  <label className="block text-sm font-medium text-slate-700 mb-3">Your Products & Services</label>
+                  {formData.offers.map((offer, index) => (
+                    <div key={index} className="border border-slate-200 rounded-lg p-4 mb-4 bg-slate-50">
+                      <div className="flex items-center justify-between mb-4">
+                        <h4 className="text-sm font-medium text-slate-700">Product/Service #{index + 1}</h4>
+                        {formData.offers.length > 1 && (
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => removeOffer(index)}
+                            className="text-red-600 border-red-300 hover:bg-red-50"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        )}
+                      </div>
+                      
+                      <div className="space-y-4">
+                        <div>
+                          <label className="block text-sm font-medium text-slate-600 mb-2">Name</label>
+                          <Input
+                            type="text"
+                            value={offer.name}
+                            onChange={(e) => updateOfferField(index, 'name', e.target.value)}
+                            placeholder="e.g., Premium Business Consulting"
+                            className="h-10 focus:ring-purple-500 focus:border-purple-500"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-sm font-medium text-slate-600 mb-2">Price</label>
+                          <Input
+                            type="text"
+                            value={offer.price}
+                            onChange={(e) => updateOfferField(index, 'price', e.target.value)}
+                            placeholder="e.g., $2,999, Starting at $99/month"
+                            className="h-10 focus:ring-purple-500 focus:border-purple-500"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-sm font-medium text-slate-600 mb-2">Description</label>
+                          <Textarea
+                            value={offer.description}
+                            onChange={(e) => updateOfferField(index, 'description', e.target.value)}
+                            rows={3}
+                            placeholder="Describe what this product/service includes and its key benefits..."
+                            className="focus:ring-purple-500 focus:border-purple-500"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                  
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={addOffer}
+                    className="w-full text-purple-600 border-purple-300 hover:bg-purple-50 py-3"
+                  >
+                    <Plus className="w-4 h-4 mr-2" />
+                    Add Another Product/Service
+                  </Button>
                 </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-3">Price</label>
-                  <Input
-                    type="text"
-                    value={formData.productPrice}
-                    onChange={(e) => updateField('productPrice', e.target.value)}
-                    placeholder="e.g., $2,999, Starting at $99/month"
-                    className="h-12 focus:ring-purple-500 focus:border-purple-500"
-                  />
-                </div>
+                {/* Legacy single product fields (hidden but kept for compatibility) */}
+                <div className="hidden">
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-3">Product/Service Name</label>
+                    <Input
+                      type="text"
+                      value={formData.productName}
+                      onChange={(e) => updateField('productName', e.target.value)}
+                      placeholder="e.g., Premium Business Consulting"
+                      className="h-12 focus:ring-purple-500 focus:border-purple-500"
+                    />
+                  </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-3">Description</label>
-                  <Textarea
-                    value={formData.productDescription}
-                    onChange={(e) => updateField('productDescription', e.target.value)}
-                    rows={4}
-                    placeholder="Describe what this product/service includes and its key benefits..."
-                    className="focus:ring-purple-500 focus:border-purple-500"
-                  />
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-3">Price</label>
+                    <Input
+                      type="text"
+                      value={formData.productPrice}
+                      onChange={(e) => updateField('productPrice', e.target.value)}
+                      placeholder="e.g., $2,999, Starting at $99/month"
+                      className="h-12 focus:ring-purple-500 focus:border-purple-500"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-3">Description</label>
+                    <Textarea
+                      value={formData.productDescription}
+                      onChange={(e) => updateField('productDescription', e.target.value)}
+                      rows={4}
+                      placeholder="Describe what this product/service includes and its key benefits..."
+                      className="focus:ring-purple-500 focus:border-purple-500"
+                    />
+                  </div>
                 </div>
               </CardContent>
             </Card>
@@ -1553,6 +1624,39 @@ export function BrandFormClean({ onSuccess }: BrandFormProps) {
                     value={formData.socialInstagram}
                     onChange={(e) => updateField('socialInstagram', e.target.value)}
                     placeholder="https://instagram.com/yourbusiness"
+                    className="h-12 focus:ring-purple-500 focus:border-purple-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-3">YouTube Channel</label>
+                  <Input
+                    type="url"
+                    value={formData.clientAssets.socialMediaProfiles.youtube}
+                    onChange={(e) => updateNestedField(['clientAssets', 'socialMediaProfiles', 'youtube'], e.target.value)}
+                    placeholder="https://youtube.com/@yourbusiness"
+                    className="h-12 focus:ring-purple-500 focus:border-purple-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-3">Facebook Page</label>
+                  <Input
+                    type="url"
+                    value={formData.clientAssets.socialMediaProfiles.facebook}
+                    onChange={(e) => updateNestedField(['clientAssets', 'socialMediaProfiles', 'facebook'], e.target.value)}
+                    placeholder="https://facebook.com/yourbusiness"
+                    className="h-12 focus:ring-purple-500 focus:border-purple-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-3">TikTok Profile</label>
+                  <Input
+                    type="url"
+                    value={formData.clientAssets.socialMediaProfiles.tiktok}
+                    onChange={(e) => updateNestedField(['clientAssets', 'socialMediaProfiles', 'tiktok'], e.target.value)}
+                    placeholder="https://tiktok.com/@yourbusiness"
                     className="h-12 focus:ring-purple-500 focus:border-purple-500"
                   />
                 </div>
