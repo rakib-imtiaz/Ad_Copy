@@ -7,7 +7,7 @@ import {
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
+import { Textarea } from "@/components/ui/textarea"
 import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -68,6 +68,7 @@ export function ChatInterface({
   const [isUploading, setIsUploading] = React.useState(false)
 
   const messagesEndRef = React.useRef<HTMLDivElement>(null)
+  const textareaRef = React.useRef<HTMLTextAreaElement>(null)
 
   const currentAgent = availableAgents.find(agent => agent.id === conversation?.agentId)
 
@@ -82,14 +83,26 @@ export function ChatInterface({
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
   }, [conversation?.messages, messages])
 
+  // Auto-resize textarea
+  React.useEffect(() => {
+    if (textareaRef.current) {
+      textareaRef.current.style.height = 'auto'
+      textareaRef.current.style.height = `${Math.min(textareaRef.current.scrollHeight, 160)}px`
+    }
+  }, [message])
+
   const handleSend = () => {
     if (message.trim() && onSendMessage) {
       onSendMessage(message.trim(), [])
       setMessage("")
+      // Reset textarea height after sending
+      if (textareaRef.current) {
+        textareaRef.current.style.height = 'auto'
+      }
     }
   }
 
-  const handleKeyPress = (e: React.KeyboardEvent) => {
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault()
       handleSend()
@@ -383,14 +396,16 @@ export function ChatInterface({
                 )}
               </div>
               
-              {/* Input field */}
-              <Input
+              {/* Textarea field */}
+              <Textarea
+                ref={textareaRef}
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
-                onKeyPress={handleKeyPress}
+                onKeyDown={handleKeyDown}
                 placeholder="Ask anything or drag & drop files here"
                 disabled={!currentAgent && !selectedAgent || isLoading}
-                className="flex-1 border-0 bg-transparent text-gray-800 placeholder:text-gray-500 focus:ring-0 focus:outline-none focus:border-0 focus-visible:ring-0 focus-visible:outline-none text-sm"
+                className="flex-1 border-0 bg-transparent text-gray-800 placeholder:text-gray-500 focus:ring-0 focus:outline-none focus:border-0 focus-visible:ring-0 focus-visible:outline-none text-sm resize-none min-h-[24px] max-h-[160px] overflow-y-auto"
+                rows={1}
               />
               
               {/* Voice icons on the right */}
@@ -422,6 +437,10 @@ export function ChatInterface({
                   ? `Drag & drop more files or use selected ${selectedMediaCount} file${selectedMediaCount !== 1 ? 's' : ''} for context`
                   : "Drag & drop files here to upload to your media library"
                 }
+              </p>
+              <span className="text-xs text-gray-400">•</span>
+              <p className="text-xs text-gray-500">
+                Shift+Enter for new line, Enter to send
               </p>
             </div>
             
