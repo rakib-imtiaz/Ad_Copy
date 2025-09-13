@@ -152,8 +152,183 @@ export function BrandFormClean({ onSuccess }: BrandFormProps) {
   const [toastType, setToastType] = React.useState<'success' | 'error' | 'info'>('success')
   const [currentStep, setCurrentStep] = React.useState(1)
   const [completedSteps, setCompletedSteps] = React.useState<number[]>([])
+  const [isSaving, setIsSaving] = React.useState(false)
+  const [isLoading, setIsLoading] = React.useState(true)
 
   const totalSteps = 12
+
+  // Load saved progress on component mount
+  React.useEffect(() => {
+    const loadSavedProgress = async () => {
+      try {
+        const accessToken = authService.getAuthToken()
+        if (!accessToken) {
+          setIsLoading(false)
+          return
+        }
+
+        const response = await fetch('/api/knowledge-base', {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${accessToken}`,
+            'Content-Type': 'application/json'
+          }
+        })
+
+        if (response.ok) {
+          const result = await response.json()
+          if (result.success && result.data?.content) {
+            try {
+              const content = JSON.parse(result.data.content)
+              const bodyContent = content.body || content
+              
+              // Check if this is a draft with progress metadata
+              if (bodyContent._progress && bodyContent._progress.isDraft) {
+                const progress = bodyContent._progress
+                setCurrentStep(progress.currentStep || 1)
+                setCompletedSteps(progress.completedSteps || [])
+                
+                // Transform the data back to form format
+                const transformedData = transformFromWebhookFormat(bodyContent)
+                setFormData(transformedData)
+                
+                setToastMessage("Previous progress loaded successfully!")
+                setToastType('info')
+                setShowToast(true)
+              } else {
+                // Load regular knowledge base data
+                const transformedData = transformFromWebhookFormat(bodyContent)
+                setFormData(transformedData)
+              }
+            } catch (parseError) {
+              console.log('Could not parse saved data:', parseError)
+            }
+          }
+        }
+      } catch (error) {
+        console.log('Error loading saved progress:', error)
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    loadSavedProgress()
+  }, [])
+
+  // Transform webhook format back to form format
+  const transformFromWebhookFormat = (data: any): BrandFormData => {
+    const transformed: BrandFormData = { ...defaultFormData }
+
+    // Transform Brand Identity
+    if (data['1. Brand & Identity']) {
+      const brandData = data['1. Brand & Identity']
+      
+      if (brandData['Business Name & Tagline']) {
+        transformed.brandIdentity.businessNameTagline = {
+          name: brandData['Business Name & Tagline']['Name'] || '',
+          tagline: brandData['Business Name & Tagline']['Tagline'] || ''
+        }
+      }
+      
+      if (brandData['Founder\'s Name & Backstory']) {
+        transformed.brandIdentity.founderNameBackstory = {
+          founders: brandData['Founder\'s Name & Backstory']['Founders'] || '',
+          backstory: brandData['Founder\'s Name & Backstory']['Backstory'] || ''
+        }
+      }
+      
+      if (brandData['Mission Statement']) {
+        transformed.brandIdentity.missionStatement = {
+          whyWeExist: brandData['Mission Statement']['Why We Exist'] || '',
+          principles: brandData['Mission Statement']['Principles'] || ''
+        }
+      }
+      
+      transformed.brandIdentity.businessModelType = brandData['Business Model Type'] || ''
+      transformed.brandIdentity.uniqueSellingProposition = brandData['Unique Selling Proposition (USP)'] || ''
+      
+      if (brandData['Tone & Personality']) {
+        transformed.brandIdentity.tonePersonality = {
+          style: brandData['Tone & Personality']['Style'] || ['']
+        }
+      }
+      
+      transformed.brandIdentity.examplePhrases = brandData['Example Phrases'] || ['']
+      transformed.brandIdentity.brandPowerWords = brandData['Brand Power Words/Phrases'] || ['']
+      transformed.brandIdentity.thingsToAvoid = brandData['Things to Avoid'] || ['']
+    }
+
+    // Transform Target Audience
+    if (data['2. Target Audience']) {
+      const audienceData = data['2. Target Audience']
+      
+      if (audienceData['Ideal Customer Profile(s)']) {
+        transformed.targetAudience.idealCustomerProfile = {
+          description: audienceData['Ideal Customer Profile(s)']['Description'] || ['']
+        }
+      }
+      
+      transformed.targetAudience.primaryPainPoints = audienceData['Primary Pain Points'] || ['']
+      transformed.targetAudience.primaryDesiresGoals = audienceData['Primary Desires & Goals'] || ['']
+      transformed.targetAudience.commonObjections = audienceData['Common Objections'] || ['']
+      transformed.targetAudience.audienceVocabulary = audienceData['Audience Vocabulary'] || ['']
+    }
+
+    // Transform Offers
+    if (data['3. Offers']) {
+      const offersData = data['3. Offers']
+      transformed.offers = []
+      
+      Object.keys(offersData).forEach(key => {
+        if (offersData[key] && typeof offersData[key] === 'string') {
+          const parts = key.split(' – ')
+          transformed.offers.push({
+            name: parts[0] || key,
+            price: parts[1] || '',
+            description: offersData[key]
+          })
+        }
+      })
+      
+      if (transformed.offers.length === 0) {
+        transformed.offers = [{ name: '', price: '', description: '' }]
+      }
+    }
+
+    // Transform Client Assets
+    if (data['4. Client Assets']) {
+      const assetsData = data['4. Client Assets']
+      
+      if (assetsData['Links to All Social Media Profiles']) {
+        const socialData = assetsData['Links to All Social Media Profiles']
+        transformed.clientAssets.socialMediaProfiles = {
+          instagram: socialData['Instagram'] || '',
+          youtube: socialData['YouTube'] || '',
+          facebook: socialData['Facebook'] || '',
+          tiktok: socialData['TikTok'] || ''
+        }
+      }
+      
+      if (assetsData['Testimonials & Case Studies']) {
+        const testimonialsData = assetsData['Testimonials & Case Studies']
+        transformed.clientAssets.testimonialsCaseStudies = {
+          ecommerce: testimonialsData['Ecommerce'] || [''],
+          financialServices: testimonialsData['Financial Services'] || [''],
+          entertainment: testimonialsData['Entertainment'] || [''],
+          coachesConsultants: testimonialsData['Coaches / Consultants'] || [''],
+          brickMortar: testimonialsData['Brick & Mortar'] || [''],
+          others: testimonialsData['Others'] || ['']
+        }
+      }
+    }
+
+    // Transform Other Information
+    if (data['6. Other Information']) {
+      transformed.otherInformation = data['6. Other Information']
+    }
+
+    return transformed
+  }
 
   // Step navigation functions
   const nextStep = () => {
@@ -170,9 +345,15 @@ export function BrandFormClean({ onSuccess }: BrandFormProps) {
   }
 
   const goToStep = (step: number) => {
-    if (step <= currentStep || completedSteps.includes(step - 1)) {
-      setCurrentStep(step)
+    // Allow navigation to any step - users can jump directly to any step
+    setCurrentStep(step)
+    
+    // Mark all steps up to the current step as completed (except the current step itself)
+    const newCompletedSteps = []
+    for (let i = 1; i < step; i++) {
+      newCompletedSteps.push(i)
     }
+    setCompletedSteps(newCompletedSteps)
   }
 
   // Update simple fields
@@ -268,34 +449,22 @@ export function BrandFormClean({ onSuccess }: BrandFormProps) {
     }))
   }
 
-  // Submit form
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setIsSubmitting(true)
-
+  // Save progress function
+  const saveProgress = async () => {
+    setIsSaving(true)
+    
     try {
-      console.log('=== FORM SUBMISSION START ===')
-      console.log('Timestamp:', new Date().toISOString())
-      
       const accessToken = authService.getAuthToken()
       if (!accessToken) {
-        console.log('❌ No access token found')
         setToastMessage("Authentication required. Please log in again.")
         setToastType('error')
         setShowToast(true)
         return
       }
 
-      console.log('✅ Access token found, length:', accessToken.length)
-      console.log('🔗 API Route: /api/upload-knowledge-base')
-
-      // Log raw form data
-      console.log('📋 Raw Form Data:')
-      console.log(JSON.stringify(formData, null, 2))
-
       // Transform form data to match expected webhook structure
-      const transformToWebhookFormat = (data: any): any => {
-        return {
+      const transformToWebhookFormat = (data: any, isDraft: boolean = false): any => {
+        const baseData = {
           "1. Brand & Identity": {
             "Business Name & Tagline": {
               "Name": data.brandIdentity?.businessNameTagline?.name || null,
@@ -370,9 +539,170 @@ export function BrandFormClean({ onSuccess }: BrandFormProps) {
           },
           "6. Other Information": data.otherInformation && data.otherInformation.trim() !== '' ? data.otherInformation : null
         }
+
+        // Add progress metadata only for drafts
+        if (isDraft) {
+          return {
+            ...baseData,
+            "_progress": {
+              "currentStep": currentStep,
+              "completedSteps": completedSteps,
+              "isDraft": true
+            }
+          }
+        }
+
+        return baseData
       }
 
-      const transformedData = transformToWebhookFormat(formData)
+      const transformedData = transformToWebhookFormat(formData, true) // true for draft
+
+      const response = await fetch('/api/upload-knowledge-base', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${accessToken}`,
+        },
+        body: JSON.stringify(transformedData),
+      })
+
+      if (response.ok) {
+        setToastMessage("Progress saved successfully!")
+        setToastType('success')
+        setShowToast(true)
+      } else {
+        setToastMessage("Failed to save progress")
+        setToastType('error')
+        setShowToast(true)
+      }
+    } catch (error: any) {
+      setToastMessage("Error saving progress: " + error.message)
+      setToastType('error')
+      setShowToast(true)
+    } finally {
+      setIsSaving(false)
+    }
+  }
+
+  // Submit form
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setIsSubmitting(true)
+
+    try {
+      console.log('=== FORM SUBMISSION START ===')
+      console.log('Timestamp:', new Date().toISOString())
+      
+      const accessToken = authService.getAuthToken()
+      if (!accessToken) {
+        console.log('❌ No access token found')
+        setToastMessage("Authentication required. Please log in again.")
+        setToastType('error')
+        setShowToast(true)
+        return
+      }
+
+      console.log('✅ Access token found, length:', accessToken.length)
+      console.log('🔗 API Route: /api/upload-knowledge-base')
+
+      // Log raw form data
+      console.log('📋 Raw Form Data:')
+      console.log(JSON.stringify(formData, null, 2))
+
+      // Transform form data to match expected webhook structure
+      const transformToWebhookFormat = (data: any, isDraft: boolean = false): any => {
+        const baseData = {
+          "1. Brand & Identity": {
+            "Business Name & Tagline": {
+              "Name": data.brandIdentity?.businessNameTagline?.name || null,
+              "Tagline": data.brandIdentity?.businessNameTagline?.tagline || null
+            },
+            "Founder's Name & Backstory": {
+              "Founders": data.brandIdentity?.founderNameBackstory?.founders || null,
+              "Backstory": data.brandIdentity?.founderNameBackstory?.backstory || null
+            },
+            "Mission Statement": {
+              "Why We Exist": data.brandIdentity?.missionStatement?.whyWeExist || null,
+              "Principles": data.brandIdentity?.missionStatement?.principles || null
+            },
+            "Business Model Type": data.brandIdentity?.businessModelType || null,
+            "Unique Selling Proposition (USP)": data.brandIdentity?.uniqueSellingProposition || null,
+            "Tone & Personality": {
+              "Style": data.brandIdentity?.tonePersonality?.style?.filter((s: string) => s.trim() !== '') || []
+            },
+            "Example Phrases": data.brandIdentity?.examplePhrases?.filter((p: string) => p.trim() !== '') || [],
+            "Brand Power Words/Phrases": data.brandIdentity?.brandPowerWords?.filter((w: string) => w.trim() !== '') || [],
+            "Things to Avoid": data.brandIdentity?.thingsToAvoid?.filter((t: string) => t.trim() !== '') || []
+          },
+          "2. Target Audience": {
+            "Ideal Customer Profile(s)": {
+              "Description": data.targetAudience?.idealCustomerProfile?.description?.filter((d: string) => d.trim() !== '') || []
+            },
+            "Primary Pain Points": data.targetAudience?.primaryPainPoints?.filter((p: string) => p.trim() !== '') || [],
+            "Primary Desires & Goals": data.targetAudience?.primaryDesiresGoals?.filter((g: string) => g.trim() !== '') || [],
+            "Common Objections": data.targetAudience?.commonObjections?.filter((o: string) => o.trim() !== '') || [],
+            "Audience Vocabulary": data.targetAudience?.audienceVocabulary?.filter((v: string) => v.trim() !== '') || []
+          },
+          "3. Offers": (() => {
+            const offers: any = {}
+            
+            // Add offers from the offers array
+            data.offers?.forEach((offer: any) => {
+              if (offer.name && offer.name.trim() !== '') {
+                if (offer.price && offer.price.trim() !== '') {
+                  offers[`${offer.name} – ${offer.price}`] = offer.description || null
+                } else {
+                  offers[offer.name] = offer.description || null
+                }
+              }
+            })
+            
+            // Add main product if it exists
+            if (data.productName && data.productName.trim() !== '') {
+              if (data.productPrice && data.productPrice.trim() !== '') {
+                offers[`${data.productName} – ${data.productPrice}`] = data.productDescription || null
+              } else {
+                offers[data.productName] = data.productDescription || null
+              }
+            }
+            
+            return offers
+          })(),
+          "4. Client Assets": {
+            "Links to All Social Media Profiles": {
+              "Instagram": data.socialInstagram || data.clientAssets?.socialMediaProfiles?.instagram || null,
+              "YouTube": data.clientAssets?.socialMediaProfiles?.youtube || null,
+              "Facebook": data.clientAssets?.socialMediaProfiles?.facebook || null,
+              "TikTok": data.clientAssets?.socialMediaProfiles?.tiktok || null
+            },
+            "Testimonials & Case Studies": {
+              "Ecommerce": data.clientAssets?.testimonialsCaseStudies?.ecommerce?.filter((t: string) => t.trim() !== '') || [],
+              "Financial Services": data.clientAssets?.testimonialsCaseStudies?.financialServices?.filter((t: string) => t.trim() !== '') || [],
+              "Entertainment": data.clientAssets?.testimonialsCaseStudies?.entertainment?.filter((t: string) => t.trim() !== '') || [],
+              "Coaches / Consultants": data.clientAssets?.testimonialsCaseStudies?.coachesConsultants?.filter((t: string) => t.trim() !== '') || [],
+              "Brick & Mortar": data.clientAssets?.testimonialsCaseStudies?.brickMortar?.filter((t: string) => t.trim() !== '') || [],
+              "Others": data.testimonial && data.testimonial.trim() !== '' ? [data.testimonial] : []
+            }
+          },
+          "6. Other Information": data.otherInformation && data.otherInformation.trim() !== '' ? data.otherInformation : null
+        }
+
+        // Add progress metadata only for drafts
+        if (isDraft) {
+          return {
+            ...baseData,
+            "_progress": {
+              "currentStep": currentStep,
+              "completedSteps": completedSteps,
+              "isDraft": true
+            }
+          }
+        }
+
+        return baseData
+      }
+
+      const transformedData = transformToWebhookFormat(formData, false) // false for final submission
       
       // Log filtered/transformed data
       console.log('🔄 Filtered/Transformed Data:')
@@ -486,7 +816,6 @@ export function BrandFormClean({ onSuccess }: BrandFormProps) {
           const stepNumber = index + 1
           const isCompleted = completedSteps.includes(stepNumber)
           const isCurrent = currentStep === stepNumber
-          const isAccessible = stepNumber <= currentStep || completedSteps.includes(stepNumber - 1)
           
           return (
             <React.Fragment key={stepNumber}>
@@ -494,21 +823,19 @@ export function BrandFormClean({ onSuccess }: BrandFormProps) {
                 <button
                   type="button"
                   onClick={() => goToStep(stepNumber)}
-                  disabled={!isAccessible}
                   className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-semibold transition-all duration-200 ${
                     isCompleted
-                      ? 'bg-green-500 text-white shadow-lg'
+                      ? 'bg-green-500 text-white shadow-lg hover:bg-green-600'
                       : isCurrent
                       ? 'bg-purple-600 text-white shadow-lg scale-110'
-                      : isAccessible
-                      ? 'bg-slate-200 text-slate-600 hover:bg-slate-300'
-                      : 'bg-slate-100 text-slate-400 cursor-not-allowed'
+                      : 'bg-slate-200 text-slate-600 hover:bg-slate-300'
                   }`}
                 >
                   {isCompleted ? <Check className="w-5 h-5" /> : stepNumber}
                 </button>
                 <span className={`mt-2 text-xs font-medium text-center ${
-                  isCurrent ? 'text-purple-600' : isCompleted ? 'text-green-600' : 'text-slate-500'
+                  isCurrent ? 'text-purple-600' : 
+                  isCompleted ? 'text-green-600' : 'text-slate-500'
                 }`}>
                   {stepNumber === 1 && 'Basic Info'}
                   {stepNumber === 2 && 'Mission'}
@@ -535,6 +862,19 @@ export function BrandFormClean({ onSuccess }: BrandFormProps) {
       </div>
     </div>
   )
+
+  if (isLoading) {
+    return (
+      <div className="max-w-2xl mx-auto space-y-8">
+        <div className="flex items-center justify-center py-12">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4"></div>
+            <p className="text-slate-600">Loading your saved progress...</p>
+          </div>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <motion.div 
@@ -1380,40 +1720,55 @@ export function BrandFormClean({ onSuccess }: BrandFormProps) {
           className="flex items-center justify-between pt-8"
           variants={itemVariants}
         >
-          <Button
-            type="button"
-            variant="outline"
-            onClick={prevStep}
-            disabled={currentStep === 1}
-            className="flex items-center space-x-2 px-6 py-3"
-          >
-            <ChevronLeft className="w-4 h-4" />
-            <span>Back</span>
-          </Button>
+          <div className="flex items-center space-x-3">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={prevStep}
+              disabled={currentStep === 1}
+              className="flex items-center space-x-2 px-6 py-3"
+            >
+              <ChevronLeft className="w-4 h-4" />
+              <span>Back</span>
+            </Button>
+            
+            <Button
+              type="button"
+              variant="outline"
+              onClick={saveProgress}
+              disabled={isSaving}
+              className="flex items-center space-x-2 px-4 py-3 text-blue-600 border-blue-300 hover:bg-blue-50"
+            >
+              <Save className="w-4 h-4" />
+              <span>{isSaving ? 'Saving...' : 'Save Progress'}</span>
+            </Button>
+          </div>
 
           <Badge variant="secondary" className="px-4 py-2 text-sm">
             Step {currentStep} of {totalSteps}
           </Badge>
 
-          {currentStep < totalSteps ? (
-            <Button
-              type="button"
-              onClick={nextStep}
-              className="bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white px-6 py-3"
-            >
-              <span>Next</span>
-              <ChevronRight className="w-4 h-4 ml-2" />
-            </Button>
-          ) : (
-            <Button
-              type="submit"
-              disabled={isSubmitting}
-              className="bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white px-6 py-3"
-            >
-              <Save className="w-4 h-4 mr-2" />
-              {isSubmitting ? 'Saving...' : 'Complete Setup'}
-            </Button>
-          )}
+          <div className="flex items-center space-x-3">
+            {currentStep < totalSteps ? (
+              <Button
+                type="button"
+                onClick={nextStep}
+                className="bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white px-6 py-3"
+              >
+                <span>Next</span>
+                <ChevronRight className="w-4 h-4 ml-2" />
+              </Button>
+            ) : (
+              <Button
+                type="submit"
+                disabled={isSubmitting}
+                className="bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white px-6 py-3"
+              >
+                <Save className="w-4 h-4 mr-2" />
+                {isSubmitting ? 'Saving...' : 'Complete Setup'}
+              </Button>
+            )}
+          </div>
         </motion.div>
       </form>
 
