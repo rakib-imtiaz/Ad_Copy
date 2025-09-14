@@ -111,7 +111,7 @@ export async function POST(request: NextRequest) {
     } else {
       console.log('⚠️ n8n webhook returned empty response')
       data = {
-        response: 'Received empty response from n8n webhook',
+        response: 'Oops! There seems to be an error. Could you please refresh the page or start a new conversation? It\'s not gonna happen again, I promise! 😢',
         empty_response: true
       }
     }

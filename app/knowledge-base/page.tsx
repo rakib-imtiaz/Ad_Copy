@@ -89,7 +89,12 @@ export default function KnowledgeBasePage() {
               </div>
               
               <Button
-                onClick={() => setIsKnowledgeViewerOpen(true)}
+                onClick={() => {
+                  console.log('=== VIEW KNOWLEDGE BASE BUTTON CLICKED ===')
+                  console.log('🔘 Button clicked - opening knowledge base viewer modal')
+                  console.log('📅 Timestamp:', new Date().toISOString())
+                  setIsKnowledgeViewerOpen(true)
+                }}
                 className="bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white shadow-lg hover:shadow-xl transition-all duration-200"
               >
                 <Eye className="w-4 h-4 mr-2" />

@@ -25,25 +25,38 @@ export function KnowledgeBaseViewer({ isOpen, onClose }: KnowledgeBaseViewerProp
         return
       }
 
+      console.log('=== VIEW KNOWLEDGE BASE BUTTON CLICKED ===')
       console.log('🔍 Fetching knowledge base content...')
-      console.log('URL:', API_ENDPOINTS.N8N_WEBHOOKS.SEE_KNOWLEDGE_BASE)
-      console.log('Token:', accessToken.substring(0, 20) + '...')
+      console.log('📡 Webhook URL:', API_ENDPOINTS.N8N_WEBHOOKS.SEE_KNOWLEDGE_BASE)
+      console.log('🔐 Access Token Length:', accessToken.length)
+      console.log('🔐 Access Token Preview:', accessToken.substring(0, 30) + '...')
+      console.log('📤 Request Method: GET')
+      console.log('📤 Request Headers:', {
+        'Authorization': `Bearer ${accessToken.substring(0, 20)}...`,
+        'Content-Type': 'application/json'
+      })
 
       const response = await fetch(API_ENDPOINTS.N8N_WEBHOOKS.SEE_KNOWLEDGE_BASE, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${accessToken}`,
+          'Content-Type': 'application/json'
         }
       })
 
-      console.log('📡 Response status:', response.status)
-      console.log('📡 Response ok:', response.ok)
+      console.log('📊 Response received:')
+      console.log('  - Status:', response.status)
+      console.log('  - Status Text:', response.statusText)
+      console.log('  - OK:', response.ok)
+      console.log('  - Headers:', Object.fromEntries(response.headers.entries()))
 
       if (response.ok) {
         try {
           const result = await response.json()
-          console.log('📄 Response data type:', typeof result)
-          console.log('📄 Response structure:', Array.isArray(result) ? 'Array' : 'Object')
+          console.log('📄 Raw Response Data:')
+          console.log('  - Type:', typeof result)
+          console.log('  - Structure:', Array.isArray(result) ? 'Array' : 'Object')
+          console.log('  - Full Response:', JSON.stringify(result, null, 2))
           
           let contentText = ""
           
@@ -78,15 +91,23 @@ export function KnowledgeBaseViewer({ isOpen, onClose }: KnowledgeBaseViewerProp
         }
       } else {
         const errorText = await response.text()
-        console.error('❌ HTTP Error:', response.status, response.statusText)
-        console.error('❌ Error response:', errorText)
+        console.error('❌ HTTP Error Response:')
+        console.error('  - Status:', response.status)
+        console.error('  - Status Text:', response.statusText)
+        console.error('  - Error Response Body:', errorText)
+        console.error('  - Response Headers:', Object.fromEntries(response.headers.entries()))
         setError(`Failed to fetch content: ${response.status} ${response.statusText}`)
       }
     } catch (error: any) {
-      console.error('❌ Network error:', error)
+      console.error('❌ Network/Catch Error:')
+      console.error('  - Error Type:', error.constructor.name)
+      console.error('  - Error Message:', error.message)
+      console.error('  - Error Stack:', error.stack)
+      console.error('  - Full Error Object:', error)
       setError(`Network error: ${error.message}`)
     } finally {
       setIsLoading(false)
+      console.log('=== VIEW KNOWLEDGE BASE REQUEST COMPLETED ===')
     }
   }
 

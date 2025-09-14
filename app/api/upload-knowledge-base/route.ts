@@ -82,12 +82,15 @@ function transformKnowledgeBaseData(oldData: any): any {
     // Convert offers object to array format
     Object.keys(offersData).forEach(key => {
       if (offersData[key] && typeof offersData[key] === 'string') {
-        // Split the value to extract name and description
-        const parts = offersData[key].split(' — ')
+        // Split the key to extract name and price (format: "name – price")
+        const namePriceParts = key.split(' – ')
+        const name = namePriceParts[0] || key
+        const price = namePriceParts[1] || ''
+        
         transformed.offers.push({
-          name: key,
-          price: '', // Default empty price
-          description: parts.length > 1 ? parts.slice(1).join(' — ') : offersData[key]
+          name: name,
+          price: price,
+          description: offersData[key]
         })
       }
     })

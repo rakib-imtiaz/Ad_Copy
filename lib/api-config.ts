@@ -108,6 +108,7 @@ export const API_ENDPOINTS = {
       YOUTUBE_TRANSCRIBE: 'https://n8n.srv934833.hstgr.cloud/webhook/youtube-video-transcribe',
       EXTRA_RESOURCES_CONTENT_EXTRACT: 'https://n8n.srv934833.hstgr.cloud/webhook/extra-resources-content-extract',
       SEE_USER_PASSWORD: 'https://n8n.srv934833.hstgr.cloud/webhook/see-user-password',
+      GET_KNOWLEDGE_BASE_IN_FIELD: 'https://n8n.srv934833.hstgr.cloud/webhook/get-knowledge-base-in-field',
       },
   
   // User Management

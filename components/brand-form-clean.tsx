@@ -167,12 +167,14 @@ export function BrandFormClean({ onSuccess }: BrandFormProps) {
           return
         }
 
-        const response = await fetch('/api/knowledge-base', {
+        const response = await fetch(API_ENDPOINTS.N8N_WEBHOOKS.GET_KNOWLEDGE_BASE_IN_FIELD, {
           method: 'GET',
           headers: {
-            'Authorization': `Bearer ${accessToken}`,
             'Content-Type': 'application/json'
-          }
+          },
+          body: JSON.stringify({
+            access_token: accessToken
+          })
         })
 
         if (response.ok) {
