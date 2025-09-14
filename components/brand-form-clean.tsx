@@ -1678,7 +1678,7 @@ export function BrandFormClean({ onSuccess }: BrandFormProps) {
           </motion.div>
         )}
 
-        {/* Step 9: Testimonials */}
+        {/* Step 9: Testimonials & Case Studies */}
         {currentStep === 9 && (
           <motion.div 
             variants={itemVariants}
@@ -1692,19 +1692,233 @@ export function BrandFormClean({ onSuccess }: BrandFormProps) {
                 <div className="w-16 h-16 bg-gradient-to-r from-teal-500 to-teal-600 rounded-full flex items-center justify-center mx-auto mb-4">
                   <span className="text-white text-xl font-bold">9</span>
                 </div>
-                <CardTitle className="text-2xl font-bold text-slate-900">Social Proof</CardTitle>
-                <CardDescription className="text-slate-600">Share a customer testimonial</CardDescription>
+                <CardTitle className="text-2xl font-bold text-slate-900">Testimonials & Case Studies</CardTitle>
+                <CardDescription className="text-slate-600">Share customer testimonials by industry category</CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
+                
+                {/* Ecommerce Testimonials */}
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-3">Customer Testimonial</label>
-                  <Textarea
-                    value={formData.testimonial}
-                    onChange={(e) => updateField('testimonial', e.target.value)}
-                    rows={4}
-                    placeholder="Share a positive review or testimonial from a happy customer..."
-                    className="focus:ring-purple-500 focus:border-purple-500"
-                  />
+                  <label className="block text-sm font-medium text-slate-700 mb-3">Ecommerce Testimonials</label>
+                  {formData.clientAssets.testimonialsCaseStudies.ecommerce.map((testimonial, index) => (
+                    <div key={index} className="flex gap-2 mb-3">
+                      <Textarea
+                        value={testimonial}
+                        onChange={(e) => updateArrayField(['clientAssets', 'testimonialsCaseStudies', 'ecommerce'], index, e.target.value)}
+                        rows={3}
+                        placeholder="Share testimonials from ecommerce customers..."
+                        className="flex-1 focus:ring-purple-500 focus:border-purple-500"
+                      />
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={(e) => {
+                          e.preventDefault()
+                          e.stopPropagation()
+                          removeArrayItem(['clientAssets', 'testimonialsCaseStudies', 'ecommerce'], index)
+                        }}
+                        className="text-red-600 border-red-300 hover:bg-red-50 self-start mt-2"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  ))}
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={(e) => {
+                      e.preventDefault()
+                      e.stopPropagation()
+                      addArrayItem(['clientAssets', 'testimonialsCaseStudies', 'ecommerce'])
+                    }}
+                    className="text-purple-600 border-purple-300 hover:bg-purple-50 w-full"
+                  >
+                    <Plus className="w-4 h-4 mr-2" />
+                    Add Ecommerce Testimonial
+                  </Button>
+                </div>
+
+                {/* Financial Services Testimonials */}
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-3">Financial Services Testimonials</label>
+                  {formData.clientAssets.testimonialsCaseStudies.financialServices.map((testimonial, index) => (
+                    <div key={index} className="flex gap-2 mb-3">
+                      <Textarea
+                        value={testimonial}
+                        onChange={(e) => updateArrayField(['clientAssets', 'testimonialsCaseStudies', 'financialServices'], index, e.target.value)}
+                        rows={3}
+                        placeholder="Share testimonials from financial services clients..."
+                        className="flex-1 focus:ring-purple-500 focus:border-purple-500"
+                      />
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={(e) => {
+                          e.preventDefault()
+                          e.stopPropagation()
+                          removeArrayItem(['clientAssets', 'testimonialsCaseStudies', 'financialServices'], index)
+                        }}
+                        className="text-red-600 border-red-300 hover:bg-red-50 self-start mt-2"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  ))}
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={(e) => {
+                      e.preventDefault()
+                      e.stopPropagation()
+                      addArrayItem(['clientAssets', 'testimonialsCaseStudies', 'financialServices'])
+                    }}
+                    className="text-purple-600 border-purple-300 hover:bg-purple-50 w-full"
+                  >
+                    <Plus className="w-4 h-4 mr-2" />
+                    Add Financial Services Testimonial
+                  </Button>
+                </div>
+
+                {/* Entertainment Testimonials */}
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-3">Entertainment Testimonials</label>
+                  {formData.clientAssets.testimonialsCaseStudies.entertainment.map((testimonial, index) => (
+                    <div key={index} className="flex gap-2 mb-3">
+                      <Textarea
+                        value={testimonial}
+                        onChange={(e) => updateArrayField(['clientAssets', 'testimonialsCaseStudies', 'entertainment'], index, e.target.value)}
+                        rows={3}
+                        placeholder="Share testimonials from entertainment industry clients..."
+                        className="flex-1 focus:ring-purple-500 focus:border-purple-500"
+                      />
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={(e) => {
+                          e.preventDefault()
+                          e.stopPropagation()
+                          removeArrayItem(['clientAssets', 'testimonialsCaseStudies', 'entertainment'], index)
+                        }}
+                        className="text-red-600 border-red-300 hover:bg-red-50 self-start mt-2"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  ))}
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={(e) => {
+                      e.preventDefault()
+                      e.stopPropagation()
+                      addArrayItem(['clientAssets', 'testimonialsCaseStudies', 'entertainment'])
+                    }}
+                    className="text-purple-600 border-purple-300 hover:bg-purple-50 w-full"
+                  >
+                    <Plus className="w-4 h-4 mr-2" />
+                    Add Entertainment Testimonial
+                  </Button>
+                </div>
+
+                {/* Coaches/Consultants Testimonials */}
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-3">Coaches & Consultants Testimonials</label>
+                  {formData.clientAssets.testimonialsCaseStudies.coachesConsultants.map((testimonial, index) => (
+                    <div key={index} className="flex gap-2 mb-3">
+                      <Textarea
+                        value={testimonial}
+                        onChange={(e) => updateArrayField(['clientAssets', 'testimonialsCaseStudies', 'coachesConsultants'], index, e.target.value)}
+                        rows={3}
+                        placeholder="Share testimonials from coaches and consultants..."
+                        className="flex-1 focus:ring-purple-500 focus:border-purple-500"
+                      />
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={(e) => {
+                          e.preventDefault()
+                          e.stopPropagation()
+                          removeArrayItem(['clientAssets', 'testimonialsCaseStudies', 'coachesConsultants'], index)
+                        }}
+                        className="text-red-600 border-red-300 hover:bg-red-50 self-start mt-2"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  ))}
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={(e) => {
+                      e.preventDefault()
+                      e.stopPropagation()
+                      addArrayItem(['clientAssets', 'testimonialsCaseStudies', 'coachesConsultants'])
+                    }}
+                    className="text-purple-600 border-purple-300 hover:bg-purple-50 w-full"
+                  >
+                    <Plus className="w-4 h-4 mr-2" />
+                    Add Coach/Consultant Testimonial
+                  </Button>
+                </div>
+
+                {/* Brick & Mortar Testimonials */}
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-3">Brick & Mortar Testimonials</label>
+                  {formData.clientAssets.testimonialsCaseStudies.brickMortar.map((testimonial, index) => (
+                    <div key={index} className="flex gap-2 mb-3">
+                      <Textarea
+                        value={testimonial}
+                        onChange={(e) => updateArrayField(['clientAssets', 'testimonialsCaseStudies', 'brickMortar'], index, e.target.value)}
+                        rows={3}
+                        placeholder="Share testimonials from brick & mortar business clients..."
+                        className="flex-1 focus:ring-purple-500 focus:border-purple-500"
+                      />
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={(e) => {
+                          e.preventDefault()
+                          e.stopPropagation()
+                          removeArrayItem(['clientAssets', 'testimonialsCaseStudies', 'brickMortar'], index)
+                        }}
+                        className="text-red-600 border-red-300 hover:bg-red-50 self-start mt-2"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  ))}
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={(e) => {
+                      e.preventDefault()
+                      e.stopPropagation()
+                      addArrayItem(['clientAssets', 'testimonialsCaseStudies', 'brickMortar'])
+                    }}
+                    className="text-purple-600 border-purple-300 hover:bg-purple-50 w-full"
+                  >
+                    <Plus className="w-4 h-4 mr-2" />
+                    Add Brick & Mortar Testimonial
+                  </Button>
+                </div>
+
+                {/* Legacy single testimonial field (hidden but kept for compatibility) */}
+                <div className="hidden">
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-3">Customer Testimonial</label>
+                    <Textarea
+                      value={formData.testimonial}
+                      onChange={(e) => updateField('testimonial', e.target.value)}
+                      rows={4}
+                      placeholder="Share a positive review or testimonial from a happy customer..."
+                      className="focus:ring-purple-500 focus:border-purple-500"
+                    />
+                  </div>
                 </div>
               </CardContent>
             </Card>
