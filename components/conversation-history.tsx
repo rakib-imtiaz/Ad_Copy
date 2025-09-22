@@ -265,7 +265,7 @@ export function ConversationHistory({
                         e.stopPropagation()
                         onDeleteConversation?.(conversation.id)
                       }}
-                      className="text-gray-400 hover:text-red-400 p-1"
+                      className="text-gray-400 hover:text-white hover:bg-red-500 p-1"
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>

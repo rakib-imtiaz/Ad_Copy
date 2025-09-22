@@ -233,7 +233,7 @@ export function AppSidebar() {
                                       <Button
                                         variant="ghost"
                                         size="sm"
-                                        className="h-6 w-6 p-0 text-gray-500 hover:text-red-400 hover:bg-red-900 opacity-0 group-hover:opacity-100 transition-opacity"
+                                        className="h-6 w-6 p-0 text-gray-500 hover:text-white hover:bg-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
                                         onClick={(e) => e.stopPropagation()}
                                       >
                                         <Trash2 className="h-3 w-3" />
