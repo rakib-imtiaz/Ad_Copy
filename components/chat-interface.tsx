@@ -408,38 +408,8 @@ export function ChatInterface({
                 rows={1}
               />
               
-              {/* Send button on the right */}
-              <div className="flex items-center ml-3">
-                <Button
-                  onClick={handleSend}
-                  disabled={!message.trim() || !currentAgent && !selectedAgent || isLoading}
-                  className="bg-black hover:bg-gray-800 text-white rounded-full px-4 py-2 transition-colors disabled:bg-gray-300 disabled:text-gray-500 disabled:cursor-not-allowed"
-                  size="sm"
-                >
-                  <Send className="h-4 w-4" />
-                </Button>
-              </div>
             </div>
             
-            {/* Drag & Drop Hint */}
-            <div className="flex items-center justify-center mt-2 space-x-2">
-              <Upload className="h-3 w-3 text-gray-400" />
-              <p className="text-xs text-gray-500">
-                {selectedMediaCount > 0 
-                  ? `Drag & drop more files or use selected ${selectedMediaCount} file${selectedMediaCount !== 1 ? 's' : ''} for context`
-                  : "Drag & drop files here to upload to your media library"
-                }
-              </p>
-              <span className="text-xs text-gray-400">•</span>
-              <p className="text-xs text-gray-500">
-                Shift+Enter for new line, Enter to send
-              </p>
-            </div>
-            
-            {/* Disclaimer text */}
-            <p className="text-xs text-gray-600 mt-1 text-center">
-              AI can make mistakes. Check important info.
-            </p>
           </div>
           
           {!currentAgent && !selectedAgent && (
