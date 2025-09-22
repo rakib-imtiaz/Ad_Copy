@@ -496,6 +496,7 @@ export default function Dashboard() {
     session_id: string
     title: string
     created_at: string
+    agent_id?: string | null
   }>>([])
   const [isLoadingChatHistory, setIsLoadingChatHistory] = React.useState(false)
   const [currentChatSession, setCurrentChatSession] = React.useState<string | null>(null)
@@ -1002,6 +1003,10 @@ export default function Dashboard() {
     setIsLoadingChat(true)
 
     try {
+      // Find the conversation in chat history to get agent_id
+      const conversation = chatHistory.find(chat => chat.session_id === sessionId)
+      console.log('🔍 Found conversation:', conversation)
+      
       // Set the session ID and current chat session immediately
       console.log('✅ Setting sessionId and currentChatSession to:', sessionId)
       setSessionId(sessionId)
@@ -1010,6 +1015,22 @@ export default function Dashboard() {
       // Also update the sidebar context state
       console.log('🔄 Syncing sidebar context currentChatSession to:', sessionId)
       updateCurrentChatSession(sessionId)
+      
+      // Set the agent if conversation has agent_id
+      if (conversation && conversation.agent_id) {
+        console.log('🤖 Setting agent from conversation:', conversation.agent_id)
+        // Find agent by ID and set by name
+        const agent = agents.find(agent => agent.id === conversation.agent_id)
+        if (agent) {
+          console.log('✅ Found agent, setting selectedAgent to:', agent.name)
+          setSelectedAgent(agent.name)
+          updateSelectedAgent(agent.name)
+        } else {
+          console.log('⚠️ Agent not found for ID:', conversation.agent_id)
+        }
+      } else {
+        console.log('ℹ️ No agent_id found in conversation, keeping current agent')
+      }
       
       // Save to localStorage
       if (typeof window !== 'undefined') {
@@ -3997,6 +4018,9 @@ function LeftSidebar({
                   isSelected
                 })
 
+                // Get agent info for this chat
+                const agentInfo = chat.agent_id ? agents.find(agent => agent.id === chat.agent_id) : null
+
                 return (
                 <div
                     key={chat.session_id}
@@ -4011,10 +4035,18 @@ function LeftSidebar({
                         className="flex-1 min-w-0 cursor-pointer"
                         onClick={() => onLoadChatSession(chat.session_id)}
                       >
-                        <h4 className="font-medium text-sm truncate text-gray-900">
-                          {chat.title || `Chat ${chat.session_id}`}
-                        </h4>
-                        <p className="text-xs text-gray-500 mt-1">{timeAgo}</p>
+                        <div className="flex items-center space-x-2 mb-1">
+                          <h4 className="font-medium text-sm truncate text-gray-900">
+                            {chat.title || `Chat ${chat.session_id}`}
+                          </h4>
+                          {agentInfo && (
+                            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                              <Bot className="h-3 w-3 mr-1" />
+                              {agentInfo.name}
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-xs text-gray-500">{timeAgo}</p>
                       </div>
                   <div className="flex items-center space-x-2">
                         <Button

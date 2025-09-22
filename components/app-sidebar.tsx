@@ -218,12 +218,20 @@ export function AppSidebar() {
                             >
                               <div className="flex items-start justify-between gap-2">
                                 <div className="flex-1 min-w-0 overflow-hidden">
-                                  <h4 className={`font-bold text-sm truncate ${
-                                    isActive ? 'text-white' : 'text-white'
-                                  }`}>
-                                    {chat.title || `Chat ${chat.session_id}`}
-                                  </h4>
-                                  <p className="text-xs text-gray-400 mt-1 truncate">{timeAgo}</p>
+                                  <div className="flex items-center space-x-2 mb-1">
+                                    <h4 className={`font-bold text-sm truncate ${
+                                      isActive ? 'text-white' : 'text-white'
+                                    }`}>
+                                      {chat.title || `Chat ${chat.session_id}`}
+                                    </h4>
+                                    {chat.agent_id && (
+                                      <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium bg-blue-900 text-blue-200 border border-blue-700">
+                                        <Bot className="h-2.5 w-2.5 mr-1" />
+                                        Agent
+                                      </span>
+                                    )}
+                                  </div>
+                                  <p className="text-xs text-gray-400 truncate">{timeAgo}</p>
                                 </div>
                                 {!isDeleting && (
                                   <AlertDialog>
@@ -312,9 +320,17 @@ export function AppSidebar() {
                             </TooltipTrigger>
                             <TooltipContent side="right">
                               <div className="text-sm max-w-48">
-                                <p className="font-medium truncate">
-                                  {chat.title || `Chat ${chat.session_id}`}
-                                </p>
+                                <div className="flex items-center space-x-2 mb-1">
+                                  <p className="font-medium truncate">
+                                    {chat.title || `Chat ${chat.session_id}`}
+                                  </p>
+                                  {chat.agent_id && (
+                                    <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                      <Bot className="h-2.5 w-2.5 mr-1" />
+                                      Agent
+                                    </span>
+                                  )}
+                                </div>
                                 <p className="text-xs text-muted-foreground">{timeAgo}</p>
                               </div>
                             </TooltipContent>

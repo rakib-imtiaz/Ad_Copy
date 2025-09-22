@@ -120,6 +120,12 @@ export async function GET(request: NextRequest) {
     if (Array.isArray(result.data)) {
       console.log('  - Data array length:', result.data.length)
       console.log('  - First item:', result.data[0])
+      
+      // Ensure each conversation has agent_id field
+      result.data = result.data.map((conversation: any) => ({
+        ...conversation,
+        agent_id: conversation.agent_id || null
+      }))
     }
 
     console.log('=== CHAT HISTORY API ROUTE END ===')
