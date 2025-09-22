@@ -224,12 +224,6 @@ export function AppSidebar() {
                                     }`}>
                                       {chat.title || `Chat ${chat.session_id}`}
                                     </h4>
-                                    {chat.agent_id && (
-                                      <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium bg-blue-900 text-blue-200 border border-blue-700">
-                                        <Bot className="h-2.5 w-2.5 mr-1" />
-                                        Agent
-                                      </span>
-                                    )}
                                   </div>
                                   <p className="text-xs text-gray-400 truncate">{timeAgo}</p>
                                 </div>
@@ -324,12 +318,6 @@ export function AppSidebar() {
                                   <p className="font-medium truncate">
                                     {chat.title || `Chat ${chat.session_id}`}
                                   </p>
-                                  {chat.agent_id && (
-                                    <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                                      <Bot className="h-2.5 w-2.5 mr-1" />
-                                      Agent
-                                    </span>
-                                  )}
                                 </div>
                                 <p className="text-xs text-muted-foreground">{timeAgo}</p>
                               </div>

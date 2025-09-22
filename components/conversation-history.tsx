@@ -194,13 +194,9 @@ export function ConversationHistory({
               <CardContent className="p-4">
                 <div className="flex items-start justify-between">
                   <div className="flex-1 min-w-0 mr-4">
-                    {/* Title and Agent */}
+                    {/* Title */}
                     <div className="flex items-center space-x-2 mb-2">
                       <h3 className="font-semibold truncate">{conversation.title}</h3>
-                      <Badge variant="outline" className="text-xs">
-                        <Bot className="h-3 w-3 mr-1" />
-                        {getAgentName(conversation.agentId)}
-                      </Badge>
                     </div>
 
                     {/* Last Message Preview */}

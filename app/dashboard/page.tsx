@@ -24,6 +24,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import ShinyText from "@/components/ui/ShinyText"
 
 import { authService } from "@/lib/auth-service"
 import { ChatInterface } from "@/components/chat-interface"
@@ -79,113 +80,134 @@ function InitialInterface({ agents, selectedAgent, onSelectAgent, onStartChattin
     }
   }
 
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50/50 via-white to-primary/5">
-      <div className="container mx-auto px-4 py-8 max-w-4xl">
-        {/* Header Section */}
-    <motion.div 
-          className="text-center mb-12"
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.6 }}
-    >
-          <div className="flex justify-center mb-6">
-            <div className="relative">
-              <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center shadow-lg">
-            <img 
-              src="/logo.png" 
-              alt="Copy Ready logo" 
-                  width={40} 
-                  height={40}
-              className="rounded-lg"
-            />
-          </div>
-              <div className="absolute -top-1 -right-1 w-6 h-6 bg-emerald-500 rounded-full flex items-center justify-center">
-                <Sparkles className="h-3 w-3 text-white" />
+      <div className="container mx-auto px-4 py-8 max-w-6xl">
+        {/* Professional Header Section with Card Layout */}
+        <motion.div 
+          className="mb-12"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+        >
+          <Card className="border-0 shadow-xl bg-gradient-to-br from-white/80 to-primary/5 backdrop-blur-sm">
+            <CardContent className="p-12 text-center">
+              <div className="flex justify-center mb-8">
+                <div className="relative">
+                  <div className="w-20 h-20 rounded-3xl bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center shadow-2xl">
+                    <img 
+                      src="/logo.png" 
+                      alt="Copy Ready logo" 
+                      width={48} 
+                      height={48}
+                      className="rounded-xl"
+                    />
+                  </div>
+                  <div className="absolute -top-2 -right-2 w-8 h-8 bg-emerald-500 rounded-full flex items-center justify-center shadow-lg">
+                    <Sparkles className="h-4 w-4 text-white" />
+                  </div>
+                </div>
               </div>
-            </div>
-          </div>
-          <h1 className="text-5xl font-bold bg-gradient-to-r from-gray-900 to-gray-600 bg-clip-text text-transparent mb-4">
-            What can I help with?
-          </h1>
-          <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-            Choose an AI agent and start creating high-converting ad copy that drives results
-          </p>
+              <CardTitle className="text-6xl font-bold bg-gradient-to-r from-gray-900 via-primary to-gray-600 bg-clip-text text-transparent mb-6">
+                What can I help with?
+              </CardTitle>
+              <CardDescription className="text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
+                Choose an AI agent and start creating high-converting ad copy that drives results
+              </CardDescription>
+            </CardContent>
+          </Card>
         </motion.div>
 
-        {/* Agent Selection Section */}
+        {/* Professional Agent Selection Section */}
         <motion.div 
-          className="mb-8"
+          className="mb-12"
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.1 }}
         >
-          <div className="flex items-center justify-between mb-6">
-            <div>
-              <h2 className="text-lg font-semibold text-foreground mb-1">Select Your AI Agent</h2>
-              <p className="text-sm text-muted-foreground">Choose the perfect assistant for your copywriting needs</p>
-            </div>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={onRefreshAgents}
-              disabled={isLoadingAgents || isStartingChat}
-              className="flex items-center space-x-2"
-            >
-              <RefreshCw className={`h-4 w-4 ${isLoadingAgents ? 'animate-spin' : ''}`} />
-              <span>Refresh</span>
-            </Button>
-          </div>
-          <AgentSelector 
-            agents={agents}
-            selectedAgent={selectedAgent}
-            onSelectAgent={onSelectAgent}
-            onOpenChange={() => {}}
-            isLoading={isLoadingAgents || isStartingChat}
-            onRefresh={onRefreshAgents}
-          />
+          <Card className="border-0 shadow-lg bg-white/60 backdrop-blur-sm">
+            <CardHeader className="pb-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle className="text-2xl font-semibold text-foreground mb-2">Select Your AI Agent</CardTitle>
+                  <CardDescription className="text-base text-muted-foreground">
+                    Choose the perfect assistant for your copywriting needs
+                  </CardDescription>
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={onRefreshAgents}
+                  disabled={isLoadingAgents || isStartingChat}
+                  className="flex items-center space-x-2 shadow-sm hover:shadow-md transition-all duration-200"
+                >
+                  <RefreshCw className={`h-4 w-4 ${isLoadingAgents ? 'animate-spin' : ''}`} />
+                  <span>Refresh</span>
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent className="pt-0">
+              <AgentSelector 
+                agents={agents}
+                selectedAgent={selectedAgent}
+                onSelectAgent={onSelectAgent}
+                onOpenChange={() => {}}
+                isLoading={isLoadingAgents || isStartingChat}
+                onRefresh={onRefreshAgents}
+              />
+            </CardContent>
+          </Card>
         </motion.div>
 
-        {/* Start Button */}
+        {/* Professional Start Button with Shiny Text */}
         <motion.div 
           className="mb-12 flex justify-center"
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.2 }}
         >
-          <Button
-            onClick={handleStartChatting}
-            disabled={!selectedAgent || isStartingChat}
-            size="lg"
-            className="w-full max-w-md h-14 px-8 text-base font-semibold bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary text-white shadow-lg hover:shadow-xl transition-all duration-200 rounded-xl"
-          >
-            {isStartingChat ? (
-              <div className="flex items-center justify-center space-x-3">
-                <div className="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent"></div>
-                <span>Starting Chat...</span>
-              </div>
-            ) : (
-              <div className="flex items-center justify-center space-x-3">
-                <MessageSquare className="h-5 w-5" />
-                <span>Start Chatting</span>
-                <ArrowRight className="h-5 w-5" />
-              </div>
-            )}
-          </Button>
+          <Card className="border-0 shadow-xl bg-gradient-to-r from-primary/10 to-primary/5 backdrop-blur-sm p-2">
+            <Button
+              onClick={handleStartChatting}
+              disabled={!selectedAgent || isStartingChat}
+              size="lg"
+              className="w-full max-w-lg h-16 px-12 text-lg font-semibold bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary text-white shadow-2xl hover:shadow-3xl transition-all duration-300 rounded-2xl border-0"
+            >
+              {isStartingChat ? (
+                <div className="flex items-center justify-center space-x-3">
+                  <div className="animate-spin rounded-full h-6 w-6 border-2 border-white border-t-transparent"></div>
+                  <span>Starting Chat...</span>
+                </div>
+              ) : (
+                <div className="flex items-center justify-center space-x-4">
+                  <MessageSquare className="h-6 w-6" />
+                  <ShinyText 
+                    text="Start Chatting" 
+                    speed={3}
+                    className="text-lg font-semibold"
+                  />
+                  <ArrowRight className="h-6 w-6" />
+                </div>
+              )}
+            </Button>
+          </Card>
         </motion.div>
 
-
-        {/* Footer */}
+        {/* Professional Footer */}
         <motion.div 
-          className="text-center mt-12 pt-8 border-t border-border"
+          className="text-center"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.6, delay: 0.4 }}
         >
-          <p className="text-xs text-muted-foreground">
-            ⚡ AI can make mistakes. Verify important information and review all generated content.
-          </p>
+          <Card className="border-0 shadow-sm bg-white/40 backdrop-blur-sm">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-center space-x-2 text-sm text-muted-foreground">
+                <Zap className="h-4 w-4 text-amber-500" />
+                <span>AI can make mistakes. Verify important information and review all generated content.</span>
+              </div>
+            </CardContent>
+          </Card>
         </motion.div>
       </div>
     </div>
