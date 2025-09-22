@@ -54,9 +54,9 @@ const NewAgentPage = () => {
       
       setSuccess('Agent created successfully!');
       
-      // Redirect to user dashboard with refresh parameter after a short delay
+      // Redirect back to admin agents page after a short delay
       setTimeout(() => {
-        router.push('/dashboard?refreshAgents=true');
+        router.push('/admin/agents');
       }, 1500);
     } catch (err: any) {
       console.error('❌ Error creating agent:', err);
