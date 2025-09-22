@@ -19,6 +19,7 @@ interface ChatInterfaceProps {
   availableAgents?: Agent[]
   mediaItems?: MediaItem[]
       onSendMessage?: (content: string, attachedMedia?: string[]) => void
+  onRetryMessage?: (originalMessage: string) => void
   onPinMessage?: (messageId: string) => void
   onDeleteMessage?: (messageId: string) => void
   isLoading?: boolean
@@ -29,6 +30,9 @@ interface ChatInterfaceProps {
     content: string
     timestamp: string
     animated?: boolean
+    isError?: boolean
+    showRetryButton?: boolean
+    originalMessage?: string
   }>
   selectedAgent?: string
   // Media selector props
@@ -51,6 +55,7 @@ export function ChatInterface({
   availableAgents = [],
   mediaItems = [],
   onSendMessage,
+  onRetryMessage,
   onPinMessage,
   onDeleteMessage,
   isLoading,
@@ -273,6 +278,18 @@ export function ChatInterface({
                     {/* Message Actions */}
                     {!isUser && (
                       <div className="flex space-x-0.5 sm:space-x-1 opacity-70 hover:opacity-100 transition-opacity">
+                        {/* Retry button for error messages */}
+                        {msg.isError && msg.showRetryButton && msg.originalMessage && onRetryMessage && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => onRetryMessage(msg.originalMessage!)}
+                            className="h-5 w-5 sm:h-6 sm:w-6 p-0 hover:text-green-500 hover:bg-green-50 rounded-lg"
+                            title="Retry this message"
+                          >
+                            <RotateCcw className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
+                          </Button>
+                        )}
                         <Button
                           variant="ghost"
                           size="sm"

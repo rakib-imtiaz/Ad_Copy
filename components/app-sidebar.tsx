@@ -39,7 +39,6 @@ import { useAuth } from "@/lib/auth-context"
 import { useSidebarState } from "@/lib/sidebar-state-context"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
-import { AgentSelector } from "@/components/agent-selector"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -59,18 +58,12 @@ const mainNav = [
 
 export function AppSidebar() {
   const [activeItem, setActiveItem] = React.useState("/knowledge-base")
-  const [isAgentSelectorOpen, setIsAgentSelectorOpen] = React.useState(false)
   const [deletingChatId, setDeletingChatId] = React.useState<string | null>(null)
   const { user, logout } = useAuth()
   const { state } = useSidebar()
   
   // Get sidebar state data
   const {
-    agents,
-    selectedAgent,
-    onSelectAgent,
-    isLoadingAgents,
-    onRefreshAgents,
     chatHistory,
     currentChatSession,
     onLoadChatSession,
@@ -138,89 +131,10 @@ export function AppSidebar() {
       </SidebarHeader>
 
       <SidebarContent className={`flex flex-col justify-between bg-black ${state === 'expanded' ? 'px-3 py-4' : 'px-0 py-4'}`}>
-        <div className="space-y-8">
+        <div className="flex-1 flex flex-col">
 
-          {/* Agent Selector Section */}
-          <SidebarGroup>
-            {state === 'expanded' ? (
-              <>
-                <div className="flex items-center justify-between px-3 mb-3">
-                  <SidebarGroupLabel className="text-white font-black text-sm">
-                    Current Agent
-                  </SidebarGroupLabel>
-                  {onRefreshAgents && (
-                    <TooltipProvider>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={onRefreshAgents}
-                            disabled={isLoadingAgents}
-                            className="h-7 w-7 p-0 text-gray-300 hover:text-white hover:bg-gray-800 rounded-md"
-                          >
-                            <RefreshCw className={`h-3.5 w-3.5 ${isLoadingAgents ? 'animate-spin' : ''}`} />
-                          </Button>
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          <p>Refresh agents</p>
-                        </TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
-                  )}
-                </div>
-                <SidebarGroupContent>
-                  <div className="px-3 w-full">
-                    <AgentSelector 
-                      agents={agents}
-                      selectedAgent={selectedAgent}
-                      onSelectAgent={onSelectAgent}
-                      onOpenChange={setIsAgentSelectorOpen}
-                      isLoading={isLoadingAgents}
-                      onRefresh={onRefreshAgents}
-                    />
-                  </div>
-                </SidebarGroupContent>
-              </>
-            ) : (
-              <SidebarGroupContent className={(state as string) === 'expanded' ? '' : 'px-0'}>
-                <SidebarMenu>
-                  <SidebarMenuItem>
-                        <TooltipProvider>
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <SidebarMenuButton
-                                asChild
-                                className="w-full h-10 p-0"
-                              >
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  className="w-full h-10 p-0 hover:bg-gray-800 rounded-lg justify-center"
-                                  onClick={() => setIsAgentSelectorOpen(true)}
-                                >
-                                  <Bot className="h-5 w-5 text-gray-300" />
-                                </Button>
-                              </SidebarMenuButton>
-                            </TooltipTrigger>
-                        <TooltipContent side="right">
-                          <div className="text-sm">
-                            <p className="font-medium">Current Agent</p>
-                            <p className="text-xs text-muted-foreground">
-                              {selectedAgent || "Select an AI Agent"}
-                            </p>
-                          </div>
-                        </TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
-                  </SidebarMenuItem>
-                </SidebarMenu>
-              </SidebarGroupContent>
-            )}
-          </SidebarGroup>
-
-          {/* Chat History Section */}
-          <SidebarGroup>
+          {/* Chat History Section - Now takes up most of the space */}
+          <SidebarGroup className="flex-1">
             {state === 'expanded' ? (
               <>
                 <div className="flex items-center justify-between px-3 mb-3">
@@ -269,9 +183,9 @@ export function AppSidebar() {
                     )}
                   </div>
                 </div>
-                <SidebarGroupContent>
-                  <div className="px-3 w-full overflow-hidden">
-                    <div className="space-y-2 max-h-80 overflow-y-auto overflow-x-hidden">
+                <SidebarGroupContent className="flex-1">
+                  <div className="px-3 w-full overflow-hidden h-full">
+                    <div className="space-y-2 h-full overflow-y-auto overflow-x-hidden">
                       {isLoadingChatHistory ? (
                         <div className="flex items-center justify-center py-8">
                           <Loader2 className="h-5 w-5 animate-spin text-gray-300" />

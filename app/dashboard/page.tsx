@@ -2110,8 +2110,20 @@ export default function Dashboard() {
     } catch (error) {
       console.error('Error sending message to chat window:', error)
       console.log('🌐 ===== SEND MESSAGE TO CHAT WINDOW END (ERROR) =====')
-      return null
+      
+      // Re-throw the error with more context for better error handling
+      if (error instanceof Error) {
+        throw error
+      } else {
+        throw new Error(`Unknown error: ${String(error)}`)
+      }
     }
+  }
+
+  // Handle retrying a failed message
+  const handleRetryMessage = async (originalMessage: string) => {
+    console.log('🔄 Retrying message:', originalMessage)
+    await handleSendMessage(originalMessage)
   }
 
   // Handle sending messages
@@ -2285,13 +2297,39 @@ export default function Dashboard() {
       }
     } catch (error) {
       console.error('Chat error:', error)
+      
+      // Determine the type of error and show appropriate message
+      let errorContent = 'Sorry, I encountered an error. Please try again.'
+      let showRetryButton = false
+      
+      if (error instanceof Error) {
+        if (error.name === 'TimeoutError' || error.message.includes('timeout')) {
+          errorContent = '⏱️ The request is taking longer than expected. This might be due to high server load or complex processing. Would you like to try again?'
+          showRetryButton = true
+        } else if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
+          errorContent = '🌐 Connection issue detected. Please check your internet connection and try again.'
+          showRetryButton = true
+        } else if (error.message.includes('500') || error.message.includes('Internal Server Error')) {
+          errorContent = '🔧 Server is temporarily unavailable. Please try again in a moment.'
+          showRetryButton = true
+        } else if (error.message.includes('401') || error.message.includes('Unauthorized')) {
+          errorContent = '🔐 Session expired. Please refresh the page and log in again.'
+        } else if (error.message.includes('429') || error.message.includes('Too Many Requests')) {
+          errorContent = '⏳ Too many requests. Please wait a moment before trying again.'
+        }
+      }
+      
       const errorMessage = {
         id: (Date.now() + 1).toString(),
         role: 'assistant' as const,
-        content: 'Sorry, I encountered an error. Please try again.',
+        content: errorContent,
         timestamp: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true }),
-        animated: false
+        animated: false,
+        isError: true,
+        showRetryButton: showRetryButton,
+        originalMessage: content.trim() // Store original message for retry
       }
+      
       setMessages(prev => {
         const newMessages = [...prev, errorMessage]
         // Save messages to localStorage
@@ -2300,6 +2338,13 @@ export default function Dashboard() {
         }
         return newMessages
       })
+      
+      // Show toast notification for critical errors
+      if (error instanceof Error && (error.message.includes('401') || error.message.includes('Unauthorized'))) {
+        showToast('Session expired. Please refresh the page.', 'error')
+      } else if (error instanceof Error && (error.name === 'TimeoutError' || error.message.includes('timeout'))) {
+        showToast('Request timed out. You can retry using the button below.', 'info')
+      }
     } finally {
       // Clear scraped content from selection after sending message
       if (selectedMediaItems.size > 0) {
@@ -3346,6 +3391,7 @@ export default function Dashboard() {
               messages={messages} 
               selectedAgent={selectedAgent}
               onSendMessage={handleSendMessage}
+              onRetryMessage={handleRetryMessage}
               isLoading={isLoading}
               onOpenMediaSelector={() => {
                 console.log('🚀 MEDIA SELECTOR OPENED - Starting debug...')
