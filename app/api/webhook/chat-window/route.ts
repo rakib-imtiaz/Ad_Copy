@@ -110,9 +110,32 @@ export async function POST(request: NextRequest) {
       }
     } else {
       console.log('⚠️ n8n webhook returned empty response')
+      console.log('🔍 Debugging empty response:')
+      console.log('  - Response status:', response.status)
+      console.log('  - Response headers:', Object.fromEntries(response.headers.entries()))
+      console.log('  - Response text length:', responseText.length)
+      console.log('  - Response text content:', responseText)
+      
       data = {
-        response: 'Oops! There seems to be an error. Could you please refresh the page or start a new conversation? It\'s not gonna happen again, I promise! 😢',
-        empty_response: true
+        response: `I'm having trouble generating a response right now. This could be due to:
+
+• The AI agent "${agent_id || 'Unknown'}" might not be properly configured
+• The n8n workflow might not be active or have errors
+• There might be an issue with the AI service
+
+Please try:
+1. Refreshing the page
+2. Starting a new conversation
+3. Contacting support if the issue persists
+
+Error details: Empty response from n8n webhook`,
+        empty_response: true,
+        debug_info: {
+          agent_id: agent_id || 'Not provided',
+          session_id: session_id,
+          response_status: response.status,
+          response_headers: Object.fromEntries(response.headers.entries())
+        }
       }
     }
 

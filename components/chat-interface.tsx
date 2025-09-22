@@ -394,7 +394,7 @@ export function ChatInterface({
         <div className="max-w-4xl mx-auto">
           {/* ChatGPT-style input bar */}
           <div className="relative">
-            <div className="flex items-center bg-white border-2 border-gray-300 rounded-full px-4 py-3 transition-all duration-200 focus-within:border-gray-400 focus-within:outline-none" style={{ boxShadow: '0 10px 25px -3px rgba(0, 0, 0, 0.4), 0 4px 6px -2px rgba(0, 0, 0, 0.1)' }} onMouseEnter={(e) => e.currentTarget.style.boxShadow = '0 20px 35px -3px rgba(0, 0, 0, 0.5), 0 8px 10px -2px rgba(0, 0, 0, 0.1)'} onMouseLeave={(e) => e.currentTarget.style.boxShadow = '0 10px 25px -3px rgba(0, 0, 0, 0.4), 0 4px 6px -2px rgba(0, 0, 0, 0.1)'}>
+            <div className="flex items-center bg-white rounded-full px-4 py-3 transition-all duration-200 focus-within:outline-none" style={{ boxShadow: '0 10px 25px -3px rgba(0, 0, 0, 0.4), 0 4px 6px -2px rgba(0, 0, 0, 0.1)' }} onMouseEnter={(e) => e.currentTarget.style.boxShadow = '0 20px 35px -3px rgba(0, 0, 0, 0.5), 0 8px 10px -2px rgba(0, 0, 0, 0.1)'} onMouseLeave={(e) => e.currentTarget.style.boxShadow = '0 10px 25px -3px rgba(0, 0, 0, 0.4), 0 4px 6px -2px rgba(0, 0, 0, 0.1)'}>
               {/* Plus icon on the left */}
               <div className="relative mr-3">
                 <Button
@@ -421,9 +421,19 @@ export function ChatInterface({
                 onKeyDown={handleKeyDown}
                 placeholder="Ask anything or drag & drop files here"
                 disabled={!currentAgent && !selectedAgent || isLoading}
-                className="flex-1 border-0 bg-transparent text-gray-800 placeholder:text-gray-500 focus:ring-0 focus:outline-none focus:border-0 focus-visible:ring-0 focus-visible:outline-none text-sm resize-none min-h-[24px] max-h-[160px] overflow-y-auto"
+                className="flex-1 border-0 border-none bg-transparent text-gray-800 placeholder:text-gray-500 focus:ring-0 focus:outline-none focus:border-0 focus-visible:ring-0 focus-visible:outline-none focus-visible:ring-offset-0 text-sm resize-none min-h-[24px] max-h-[160px] overflow-y-auto shadow-none rounded-none"
                 rows={1}
               />
+              
+              {/* Send Button */}
+              <Button
+                onClick={handleSend}
+                disabled={!message.trim() || !currentAgent && !selectedAgent || isLoading}
+                className="ml-3 bg-blue-600 hover:bg-blue-700 text-white border-2 border-white rounded-lg px-4 py-2 h-10 flex items-center space-x-2 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <Send className="h-4 w-4" />
+                <span className="text-sm font-medium">Send</span>
+              </Button>
               
             </div>
             
