@@ -79,32 +79,6 @@ function InitialInterface({ agents, selectedAgent, onSelectAgent, onStartChattin
     }
   }
 
-  const quickPrompts = [
-    {
-      title: "Instagram Ad",
-      description: "Create an Instagram ad for a new fitness app",
-      icon: "📱",
-      category: "Social Media"
-    },
-    {
-      title: "Local Restaurant",
-      description: "Write a Facebook ad for a local restaurant",
-      icon: "🍽️",
-      category: "Facebook"
-    },
-    {
-      title: "Email Subject Lines",
-      description: "Generate email subject lines for a sale",
-      icon: "📧",
-      category: "Email"
-    },
-    {
-      title: "B2B LinkedIn",
-      description: "Draft LinkedIn ad copy for B2B software",
-      icon: "💼",
-      category: "LinkedIn"
-    }
-  ]
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50/50 via-white to-primary/5">
@@ -201,65 +175,6 @@ function InitialInterface({ agents, selectedAgent, onSelectAgent, onStartChattin
           </Button>
         </motion.div>
 
-        {/* Quick Prompts Section */}
-        <motion.div 
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.3 }}
-        >
-          <div className="text-center mb-8">
-            <h3 className="text-xl font-semibold text-foreground mb-2">Quick Start Templates</h3>
-            <p className="text-muted-foreground">Get started with these popular ad copy templates</p>
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {quickPrompts.map((prompt, index) => (
-              <motion.div
-              key={index}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.4, delay: 0.1 * index }}
-              >
-                <Card 
-                  className={`cursor-pointer transition-all duration-200 border-2 hover:border-primary/50 hover:shadow-lg group ${
-                    isStartingChat ? 'opacity-50 cursor-not-allowed' : ''
-                  }`}
-              onClick={() => {
-                    if (!isStartingChat) {
-                if (typeof window !== 'undefined') {
-                        localStorage.setItem('pending_prompt', prompt.description)
-                      }
-                    }
-                  }}
-                >
-                  <CardHeader className="pb-3">
-                    <div className="flex items-start justify-between">
-                      <div className="flex items-center space-x-3">
-                        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary/20 to-primary/10 flex items-center justify-center text-lg">
-                          {prompt.icon}
-                        </div>
-                        <div>
-                          <CardTitle className="text-base group-hover:text-primary transition-colors">
-                            {prompt.title}
-                          </CardTitle>
-                          <Badge variant="secondary" className="text-xs mt-1">
-                            {prompt.category}
-                          </Badge>
-                        </div>
-                      </div>
-                      <ArrowRight className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors opacity-0 group-hover:opacity-100" />
-                    </div>
-                  </CardHeader>
-                  <CardContent className="pt-0">
-                    <CardDescription className="text-sm leading-relaxed">
-                      {prompt.description}
-                    </CardDescription>
-                  </CardContent>
-                </Card>
-              </motion.div>
-            ))}
-          </div>
-        </motion.div>
 
         {/* Footer */}
         <motion.div 
