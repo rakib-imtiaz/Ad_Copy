@@ -94,17 +94,14 @@ function InitialInterface({ agents, selectedAgent, onSelectAgent, onStartChattin
             <CardContent className="p-12 text-center">
               <div className="flex justify-center mb-8">
                 <div className="relative">
-                  <div className="w-20 h-20 rounded-3xl bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center shadow-2xl">
+                  <div className="w-32 h-32 rounded-3xl flex items-center justify-center">
                     <img 
                       src="/logo.png" 
                       alt="Copy Ready logo" 
-                      width={48} 
-                      height={48}
+                      width={80} 
+                      height={80}
                       className="rounded-xl"
                     />
-                  </div>
-                  <div className="absolute -top-2 -right-2 w-8 h-8 bg-emerald-500 rounded-full flex items-center justify-center shadow-lg">
-                    <Sparkles className="h-4 w-4 text-white" />
                   </div>
                 </div>
               </div>
@@ -193,22 +190,6 @@ function InitialInterface({ agents, selectedAgent, onSelectAgent, onStartChattin
           </Card>
         </motion.div>
 
-        {/* Professional Footer */}
-        <motion.div 
-          className="text-center"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.6, delay: 0.4 }}
-        >
-          <Card className="border-0 shadow-sm bg-white/40 backdrop-blur-sm">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-center space-x-2 text-sm text-muted-foreground">
-                <Zap className="h-4 w-4 text-amber-500" />
-                <span>AI can make mistakes. Verify important information and review all generated content.</span>
-              </div>
-            </CardContent>
-          </Card>
-        </motion.div>
       </div>
     </div>
   )
