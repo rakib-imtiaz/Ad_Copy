@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { ChevronDown, Check } from "lucide-react"
+import { ChevronDown, Check, Bot } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
@@ -76,7 +76,7 @@ export function AgentSelector({
               <div className="flex items-start space-x-3">
                 <div className="flex-shrink-0">
                   <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-gray-600 to-gray-700 flex items-center justify-center text-lg">
-                    {currentAgent?.icon || "🤖"}
+                    <Bot className="h-5 w-5 text-white" />
                   </div>
                 </div>
                 <div className="flex-1 min-w-0 text-left">
@@ -117,7 +117,7 @@ export function AgentSelector({
                 >
                   <div className="flex-shrink-0">
                     <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-gray-600 to-gray-700 flex items-center justify-center text-sm">
-                      {agent.icon}
+                      <Bot className="h-4 w-4 text-white" />
                     </div>
                   </div>
                   <div className="flex-1 min-w-0 overflow-hidden">
