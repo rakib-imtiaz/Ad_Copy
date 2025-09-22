@@ -74,7 +74,7 @@ export async function POST(request: NextRequest) {
         scraped_content: scraped_content || undefined,
         knowledge_base: knowledge_base || undefined
       }),
-      signal: AbortSignal.timeout(30000), // 30 second timeout for chat
+      signal: AbortSignal.timeout(60000), // 60 second timeout for chat
     })
 
     console.log('n8n response status:', response.status)
