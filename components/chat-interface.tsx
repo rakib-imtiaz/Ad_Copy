@@ -3,7 +3,7 @@
 import * as React from "react"
 import {
   Send, User, Download, Copy, RotateCcw, Zap, Star, MessageSquare,
-  Pin, Trash2, Edit, CheckCircle, Plus, Mic, Volume2, Bot, Upload
+  Pin, Trash2, Edit, CheckCircle, Plus, Bot, Upload
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -377,7 +377,7 @@ export function ChatInterface({
         <div className="max-w-4xl mx-auto">
           {/* ChatGPT-style input bar */}
           <div className="relative">
-            <div className="flex items-center bg-white border border-gray-300 rounded-full px-4 py-3 shadow-sm hover:shadow-md transition-shadow focus-within:border-gray-300 focus-within:shadow-md focus-within:outline-none">
+            <div className="flex items-center bg-white border-2 border-gray-300 rounded-full px-4 py-3 transition-all duration-200 focus-within:border-gray-400 focus-within:outline-none" style={{ boxShadow: '0 10px 25px -3px rgba(0, 0, 0, 0.4), 0 4px 6px -2px rgba(0, 0, 0, 0.1)' }} onMouseEnter={(e) => e.currentTarget.style.boxShadow = '0 20px 35px -3px rgba(0, 0, 0, 0.5), 0 8px 10px -2px rgba(0, 0, 0, 0.1)'} onMouseLeave={(e) => e.currentTarget.style.boxShadow = '0 10px 25px -3px rgba(0, 0, 0, 0.4), 0 4px 6px -2px rgba(0, 0, 0, 0.1)'}>
               {/* Plus icon on the left */}
               <div className="relative mr-3">
                 <Button
@@ -408,23 +408,15 @@ export function ChatInterface({
                 rows={1}
               />
               
-              {/* Voice icons on the right */}
-              <div className="flex items-center space-x-2 ml-3">
+              {/* Send button on the right */}
+              <div className="flex items-center ml-3">
                 <Button
-                  variant="ghost"
+                  onClick={handleSend}
+                  disabled={!message.trim() || !currentAgent && !selectedAgent || isLoading}
+                  className="bg-black hover:bg-gray-800 text-white rounded-full px-4 py-2 transition-colors disabled:bg-gray-300 disabled:text-gray-500 disabled:cursor-not-allowed"
                   size="sm"
-                  className="rounded-full p-2 hover:bg-gray-100 text-gray-600"
-                  title="Voice input"
                 >
-                  <Mic className="h-4 w-4" />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="rounded-full p-2 hover:bg-gray-100 text-gray-600"
-                  title="Voice output"
-                >
-                  <Volume2 className="h-4 w-4" />
+                  <Send className="h-4 w-4" />
                 </Button>
               </div>
             </div>
