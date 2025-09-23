@@ -164,16 +164,17 @@ function InitialInterface({ agents, selectedAgent, onSelectAgent, onStartChattin
           </div>
 
           {/* Agent Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-5xl mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-5xl mx-auto items-stretch">
             {isLoadingAgents ? (
               Array.from({ length: 3 }).map((_, i) => (
-                <Card key={i} className="p-6 border-2 border-gray-200">
-                  <div className="flex items-start space-x-4">
+                <Card key={i} className="h-full p-6 border-2 border-gray-200 flex flex-col">
+                  <div className="flex items-start space-x-4 flex-1">
                     <Skeleton className="w-12 h-12 rounded-xl bg-gray-200" />
-                    <div className="flex-1 space-y-2">
+                    <div className="flex-1 space-y-2 flex flex-col">
                       <Skeleton className="h-5 w-3/4 bg-gray-200" />
                       <Skeleton className="h-4 w-full bg-gray-200" />
                       <Skeleton className="h-4 w-2/3 bg-gray-200" />
+                      <Skeleton className="h-4 w-1/2 bg-gray-200" />
                     </div>
                   </div>
                 </Card>
@@ -184,19 +185,27 @@ function InitialInterface({ agents, selectedAgent, onSelectAgent, onStartChattin
                 return (
                   <motion.div
                     key={agent.id}
-                    whileHover={{ scale: 1.02 }}
+                    className="h-full"
+                    whileHover={{ 
+                      scale: 1.05,
+                      y: -8,
+                      transition: { 
+                        duration: 0.3,
+                        ease: "easeOut"
+                      }
+                    }}
                     whileTap={{ scale: 0.98 }}
                     transition={{ duration: 0.2 }}
                   >
                     <Card 
-                      className={`p-6 cursor-pointer transition-all duration-300 hover:shadow-lg ${
+                      className={`h-full p-6 cursor-pointer transition-all duration-300 hover:shadow-xl hover:shadow-black/10 flex flex-col ${
                         isSelected 
                           ? 'border-2 border-black shadow-lg bg-gray-50' 
-                          : 'border-2 border-gray-200 hover:border-black'
+                          : 'border-2 border-gray-200 hover:border-black hover:bg-white'
                       }`}
                       onClick={() => onSelectAgent(agent.name)}
                     >
-                      <div className="flex items-start space-x-4">
+                      <div className="flex items-start space-x-4 flex-1">
                         <motion.div 
                           className="w-12 h-12 rounded-xl bg-black flex items-center justify-center flex-shrink-0"
                           animate={isSelected ? { scale: [1, 1.1, 1] } : {}}
@@ -204,7 +213,7 @@ function InitialInterface({ agents, selectedAgent, onSelectAgent, onStartChattin
                         >
                           <Bot className="h-6 w-6 text-white" />
                         </motion.div>
-                        <div className="flex-1 min-w-0">
+                        <div className="flex-1 min-w-0 flex flex-col">
                           <motion.h3 
                             className="font-semibold text-lg text-black mb-2"
                             animate={isSelected ? { color: ["#000000", "#374151", "#000000"] } : {}}
@@ -212,7 +221,7 @@ function InitialInterface({ agents, selectedAgent, onSelectAgent, onStartChattin
                           >
                             {agent.name}
                           </motion.h3>
-                          <p className="text-sm text-gray-600 leading-relaxed">
+                          <p className="text-sm text-gray-600 leading-relaxed flex-1">
                             {agent.description}
                           </p>
                         </div>
@@ -221,7 +230,7 @@ function InitialInterface({ agents, selectedAgent, onSelectAgent, onStartChattin
                             initial={{ scale: 0, opacity: 0 }}
                             animate={{ scale: 1, opacity: 1 }}
                             transition={{ duration: 0.3, type: "spring", stiffness: 200 }}
-                            className="flex items-center justify-center"
+                            className="flex items-center justify-center flex-shrink-0"
                           >
                             <div className="w-6 h-6 rounded-full bg-black flex items-center justify-center">
                               <Check className="h-4 w-4 text-white" />
