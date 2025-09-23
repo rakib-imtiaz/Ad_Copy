@@ -3328,7 +3328,7 @@ export default function Dashboard() {
 
   return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50/20 text-slate-800 font-sans">
-      {!chatStarted ? (
+      {!chatStarted && !currentChatSession ? (
         // Initial interface without separate sidebar
         <div className="min-h-screen">
           {/* Initial Interface Content */}
@@ -3354,7 +3354,9 @@ export default function Dashboard() {
 
       <div className="flex h-screen">
         {/* Main Chat Area */}
-        <div className="flex-1 flex flex-col min-w-0 bg-gradient-to-br from-slate-50 via-white to-blue-50/30 h-full">
+        <div className={`flex-1 flex flex-col min-w-0 bg-gradient-to-br from-slate-50 via-white to-blue-50/30 h-full transition-all duration-300 ${
+          rightPanelOpen ? 'xl:mr-96' : ''
+        }`}>
           {/* Knowledge Base Status Indicator */}
           {knowledgeBaseStatus.isLoaded && (
             <div className="bg-green-50 border-b border-green-200 px-4 py-2">
@@ -3395,13 +3397,26 @@ export default function Dashboard() {
           )}
           
           {/* Media Library Toggle Header */}
-          <div className="bg-white border-b border-slate-200 px-4 py-3">
+          <div className="sticky top-0 z-10 bg-white border-b border-slate-200 px-4 py-3">
             <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-4">
               <div className="flex items-center space-x-3">
-                <h2 className="text-lg font-semibold text-slate-900">Chat Interface</h2>
-                <Badge variant="secondary" className="text-xs">
+                  <h2 className="text-lg font-semibold text-slate-900">
+                    {currentChatSession ? 
+                      (chatHistory.find(chat => chat.session_id === currentChatSession)?.title || "User chat") : 
+                      "New Conversation"
+                    }
+                  </h2>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <span className="text-sm text-slate-600">Agent:</span>
+                  <Badge 
+                    variant="secondary" 
+                    className="text-sm font-medium bg-black text-white border border-gray-300 hover:bg-gray-800 transition-colors"
+                  >
                   {selectedAgent || 'No Agent Selected'}
                 </Badge>
+                </div>
               </div>
               <div className="flex items-center space-x-2">
                 {/* Placeholder for layout - actual button is now fixed positioned */}
@@ -3409,90 +3424,93 @@ export default function Dashboard() {
             </div>
           </div>
           
-          <div className="flex-1 w-full h-full">
-            <ChatInterface 
-              messages={messages} 
-              selectedAgent={selectedAgent}
-              onSendMessage={handleSendMessage}
-              onRetryMessage={handleRetryMessage}
-              isLoading={isLoading}
-              onOpenMediaSelector={() => {
-                console.log('🚀 MEDIA SELECTOR OPENED - Starting debug...')
-                console.log('📊 Current mediaItems count:', mediaItems.length)
-                console.log('📊 Current mediaItems:', mediaItems)
-                console.log('📊 MediaItems by type:', {
-                  youtube: mediaItems.filter(item => item.type === 'youtube').length,
-                  transcript: mediaItems.filter(item => item.type === 'transcript').length,
-                  scraped: mediaItems.filter(item => item.type === 'scraped').length,
-                  webpage: mediaItems.filter(item => item.type === 'webpage').length,
-                  audio: mediaItems.filter(item => item.type === 'audio').length,
-                  video: mediaItems.filter(item => item.type === 'video').length,
-                  image: mediaItems.filter(item => item.type === 'image').length,
-                  file: mediaItems.filter(item => ['pdf', 'doc', 'txt'].includes(item.type)).length,
-                  url: mediaItems.filter(item => item.type === 'url').length
-                })
-                
-                // Log each item with full details
-                mediaItems.forEach((item, index) => {
-                  console.log(`📄 Item ${index + 1}:`, {
-                    id: item.id,
-                    type: item.type,
-                    filename: item.filename,
-                    title: item.title,
-                    content: item.content ? `${item.content.substring(0, 100)}...` : 'No content',
-                    transcript: item.transcript ? `${item.transcript.substring(0, 100)}...` : 'No transcript',
-                    resourceName: item.resourceName,
-                    url: item.url,
-                    allKeys: Object.keys(item)
+          {/* Chat Container with Fixed Height and Proper Scrolling */}
+          <div className="flex-1 w-full h-full flex flex-col overflow-hidden">
+            <div className="flex-1 min-h-0">
+              <ChatInterface 
+                messages={messages} 
+                selectedAgent={selectedAgent}
+                onSendMessage={handleSendMessage}
+                onRetryMessage={handleRetryMessage}
+                isLoading={isLoading}
+                onOpenMediaSelector={() => {
+                  console.log('🚀 MEDIA SELECTOR OPENED - Starting debug...')
+                  console.log('📊 Current mediaItems count:', mediaItems.length)
+                  console.log('📊 Current mediaItems:', mediaItems)
+                  console.log('📊 MediaItems by type:', {
+                    youtube: mediaItems.filter(item => item.type === 'youtube').length,
+                    transcript: mediaItems.filter(item => item.type === 'transcript').length,
+                    scraped: mediaItems.filter(item => item.type === 'scraped').length,
+                    webpage: mediaItems.filter(item => item.type === 'webpage').length,
+                    audio: mediaItems.filter(item => item.type === 'audio').length,
+                    video: mediaItems.filter(item => item.type === 'video').length,
+                    image: mediaItems.filter(item => item.type === 'image').length,
+                    file: mediaItems.filter(item => ['pdf', 'doc', 'txt'].includes(item.type)).length,
+                    url: mediaItems.filter(item => item.type === 'url').length
                   })
-                })
-                
-                // Open the media selector immediately for better UX
-                setIsMediaSelectorOpen(true)
-                // Only refresh if we don't have media items or they're stale
-                if (mediaItems.length === 0) {
-                  console.log('🔄 No media items found, fetching from server...')
-                  fetchMediaLibrary()
-                } else {
-                  console.log('✅ Using existing media items, no server fetch needed')
-                }
-              }}
-              selectedMediaCount={selectedMediaItems.size}
-              selectedMediaItems={selectedMediaItems}
-              onUploadFiles={uploadMediaFiles}
-              currentChatSession={currentChatSession}
-              chatHistory={chatHistory}
-            />
+                  
+                  // Log each item with full details
+                  mediaItems.forEach((item, index) => {
+                    console.log(`📄 Item ${index + 1}:`, {
+                      id: item.id,
+                      type: item.type,
+                      filename: item.filename,
+                      title: item.title,
+                      content: item.content ? `${item.content.substring(0, 100)}...` : 'No content',
+                      transcript: item.transcript ? `${item.transcript.substring(0, 100)}...` : 'No transcript',
+                      resourceName: item.resourceName,
+                      url: item.url,
+                      allKeys: Object.keys(item)
+                    })
+                  })
+                  
+                  // Open the media selector immediately for better UX
+                  setIsMediaSelectorOpen(true)
+                  // Only refresh if we don't have media items or they're stale
+                  if (mediaItems.length === 0) {
+                    console.log('🔄 No media items found, fetching from server...')
+                    fetchMediaLibrary()
+                  } else {
+                    console.log('✅ Using existing media items, no server fetch needed')
+                  }
+                }}
+                selectedMediaCount={selectedMediaItems.size}
+                selectedMediaItems={selectedMediaItems}
+                onUploadFiles={uploadMediaFiles}
+                currentChatSession={currentChatSession}
+                chatHistory={chatHistory}
+              />
+            </div>
           </div>
         </div>
-
-        {/* Right Media Drawer */}
-        <motion.div 
-          className={`hidden xl:flex flex-col bg-gradient-to-b from-white via-slate-50 to-white border-l border-slate-200/60 transition-all duration-300 shadow-sm ${
-            rightPanelOpen ? 'w-96' : 'w-0'
-          }`}
-          initial={false}
-          animate={{ width: rightPanelOpen ? 384 : 0 }}
-        >
-                  <div className="flex-1 h-[80vh] overflow-hidden">
-          <MediaDrawer 
-            activeTab={activeTab} 
-            onTabChange={handleTabChange} 
-            mediaItems={mediaItems}
-            setMediaItems={setMediaItems}
-            onRefresh={refreshAllTabs}
-            onUpload={uploadMediaFiles}
-            onDelete={deleteMediaFile}
-            handleDeleteItem={handleDeleteItem}
-            isRefreshing={isRefreshing}
-            isLoadingTabContent={isLoadingTabContent}
-            onClose={() => setRightPanelOpen(false)}
-            isDeleting={isDeleting}
-            deletingItemId={deletingItemId}
-          />
-        </div>
-        </motion.div>
       </div>
+
+      {/* Right Media Drawer - Independent Panel */}
+      <motion.div 
+        className={`fixed top-0 right-0 h-screen hidden xl:flex flex-col bg-gradient-to-b from-white via-slate-50 to-white border-l border-slate-200/60 transition-all duration-300 shadow-sm z-10 ${
+          rightPanelOpen ? 'w-96' : 'w-0'
+        }`}
+        initial={false}
+        animate={{ width: rightPanelOpen ? 384 : 0 }}
+      >
+        <div className="flex-1 h-full overflow-hidden">
+        <MediaDrawer 
+          activeTab={activeTab} 
+          onTabChange={handleTabChange} 
+          mediaItems={mediaItems}
+          setMediaItems={setMediaItems}
+          onRefresh={refreshAllTabs}
+          onUpload={uploadMediaFiles}
+          onDelete={deleteMediaFile}
+          handleDeleteItem={handleDeleteItem}
+          isRefreshing={isRefreshing}
+          isLoadingTabContent={isLoadingTabContent}
+          onClose={() => setRightPanelOpen(false)}
+          isDeleting={isDeleting}
+          deletingItemId={deletingItemId}
+        />
+      </div>
+      </motion.div>
 
       {/* Professional Chat Loading Overlay */}
       {isLoadingChat && (
@@ -4155,7 +4173,7 @@ function MediaDrawer({ activeTab, onTabChange, mediaItems, setMediaItems, onRefr
   ]
 
   return (
-    <div className="h-full flex flex-col overflow-hidden">
+    <div className="h-full flex flex-col overflow-hidden max-h-screen">
       {/* Header with tabs */}
       <div className="border-b border-[#EEEEEE] p-6 pt-12">
         <div className="flex flex-col space-y-6 mb-8">
@@ -4205,7 +4223,7 @@ function MediaDrawer({ activeTab, onTabChange, mediaItems, setMediaItems, onRefr
       </div>
 
       {/* Content */}
-      <div className="flex-1 overflow-y-auto p-4 scrollbar-hide">
+      <div className="flex-1 overflow-y-auto p-4 scrollbar-hide max-h-[60vh]">
         {activeTab === 'files' && <FilesTab mediaItems={mediaItems} onUpload={onUpload} onDelete={handleDeleteItem} isDeleting={isDeleting} deletingItemId={deletingItemId} isLoadingTabContent={isLoadingTabContent} />}
         {activeTab === 'links' && <LinksTab mediaItems={mediaItems} onDelete={handleDeleteItem} onRefresh={onRefresh} setMediaItems={setMediaItems} isDeleting={isDeleting} deletingItemId={deletingItemId} isLoadingTabContent={isLoadingTabContent} />}
         {activeTab === 'youtube' && <YouTubeTab mediaItems={mediaItems} onDelete={handleDeleteItem} onRefresh={onRefresh} setMediaItems={setMediaItems} isDeleting={isDeleting} deletingItemId={deletingItemId} isLoadingTabContent={isLoadingTabContent} />}

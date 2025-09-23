@@ -198,30 +198,10 @@ export function ChatInterface({
       onDragOver={handleDragOver}
       onDrop={handleDrop}
     >
-      {/* Chat Header */}
-      <div className="p-3 sm:p-4 border-b border-slate-200/60 bg-white/80 backdrop-blur-sm">
-        <div className="flex items-center justify-between">
-          <div>
-              <div className="flex items-center space-x-2">
-                <h3 className="font-semibold text-slate-800 text-base sm:text-lg">
-                  {currentChatTitle || conversation?.title || "New Conversation"}
-                </h3>
-                {conversation?.pinnedMessages && conversation.pinnedMessages.length > 0 && (
-                  <Badge variant="secondary" className="text-xs bg-amber-100 text-amber-700 border-amber-200">
-                    {conversation.pinnedMessages.length} pinned
-                  </Badge>
-                )}
-              </div>
 
-            </div>
-
-
-        </div>
-
-      </div>
-
-      {/* Messages */}
-      <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4 sm:space-y-6 pb-32">
+      {/* Messages Container - Properly Scrolled */}
+      <div className="flex-1 min-h-0 overflow-y-auto">
+        <div className="p-4 sm:p-6 pt-20 space-y-4 sm:space-y-6 pb-32">
         {(messages || conversation?.messages || []).map((msg) => {
           // Handle both ChatMessage (with type) and dashboard messages (with role)
           const isUser = 'role' in msg ? msg.role === 'user' : msg.type === 'user'
@@ -279,11 +259,11 @@ export function ChatInterface({
                     {!isUser && (
                       <div className="flex space-x-0.5 sm:space-x-1 opacity-70 hover:opacity-100 transition-opacity">
                         {/* Retry button for error messages */}
-                        {msg.isError && msg.showRetryButton && msg.originalMessage && onRetryMessage && (
+                        {('isError' in msg && msg.isError && 'showRetryButton' in msg && msg.showRetryButton && 'originalMessage' in msg && msg.originalMessage && onRetryMessage) && (
                           <Button
                             variant="ghost"
                             size="sm"
-                            onClick={() => onRetryMessage(msg.originalMessage!)}
+                            onClick={() => onRetryMessage(('originalMessage' in msg ? msg.originalMessage : '')!)}
                             className="h-5 w-5 sm:h-6 sm:w-6 p-0 hover:text-green-500 hover:bg-green-50 rounded-lg"
                             title="Retry this message"
                           >
@@ -337,6 +317,7 @@ export function ChatInterface({
         )}
         
         <div ref={messagesEndRef} />
+        </div>
       </div>
 
 
@@ -389,8 +370,8 @@ export function ChatInterface({
         </div>
       )}
 
-      {/* Input Area */}
-      <div className="p-4 sm:p-6 bg-white/95 backdrop-blur-sm border-t border-slate-200 sticky bottom-0 left-0 right-0 z-10">
+      {/* Input Area - Fixed at Bottom */}
+      <div className="flex-shrink-0 p-4 sm:p-6 pb-8 bg-white/95 backdrop-blur-sm border-t border-slate-200">
         <div className="max-w-4xl mx-auto">
           {/* ChatGPT-style input bar */}
           <div className="relative">
