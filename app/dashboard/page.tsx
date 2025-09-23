@@ -1868,17 +1868,30 @@ export default function Dashboard() {
       onRefreshChatHistory: fetchChatHistory,
       onDeleteChatSession: deleteChatSession,
       onStartNewChat: () => {
-        setChatStarted(false)
-        setMessages([])
-        setSessionId('')
+        console.log('🔄 Starting new conversation from sidebar...')
+        setSessionId('') // Clear existing session
+        setHasInitializedChat(false) // Reset initialization flag
+        setChatStarted(false) // Reset chat state
+        setMessages([]) // Clear messages
+        setCurrentChatSession(null) // Clear current chat session
+        updateCurrentChatSession(null) // Also clear sidebar context state
+        
+        // Clear localStorage
         if (typeof window !== 'undefined') {
           localStorage.removeItem('chat_session_id')
           localStorage.removeItem('chat_started')
           localStorage.removeItem('chat_messages')
+          
+          // Clear URL parameter
+          const url = new URL(window.location.href)
+          url.searchParams.delete('chatid')
+          window.history.replaceState({}, document.title, url.toString())
         }
+        
+        console.log('💡 Chat state cleared and new session initiated from sidebar.')
       }
     })
-  }, [setActionRefs, handleSelectAgent, refreshAgents, loadChatSession, fetchChatHistory, deleteChatSession])
+  }, [setActionRefs, handleSelectAgent, refreshAgents, loadChatSession, fetchChatHistory, deleteChatSession, updateCurrentChatSession])
 
   // Send message to chat window webhook
   const sendMessageToChatWindow = async (userPrompt: string, isFirstMessage: boolean = false, sessionIdParam?: string) => {
