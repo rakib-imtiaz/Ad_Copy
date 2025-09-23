@@ -186,7 +186,7 @@ export function ConversationHistory({
           return (
             <Card 
               key={conversation.id}
-              className={`bg-gray-900 border-gray-800 hover:bg-gray-800/50 transition-all cursor-pointer ${
+              className={`bg-white border-gray-300 hover:bg-gray-50 transition-all cursor-pointer ${
                 isSelected ? 'ring-2 ring-[#1ABC9C] border-[#1ABC9C]' : ''
               }`}
               onClick={() => onSelectConversation?.(conversation.id)}
@@ -196,16 +196,16 @@ export function ConversationHistory({
                   <div className="flex-1 min-w-0 mr-4">
                     {/* Title */}
                     <div className="flex items-center space-x-2 mb-2">
-                      <h3 className="font-semibold truncate">{conversation.title}</h3>
+                      <h3 className="font-semibold truncate text-black">{conversation.title}</h3>
                     </div>
 
                     {/* Last Message Preview */}
-                    <p className="text-sm text-gray-400 line-clamp-2 mb-2">
+                    <p className="text-sm text-gray-600 line-clamp-2 mb-2">
                       {getLastMessagePreview(conversation)}
                     </p>
 
                     {/* Stats and Metadata */}
-                    <div className="flex items-center space-x-4 text-xs text-gray-500">
+                    <div className="flex items-center space-x-4 text-xs text-gray-700">
                       <div className="flex items-center space-x-1">
                         <MessageSquare className="h-3 w-3" />
                         <span>{stats.messageCount} messages</span>
@@ -241,7 +241,7 @@ export function ConversationHistory({
                         e.stopPropagation()
                         // TODO: Show conversation details
                       }}
-                      className="text-gray-400 hover:text-white p-1"
+                      className="text-gray-600 hover:text-black p-1"
                     >
                       <Eye className="h-4 w-4" />
                     </Button>
@@ -253,7 +253,7 @@ export function ConversationHistory({
                         e.stopPropagation()
                         onArchiveConversation?.(conversation.id)
                       }}
-                      className="text-gray-400 hover:text-orange-400 p-1"
+                      className="text-gray-600 hover:text-orange-600 p-1"
                     >
                       <Archive className="h-4 w-4" />
                     </Button>
@@ -265,7 +265,7 @@ export function ConversationHistory({
                         e.stopPropagation()
                         onDeleteConversation?.(conversation.id)
                       }}
-                      className="text-gray-400 hover:text-white hover:bg-red-500 p-1"
+                      className="text-gray-600 hover:text-white hover:bg-red-500 p-1"
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>

@@ -3973,7 +3973,7 @@ function LeftSidebar({
               <Tooltip>
                 <TooltipTrigger asChild>
                   <Button 
-                    onClick={() => {
+                    onClick={async () => {
                       console.log('🔄 Starting new chat (sidebar) - clearing chat state')
                       setChatStarted(false)
                       setMessages([])
@@ -3986,7 +3986,20 @@ function LeftSidebar({
                         localStorage.removeItem('chat_messages')
                       }
                       
-                      console.log('💡 Chat state cleared. User can now select agent and start chatting.')
+                      // Start a new chat session
+                      try {
+                        const success = await initiateNewChat(true)
+                        if (success) {
+                          console.log('✅ New chat session created successfully')
+                          setChatStarted(true)
+                        } else {
+                          console.log('❌ Failed to create new chat session')
+                        }
+                      } catch (error) {
+                        console.error('❌ Error creating new chat session:', error)
+                      }
+                      
+                      console.log('💡 Chat state cleared and new session initiated.')
                     }}
                     variant="ghost" 
                     size="icon" 
