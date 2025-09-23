@@ -354,7 +354,7 @@
 @layer components {
   /* Override prose styles for chat messages */
   .chat-message .prose {
-    color: inherit;
+    color: #000000; /* Pure black text */
     text-align: left;
     max-width: none;
   }
@@ -363,15 +363,17 @@
   .chat-message .prose h2,
   .chat-message .prose h3,
   .chat-message .prose h4 {
-    color: inherit;
+    color: #000000; /* Pure black text */
     margin-top: 0.5rem;
     margin-bottom: 0.5rem;
+    font-weight: 600;
   }
   
   .chat-message .prose p {
     margin-bottom: 0.5rem;
     text-align: left;
     line-height: 1.6;
+    color: #000000; /* Pure black text */
   }
   
   .chat-message .prose p:last-child {
@@ -381,7 +383,7 @@
   .chat-message .prose ul,
   .chat-message .prose ol {
     margin-bottom: 0.5rem;
-    padding-left: 0;
+    padding-left: 1.5rem;
     list-style-position: outside;
   }
   
@@ -390,14 +392,15 @@
     padding-left: 0;
     line-height: 1.6;
     text-align: left;
+    color: #000000; /* Pure black text */
   }
   
   .chat-message .prose ul li::marker {
-    color: #64748b; /* slate-500 */
+    color: #000000; /* Pure black text */
   }
   
   .chat-message .prose ol li::marker {
-    color: #64748b; /* slate-500 */
+    color: #000000; /* Pure black text */
     font-weight: 500;
   }
   
@@ -406,21 +409,25 @@
     padding: 0.125rem 0.25rem;
     border-radius: 0.25rem;
     font-size: 0.875em;
+    color: #000000; /* Pure black text */
   }
   
   .chat-message .prose pre {
     margin-bottom: 0.5rem;
+    color: #000000; /* Pure black text */
   }
   
   .chat-message .prose blockquote {
     margin: 0.5rem 0;
     padding-left: 1rem;
     border-left: 3px solid rgba(0, 0, 0, 0.2);
+    color: #000000; /* Pure black text */
   }
   
   .chat-message .prose table {
     margin-bottom: 0.5rem;
     font-size: 0.875em;
+    color: #000000; /* Pure black text */
   }
   
   /* User message specific styles */

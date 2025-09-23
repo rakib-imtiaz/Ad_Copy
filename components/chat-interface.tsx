@@ -206,85 +206,101 @@ export function ChatInterface({
           // Handle both ChatMessage (with type) and dashboard messages (with role)
           const isUser = 'role' in msg ? msg.role === 'user' : msg.type === 'user'
           return (
-          <div key={msg.id} className={`flex ${isUser ? 'justify-end' : 'justify-start'}`}>
-            <div className={`max-w-[80%] sm:max-w-[70%] ${isUser ? 'ml-3 sm:ml-12' : 'mr-3 sm:mr-12'}`}>
-              <div className={`flex items-start ${isUser ? 'flex-row-reverse' : 'space-x-3 sm:space-x-4'}`}>
-                {!isUser && (
-                  <Avatar className="h-7 w-7 sm:h-9 sm:w-9 flex-shrink-0 shadow-md">
-                    <AvatarFallback className="bg-gradient-to-br from-[#1ABC9C] to-emerald-500 text-white font-semibold text-xs sm:text-sm flex items-center justify-center">
-                      <Bot className="h-3 w-3 sm:h-4 sm:w-4" />
+          <div key={msg.id} className={`flex ${isUser ? 'justify-end' : 'justify-start'} mb-6`}>
+            <div className={`max-w-[85%] sm:max-w-[75%] ${isUser ? 'ml-4 sm:ml-16' : 'mr-4 sm:mr-16'}`}>
+              <div className={`flex items-start gap-3 ${isUser ? 'flex-row-reverse' : ''}`}>
+                {/* Avatar for both user and agent */}
+                <Avatar className="h-8 w-8 sm:h-10 sm:w-10 flex-shrink-0 shadow-lg ring-2 ring-white">
+                  {isUser ? (
+                    <AvatarFallback className="bg-gradient-to-br from-blue-600 to-blue-700 text-white font-semibold text-sm flex items-center justify-center">
+                      <User className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
                     </AvatarFallback>
-                  </Avatar>
-                )}
+                  ) : (
+                    <AvatarFallback className="bg-black text-white font-semibold text-sm flex items-center justify-center">
+                      <Bot className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
+                    </AvatarFallback>
+                  )}
+                </Avatar>
                 
-                <div className={`flex-1 min-w-0 ${isUser ? 'text-right' : ''}`}>
-                  <div className={`inline-block p-2.5 sm:p-3 rounded-2xl shadow-sm chat-message ${isUser ? 'user' : 'ai'} ${
+                <div className="flex-1 min-w-0">
+                  {/* Message bubble with improved styling */}
+                  <div className={`relative inline-block max-w-full ${
                     isUser 
-                      ? 'bg-gradient-to-br from-blue-500 to-blue-600 text-white' 
-                      : 'bg-white border border-slate-200 text-slate-800'
-                  }`}>
-                    <div className={`break-words overflow-hidden space-y-2 ${isUser ? 'text-white' : ''}`}>
+                      ? 'bg-gradient-to-br from-blue-600 to-blue-700 text-white shadow-lg' 
+                      : 'bg-black text-white shadow-md'
+                  } rounded-2xl px-4 py-3`} style={isUser ? {'--tw-gradient-to': '#1d4ed8 var(--tw-gradient-to-position)'} : {}}>
+                    <div className="break-words overflow-hidden">
                       <MarkdownRenderer 
                         content={msg.content} 
-                        className={isUser ? 'prose-invert [&_*]:text-white [&_p]:text-white [&_strong]:text-white [&_em]:text-white [&_li]:text-white [&_ul]:text-white [&_ol]:text-white [&_h1]:text-white [&_h2]:text-white [&_h3]:text-white [&_h4]:text-white' : ''}
+                        className={`text-sm leading-relaxed ${
+                          isUser 
+                            ? 'prose-invert [&_*]:text-white [&_p]:text-white [&_strong]:text-white [&_em]:text-white [&_li]:text-white [&_ul]:text-white [&_ol]:text-white [&_h1]:text-white [&_h2]:text-white [&_h3]:text-white [&_h4]:text-white [&_code]:bg-blue-500/20 [&_pre]:bg-blue-500/20' 
+                            : 'prose-invert [&_*]:text-white [&_p]:text-white [&_strong]:text-white [&_em]:text-white [&_li]:text-white [&_ul]:text-white [&_ol]:text-white [&_h1]:text-white [&_h2]:text-white [&_h3]:text-white [&_h4]:text-white [&_code]:bg-gray-700 [&_pre]:bg-gray-700'
+                        }`}
                       />
                     </div>
                     
                     {/* Generated Copy Preview */}
                     {'metadata' in msg && msg.metadata?.generatedCopy && (
-                      <div className="mt-3 sm:mt-4 p-2.5 sm:p-3 bg-slate-50 rounded-xl border border-slate-200 chat-message ai">
-                        <div className="flex items-center justify-end mb-2 sm:mb-3">
+                      <div className="mt-4 p-4 bg-gray-800 rounded-xl border border-gray-600">
+                        <div className="flex items-center justify-end mb-3">
                           <Button
                             variant="ghost"
                             size="sm"
                             onClick={() => handleCopyToClipboard(msg.metadata?.generatedCopy?.content || "")}
-                            className="h-7 w-7 sm:h-8 sm:w-8 p-0 hover:bg-slate-200 text-slate-600"
+                            className="h-8 w-8 p-0 hover:bg-gray-700 text-white rounded-lg"
                           >
-                            <Copy className="h-3 w-3 sm:h-4 sm:w-4" />
+                            <Copy className="h-4 w-4 text-white" />
                           </Button>
                         </div>
                         <div className="break-words overflow-hidden">
-                          <MarkdownRenderer content={msg.metadata?.generatedCopy?.content || ""} className="text-sm" />
+                          <MarkdownRenderer 
+                            content={msg.metadata?.generatedCopy?.content || ""} 
+                            className="text-sm prose-invert [&_*]:text-white [&_p]:text-white [&_strong]:text-white [&_em]:text-white [&_li]:text-white [&_ul]:text-white [&_ol]:text-white [&_h1]:text-white [&_h2]:text-white [&_h3]:text-white [&_h4]:text-white [&_code]:bg-gray-700 [&_pre]:bg-gray-700" 
+                          />
                         </div>
                       </div>
                     )}
                   </div>
                   
-                  <div className={`flex items-center mt-1.5 sm:mt-2 space-x-1.5 sm:space-x-2 text-xs text-slate-500 ${
+                  {/* Timestamp and Actions */}
+                  <div className={`flex items-center mt-2 space-x-2 text-xs text-gray-500 ${
                     isUser ? 'justify-end' : 'justify-start'
                   }`}>
                     <span className="font-medium">{formatTimestamp(msg.timestamp)}</span>
                     
                     {/* Message Actions */}
                     {!isUser && (
-                      <div className="flex space-x-0.5 sm:space-x-1 opacity-70 hover:opacity-100 transition-opacity">
+                      <div className="flex space-x-1 opacity-60 hover:opacity-100 transition-opacity">
                         {/* Retry button for error messages */}
                         {('isError' in msg && msg.isError && 'showRetryButton' in msg && msg.showRetryButton && 'originalMessage' in msg && msg.originalMessage && onRetryMessage) && (
                           <Button
                             variant="ghost"
                             size="sm"
                             onClick={() => onRetryMessage(('originalMessage' in msg ? msg.originalMessage : '')!)}
-                            className="h-5 w-5 sm:h-6 sm:w-6 p-0 hover:text-green-500 hover:bg-green-50 rounded-lg"
+                            className="h-6 w-6 p-0 hover:text-green-600 hover:bg-green-50 rounded-md"
                             title="Retry this message"
                           >
-                            <RotateCcw className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
+                            <RotateCcw className="h-3 w-3 text-black" />
                           </Button>
                         )}
                         <Button
                           variant="ghost"
                           size="sm"
                           onClick={() => onPinMessage?.(msg.id)}
-                          className="h-5 w-5 sm:h-6 sm:w-6 p-0 hover:text-amber-500 hover:bg-amber-50 rounded-lg"
+                          className="h-6 w-6 p-0 hover:text-amber-600 hover:bg-amber-50 rounded-md"
+                          title="Pin message"
                         >
-                          <Pin className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
+                          <Pin className="h-3 w-3 text-black" />
                         </Button>
                         <Button
                           variant="ghost"
                           size="sm"
                           onClick={() => handleCopyToClipboard(msg.content)}
-                          className="h-5 w-5 sm:h-6 sm:w-6 p-0 hover:text-[#1ABC9C] hover:bg-[#1ABC9C]/10 rounded-lg"
+                          className="h-6 w-6 p-0 hover:text-emerald-600 hover:bg-emerald-50 rounded-md"
+                          title="Copy message"
                         >
-                          <Copy className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
+                          <Copy className="h-3 w-3 text-black" />
                         </Button>
                       </div>
                     )}
@@ -296,19 +312,25 @@ export function ChatInterface({
         )})}
         
         {isLoading && (
-          <div className="flex justify-start">
-            <div className="max-w-[80%] sm:max-w-[70%] mr-3 sm:mr-12">
-              <div className="flex items-start space-x-3 sm:space-x-4">
-                <Avatar className="h-7 w-7 sm:h-9 sm:w-9 shadow-md">
-                  <AvatarFallback className="bg-gradient-to-br from-[#1ABC9C] to-emerald-500 text-white font-semibold text-xs sm:text-sm flex items-center justify-center">
-                    <Bot className="h-3 w-3 sm:h-4 sm:w-4" />
+          <div className="flex justify-start mb-6">
+            <div className="max-w-[85%] sm:max-w-[75%] mr-4 sm:mr-16">
+              <div className="flex items-start gap-3">
+                <Avatar className="h-8 w-8 sm:h-10 sm:w-10 flex-shrink-0 shadow-lg ring-2 ring-white">
+                  <AvatarFallback className="bg-black text-white font-semibold text-sm flex items-center justify-center">
+                    <Bot className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
                   </AvatarFallback>
                 </Avatar>
-                <div className="bg-white border border-slate-200 text-slate-800 p-2.5 sm:p-3 rounded-2xl shadow-sm">
-                  <div className="flex space-x-1">
-                    <div className="w-2 h-2 bg-[#1ABC9C] rounded-full animate-bounce"></div>
-                    <div className="w-2 h-2 bg-[#1ABC9C] rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-                    <div className="w-2 h-2 bg-[#1ABC9C] rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                
+                <div className="flex-1 min-w-0">
+                  <div className="relative inline-block max-w-full bg-black text-white shadow-md rounded-2xl px-4 py-3">
+                    <div className="flex items-center space-x-3">
+                      <div className="flex space-x-1">
+                        <div className="w-2 h-2 bg-white rounded-full animate-bounce"></div>
+                        <div className="w-2 h-2 bg-white rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+                        <div className="w-2 h-2 bg-white rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                      </div>
+                      <span className="text-sm text-white font-medium">AI is thinking...</span>
+                    </div>
                   </div>
                 </div>
               </div>
