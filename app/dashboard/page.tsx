@@ -115,12 +115,12 @@ function InitialInterface({ agents, selectedAgent, onSelectAgent, onStartChattin
           transition={{ duration: 0.6 }}
         >
           <div className="flex justify-center mb-8">
-            <div className="w-24 h-24 rounded-2xl bg-black flex items-center justify-center shadow-lg">
+            <div className="w-48 h-48 flex items-center justify-center">
               <img 
                 src="/logo.png" 
                 alt="Copy Ready logo" 
-                width={48} 
-                height={48}
+                width={192} 
+                height={192}
                 className="rounded-lg"
               />
             </div>
