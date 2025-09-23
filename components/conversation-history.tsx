@@ -186,8 +186,10 @@ export function ConversationHistory({
           return (
             <Card 
               key={conversation.id}
-              className={`bg-white hover:bg-gray-50 transition-all cursor-pointer ${
-                isSelected ? 'ring-2 ring-[#1ABC9C] border-[#1ABC9C]' : ''
+              className={`transition-all cursor-pointer ${
+                isSelected 
+                  ? 'bg-white hover:bg-gray-50 ring-2 ring-[#1ABC9C] border-[#1ABC9C] shadow-lg' 
+                  : 'bg-black hover:border-gray-600 border-gray-700 shadow-md'
               }`}
               onClick={() => onSelectConversation?.(conversation.id)}
             >
@@ -196,16 +198,16 @@ export function ConversationHistory({
                   <div className="flex-1 min-w-0 mr-4">
                     {/* Title */}
                     <div className="flex items-center space-x-2 mb-2">
-                      <h3 className="font-semibold truncate text-black">{conversation.title}</h3>
+                      <h3 className={`font-semibold truncate ${isSelected ? 'text-black' : 'text-white'}`}>{conversation.title}</h3>
                     </div>
 
                     {/* Last Message Preview */}
-                    <p className="text-sm text-gray-600 line-clamp-2 mb-2">
+                    <p className={`text-sm line-clamp-2 mb-2 ${isSelected ? 'text-gray-600' : 'text-gray-300'}`}>
                       {getLastMessagePreview(conversation)}
                     </p>
 
                     {/* Stats and Metadata */}
-                    <div className="flex items-center space-x-4 text-xs text-gray-700">
+                    <div className={`flex items-center space-x-4 text-xs ${isSelected ? 'text-gray-700' : 'text-gray-400'}`}>
                       <div className="flex items-center space-x-1">
                         <MessageSquare className="h-3 w-3" />
                         <span>{stats.messageCount} messages</span>
@@ -241,7 +243,7 @@ export function ConversationHistory({
                         e.stopPropagation()
                         // TODO: Show conversation details
                       }}
-                      className="text-gray-600 hover:text-black p-1"
+                      className={`p-1 ${isSelected ? 'text-gray-600 hover:text-black' : 'text-gray-400 hover:text-white'}`}
                     >
                       <Eye className="h-4 w-4" />
                     </Button>
@@ -253,7 +255,7 @@ export function ConversationHistory({
                         e.stopPropagation()
                         onArchiveConversation?.(conversation.id)
                       }}
-                      className="text-gray-600 hover:text-orange-600 p-1"
+                      className={`p-1 ${isSelected ? 'text-gray-600 hover:text-orange-600' : 'text-gray-400 hover:text-orange-400'}`}
                     >
                       <Archive className="h-4 w-4" />
                     </Button>
@@ -265,7 +267,7 @@ export function ConversationHistory({
                         e.stopPropagation()
                         onDeleteConversation?.(conversation.id)
                       }}
-                      className="text-gray-600 hover:text-white hover:bg-red-500 p-1"
+                      className={`p-1 ${isSelected ? 'text-gray-600 hover:text-white hover:bg-red-500' : 'text-gray-400 hover:text-white hover:bg-red-500'}`}
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>

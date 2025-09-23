@@ -17,6 +17,7 @@ import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog"
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
 
 import { AnimatedText, FadeInText, SlideInText, WordByWordText } from "@/components/ui/animated-text"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
@@ -25,6 +26,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import ShinyText from "@/components/ui/ShinyText"
 
 import { authService } from "@/lib/auth-service"
@@ -36,7 +38,7 @@ import { Toast } from "@/components/ui/toast"
 import { ContentViewer } from "@/components/content-viewer"
 import { useSidebarState } from "@/lib/sidebar-state-context"
 
-// Helper function to format time ago
+  // Helper function to format time ago
 function formatTimeAgo(date: Date): string {
   const now = new Date()
   const diffInHours = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60))
@@ -52,6 +54,21 @@ function formatTimeAgo(date: Date): string {
     month: 'short',
     day: 'numeric'
   }).format(date)
+}
+
+// Helper function to clean user messages by removing meta prompts
+function cleanUserMessage(content: string): string {
+  // Remove the meta prompt pattern that appears in user messages
+  // This pattern matches "Please refer to the following attached content for context:" followed by any content until end of string or double newline
+  const metaPromptPattern = /\n\nPlease refer to the following attached content for context:[\s\S]*$/g
+  const cleanedContent = content.replace(metaPromptPattern, '').trim()
+  
+  // If the content was entirely meta prompt, return the original
+  if (!cleanedContent) {
+    return content
+  }
+  
+  return cleanedContent
 }
 
 // Component to render markdown content
@@ -643,7 +660,7 @@ export default function Dashboard() {
       if (savedMessages) {
         try {
           const parsedMessages = JSON.parse(savedMessages)
-          // Ensure all messages have proper role assignment
+          // Ensure all messages have proper role assignment and clean user messages
           const validatedMessages = parsedMessages.map((msg: any) => {
             // If message has role property, keep it; otherwise assign based on type
             if (!msg.role && msg.type) {
@@ -652,6 +669,12 @@ export default function Dashboard() {
               // Fallback: assume it's a user message if no role/type specified
               msg.role = 'user'
             }
+            
+            // Clean user messages to remove meta prompts
+            if (msg.role === 'user' && msg.content) {
+              msg.content = cleanUserMessage(msg.content)
+            }
+            
             return msg
           })
           setMessages(validatedMessages)
@@ -1279,7 +1302,13 @@ export default function Dashboard() {
         }
         
         const messageId = msg.message_id || msg.id || `session-${sessionId}-${index}`
-        const content = msg.content || msg.message || msg.text || 'No content'
+        let content = msg.content || msg.message || msg.text || 'No content'
+        
+        // Clean user messages to remove meta prompts
+        if (role === 'user') {
+          content = cleanUserMessage(content)
+        }
+        
         const timestamp = msg.timestamp ? new Date(msg.timestamp).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true }) : new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true })
         
         console.log('🆔 Message ID:', messageId)
@@ -2227,7 +2256,7 @@ export default function Dashboard() {
     const userMessage = {
       id: Date.now().toString(),
       role: 'user' as const,
-      content: content.trim(),
+      content: content.trim(), // Always use original content for UI display
       timestamp: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true }),
       animated: false
     }
@@ -3373,7 +3402,7 @@ export default function Dashboard() {
         }`}>
           {/* Knowledge Base Status Indicator */}
           {knowledgeBaseStatus.isLoaded && (
-            <div className="bg-green-50 border-b border-green-200 px-4 py-2">
+            <div className="bg-green-50 px-4 py-2">
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-2">
                   <div className="w-2 h-2 bg-green-500 rounded-full"></div>
@@ -3394,7 +3423,7 @@ export default function Dashboard() {
             </div>
           )}
           {!knowledgeBaseStatus.isLoaded && knowledgeBaseStatus.lastFetched && (
-            <div className="bg-yellow-50 border-b border-yellow-200 px-4 py-2">
+            <div className="bg-yellow-50 px-4 py-2">
               <div className="flex items-center space-x-2">
                 <div className="w-2 h-2 bg-yellow-500 rounded-full"></div>
                 <span className="text-sm text-yellow-700 font-medium">
@@ -3410,30 +3439,37 @@ export default function Dashboard() {
             </div>
           )}
           
-          {/* Media Library Toggle Header */}
-          <div className="sticky top-0 z-10 bg-white border-b border-slate-200 px-4 py-3">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-4">
-              <div className="flex items-center space-x-3">
-                  <h2 className="text-lg font-semibold text-slate-900">
-                    {currentChatSession ? 
-                      (chatHistory.find(chat => chat.session_id === currentChatSession)?.title || "User chat") : 
-                      "New Conversation"
-                    }
-                  </h2>
+          {/* Chat Header */}
+          <div className="sticky top-0 z-10 bg-white/95 backdrop-blur-sm border-b border-slate-200/60 shadow-sm">
+            <div className="px-6 py-4">
+              <div className="flex items-center justify-between">
+                {/* Left side - Chat title and agent info */}
+                <div className="flex items-center space-x-6">
+                  <div className="flex flex-col">
+                    <h1 className="text-xl font-bold text-slate-900 leading-tight">
+                      {currentChatSession ? 
+                        (chatHistory.find(chat => chat.session_id === currentChatSession)?.title || "Chat Session") : 
+                        "New Conversation"
+                      }
+                    </h1>
+                    <div className="flex items-center space-x-2 mt-1">
+                      <span className="text-xs font-bold text-slate-800 uppercase tracking-wide">Active Agent</span>
+                      <div className="flex items-center space-x-2">
+                        <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                        <Badge 
+                          variant="outline" 
+                          className="text-xs font-semibold bg-white text-slate-800 border-2 border-black rounded-full hover:bg-slate-50 transition-all duration-200 px-3 py-1"
+                        >
+                          {selectedAgent || 'No Agent Selected'}
+                        </Badge>
+                      </div>
+                    </div>
+                  </div>
                 </div>
-                <div className="flex items-center space-x-2">
-                  <span className="text-sm text-slate-600">Agent:</span>
-                  <Badge 
-                    variant="secondary" 
-                    className="text-sm font-medium bg-black text-white border border-gray-300 hover:bg-gray-800 transition-colors"
-                  >
-                  {selectedAgent || 'No Agent Selected'}
-                </Badge>
+                
+                {/* Right side - Actions */}
+                <div className="flex items-center space-x-3">
                 </div>
-              </div>
-              <div className="flex items-center space-x-2">
-                {/* Placeholder for layout - actual button is now fixed positioned */}
               </div>
             </div>
           </div>
@@ -3520,11 +3556,33 @@ export default function Dashboard() {
           isRefreshing={isRefreshing}
           isLoadingTabContent={isLoadingTabContent}
           onClose={() => setRightPanelOpen(false)}
+          onToggle={() => setRightPanelOpen(false)}
           isDeleting={isDeleting}
           deletingItemId={deletingItemId}
         />
       </div>
       </motion.div>
+
+      {/* Floating Toggle Button - Shows when sidebar is collapsed */}
+      {!rightPanelOpen && (
+        <motion.div
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          exit={{ opacity: 0, x: 20 }}
+          className="fixed top-20 right-4 z-20 hidden xl:block"
+        >
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setRightPanelOpen(true)}
+            className="bg-black hover:bg-gray-800 text-white border border-gray-700 shadow-lg hover:shadow-xl transition-all duration-200 font-bold px-4 py-2"
+            title="Open Media Library"
+          >
+            <ChevronDown className="h-5 w-5 text-white rotate-90 font-bold stroke-2" />
+            <span className="ml-2 text-sm font-bold">Media</span>
+          </Button>
+        </motion.div>
+      )}
 
       {/* Professional Chat Loading Overlay */}
       {isLoadingChat && (
@@ -3749,83 +3807,132 @@ function MediaSelector({
               <p className="text-gray-600">Upload files or scrape content to make them available for chat context.</p>
             </div>
           ) : (
-            <div className="space-y-2">
-              {availableItems.map((item, index) => {
-                const isSelected = selectedMediaItems.has(item.id)
-                const isLink = item.type === 'url' || item.type === 'scraped'
-                const isTranscript = item.type === 'transcript' || item.type === 'youtube'
+            <div className="space-y-4">
+              {(() => {
+                // Group items by type
+                const links = availableItems.filter(item => item.type === 'url' || item.type === 'scraped')
+                const transcripts = availableItems.filter(item => item.type === 'transcript' || item.type === 'youtube')
+                const files = availableItems.filter(item => !['url', 'scraped', 'transcript', 'youtube'].includes(item.type))
                 
-                return (
-                  <div 
-                    key={item.id}
-                    className={`p-3 rounded-lg border transition-all duration-200 cursor-pointer hover:shadow-sm ${
-                      isSelected 
-                        ? 'border-blue-500 bg-blue-50' 
-                        : 'border-gray-200 hover:border-blue-300'
-                    }`}
-                    onClick={() => onMediaSelection(item.id, !isSelected)}
-                  >
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center space-x-3 flex-1 min-w-0">
-                        <div className={`p-2 rounded-lg ${
-                          isSelected ? 'bg-blue-100' : 'bg-gray-100'
-                        }`}>
-                          {isLink ? (
-                            <Link2 className={`h-4 w-4 ${isSelected ? 'text-blue-600' : 'text-gray-600'}`} />
-                          ) : isTranscript ? (
-                            <Mic className={`h-4 w-4 ${isSelected ? 'text-blue-600' : 'text-gray-600'}`} />
-                          ) : (
-                            <FileText className={`h-4 w-4 ${isSelected ? 'text-blue-600' : 'text-gray-600'}`} />
-                          )}
+                const sections = [
+                  { 
+                    title: 'Links & Web Pages', 
+                    items: links, 
+                    icon: Link2, 
+                    color: 'blue',
+                    defaultOpen: true
+                  },
+                  { 
+                    title: 'Transcripts & Videos', 
+                    items: transcripts, 
+                    icon: Mic, 
+                    color: 'indigo',
+                    defaultOpen: true
+                  },
+                  { 
+                    title: 'Files & Documents', 
+                    items: files, 
+                    icon: FileText, 
+                    color: 'gray',
+                    defaultOpen: true
+                  }
+                ].filter(section => section.items.length > 0)
+                
+                return sections.map((section, sectionIndex) => (
+                  <Collapsible key={section.title} defaultOpen={section.defaultOpen}>
+                    <CollapsibleTrigger className="flex items-center justify-between w-full p-3 rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors">
+                      <div className="flex items-center space-x-3">
+                        <div className={`p-2 rounded-lg bg-${section.color}-100`}>
+                          <section.icon className={`h-4 w-4 text-${section.color}-600`} />
                         </div>
+                        <div>
+                          <h3 className="font-medium text-gray-900 text-sm">{section.title}</h3>
+                          <p className="text-xs text-gray-500">{section.items.length} item{section.items.length !== 1 ? 's' : ''}</p>
+                        </div>
+                      </div>
+                      <ChevronDown className="h-4 w-4 text-gray-400 transition-transform duration-200 data-[state=open]:rotate-180" />
+                    </CollapsibleTrigger>
+                    <CollapsibleContent className="mt-2 space-y-2">
+                      {section.items.map((item, index) => {
+                        const isSelected = selectedMediaItems.has(item.id)
+                        const isLink = item.type === 'url' || item.type === 'scraped'
+                        const isTranscript = item.type === 'transcript' || item.type === 'youtube'
                         
-                        <div className="flex-1 min-w-0">
-                          <h4 className="font-medium text-gray-900 truncate text-sm">
-                            {item.filename || item.title || item.url || `Media Item ${item.id.slice(0, 8)}`}
-                          </h4>
-                          <div className="flex items-center space-x-2 mt-1">
-                            <span className={`text-xs px-2 py-1 rounded-full ${
-                              isLink ? 'bg-blue-100 text-blue-800' :
-                              isTranscript ? 'bg-indigo-100 text-indigo-800' :
-                              'bg-gray-100 text-gray-800'
-                            }`}>
-                              {isLink ? 'Link' : 
-                               isTranscript ? 'Transcript' :
-                               'Content'}
-                            </span>
-                            {(item.content || item.transcript || item.resourceName || item.title) ? (
-                              <span className="text-xs text-gray-500 truncate">
-                                {(() => {
-                                  const content = item.content || item.transcript || item.resourceName || item.title || ''
-                                  return content.length > 60 ? `${content.substring(0, 60)}...` : content
-                                })()}
-                              </span>
-                            ) : item.filename && (
-                              <span className="text-xs text-gray-500 truncate">
-                                {item.filename}
-                              </span>
-                            )}
+                        return (
+                          <div 
+                            key={item.id}
+                            className={`p-3 rounded-lg border transition-all duration-200 cursor-pointer hover:shadow-sm ${
+                              isSelected 
+                                ? 'border-blue-500 bg-blue-50' 
+                                : 'border-gray-200 hover:border-blue-300'
+                            }`}
+                            onClick={() => onMediaSelection(item.id, !isSelected)}
+                          >
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center space-x-3 flex-1 min-w-0">
+                                <div className={`p-2 rounded-lg ${
+                                  isSelected ? 'bg-blue-100' : 'bg-gray-100'
+                                }`}>
+                                  {isLink ? (
+                                    <Link2 className={`h-4 w-4 ${isSelected ? 'text-blue-600' : 'text-gray-600'}`} />
+                                  ) : isTranscript ? (
+                                    <Mic className={`h-4 w-4 ${isSelected ? 'text-blue-600' : 'text-gray-600'}`} />
+                                  ) : (
+                                    <FileText className={`h-4 w-4 ${isSelected ? 'text-blue-600' : 'text-gray-600'}`} />
+                                  )}
+                                </div>
+                                
+                                <div className="flex-1 min-w-0">
+                                  <h4 className="font-medium text-gray-900 truncate text-sm">
+                                    {item.filename || item.title || item.url || `Media Item ${item.id.slice(0, 8)}`}
+                                  </h4>
+                                  <div className="flex items-center space-x-2 mt-1">
+                                    <span className={`text-xs px-2 py-1 rounded-full ${
+                                      isLink ? 'bg-blue-100 text-blue-800' :
+                                      isTranscript ? 'bg-indigo-100 text-indigo-800' :
+                                      'bg-gray-100 text-gray-800'
+                                    }`}>
+                                      {isLink ? 'Link' : 
+                                       isTranscript ? 'Transcript' :
+                                       'Content'}
+                                    </span>
+                                    {(item.content || item.transcript || item.resourceName || item.title) ? (
+                                      <span className="text-xs text-gray-500 truncate">
+                                        {(() => {
+                                          const content = item.content || item.transcript || item.resourceName || item.title || ''
+                                          return content.length > 60 ? `${content.substring(0, 60)}...` : content
+                                        })()}
+                                      </span>
+                                    ) : item.filename && (
+                                      <span className="text-xs text-gray-500 truncate">
+                                        {item.filename}
+                                      </span>
+                                    )}
+                                  </div>
+                                </div>
+                              </div>
+                              
+                              <div className="flex items-center space-x-2">
+                                <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${
+                                  isSelected 
+                                    ? 'border-blue-500 bg-blue-500' 
+                                    : 'border-gray-300'
+                                }`}>
+                                  {isSelected && (
+                                    <svg className="w-2.5 h-2.5 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                      <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                                    </svg>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
                           </div>
-                        </div>
-                      </div>
-                      
-                      <div className="flex items-center space-x-2">
-                        <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${
-                          isSelected 
-                            ? 'border-blue-500 bg-blue-500' 
-                            : 'border-gray-300'
-                        }`}>
-                          {isSelected && (
-                            <svg className="w-2.5 h-2.5 text-white" fill="currentColor" viewBox="0 0 20 20">
-                              <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                            </svg>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                )
-              })}
+                        )
+                      })}
+                    </CollapsibleContent>
+                  </Collapsible>
+                ))
+              })()}
             </div>
           )}
         </div>
@@ -4008,8 +4115,8 @@ function LeftSidebar({
                     key={chat.session_id}
                     className={`p-3 rounded-lg border transition-all duration-150 ${
                       isSelected
-                        ? 'bg-emerald-50 border-emerald-200 shadow-sm ring-2 ring-emerald-500/20'
-                        : 'bg-gray-50 border-gray-200 hover:bg-gray-100 hover:border-gray-300'
+                        ? 'bg-white border-gray-300 shadow-lg'
+                        : 'bg-black border-gray-700 hover:border-gray-600'
                     }`}
               >
                 <div className="flex items-start justify-between mb-2">
@@ -4018,23 +4125,23 @@ function LeftSidebar({
                         onClick={() => onLoadChatSession(chat.session_id)}
                       >
                         <div className="flex items-center space-x-2 mb-1">
-                          <h4 className="font-medium text-sm truncate text-gray-900">
+                          <h4 className={`font-medium text-sm truncate ${isSelected ? 'text-black' : 'text-white'}`}>
                             {chat.title || `Chat ${chat.session_id}`}
                           </h4>
                           {agentInfo && (
-                            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                            <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${isSelected ? 'bg-blue-100 text-blue-800' : 'bg-gray-700 text-gray-300'}`}>
                               <Bot className="h-3 w-3 mr-1" />
                               {agentInfo.name}
                             </span>
                           )}
                         </div>
-                        <p className="text-xs text-gray-500">{timeAgo}</p>
+                        <p className={`text-xs ${isSelected ? 'text-gray-600' : 'text-gray-400'}`}>{timeAgo}</p>
                       </div>
                   <div className="flex items-center space-x-2">
                         <Button
                           variant="ghost"
                           size="icon"
-                          className="h-6 w-6 text-gray-400 hover:text-red-500 hover:bg-red-50"
+                          className={`h-6 w-6 ${isSelected ? 'text-gray-400 hover:text-red-500 hover:bg-red-50' : 'text-gray-500 hover:text-red-400 hover:bg-red-900/20'}`}
                           onClick={(e) => {
                             e.stopPropagation()
                             onDeleteChatSession(chat.session_id)
@@ -4112,7 +4219,7 @@ function MobileSidebar({ agents, conversations, chatHistory, isLoadingChatHistor
 }
 
 // Media Drawer Component  
-function MediaDrawer({ activeTab, onTabChange, mediaItems, setMediaItems, onRefresh, onUpload, onDelete, handleDeleteItem, isRefreshing, isLoadingTabContent, isDeleting, deletingItemId, onClose }: any) {
+function MediaDrawer({ activeTab, onTabChange, mediaItems, setMediaItems, onRefresh, onUpload, onDelete, handleDeleteItem, isRefreshing, isLoadingTabContent, isDeleting, deletingItemId, onClose, onToggle }: any) {
   const tabs = [
     { id: 'files' as const, label: 'Files', icon: FileText },
     { id: 'links' as const, label: 'Links', icon: Link2 },
@@ -4123,50 +4230,69 @@ function MediaDrawer({ activeTab, onTabChange, mediaItems, setMediaItems, onRefr
 
   return (
     <div className="h-full flex flex-col overflow-hidden max-h-screen">
-      {/* Header with tabs */}
-      <div className="border-b border-[#EEEEEE] p-6 pt-12">
+      {/* Header with sidebar toggle */}
+      <div className="border-b border-[#EEEEEE] p-6 pt-12 mt-4">
         <div className="flex flex-col space-y-6 mb-8">
           <div className="flex items-center justify-between">
-            <SlideInText text="Media Library" className="font-semibold text-lg" />
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={onRefresh}
-                    disabled={isRefreshing}
-                    className="flex items-center space-x-2 bg-[#1ABC9C] hover:bg-[#1ABC9C]/90 text-white border-0 shadow-md hover:shadow-lg transition-all duration-200"
-                  >
-                    <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
-                    <span className="text-sm font-medium">Refresh All</span>
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>Refresh all media tabs and content (Files, Links, YouTube, Images, Transcripts, Knowledge Base)</p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
+            <div className="flex items-center space-x-3">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={onToggle}
+                className="bg-black hover:bg-gray-800 text-white p-3 rounded-lg transition-all duration-200 font-bold shadow-md hover:shadow-lg border border-gray-700"
+                title="Collapse Media Library Sidebar"
+              >
+                <ChevronDown className="h-5 w-5 text-white -rotate-90 transition-transform duration-200 font-bold stroke-2" />
+              </Button>
+              <SlideInText text="Media Library" className="font-bold text-xl text-black" />
+            </div>
           </div>
         </div>
-        <div className="bg-[#EEEEEE] p-1.5 rounded-xl shadow-inner">
-          <div className="flex space-x-1 flex-wrap justify-center">
-            {tabs.map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => onTabChange(tab.id)}
-                className={`flex items-center justify-center space-x-2 py-3 px-4 rounded-lg text-sm font-semibold transition-all duration-200 whitespace-nowrap ${
-                  activeTab === tab.id
-                    ? 'bg-white text-[#393E46] shadow-md border border-[#E0E0E0] transform scale-105'
-                    : 'text-[#929AAB] hover:text-[#393E46] hover:bg-white/50 hover:shadow-sm'
-                }`}
-              >
-                <tab.icon className={`h-4 w-4 flex-shrink-0 transition-colors duration-200 ${
-                  activeTab === tab.id ? 'text-[#1ABC9C]' : 'text-[#929AAB]'
-                }`} />
-                <span className="tracking-wide">{tab.label}</span>
-              </button>
-            ))}
+        
+        <div className="flex justify-center">
+          <div className="w-full max-w-xs">
+            <Select value={activeTab} onValueChange={onTabChange}>
+              <SelectTrigger className="w-full bg-white border-2 border-black text-black hover:bg-gray-50 focus:ring-2 focus:ring-blue-500/20 shadow-lg font-bold">
+                <SelectValue placeholder="Select media type">
+                  <div className="flex items-center space-x-2">
+                    {(() => {
+                      const currentTab = tabs.find(tab => tab.id === activeTab)
+                      return currentTab ? (
+                        <>
+                          <currentTab.icon className="h-4 w-4 text-black font-bold" />
+                          <span className="text-black font-bold">{currentTab.label}</span>
+                        </>
+                      ) : null
+                    })()}
+                  </div>
+                </SelectValue>
+              </SelectTrigger>
+              <SelectContent className="bg-white border-2 border-black shadow-xl">
+                {tabs.map((tab) => (
+                  <SelectItem 
+                    key={tab.id} 
+                    value={tab.id}
+                    className="text-black hover:bg-gray-100 focus:bg-gray-100 cursor-pointer font-semibold"
+                  >
+                    <div className="flex items-center space-x-2">
+                      <tab.icon className="h-4 w-4 text-black font-bold" />
+                      <span className="text-black font-semibold">{tab.label}</span>
+                    </div>
+                  </SelectItem>
+                ))}
+                <div className="border-t border-gray-200 my-1"></div>
+                <div 
+                  className="flex items-center space-x-2 px-2 py-1.5 text-black hover:bg-gray-100 cursor-pointer font-semibold"
+                  onClick={(e) => {
+                    e.preventDefault()
+                    onRefresh()
+                  }}
+                >
+                  <RefreshCw className={`h-4 w-4 text-black font-bold ${isRefreshing ? 'animate-spin' : ''}`} />
+                  <span className="text-black font-semibold">Refresh All</span>
+                </div>
+              </SelectContent>
+            </Select>
           </div>
         </div>
       </div>
@@ -4247,19 +4373,19 @@ function FilesTab({ mediaItems, onUpload, onDelete, isDeleting, deletingItemId, 
               : 'bg-gradient-to-br from-[#EEEEEE] to-[#F5F5F5]'
           }`}>
             <Upload className={`h-8 w-8 transition-all duration-200 ${isUploading ? 'animate-bounce' : ''} ${
-              dragActive ? 'text-white' : 'text-[#929AAB]'
+              dragActive ? 'text-white' : 'text-black'
             }`} />
           </div>
           <div className="space-y-2">
             <FadeInText 
               text={isUploading ? "Uploading files..." : "Drop files here or click to browse"} 
-              className={`text-lg font-semibold text-center transition-colors duration-200 ${
-                isUploading ? 'text-[#1ABC9C]' : dragActive ? 'text-[#1ABC9C]' : 'text-[#393E46]'
+              className={`text-lg font-bold text-center transition-colors duration-200 ${
+                isUploading ? 'text-[#1ABC9C]' : dragActive ? 'text-[#1ABC9C]' : 'text-slate-800'
               }`} 
             />
             <FadeInText 
               text={isUploading ? "Please wait..." : "Supports PDF, DOC, TXT, MP3, MP4, and more"} 
-              className="text-sm text-[#929AAB] text-center" 
+              className="text-sm text-slate-800 text-center font-semibold" 
               delay={0.1} 
             />
           </div>
@@ -4306,7 +4432,7 @@ function FilesTab({ mediaItems, onUpload, onDelete, isDeleting, deletingItemId, 
                     </svg>
                   )
                 default:
-                  return <FileText className="h-4 w-4 text-[#929AAB]" />
+                  return <FileText className="h-4 w-4 text-black" />
               }
             }
 
@@ -4330,7 +4456,7 @@ function FilesTab({ mediaItems, onUpload, onDelete, isDeleting, deletingItemId, 
                   <TooltipProvider>
                     <Tooltip>
                       <TooltipTrigger asChild>
-                        <p className="text-sm font-medium text-gray-900 truncate cursor-default" title={item.filename}>
+                        <p className="text-sm font-bold text-slate-800 truncate cursor-default" title={item.filename}>
                           {item.filename}
                         </p>
                       </TooltipTrigger>
@@ -4339,7 +4465,7 @@ function FilesTab({ mediaItems, onUpload, onDelete, isDeleting, deletingItemId, 
                       </TooltipContent>
                     </Tooltip>
                   </TooltipProvider>
-                  <p className="text-xs text-gray-500 mt-1">
+                  <p className="text-xs text-slate-800 mt-1 font-semibold">
                     {formatFileSize(item.size)}
                   </p>
                 </div>
@@ -4368,9 +4494,9 @@ function FilesTab({ mediaItems, onUpload, onDelete, isDeleting, deletingItemId, 
           })
         ) : (
           <div className="text-center py-8">
-            <FileText className="h-8 w-8 text-[#929AAB] mx-auto mb-2" />
-            <p className="text-sm text-[#929AAB]">No files uploaded yet</p>
-            <p className="text-xs text-[#929AAB] mt-1">Upload your first file to get started</p>
+            <FileText className="h-8 w-8 text-black mx-auto mb-2" />
+            <p className="text-sm text-slate-800 font-bold">No files uploaded yet</p>
+            <p className="text-xs text-slate-800 mt-1 font-semibold">Upload your first file to get started</p>
           </div>
         )}
       </div>
@@ -4697,8 +4823,8 @@ function LinksTab({ mediaItems, onDelete, onRefresh, setMediaItems, isDeleting, 
             >
               <Link2 className="h-4 w-4 text-[#929AAB]" />
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium truncate">{item.resourceName || item.filename}</p>
-                <p className="text-xs text-[#929AAB]">
+                <p className="text-sm font-semibold text-slate-800 truncate">{item.resourceName || item.filename}</p>
+                <p className="text-xs text-slate-600 font-medium">
                   Webpage Content
                 </p>
                 <p className="text-xs text-blue-500 mt-1 opacity-75">
@@ -4730,8 +4856,8 @@ function LinksTab({ mediaItems, onDelete, onRefresh, setMediaItems, isDeleting, 
         ) : (
           <div className="text-center py-8">
             <Link2 className="h-8 w-8 text-[#929AAB] mx-auto mb-2" />
-            <p className="text-sm text-[#929AAB]">No links or scraped content yet</p>
-            <p className="text-xs text-[#929AAB] mt-1">Add a URL to scrape content</p>
+            <p className="text-sm text-slate-800 font-semibold">No links or scraped content yet</p>
+            <p className="text-xs text-slate-600 mt-1 font-medium">Add a URL to scrape content</p>
           </div>
         )}
       </div>
@@ -4969,8 +5095,8 @@ function YouTubeTab({ mediaItems, onDelete, onRefresh, setMediaItems, isDeleting
                 </div>
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium truncate text-gray-900">{item.resourceName || item.title || item.filename}</p>
-                <p className="text-xs text-gray-500">
+                <p className="text-sm font-semibold truncate text-slate-800">{item.resourceName || item.title || item.filename}</p>
+                <p className="text-xs text-slate-600 font-medium">
                   {item.channel && `Channel: ${item.channel}`}
                   {item.duration && ` • ${item.duration}`}
                 </p>
@@ -5007,8 +5133,8 @@ function YouTubeTab({ mediaItems, onDelete, onRefresh, setMediaItems, isDeleting
                 <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
               </svg>
             </div>
-            <p className="text-sm text-gray-600 mb-2">No YouTube transcriptions yet</p>
-            <p className="text-xs text-gray-500">Paste a YouTube URL to transcribe the video</p>
+            <p className="text-sm text-slate-800 font-semibold mb-2">No YouTube transcriptions yet</p>
+            <p className="text-xs text-slate-600 font-medium">Paste a YouTube URL to transcribe the video</p>
         </div>
       )}
     </div>
@@ -5285,7 +5411,7 @@ function ImageAnalyzerTab({ mediaItems, onUpload, onDelete, isDeleting, deleting
                     </div>
                     
                     <div className="flex-1 min-w-0">
-                      <h4 className="text-sm font-medium text-gray-900 truncate">{item.filename}</h4>
+                      <h4 className="text-sm font-semibold text-slate-800 truncate">{item.filename}</h4>
                                           <div className="flex items-center space-x-3 mt-1 mb-3">
                       {hasAnalysis && (
                         <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
@@ -5356,8 +5482,8 @@ function ImageAnalyzerTab({ mediaItems, onUpload, onDelete, isDeleting, deleting
         ) : (
           <div className="text-center py-8">
             <Image className="h-8 w-8 text-[#929AAB] mx-auto mb-2" />
-            <p className="text-sm text-[#929AAB]">No ad images uploaded yet</p>
-            <p className="text-xs text-[#929AAB] mt-1">Upload images to analyze ad content</p>
+            <p className="text-sm text-slate-800 font-semibold">No ad images uploaded yet</p>
+            <p className="text-xs text-slate-600 mt-1 font-medium">Upload images to analyze ad content</p>
           </div>
         )}
       </div>
@@ -5366,7 +5492,7 @@ function ImageAnalyzerTab({ mediaItems, onUpload, onDelete, isDeleting, deleting
       {selectedImageAnalysis && (
         <div className="mt-6 p-4 bg-gray-50 rounded-lg border">
           <div className="flex justify-between items-center mb-4">
-            <h3 className="text-lg font-semibold text-gray-800">Analysis Results</h3>
+            <h3 className="text-lg font-bold text-slate-800">Analysis Results</h3>
             <Button
               variant="ghost"
               size="sm"
@@ -5381,10 +5507,10 @@ function ImageAnalyzerTab({ mediaItems, onUpload, onDelete, isDeleting, deleting
           
           <div className="space-y-4">
             <div>
-              <h4 className="font-medium text-gray-700 mb-2">{selectedImageAnalysis.filename}</h4>
+              <h4 className="font-semibold text-slate-800 mb-2">{selectedImageAnalysis.filename}</h4>
               <div className="bg-white p-4 rounded-lg border">
-                <h5 className="font-medium text-gray-800 mb-3">AI Analysis</h5>
-                <div className="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap">
+                <h5 className="font-semibold text-slate-800 mb-3">AI Analysis</h5>
+                <div className="text-sm text-slate-700 leading-relaxed whitespace-pre-wrap font-medium">
                   {selectedImageAnalysis.analysis.textContent}
                 </div>
               </div>
@@ -5392,7 +5518,7 @@ function ImageAnalyzerTab({ mediaItems, onUpload, onDelete, isDeleting, deleting
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <h5 className="font-medium text-gray-700 mb-2">Detected Objects</h5>
+                <h5 className="font-semibold text-slate-800 mb-2">Detected Objects</h5>
                 <div className="flex flex-wrap gap-1">
                   {selectedImageAnalysis.analysis.objects.map((obj: string, idx: number) => (
                     <span key={idx} className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded">
@@ -5403,7 +5529,7 @@ function ImageAnalyzerTab({ mediaItems, onUpload, onDelete, isDeleting, deleting
               </div>
 
               <div>
-                <h5 className="font-medium text-gray-700 mb-2">Color Palette</h5>
+                <h5 className="font-semibold text-slate-800 mb-2">Color Palette</h5>
                 <div className="flex gap-2">
                   {selectedImageAnalysis.analysis.colors.map((color: string, idx: number) => (
                     <div
@@ -5626,8 +5752,8 @@ function TranscriptsTab({ mediaItems, onDelete, isDeleting, deletingItemId, isLo
             <div key={item.id} className="flex items-center space-x-3 p-2 rounded-lg hover:bg-white border border-transparent hover:border-[#EEEEEE]">
               <Mic className="h-4 w-4 text-[#929AAB]" />
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium truncate">{item.filename}</p>
-                <p className="text-xs text-[#929AAB]">
+                <p className="text-sm font-semibold text-slate-800 truncate">{item.filename}</p>
+                <p className="text-xs text-slate-600 font-medium">
                   {item.metadata?.duration || 'Unknown duration'}
                 </p>
               </div>
@@ -5640,8 +5766,8 @@ function TranscriptsTab({ mediaItems, onDelete, isDeleting, deletingItemId, isLo
       ) : (
         <div className="text-center py-6">
           <Mic className="h-8 w-8 text-[#929AAB] mx-auto mb-2" />
-          <p className="text-sm text-[#929AAB]">No transcripts yet</p>
-          <p className="text-xs text-[#929AAB] mt-1">Upload audio or video files to transcribe</p>
+          <p className="text-sm text-slate-800 font-semibold">No transcripts yet</p>
+          <p className="text-xs text-slate-600 mt-1 font-medium">Upload audio or video files to transcribe</p>
         </div>
       )}
     </div>

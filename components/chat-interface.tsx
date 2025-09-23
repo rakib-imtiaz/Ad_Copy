@@ -210,67 +210,63 @@ export function ChatInterface({
           <div key={msg.id} className={`flex ${isUser ? 'justify-end' : 'justify-start'} mb-6`}>
             <div className={`max-w-[85%] sm:max-w-[75%] ${isUser ? 'ml-4 sm:ml-16' : 'mr-4 sm:mr-16'}`}>
               <div className={`flex items-start gap-3 ${isUser ? 'flex-row-reverse' : ''}`}>
-                {/* Avatar for both user and agent */}
-                <Avatar className="h-8 w-8 sm:h-10 sm:w-10 flex-shrink-0 shadow-lg ring-2 ring-white">
-                  {isUser ? (
-                    <AvatarFallback className="bg-gradient-to-br from-blue-600 to-blue-700 text-white font-semibold text-sm flex items-center justify-center">
-                      <User className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
-                    </AvatarFallback>
-                  ) : (
+                {/* Avatar for agent only - removed for user */}
+                {!isUser && (
+                  <Avatar className="h-8 w-8 sm:h-10 sm:w-10 flex-shrink-0 shadow-lg ring-2 ring-black">
                     <AvatarFallback className="bg-black text-white font-semibold text-sm flex items-center justify-center">
                       <Bot className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
                     </AvatarFallback>
-                  )}
-                </Avatar>
+                  </Avatar>
+                )}
                 
                 <div className="flex-1 min-w-0">
                   {/* Message bubble with improved styling */}
                   <div className={`relative inline-block max-w-full ${
                     isUser 
-                      ? 'bg-gradient-to-br from-blue-600 to-blue-700 text-white shadow-lg' 
+                      ? 'bg-white text-black shadow-2xl border border-gray-300' 
                       : 'bg-black text-white shadow-md'
-                  } rounded-2xl px-4 py-3`} style={isUser ? {'--tw-gradient-to': '#1d4ed8 var(--tw-gradient-to-position)'} as React.CSSProperties : {}}>
+                  } rounded-2xl px-4 py-3`}>
                     <div className="break-words overflow-hidden">
                       <div className={`text-sm leading-relaxed ${
                         isUser 
-                          ? 'text-white' 
+                          ? 'text-black' 
                           : 'text-white'
                       }`}>
                       <ReactMarkdown
                         components={{
                           // Headings
-                          h1: ({ children }) => <h1 className="text-lg font-bold text-white mb-2 mt-3 first:mt-0">{children}</h1>,
-                          h2: ({ children }) => <h2 className="text-base font-semibold text-white mb-2 mt-3 first:mt-0">{children}</h2>,
-                          h3: ({ children }) => <h3 className="text-sm font-semibold text-white mb-1 mt-2 first:mt-0">{children}</h3>,
-                          h4: ({ children }) => <h4 className="text-sm font-medium text-white mb-1 mt-2 first:mt-0">{children}</h4>,
+                          h1: ({ children }) => <h1 className={`text-lg font-bold mb-2 mt-3 first:mt-0 ${isUser ? 'text-black' : 'text-white'}`}>{children}</h1>,
+                          h2: ({ children }) => <h2 className={`text-base font-semibold mb-2 mt-3 first:mt-0 ${isUser ? 'text-black' : 'text-white'}`}>{children}</h2>,
+                          h3: ({ children }) => <h3 className={`text-sm font-semibold mb-1 mt-2 first:mt-0 ${isUser ? 'text-black' : 'text-white'}`}>{children}</h3>,
+                          h4: ({ children }) => <h4 className={`text-sm font-medium mb-1 mt-2 first:mt-0 ${isUser ? 'text-black' : 'text-white'}`}>{children}</h4>,
                           
                           // Paragraphs
-                          p: ({ children }) => <p className="text-white leading-relaxed mb-2 last:mb-0">{children}</p>,
+                          p: ({ children }) => <p className={`leading-relaxed mb-2 last:mb-0 ${isUser ? 'text-black' : 'text-white'}`}>{children}</p>,
                           
                           // Lists
-                          ul: ({ children }) => <ul className="list-disc list-outside text-white mb-3 space-y-1 pl-4 marker:text-white">{children}</ul>,
-                          ol: ({ children }) => <ol className="list-decimal list-outside text-white mb-3 space-y-1 pl-4 marker:text-white">{children}</ol>,
-                          li: ({ children }) => <li className="text-white leading-relaxed">{children}</li>,
+                          ul: ({ children }) => <ul className={`list-disc list-outside mb-3 space-y-1 pl-4 ${isUser ? 'text-black marker:text-black' : 'text-white marker:text-white'}`}>{children}</ul>,
+                          ol: ({ children }) => <ol className={`list-decimal list-outside mb-3 space-y-1 pl-4 ${isUser ? 'text-black marker:text-black' : 'text-white marker:text-white'}`}>{children}</ol>,
+                          li: ({ children }) => <li className={`leading-relaxed ${isUser ? 'text-black' : 'text-white'}`}>{children}</li>,
                           
                           // Text formatting
-                          strong: ({ children }) => <strong className="font-semibold text-white">{children}</strong>,
-                          em: ({ children }) => <em className="italic text-white">{children}</em>,
+                          strong: ({ children }) => <strong className={`font-semibold ${isUser ? 'text-black' : 'text-white'}`}>{children}</strong>,
+                          em: ({ children }) => <em className={`italic ${isUser ? 'text-black' : 'text-white'}`}>{children}</em>,
                           
                           // Code
                           code: ({ children, className }) => {
                             const isInline = !className
                             if (isInline) {
-                              return <code className={`bg-gray-700 text-white px-1 py-0.5 rounded text-xs font-mono ${isUser ? 'bg-blue-500/20' : 'bg-gray-700'}`}>{children}</code>
+                              return <code className={`px-1 py-0.5 rounded text-xs font-mono ${isUser ? 'bg-gray-200 text-black' : 'bg-gray-700 text-white'}`}>{children}</code>
                             }
                             return <code className={className}>{children}</code>
                           },
-                          pre: ({ children }) => <pre className={`p-3 rounded-lg overflow-x-auto mb-3 whitespace-pre-wrap break-words ${isUser ? 'bg-blue-500/20 text-white' : 'bg-gray-700 text-white'}`}>{children}</pre>,
+                          pre: ({ children }) => <pre className={`p-3 rounded-lg overflow-x-auto mb-3 whitespace-pre-wrap break-words ${isUser ? 'bg-gray-200 text-black' : 'bg-gray-700 text-white'}`}>{children}</pre>,
                           
                           // Links
-                          a: ({ href, children }) => <a href={href} className="text-blue-300 hover:text-blue-200 underline" target="_blank" rel="noopener noreferrer">{children}</a>,
+                          a: ({ href, children }) => <a href={href} className={`underline ${isUser ? 'text-blue-600 hover:text-blue-800' : 'text-blue-300 hover:text-blue-200'}`} target="_blank" rel="noopener noreferrer">{children}</a>,
                           
                           // Blockquotes
-                          blockquote: ({ children }) => <blockquote className="border-l-4 border-gray-400 pl-3 italic text-gray-200 mb-3">{children}</blockquote>,
+                          blockquote: ({ children }) => <blockquote className={`border-l-4 pl-3 italic mb-3 ${isUser ? 'border-gray-400 text-gray-800' : 'border-gray-400 text-gray-200'}`}>{children}</blockquote>,
                           
                           // Horizontal rule
                           hr: () => <hr className="border-gray-400 my-3" />,
@@ -368,15 +364,6 @@ export function ChatInterface({
                         <Button
                           variant="ghost"
                           size="sm"
-                          onClick={() => onPinMessage?.(msg.id)}
-                          className="h-6 w-6 p-0 hover:text-amber-600 hover:bg-amber-50 rounded-md"
-                          title="Pin message"
-                        >
-                          <Pin className="h-3 w-3 text-black" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
                           onClick={() => handleCopyToClipboard(msg.content)}
                           className="h-6 w-6 p-0 hover:text-emerald-600 hover:bg-emerald-50 rounded-md"
                           title="Copy message"
@@ -453,7 +440,7 @@ export function ChatInterface({
         <div className="max-w-4xl mx-auto">
           {/* ChatGPT-style input bar */}
           <div className="relative">
-            <div className="flex items-center bg-white rounded-full px-4 py-3 transition-all duration-200 focus-within:outline-none" style={{ boxShadow: '0 10px 25px -3px rgba(0, 0, 0, 0.4), 0 4px 6px -2px rgba(0, 0, 0, 0.1)' }} onMouseEnter={(e) => e.currentTarget.style.boxShadow = '0 20px 35px -3px rgba(0, 0, 0, 0.5), 0 8px 10px -2px rgba(0, 0, 0, 0.1)'} onMouseLeave={(e) => e.currentTarget.style.boxShadow = '0 10px 25px -3px rgba(0, 0, 0, 0.4), 0 4px 6px -2px rgba(0, 0, 0, 0.1)'}>
+            <div className="flex items-center bg-white rounded-full px-4 py-3 transition-all duration-200 focus-within:outline-none border border-slate-200" style={{ boxShadow: '0 15px 35px -5px rgba(0, 0, 0, 0.6), 0 8px 15px -5px rgba(0, 0, 0, 0.3)' }} onMouseEnter={(e) => e.currentTarget.style.boxShadow = '0 25px 45px -5px rgba(0, 0, 0, 0.7), 0 12px 20px -5px rgba(0, 0, 0, 0.4)'} onMouseLeave={(e) => e.currentTarget.style.boxShadow = '0 15px 35px -5px rgba(0, 0, 0, 0.6), 0 8px 15px -5px rgba(0, 0, 0, 0.3)'}>
               {/* Plus icon on the left */}
               <div className="relative mr-3">
                 <Button
@@ -480,7 +467,8 @@ export function ChatInterface({
                 onKeyDown={handleKeyDown}
                 placeholder="Ask anything or drag & drop files here"
                 disabled={!currentAgent && !selectedAgent || isLoading}
-                className="flex-1 border-0 border-none bg-transparent text-gray-800 placeholder:text-gray-500 focus:ring-0 focus:outline-none focus:border-0 focus-visible:ring-0 focus-visible:outline-none focus-visible:ring-offset-0 text-sm resize-none min-h-[24px] max-h-[160px] overflow-y-auto shadow-none rounded-none"
+                className="flex-1 border-0 border-none bg-transparent text-gray-800 placeholder:text-gray-500 focus:ring-0 focus:outline-none focus:border-0 focus-visible:ring-0 focus-visible:outline-none focus-visible:ring-offset-0 focus:border-0 focus:shadow-none text-sm resize-none min-h-[24px] max-h-[160px] overflow-y-auto rounded-none"
+                style={{ boxShadow: 'none', border: 'none', outline: 'none' }}
                 rows={1}
               />
               
