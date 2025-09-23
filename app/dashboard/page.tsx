@@ -16,6 +16,7 @@ import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog"
 
 import { AnimatedText, FadeInText, SlideInText, WordByWordText } from "@/components/ui/animated-text"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
@@ -3700,17 +3701,8 @@ function MediaSelector({
   onClose: () => void
   isLoading: boolean
 }) {
-  if (!isOpen) return null
-
   console.log('🎯 MEDIA SELECTOR COMPONENT RENDERED')
   console.log('🔍 MediaSelector - All mediaItems count:', mediaItems.length)
-  console.log('🔍 MediaSelector - All mediaItems:', mediaItems)
-  console.log('🔍 MediaSelector - Items with type "scraped":', mediaItems.filter(item => item.type === 'scraped'))
-  console.log('🔍 MediaSelector - Items with type "youtube":', mediaItems.filter(item => item.type === 'youtube'))
-  console.log('🔍 MediaSelector - Items with type "transcript":', mediaItems.filter(item => item.type === 'transcript'))
-  console.log('🔍 MediaSelector - Items with type "url":', mediaItems.filter(item => item.type === 'url'))
-  console.log('🔍 MediaSelector - Items with type "audio":', mediaItems.filter(item => item.type === 'audio'))
-  console.log('🔍 MediaSelector - Items with type "video":', mediaItems.filter(item => item.type === 'video'))
 
   const availableItems = mediaItems.filter((item, index) => {
     // Only include content types that should pass context to chat
@@ -3725,94 +3717,40 @@ function MediaSelector({
     
     const shouldInclude = hasValidType || hasContent || hasTranscript || hasResourceName || hasTitle || hasFilename
     
-    console.log(`🔍 Filtering item ${index + 1}:`, {
-      id: item.id,
-      type: item.type,
-      filename: item.filename,
-      hasValidType,
-      hasContent,
-      hasTranscript,
-      hasResourceName,
-      hasTitle,
-      hasFilename,
-      shouldInclude,
-      allKeys: Object.keys(item)
-    })
-    
-    if (item.type === 'scraped' || item.type === 'transcript' || item.type === 'audio' || item.type === 'video' || item.type === 'youtube' || item.type === 'url') {
-      console.log('🎯 SPECIAL ITEM DETAILS:', {
-        type: item.type,
-        filename: item.filename,
-        content: item.content ? `${item.content.substring(0, 50)}...` : 'No content',
-        transcript: item.transcript ? `${item.transcript.substring(0, 50)}...` : 'No transcript',
-        resourceName: item.resourceName,
-        title: item.title,
-        url: item.url
-      })
-    }
-    
     return shouldInclude
   })
 
   console.log('🔍 MediaSelector - Available items after filtering:', availableItems.length)
-  console.log('🔍 MediaSelector - Available items by type (context-enabled only):', {
-    youtube: availableItems.filter(item => item.type === 'youtube').length,
-    transcript: availableItems.filter(item => item.type === 'transcript').length,
-    scraped: availableItems.filter(item => item.type === 'scraped').length,
-    url: availableItems.filter(item => item.type === 'url').length,
-    webpage: availableItems.filter(item => item.type === 'webpage').length
-  })
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-xl shadow-2xl max-w-4xl w-full max-h-[80vh] overflow-hidden">
-        <div className="flex justify-between items-center p-6 border-b bg-gradient-to-r from-blue-50 to-indigo-50">
-          <div>
-            <h3 className="text-xl font-semibold text-gray-800 flex items-center">
-              <Activity className="h-5 w-5 mr-2 text-blue-600" />
-              Select Media for Chat Context
-            </h3>
-            <p className="text-sm text-gray-600 mt-1">
-              Choose media items to include in your chat context
-            </p>
-          </div>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={onClose}
-            className="h-8 w-8 p-0 hover:bg-gray-100"
-          >
-            <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </Button>
-        </div>
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="max-w-2xl max-h-[60vh] flex flex-col">
+        <DialogHeader>
+          <DialogTitle className="flex items-center">
+            <Activity className="h-5 w-5 mr-2 text-blue-600" />
+            Select Media for Chat Context
+          </DialogTitle>
+          <DialogDescription>
+            Choose media items to include in your chat context
+          </DialogDescription>
+        </DialogHeader>
         
-        <div className="p-6 overflow-y-auto max-h-[calc(80vh-140px)]">
+        <div className="flex-1 overflow-y-auto min-h-0 media-selector-scroll">
           {isLoading ? (
-            <div className="text-center py-12">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+            <div className="text-center py-8">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
               <h4 className="text-lg font-medium text-gray-900 mb-2">Loading Media...</h4>
               <p className="text-gray-600">Please wait while we fetch your media items.</p>
             </div>
           ) : availableItems.length === 0 ? (
-            <div className="text-center py-12">
+            <div className="text-center py-8">
               <Activity className="h-12 w-12 text-gray-400 mx-auto mb-4" />
               <h4 className="text-lg font-medium text-gray-900 mb-2">No Media Available</h4>
               <p className="text-gray-600">Upload files or scrape content to make them available for chat context.</p>
             </div>
           ) : (
-            <div className="space-y-3">
+            <div className="space-y-2">
               {availableItems.map((item, index) => {
-                console.log(`🎨 Rendering item ${index + 1}:`, {
-                  id: item.id,
-                  type: item.type,
-                  filename: item.filename,
-                  title: item.title,
-                  content: item.content ? `${item.content.substring(0, 30)}...` : 'No content',
-                  transcript: item.transcript ? `${item.transcript.substring(0, 30)}...` : 'No transcript'
-                })
-                
                 const isSelected = selectedMediaItems.has(item.id)
                 const isLink = item.type === 'url' || item.type === 'scraped'
                 const isTranscript = item.type === 'transcript' || item.type === 'youtube'
@@ -3820,7 +3758,7 @@ function MediaSelector({
                 return (
                   <div 
                     key={item.id}
-                    className={`p-4 rounded-lg border-2 transition-all duration-200 cursor-pointer hover:shadow-md ${
+                    className={`p-3 rounded-lg border transition-all duration-200 cursor-pointer hover:shadow-sm ${
                       isSelected 
                         ? 'border-blue-500 bg-blue-50' 
                         : 'border-gray-200 hover:border-blue-300'
@@ -3842,7 +3780,7 @@ function MediaSelector({
                         </div>
                         
                         <div className="flex-1 min-w-0">
-                          <h4 className="font-medium text-gray-900 truncate">
+                          <h4 className="font-medium text-gray-900 truncate text-sm">
                             {item.filename || item.title || item.url || `Media Item ${item.id.slice(0, 8)}`}
                           </h4>
                           <div className="flex items-center space-x-2 mt-1">
@@ -3856,14 +3794,14 @@ function MediaSelector({
                                'Content'}
                             </span>
                             {(item.content || item.transcript || item.resourceName || item.title) ? (
-                              <span className="text-xs text-gray-500">
+                              <span className="text-xs text-gray-500 truncate">
                                 {(() => {
                                   const content = item.content || item.transcript || item.resourceName || item.title || ''
-                                  return content.length > 100 ? `${content.substring(0, 100)}...` : content
+                                  return content.length > 60 ? `${content.substring(0, 60)}...` : content
                                 })()}
                               </span>
                             ) : item.filename && (
-                              <span className="text-xs text-gray-500">
+                              <span className="text-xs text-gray-500 truncate">
                                 {item.filename}
                               </span>
                             )}
@@ -3872,13 +3810,13 @@ function MediaSelector({
                       </div>
                       
                       <div className="flex items-center space-x-2">
-                        <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
+                        <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${
                           isSelected 
                             ? 'border-blue-500 bg-blue-500' 
                             : 'border-gray-300'
                         }`}>
                           {isSelected && (
-                            <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
+                            <svg className="w-2.5 h-2.5 text-white" fill="currentColor" viewBox="0 0 20 20">
                               <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                             </svg>
                           )}
@@ -3892,21 +3830,19 @@ function MediaSelector({
           )}
         </div>
         
-        <div className="p-6 border-t bg-gray-50">
-          <div className="flex justify-between items-center">
-            <div className="text-sm text-gray-600">
-              {selectedMediaItems.size} item{selectedMediaItems.size !== 1 ? 's' : ''} selected
-            </div>
-            <Button
-              onClick={onClose}
-              className="bg-blue-600 hover:bg-blue-700 text-white"
-            >
-              Done
-            </Button>
+        <DialogFooter className="flex justify-between items-center">
+          <div className="text-sm text-gray-600">
+            {selectedMediaItems.size} item{selectedMediaItems.size !== 1 ? 's' : ''} selected
           </div>
-        </div>
-      </div>
-    </div>
+          <Button
+            onClick={onClose}
+            className="bg-blue-600 hover:bg-blue-700 text-white"
+          >
+            Done
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   )
 }
 

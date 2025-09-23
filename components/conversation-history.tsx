@@ -186,7 +186,7 @@ export function ConversationHistory({
           return (
             <Card 
               key={conversation.id}
-              className={`bg-white border-gray-300 hover:bg-gray-50 transition-all cursor-pointer ${
+              className={`bg-white hover:bg-gray-50 transition-all cursor-pointer ${
                 isSelected ? 'ring-2 ring-[#1ABC9C] border-[#1ABC9C]' : ''
               }`}
               onClick={() => onSelectConversation?.(conversation.id)}

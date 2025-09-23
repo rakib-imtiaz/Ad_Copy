@@ -461,6 +461,15 @@
     text-align: left;
   }
   
+  /* AI message bullet points - make them white for black background */
+  .chat-message.ai .prose ul li::marker {
+    color: white !important;
+  }
+  
+  .chat-message.ai .prose ol li::marker {
+    color: white !important;
+  }
+  
   /* Nested list styling */
   .chat-message .prose ul ul,
   .chat-message .prose ol ol,
@@ -548,6 +557,25 @@
   
   .chat-message .prose p:last-child {
     margin-bottom: 0;
+  }
+
+  /* Custom scrollbar styling for media selector */
+  .media-selector-scroll::-webkit-scrollbar {
+    width: 8px;
+  }
+  
+  .media-selector-scroll::-webkit-scrollbar-track {
+    background: #f3f4f6;
+    border-radius: 4px;
+  }
+  
+  .media-selector-scroll::-webkit-scrollbar-thumb {
+    background: #d1d5db;
+    border-radius: 4px;
+  }
+  
+  .media-selector-scroll::-webkit-scrollbar-thumb:hover {
+    background: #9ca3af;
   }
   
   /* Better heading hierarchy */

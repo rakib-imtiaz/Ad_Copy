@@ -12,6 +12,7 @@ import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { MarkdownRenderer } from "@/components/ui/markdown-renderer"
+import ReactMarkdown from 'react-markdown'
 import { Conversation, ChatMessage, Agent, MediaItem } from "@/types"
 
 interface ChatInterfaceProps {
@@ -228,16 +229,56 @@ export function ChatInterface({
                     isUser 
                       ? 'bg-gradient-to-br from-blue-600 to-blue-700 text-white shadow-lg' 
                       : 'bg-black text-white shadow-md'
-                  } rounded-2xl px-4 py-3`} style={isUser ? {'--tw-gradient-to': '#1d4ed8 var(--tw-gradient-to-position)'} : {}}>
+                  } rounded-2xl px-4 py-3`} style={isUser ? {'--tw-gradient-to': '#1d4ed8 var(--tw-gradient-to-position)'} as React.CSSProperties : {}}>
                     <div className="break-words overflow-hidden">
-                      <MarkdownRenderer 
-                        content={msg.content} 
-                        className={`text-sm leading-relaxed ${
-                          isUser 
-                            ? 'prose-invert [&_*]:text-white [&_p]:text-white [&_strong]:text-white [&_em]:text-white [&_li]:text-white [&_ul]:text-white [&_ol]:text-white [&_h1]:text-white [&_h2]:text-white [&_h3]:text-white [&_h4]:text-white [&_code]:bg-blue-500/20 [&_pre]:bg-blue-500/20' 
-                            : 'prose-invert [&_*]:text-white [&_p]:text-white [&_strong]:text-white [&_em]:text-white [&_li]:text-white [&_ul]:text-white [&_ol]:text-white [&_h1]:text-white [&_h2]:text-white [&_h3]:text-white [&_h4]:text-white [&_code]:bg-gray-700 [&_pre]:bg-gray-700'
-                        }`}
-                      />
+                      <div className={`text-sm leading-relaxed ${
+                        isUser 
+                          ? 'text-white' 
+                          : 'text-white'
+                      }`}>
+                      <ReactMarkdown
+                        components={{
+                          // Headings
+                          h1: ({ children }) => <h1 className="text-lg font-bold text-white mb-2 mt-3 first:mt-0">{children}</h1>,
+                          h2: ({ children }) => <h2 className="text-base font-semibold text-white mb-2 mt-3 first:mt-0">{children}</h2>,
+                          h3: ({ children }) => <h3 className="text-sm font-semibold text-white mb-1 mt-2 first:mt-0">{children}</h3>,
+                          h4: ({ children }) => <h4 className="text-sm font-medium text-white mb-1 mt-2 first:mt-0">{children}</h4>,
+                          
+                          // Paragraphs
+                          p: ({ children }) => <p className="text-white leading-relaxed mb-2 last:mb-0">{children}</p>,
+                          
+                          // Lists
+                          ul: ({ children }) => <ul className="list-disc list-outside text-white mb-3 space-y-1 pl-4 marker:text-white">{children}</ul>,
+                          ol: ({ children }) => <ol className="list-decimal list-outside text-white mb-3 space-y-1 pl-4 marker:text-white">{children}</ol>,
+                          li: ({ children }) => <li className="text-white leading-relaxed">{children}</li>,
+                          
+                          // Text formatting
+                          strong: ({ children }) => <strong className="font-semibold text-white">{children}</strong>,
+                          em: ({ children }) => <em className="italic text-white">{children}</em>,
+                          
+                          // Code
+                          code: ({ children, className }) => {
+                            const isInline = !className
+                            if (isInline) {
+                              return <code className={`bg-gray-700 text-white px-1 py-0.5 rounded text-xs font-mono ${isUser ? 'bg-blue-500/20' : 'bg-gray-700'}`}>{children}</code>
+                            }
+                            return <code className={className}>{children}</code>
+                          },
+                          pre: ({ children }) => <pre className={`p-3 rounded-lg overflow-x-auto mb-3 whitespace-pre-wrap break-words ${isUser ? 'bg-blue-500/20 text-white' : 'bg-gray-700 text-white'}`}>{children}</pre>,
+                          
+                          // Links
+                          a: ({ href, children }) => <a href={href} className="text-blue-300 hover:text-blue-200 underline" target="_blank" rel="noopener noreferrer">{children}</a>,
+                          
+                          // Blockquotes
+                          blockquote: ({ children }) => <blockquote className="border-l-4 border-gray-400 pl-3 italic text-gray-200 mb-3">{children}</blockquote>,
+                          
+                          // Horizontal rule
+                          hr: () => <hr className="border-gray-400 my-3" />,
+                        }}
+                      >
+                        {msg.content}
+                      </ReactMarkdown>
+                      </div>
                     </div>
                     
                     {/* Generated Copy Preview */}
@@ -254,10 +295,50 @@ export function ChatInterface({
                           </Button>
                         </div>
                         <div className="break-words overflow-hidden">
-                          <MarkdownRenderer 
-                            content={msg.metadata?.generatedCopy?.content || ""} 
-                            className="text-sm prose-invert [&_*]:text-white [&_p]:text-white [&_strong]:text-white [&_em]:text-white [&_li]:text-white [&_ul]:text-white [&_ol]:text-white [&_h1]:text-white [&_h2]:text-white [&_h3]:text-white [&_h4]:text-white [&_code]:bg-gray-700 [&_pre]:bg-gray-700" 
-                          />
+                          <div className="text-sm text-white">
+                          <ReactMarkdown
+                            components={{
+                              // Headings
+                              h1: ({ children }) => <h1 className="text-lg font-bold text-white mb-2 mt-3 first:mt-0">{children}</h1>,
+                              h2: ({ children }) => <h2 className="text-base font-semibold text-white mb-2 mt-3 first:mt-0">{children}</h2>,
+                              h3: ({ children }) => <h3 className="text-sm font-semibold text-white mb-1 mt-2 first:mt-0">{children}</h3>,
+                              h4: ({ children }) => <h4 className="text-sm font-medium text-white mb-1 mt-2 first:mt-0">{children}</h4>,
+                              
+                              // Paragraphs
+                              p: ({ children }) => <p className="text-white leading-relaxed mb-2 last:mb-0">{children}</p>,
+                              
+                              // Lists
+                              ul: ({ children }) => <ul className="list-disc list-outside text-white mb-3 space-y-1 pl-4 marker:text-white">{children}</ul>,
+                              ol: ({ children }) => <ol className="list-decimal list-outside text-white mb-3 space-y-1 pl-4 marker:text-white">{children}</ol>,
+                              li: ({ children }) => <li className="text-white leading-relaxed">{children}</li>,
+                              
+                              // Text formatting
+                              strong: ({ children }) => <strong className="font-semibold text-white">{children}</strong>,
+                              em: ({ children }) => <em className="italic text-white">{children}</em>,
+                              
+                              // Code
+                              code: ({ children, className }) => {
+                                const isInline = !className
+                                if (isInline) {
+                                  return <code className="bg-gray-600 text-white px-1 py-0.5 rounded text-xs font-mono">{children}</code>
+                                }
+                                return <code className={className}>{children}</code>
+                              },
+                              pre: ({ children }) => <pre className="bg-gray-600 text-white p-3 rounded-lg overflow-x-auto mb-3 whitespace-pre-wrap break-words">{children}</pre>,
+                              
+                              // Links
+                              a: ({ href, children }) => <a href={href} className="text-blue-300 hover:text-blue-200 underline" target="_blank" rel="noopener noreferrer">{children}</a>,
+                              
+                              // Blockquotes
+                              blockquote: ({ children }) => <blockquote className="border-l-4 border-gray-400 pl-3 italic text-gray-200 mb-3">{children}</blockquote>,
+                              
+                              // Horizontal rule
+                              hr: () => <hr className="border-gray-400 my-3" />,
+                            }}
+                          >
+                            {msg.metadata?.generatedCopy?.content || ""}
+                          </ReactMarkdown>
+                          </div>
                         </div>
                       </div>
                     )}
@@ -366,31 +447,6 @@ export function ChatInterface({
         </div>
       )}
 
-      {/* Selected Files Indicator */}
-      {selectedMediaCount > 0 && (
-        <div className="px-4 sm:px-6 py-2 bg-blue-50 border-t border-blue-200 sticky bottom-0 left-0 right-0 z-20">
-          <div className="max-w-4xl mx-auto">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-2">
-                <div className="flex items-center space-x-1">
-                  <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                  <span className="text-sm font-medium text-blue-700">
-                    {selectedMediaCount} file{selectedMediaCount !== 1 ? 's' : ''} selected for context
-                  </span>
-                </div>
-              </div>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={onOpenMediaSelector}
-                className="text-blue-600 hover:text-blue-700 hover:bg-blue-100 text-xs"
-              >
-                View Selected
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Input Area - Fixed at Bottom */}
       <div className="flex-shrink-0 p-4 sm:p-6 pb-8 bg-white/95 backdrop-blur-sm border-t border-slate-200">
