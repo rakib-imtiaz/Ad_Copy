@@ -93,7 +93,7 @@ function InitialInterface({ agents, selectedAgent, onSelectAgent, onStartChattin
     <div className="min-h-screen bg-white">
       {/* Admin Button - Only show for admin users */}
       {isAdmin && (
-        <div className="absolute top-4 right-4 z-10">
+        <div className="fixed top-4 right-4 z-10">
           <Button
             variant="outline"
             size="sm"
@@ -106,7 +106,7 @@ function InitialInterface({ agents, selectedAgent, onSelectAgent, onStartChattin
         </div>
       )}
 
-      <div className="container mx-auto px-6 py-12 max-w-7xl">
+      <div className="container mx-auto px-6 py-12 max-w-7xl pb-20">
         {/* Header Section */}
         <motion.div 
           className="mb-16 text-center"
@@ -3330,22 +3330,17 @@ export default function Dashboard() {
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50/20 text-slate-800 font-sans">
       {!chatStarted ? (
         // Initial interface without separate sidebar
-        <div className="flex h-screen">
-          {/* Main Content - Initial Interface */}
-          <div className="flex-1 flex flex-col min-w-0">
-            {/* Initial Interface Content */}
-            <div className="flex-1">
-        <InitialInterface
-          agents={agents}
-          selectedAgent={selectedAgent}
-          onSelectAgent={handleSelectAgent}
-          onStartChatting={handleStartChatting}
-          onRefreshAgents={refreshAgents}
-          isLoadingAgents={isLoadingAgents}
-          isStartingChat={isStartingChat}
-        />
-            </div>
-          </div>
+        <div className="min-h-screen">
+          {/* Initial Interface Content */}
+          <InitialInterface
+            agents={agents}
+            selectedAgent={selectedAgent}
+            onSelectAgent={handleSelectAgent}
+            onStartChatting={handleStartChatting}
+            onRefreshAgents={refreshAgents}
+            isLoadingAgents={isLoadingAgents}
+            isStartingChat={isStartingChat}
+          />
         </div>
       ) : (
         // Full dashboard with chat interface
