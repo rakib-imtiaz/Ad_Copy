@@ -138,7 +138,8 @@ export function AppSidebar() {
             {state === 'expanded' ? (
               <>
                 <div className="flex items-center justify-between px-3 mb-3">
-                  <SidebarGroupLabel className="text-white font-black text-sm">
+                  <SidebarGroupLabel className="text-white font-black text-sm flex items-center gap-2">
+                    <MessageSquare className="h-4 w-4" />
                     Chat History
                   </SidebarGroupLabel>
                   <div className="flex items-center space-x-1">
