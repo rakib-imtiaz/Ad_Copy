@@ -130,7 +130,7 @@ export function AppSidebar() {
         )}
       </SidebarHeader>
 
-      <SidebarContent className={`flex flex-col justify-between bg-black ${state === 'expanded' ? 'px-3 py-4' : 'px-0 py-4'}`}>
+      <SidebarContent className={`flex flex-col justify-between bg-black h-full overflow-hidden ${state === 'expanded' ? 'px-3 py-4' : 'px-0 py-4'}`}>
         <div className="flex-1 flex flex-col">
 
           {/* Chat History Section - Now takes up most of the space */}
@@ -183,8 +183,8 @@ export function AppSidebar() {
                     )}
                   </div>
                 </div>
-                <SidebarGroupContent className="flex-1">
-                  <div className="px-3 w-full overflow-hidden h-full">
+                <SidebarGroupContent className="flex-1 overflow-hidden">
+                  <div className="px-3 w-full h-full overflow-hidden">
                     <div className="space-y-2 h-full overflow-y-auto overflow-x-hidden">
                       {isLoadingChatHistory ? (
                         <div className="flex items-center justify-center py-8">
