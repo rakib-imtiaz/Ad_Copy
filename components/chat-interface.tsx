@@ -202,30 +202,30 @@ export function ChatInterface({
 
       {/* Messages Container - Properly Scrolled */}
       <div className="flex-1 min-h-0 overflow-y-auto">
-        <div className="p-4 sm:p-6 pt-20 space-y-4 sm:space-y-6 pb-32">
+        <div className="p-2 sm:p-3 pt-12 space-y-2 sm:space-y-3 pb-16">
         {(messages || conversation?.messages || []).map((msg) => {
           // Handle both ChatMessage (with type) and dashboard messages (with role)
           const isUser = 'role' in msg ? msg.role === 'user' : msg.type === 'user'
           return (
-          <div key={msg.id} className={`flex ${isUser ? 'justify-end' : 'justify-start'} mb-6`}>
-            <div className={`max-w-[85%] sm:max-w-[75%] ${isUser ? 'ml-4 sm:ml-16' : 'mr-4 sm:mr-16'}`}>
-              <div className={`flex items-start gap-3 ${isUser ? 'flex-row-reverse' : ''}`}>
+          <div key={msg.id} className={`flex ${isUser ? 'justify-end' : 'justify-start'} mb-3`}>
+            <div className={`max-w-[90%] sm:max-w-[80%] ${isUser ? 'ml-2 sm:ml-8' : 'mr-2 sm:mr-8'}`}>
+              <div className={`flex items-start gap-1.5 ${isUser ? 'flex-row-reverse' : ''}`}>
                 {/* Avatar for agent only - removed for user */}
                 {!isUser && (
-                  <Avatar className="h-8 w-8 sm:h-10 sm:w-10 flex-shrink-0 shadow-lg ring-2 ring-black">
-                    <AvatarFallback className="bg-black text-white font-semibold text-sm flex items-center justify-center">
-                      <Bot className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
+                  <Avatar className="h-5 w-5 sm:h-6 sm:w-6 flex-shrink-0 shadow-lg ring-2 ring-black">
+                    <AvatarFallback className="bg-black text-white font-semibold text-xs flex items-center justify-center">
+                      <Bot className="h-2.5 w-2.5 sm:h-3 sm:w-3 text-white" />
                     </AvatarFallback>
                   </Avatar>
                 )}
-                
+
                 <div className="flex-1 min-w-0">
                   {/* Message bubble with improved styling */}
                   <div className={`relative inline-block max-w-full ${
-                    isUser 
-                      ? 'bg-white text-black shadow-2xl border border-gray-300' 
+                    isUser
+                      ? 'bg-white text-black shadow-lg border border-gray-300'
                       : 'bg-black text-white shadow-md'
-                  } rounded-2xl px-4 py-3`}>
+                  } rounded-lg px-2 py-1.5`}>
                     <div className="break-words overflow-hidden">
                       <div className={`text-sm leading-relaxed ${
                         isUser 
@@ -380,24 +380,24 @@ export function ChatInterface({
         )})}
         
         {isLoading && (
-          <div className="flex justify-start mb-6">
-            <div className="max-w-[85%] sm:max-w-[75%] mr-4 sm:mr-16">
-              <div className="flex items-start gap-3">
-                <Avatar className="h-8 w-8 sm:h-10 sm:w-10 flex-shrink-0 shadow-lg ring-2 ring-white">
-                  <AvatarFallback className="bg-black text-white font-semibold text-sm flex items-center justify-center">
-                    <Bot className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
+          <div className="flex justify-start mb-3">
+            <div className="max-w-[90%] sm:max-w-[80%] mr-2 sm:mr-8">
+              <div className="flex items-start gap-1.5">
+                <Avatar className="h-5 w-5 sm:h-6 sm:w-6 flex-shrink-0 shadow-lg ring-2 ring-white">
+                  <AvatarFallback className="bg-black text-white font-semibold text-xs flex items-center justify-center">
+                    <Bot className="h-2.5 w-2.5 sm:h-3 sm:w-3 text-white" />
                   </AvatarFallback>
                 </Avatar>
-                
+
                 <div className="flex-1 min-w-0">
-                  <div className="relative inline-block max-w-full bg-black text-white shadow-md rounded-2xl px-4 py-3">
-                    <div className="flex items-center space-x-3">
-                      <div className="flex space-x-1">
-                        <div className="w-2 h-2 bg-white rounded-full animate-bounce"></div>
-                        <div className="w-2 h-2 bg-white rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-                        <div className="w-2 h-2 bg-white rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                  <div className="relative inline-block max-w-full bg-black text-white shadow-md rounded-lg px-2 py-1.5">
+                    <div className="flex items-center space-x-1.5">
+                      <div className="flex space-x-0.5">
+                        <div className="w-1.5 h-1.5 bg-white rounded-full animate-bounce"></div>
+                        <div className="w-1.5 h-1.5 bg-white rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+                        <div className="w-1.5 h-1.5 bg-white rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
                       </div>
-                      <span className="text-sm text-white font-medium">AI is thinking...</span>
+                      <span className="text-xs text-white font-medium">AI is thinking...</span>
                     </div>
                   </div>
                 </div>
@@ -440,7 +440,7 @@ export function ChatInterface({
         <div className="max-w-4xl mx-auto">
           {/* ChatGPT-style input bar */}
           <div className="relative">
-            <div className="flex items-center bg-white rounded-full px-4 py-3 transition-all duration-200 focus-within:outline-none border border-slate-200" style={{ boxShadow: '0 15px 35px -5px rgba(0, 0, 0, 0.6), 0 8px 15px -5px rgba(0, 0, 0, 0.3)' }} onMouseEnter={(e) => e.currentTarget.style.boxShadow = '0 25px 45px -5px rgba(0, 0, 0, 0.7), 0 12px 20px -5px rgba(0, 0, 0, 0.4)'} onMouseLeave={(e) => e.currentTarget.style.boxShadow = '0 15px 35px -5px rgba(0, 0, 0, 0.6), 0 8px 15px -5px rgba(0, 0, 0, 0.3)'}>
+            <div className="flex items-center bg-white rounded-full px-4 py-3 transition-all duration-200 focus-within:outline-none border border-slate-200" style={{ boxShadow: '0 10px 25px -3px rgba(0, 0, 0, 0.5), 0 6px 12px -3px rgba(0, 0, 0, 0.2)' }} onMouseEnter={(e) => e.currentTarget.style.boxShadow = '0 18px 35px -4px rgba(0, 0, 0, 0.6), 0 10px 16px -4px rgba(0, 0, 0, 0.3)'} onMouseLeave={(e) => e.currentTarget.style.boxShadow = '0 10px 25px -3px rgba(0, 0, 0, 0.5), 0 6px 12px -3px rgba(0, 0, 0, 0.2)'}>
               {/* Plus icon on the left */}
               <div className="relative mr-3">
                 <Button

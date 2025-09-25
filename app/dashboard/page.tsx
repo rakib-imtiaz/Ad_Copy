@@ -3395,7 +3395,7 @@ export default function Dashboard() {
         >
       {/* Chat Interface Content */}
 
-      <div className="flex h-screen">
+      <div className="flex h-screen xl:max-w-5xl xl:mx-auto xl:shadow-xl xl:rounded-lg xl:mt-2 xl:mb-2 xl:h-[calc(100vh-1rem)]">
         {/* Main Chat Area */}
         <div className={`flex-1 flex flex-col min-w-0 bg-gradient-to-br from-slate-50 via-white to-blue-50/30 h-full transition-all duration-300 ${
           rightPanelOpen ? 'xl:mr-96' : ''
@@ -3441,24 +3441,24 @@ export default function Dashboard() {
           
           {/* Chat Header */}
           <div className="sticky top-0 z-10 bg-white/95 backdrop-blur-sm border-b border-slate-200/60 shadow-sm">
-            <div className="px-6 py-4">
+            <div className="px-3 py-2">
               <div className="flex items-center justify-between">
                 {/* Left side - Chat title and agent info */}
-                <div className="flex items-center space-x-6">
+                <div className="flex items-center space-x-3">
                   <div className="flex flex-col">
-                    <h1 className="text-xl font-bold text-slate-900 leading-tight">
+                    <h1 className="text-base font-bold text-slate-900 leading-tight">
                       {currentChatSession ? 
                         (chatHistory.find(chat => chat.session_id === currentChatSession)?.title || "Chat Session") : 
                         "New Conversation"
                       }
                     </h1>
-                    <div className="flex items-center space-x-2 mt-1">
+                    <div className="flex items-center space-x-1.5 mt-0.5">
                       <span className="text-xs font-bold text-slate-800 uppercase tracking-wide">Active Agent</span>
-                      <div className="flex items-center space-x-2">
-                        <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                      <div className="flex items-center space-x-1.5">
+                        <div className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse"></div>
                         <Badge 
                           variant="outline" 
-                          className="text-xs font-semibold bg-white text-slate-800 border-2 border-black rounded-full hover:bg-slate-50 transition-all duration-200 px-3 py-1"
+                          className="text-xs font-semibold bg-white text-slate-800 border border-black rounded-full hover:bg-slate-50 transition-all duration-200 px-2 py-0.5"
                         >
                           {selectedAgent || 'No Agent Selected'}
                         </Badge>

@@ -108,38 +108,38 @@ export function AppSidebar() {
 
   return (
     <Sidebar variant="inset" collapsible="icon" className="border-r border-gray-700 bg-black">
-      <SidebarHeader className="border-b border-gray-700 bg-black px-4 py-4">
+      <SidebarHeader className="border-b border-gray-700 bg-black px-2 py-2">
         {state === 'expanded' ? (
-          <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white shadow-sm">
-              <span className="text-xl font-black text-black">C</span>
+          <div className="flex items-center gap-1">
+            <div className="flex h-6 w-6 items-center justify-center rounded-md bg-white shadow-sm">
+              <span className="text-sm font-black text-black">C</span>
             </div>
             <div className="flex-1 min-w-0">
-              <h1 className="text-lg font-black text-white truncate">Copy Ready</h1>
+              <h1 className="text-sm font-black text-white truncate">Copy Ready</h1>
               <p className="text-xs text-gray-300 truncate">AI Ad Copy Platform</p>
             </div>
-            <SidebarTrigger className="h-8 w-8 rounded-lg hover:bg-gray-800 transition-colors text-white hover:text-white [&>svg]:text-white [&>svg]:hover:text-white [&[data-sidebar=trigger]]:text-white [&[data-sidebar=trigger]]:hover:text-white" />
+            <SidebarTrigger className="h-6 w-6 rounded-md hover:bg-gray-800 transition-colors text-white hover:text-white [&>svg]:text-white [&>svg]:hover:text-white [&[data-sidebar=trigger]]:text-white [&[data-sidebar=trigger]]:hover:text-white" />
           </div>
         ) : (
-          <div className="flex flex-col items-center gap-2">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white shadow-sm">
-              <span className="text-xl font-black text-black">C</span>
+          <div className="flex flex-col items-center gap-1">
+            <div className="flex h-6 w-6 items-center justify-center rounded-md bg-white shadow-sm">
+              <span className="text-sm font-black text-black">C</span>
             </div>
-            <SidebarTrigger className="h-6 w-6 rounded-md hover:bg-gray-800 transition-colors text-white hover:text-white [&>svg]:text-white [&>svg]:hover:text-white [&[data-sidebar=trigger]]:text-white [&[data-sidebar=trigger]]:hover:text-white" />
+            <SidebarTrigger className="h-5 w-5 rounded-md hover:bg-gray-800 transition-colors text-white hover:text-white [&>svg]:text-white [&>svg]:hover:text-white [&[data-sidebar=trigger]]:text-white [&[data-sidebar=trigger]]:hover:text-white" />
           </div>
         )}
       </SidebarHeader>
 
-      <SidebarContent className={`flex flex-col justify-between bg-black h-full overflow-hidden ${state === 'expanded' ? 'px-3 py-4' : 'px-0 py-4'}`}>
+      <SidebarContent className={`flex flex-col justify-between bg-black h-full overflow-hidden ${state === 'expanded' ? 'px-2 py-3' : 'px-0 py-3'}`}>
         <div className="flex-1 flex flex-col">
 
           {/* Chat History Section - Now takes up most of the space */}
           <SidebarGroup className="flex-1">
             {state === 'expanded' ? (
               <>
-                <div className="flex items-center justify-between px-3 mb-3">
-                  <SidebarGroupLabel className="text-white font-black text-sm flex items-center gap-2">
-                    <MessageSquare className="h-4 w-4" />
+                <div className="flex items-center justify-between px-1 mb-1">
+                  <SidebarGroupLabel className="text-white font-black text-xs flex items-center gap-1">
+                    <MessageSquare className="h-3 w-3" />
                     Chat History
                   </SidebarGroupLabel>
                   <div className="flex items-center space-x-1">
@@ -152,9 +152,9 @@ export function AppSidebar() {
                               size="sm"
                               onClick={onRefreshChatHistory}
                               disabled={isLoadingChatHistory}
-                              className="h-7 w-7 p-0 text-gray-300 hover:text-white hover:bg-gray-800 rounded-md"
+                              className="h-5 w-5 p-0 text-gray-300 hover:text-white hover:bg-gray-800 rounded-md"
                             >
-                              <RefreshCw className={`h-3.5 w-3.5 ${isLoadingChatHistory ? 'animate-spin' : ''}`} />
+                              <RefreshCw className={`h-2.5 w-2.5 ${isLoadingChatHistory ? 'animate-spin' : ''}`} />
                             </Button>
                           </TooltipTrigger>
                           <TooltipContent>
@@ -171,9 +171,9 @@ export function AppSidebar() {
                               variant="ghost"
                               size="sm"
                               onClick={onStartNewChat}
-                              className="h-7 w-7 p-0 text-gray-300 hover:text-white hover:bg-gray-800 rounded-md"
+                              className="h-5 w-5 p-0 text-gray-300 hover:text-white hover:bg-gray-800 rounded-md"
                             >
-                              <Plus className="h-3.5 w-3.5" />
+                              <Plus className="h-2.5 w-2.5" />
                             </Button>
                           </TooltipTrigger>
                           <TooltipContent>
@@ -185,12 +185,12 @@ export function AppSidebar() {
                   </div>
                 </div>
                 <SidebarGroupContent className="flex-1 overflow-hidden">
-                  <div className="px-3 w-full h-full overflow-hidden">
+                  <div className="px-1 w-full h-full overflow-hidden">
                     <div className="space-y-2 h-full overflow-y-auto overflow-x-hidden">
                       {isLoadingChatHistory ? (
-                        <div className="flex items-center justify-center py-8">
-                          <Loader2 className="h-5 w-5 animate-spin text-gray-300" />
-                          <span className="ml-2 text-sm text-gray-300">Loading conversations...</span>
+                        <div className="flex items-center justify-center py-6">
+                          <Loader2 className="h-4 w-4 animate-spin text-gray-300" />
+                          <span className="ml-2 text-xs text-gray-300">Loading conversations...</span>
                         </div>
                       ) : chatHistory.length > 0 ? (
                         chatHistory.map((chat: any) => {
@@ -210,23 +210,22 @@ export function AppSidebar() {
                           return (
                             <div
                               key={chat.session_id}
-                              className={`group relative p-3 rounded-xl border transition-all duration-200 cursor-pointer ${
-                                isActive 
-                                  ? 'bg-gray-800 border-gray-600 shadow-sm' 
-                                  : 'bg-gray-900 border-gray-700 hover:bg-gray-800 hover:border-gray-600 hover:shadow-sm'
+                              className={`group relative p-2 rounded-md transition-all duration-200 cursor-pointer ${
+                                isActive
+                                  ? 'bg-white shadow-sm border border-gray-300'
+                                  : 'bg-white hover:bg-gray-50 hover:shadow-sm border border-gray-200'
                               } ${isDeleting ? 'opacity-50 pointer-events-none' : ''}`}
                               onClick={() => !isDeleting && onLoadChatSession?.(chat.session_id)}
                             >
-                              <div className="flex items-start justify-between gap-2">
+                              <div className="flex items-start justify-between gap-1">
                                 <div className="flex-1 min-w-0 overflow-hidden">
-                                  <div className="flex items-center space-x-2 mb-1">
-                                    <h4 className={`font-bold text-sm truncate ${
-                                      isActive ? 'text-white' : 'text-white'
+                                  <div className="flex items-center space-x-1">
+                                    <h4 className={`font-bold text-xs truncate ${
+                                      isActive ? 'text-gray-900' : 'text-gray-900'
                                     }`}>
                                       {chat.title || `Chat ${chat.session_id}`}
                                     </h4>
                                   </div>
-                                  <p className="text-xs text-gray-400 truncate">{timeAgo}</p>
                                 </div>
                                 {!isDeleting && (
                                   <AlertDialog>
@@ -234,21 +233,21 @@ export function AppSidebar() {
                                       <Button
                                         variant="ghost"
                                         size="sm"
-                                        className="h-6 w-6 p-0 text-gray-500 hover:text-white hover:bg-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
+                                        className="h-4 w-4 p-0 text-gray-500 hover:text-red-600 hover:bg-red-50 opacity-0 group-hover:opacity-100 transition-opacity"
                                         onClick={(e) => e.stopPropagation()}
                                       >
                                         <Trash2 className="h-3 w-3" />
                                       </Button>
                                     </AlertDialogTrigger>
-                                    <AlertDialogContent>
+                                    <AlertDialogContent className="bg-white border-gray-200">
                                       <AlertDialogHeader>
-                                        <AlertDialogTitle>Delete Conversation</AlertDialogTitle>
-                                        <AlertDialogDescription>
+                                        <AlertDialogTitle className="text-gray-900">Delete Conversation</AlertDialogTitle>
+                                        <AlertDialogDescription className="text-gray-600">
                                           Are you sure you want to delete this conversation? This action cannot be undone.
                                         </AlertDialogDescription>
                                       </AlertDialogHeader>
                                       <AlertDialogFooter>
-                                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                        <AlertDialogCancel className="bg-gray-100 hover:bg-gray-200 text-gray-900">Cancel</AlertDialogCancel>
                                         <AlertDialogAction
                                           onClick={() => handleDeleteChat(chat.session_id)}
                                           className="bg-red-600 hover:bg-red-700"
@@ -269,11 +268,11 @@ export function AppSidebar() {
                           )
                         })
                       ) : (
-                        <div className="text-center py-8">
-                          <div className="w-12 h-12 mx-auto mb-3 bg-gray-800 rounded-full flex items-center justify-center">
-                            <MessageSquare className="h-6 w-6 text-gray-400" />
+                        <div className="text-center py-6">
+                          <div className="w-10 h-10 mx-auto mb-2 bg-white border border-gray-300 rounded-full flex items-center justify-center">
+                            <MessageSquare className="h-5 w-5 text-gray-400" />
                           </div>
-                          <p className="text-sm text-gray-300 mb-1">No conversations yet</p>
+                          <p className="text-xs text-gray-300 mb-1">No conversations yet</p>
                           <p className="text-xs text-gray-400">Start a new chat to begin</p>
                         </div>
                       )}
@@ -297,19 +296,19 @@ export function AppSidebar() {
                             <TooltipTrigger asChild>
                               <SidebarMenuButton
                                 asChild
-                                className="w-full h-10 p-0"
+                                className="w-full h-8 p-0"
                               >
                                 <Button
                                   variant="ghost"
                                   size="sm"
-                                  className={`w-full h-10 p-0 rounded-lg transition-all justify-center ${
-                                    isActive 
-                                      ? 'bg-gray-800 hover:bg-gray-700 text-white' 
-                                      : 'hover:bg-gray-800 text-gray-300'
+                                  className={`w-full h-8 p-0 rounded-lg transition-all justify-center ${
+                                    isActive
+                                      ? 'bg-white hover:bg-gray-100 text-gray-900 border border-gray-300'
+                                      : 'hover:bg-gray-50 text-gray-600'
                                   }`}
                                   onClick={() => onLoadChatSession?.(chat.session_id)}
                                 >
-                                  <MessageSquare className="h-4 w-4" />
+                                  <MessageSquare className="h-3 w-3" />
                                 </Button>
                               </SidebarMenuButton>
                             </TooltipTrigger>
@@ -337,15 +336,15 @@ export function AppSidebar() {
                             <TooltipTrigger asChild>
                               <SidebarMenuButton
                                 asChild
-                                className="w-full h-10 p-0"
+                                className="w-full h-8 p-0"
                               >
                                 <Button
                                   variant="ghost"
                                   size="sm"
-                                  className="w-full h-10 p-0 hover:bg-gray-800 rounded-lg justify-center text-gray-300"
+                                  className="w-full h-8 p-0 hover:bg-gray-50 rounded-lg justify-center text-gray-600"
                                   onClick={onStartNewChat}
                                 >
-                                  <Plus className="h-4 w-4" />
+                                  <Plus className="h-3 w-3" />
                                 </Button>
                               </SidebarMenuButton>
                             </TooltipTrigger>
@@ -363,8 +362,8 @@ export function AppSidebar() {
                       <TooltipProvider>
                         <Tooltip>
                           <TooltipTrigger asChild>
-                            <div className="w-full h-10 flex items-center justify-center">
-                              <MessageSquare className="h-4 w-4 text-gray-500" />
+                            <div className="w-full h-8 flex items-center justify-center">
+                              <MessageSquare className="h-3 w-3 text-gray-500" />
                             </div>
                           </TooltipTrigger>
                           <TooltipContent side="right">
@@ -386,23 +385,23 @@ export function AppSidebar() {
           <SidebarMenu className={state === 'expanded' ? 'space-y-1' : 'flex flex-col items-center space-y-1'}>
             {/* Knowledge Base Button */}
             <SidebarMenuItem>
-              <SidebarMenuButton 
-                asChild 
+              <SidebarMenuButton
+                asChild
                 tooltip="Knowledge Base"
               >
                  <Button
                    variant="ghost"
-                   className={`w-full h-10 rounded-lg transition-all duration-200 overflow-hidden group ${
-                     state === 'expanded' 
-                       ? `justify-start px-3 hover:bg-gray-800 text-gray-300 hover:text-white`
-                       : `justify-center p-0 hover:bg-gray-800 text-gray-300 hover:text-white`
+                   className={`w-full h-8 rounded-lg transition-all duration-200 overflow-hidden group ${
+                     state === 'expanded'
+                      ? `justify-start px-2 hover:bg-gray-800 text-white hover:text-white`
+                      : `justify-center p-0 hover:bg-gray-800 text-white hover:text-white`
                    }`}
                    size="sm"
                    onClick={() => handleNavigation('/knowledge-base')}
                  >
-                   <Database className="h-4 w-4 flex-shrink-0 transition-all duration-200 group-hover:scale-110" />
+                   <Database className="h-3 w-3 flex-shrink-0 transition-all duration-200 group-hover:scale-110" />
                    {state === 'expanded' && (
-                     <span className="font-bold truncate ml-3">
+                     <span className="font-bold text-xs truncate ml-2">
                        Knowledge Base
                      </span>
                    )}
@@ -412,22 +411,22 @@ export function AppSidebar() {
             
             {/* Settings Button */}
             <SidebarMenuItem>
-              <SidebarMenuButton 
-                asChild 
+              <SidebarMenuButton
+                asChild
                 tooltip="Settings"
               >
                 <Button
                   variant="ghost"
-                  className={`w-full h-10 rounded-lg hover:bg-gray-800 text-gray-300 overflow-hidden ${
-                    state === 'expanded' 
-                      ? 'justify-start px-3' 
+                  className={`w-full h-8 rounded-lg hover:bg-gray-800 text-white overflow-hidden ${
+                    state === 'expanded'
+                      ? 'justify-start px-2'
                       : 'justify-center p-0'
                   }`}
                   size="sm"
                   onClick={() => handleNavigation('/profile')}
                 >
-                  <Settings className="h-4 w-4 flex-shrink-0" />
-                  {state === 'expanded' && <span className="font-bold truncate ml-3">Settings</span>}
+                  <Settings className="h-3 w-3 flex-shrink-0" />
+                  {state === 'expanded' && <span className="font-bold text-xs truncate ml-2">Settings</span>}
                 </Button>
               </SidebarMenuButton>
             </SidebarMenuItem>
@@ -435,18 +434,18 @@ export function AppSidebar() {
         </div>
       </SidebarContent>
 
-      <SidebarFooter className={`border-t border-gray-700 bg-black py-4 ${state === 'expanded' ? 'px-4' : 'px-0'}`}>
-        <SidebarMenu className={`space-y-2 ${state === 'expanded' ? '' : 'flex flex-col items-center'}`}>
+      <SidebarFooter className={`border-t border-gray-700 bg-black py-2 ${state === 'expanded' ? 'px-2' : 'px-0'}`}>
+        <SidebarMenu className={`space-y-0.5 ${state === 'expanded' ? '' : 'flex flex-col items-center'}`}>
           <SidebarMenuItem>
             {state === 'expanded' ? (
-              <div className="flex items-center gap-3 min-w-0">
-                <Avatar className="h-9 w-9">
-                  <AvatarFallback className="bg-white text-black font-black">
+              <div className="flex items-center gap-1 min-w-0">
+                <Avatar className="h-5 w-5">
+                  <AvatarFallback className="bg-white text-black font-black text-xs">
                     {user?.name ? user.name.charAt(0).toUpperCase() : 'U'}
                   </AvatarFallback>
                 </Avatar>
                 <div className="overflow-hidden min-w-0 flex-1">
-                  <p className="text-sm font-black text-white truncate">
+                  <p className="text-xs font-black text-white truncate">
                     {user?.name || 'User'}
                   </p>
                   <TooltipProvider>
@@ -465,8 +464,8 @@ export function AppSidebar() {
               </div>
             ) : (
               <div className="flex justify-center">
-                <Avatar className="h-9 w-9">
-                  <AvatarFallback className="bg-white text-black font-black">
+                <Avatar className="h-5 w-5">
+                  <AvatarFallback className="bg-white text-black font-black text-xs">
                     {user?.name ? user.name.charAt(0).toUpperCase() : 'U'}
                   </AvatarFallback>
                 </Avatar>
@@ -480,16 +479,16 @@ export function AppSidebar() {
             >
               <Button
                 variant="ghost"
-                className={`w-full h-10 rounded-lg text-red-600 hover:text-red-700 hover:bg-red-50 overflow-hidden ${
-                  state === 'expanded' 
-                    ? 'justify-start px-3' 
+                className={`w-full h-8 rounded-lg text-red-600 hover:text-red-700 hover:bg-red-50 overflow-hidden ${
+                  state === 'expanded'
+                    ? 'justify-start px-2'
                     : 'justify-center p-0'
                 }`}
                 size="sm"
                 onClick={handleLogout}
               >
-                <LogOut className="h-4 w-4 flex-shrink-0" />
-                {state === 'expanded' && <span className="font-bold truncate ml-3">Logout</span>}
+                <LogOut className="h-3 w-3 flex-shrink-0" />
+                {state === 'expanded' && <span className="font-bold text-xs truncate ml-2">Logout</span>}
               </Button>
             </SidebarMenuButton>
           </SidebarMenuItem>
