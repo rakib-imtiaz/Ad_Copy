@@ -90,217 +90,7 @@ function MarkdownContent({ content }: { content: string }) {
   )
 }
 
-// Modern Initial Interface with Enhanced UX
-function InitialInterface({ agents, selectedAgent, onSelectAgent, onStartChatting, onRefreshAgents, isLoadingAgents, isStartingChat }: any) {
-  const { user } = useAuth()
-
-  const handleStartChatting = () => {
-    if (selectedAgent && onStartChatting) {
-      onStartChatting()
-    }
-  }
-
-  const handleAdminClick = () => {
-    window.location.href = '/admin'
-  }
-
-  const currentAgent = agents.find((agent: any) => agent.name === selectedAgent)
-  const isAdmin = user?.role === 'Superking'
-
-  return (
-    <div className="min-h-screen bg-white">
-      {/* Admin Button - Only show for admin users */}
-      {isAdmin && (
-        <div className="fixed top-4 right-4 z-10">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleAdminClick}
-            className="bg-black text-white border-black hover:bg-gray-800 rounded-full px-4 py-2"
-          >
-            <Shield className="h-4 w-4 mr-2" />
-            Admin
-          </Button>
-        </div>
-      )}
-
-      <div className="container mx-auto px-6 py-12 max-w-7xl pb-20">
-        {/* Header Section */}
-        <motion.div 
-          className="mb-16 text-center"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-        >
-          <div className="flex justify-center mb-8">
-            <div className="w-48 h-48 flex items-center justify-center">
-              <img 
-                src="/logo.png" 
-                alt="Copy Ready logo" 
-                width={192} 
-                height={192}
-                className="rounded-lg"
-              />
-            </div>
-          </div>
-          <h1 className="text-5xl font-bold text-black mb-4">
-            What can I help with?
-          </h1>
-          <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-            Choose an AI agent and start creating high-converting ad copy that drives results
-          </p>
-        </motion.div>
-
-        {/* Agent Selection Section */}
-        <motion.div 
-          className="mb-16"
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.1 }}
-        >
-          <div className="text-center mb-8">
-            <h2 className="text-3xl font-semibold text-black mb-2">Select Your AI Agent</h2>
-            <p className="text-lg text-gray-600 mb-6">
-              Choose the perfect assistant for your copywriting needs
-            </p>
-            
-            <div className="flex items-center justify-center gap-4 mb-8">
-              <span className="text-sm text-gray-500">
-                {agents.length} agents available
-              </span>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={onRefreshAgents}
-                disabled={isLoadingAgents || isStartingChat}
-                className="flex items-center space-x-2 border-black text-black hover:bg-black hover:text-white"
-              >
-                <RefreshCw className={`h-4 w-4 ${isLoadingAgents ? 'animate-spin' : ''}`} />
-                <span>Refresh</span>
-              </Button>
-            </div>
-          </div>
-
-          {/* Agent Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-5xl mx-auto items-stretch">
-            {isLoadingAgents ? (
-              Array.from({ length: 3 }).map((_, i) => (
-                <Card key={i} className="h-full p-6 border-2 border-gray-200 flex flex-col">
-                  <div className="flex items-start space-x-4 flex-1">
-                    <Skeleton className="w-12 h-12 rounded-xl bg-gray-200" />
-                    <div className="flex-1 space-y-2 flex flex-col">
-                      <Skeleton className="h-5 w-3/4 bg-gray-200" />
-                      <Skeleton className="h-4 w-full bg-gray-200" />
-                      <Skeleton className="h-4 w-2/3 bg-gray-200" />
-                      <Skeleton className="h-4 w-1/2 bg-gray-200" />
-                    </div>
-                  </div>
-                </Card>
-              ))
-            ) : (
-              agents.map((agent: any) => {
-                const isSelected = selectedAgent === agent.name
-                return (
-                  <motion.div
-                    key={agent.id}
-                    className="h-full"
-                    whileHover={{ 
-                      scale: 1.05,
-                      y: -8,
-                      transition: { 
-                        duration: 0.3,
-                        ease: "easeOut"
-                      }
-                    }}
-                    whileTap={{ scale: 0.98 }}
-                    transition={{ duration: 0.2 }}
-                  >
-                    <Card 
-                      className={`h-full p-6 cursor-pointer transition-all duration-300 hover:shadow-xl hover:shadow-black/10 flex flex-col ${
-                        isSelected 
-                          ? 'border-2 border-black shadow-lg bg-gray-50' 
-                          : 'border-2 border-gray-200 hover:border-black hover:bg-white'
-                      }`}
-                      onClick={() => onSelectAgent(agent.name)}
-                    >
-                      <div className="flex items-start space-x-4 flex-1">
-                        <motion.div 
-                          className="w-12 h-12 rounded-xl bg-black flex items-center justify-center flex-shrink-0"
-                          animate={isSelected ? { scale: [1, 1.1, 1] } : {}}
-                          transition={{ duration: 0.6, repeat: isSelected ? Infinity : 0, repeatDelay: 2 }}
-                        >
-                          <Bot className="h-6 w-6 text-white" />
-                        </motion.div>
-                        <div className="flex-1 min-w-0 flex flex-col">
-                          <motion.h3 
-                            className="font-semibold text-lg text-black mb-2"
-                            animate={isSelected ? { color: ["#000000", "#374151", "#000000"] } : {}}
-                            transition={{ duration: 0.3 }}
-                          >
-                            {agent.name}
-                          </motion.h3>
-                          <p className="text-sm text-gray-600 leading-relaxed flex-1">
-                            {agent.description}
-                          </p>
-                        </div>
-                        {isSelected && (
-                          <motion.div
-                            initial={{ scale: 0, opacity: 0 }}
-                            animate={{ scale: 1, opacity: 1 }}
-                            transition={{ duration: 0.3, type: "spring", stiffness: 200 }}
-                            className="flex items-center justify-center flex-shrink-0"
-                          >
-                            <div className="w-6 h-6 rounded-full bg-black flex items-center justify-center">
-                              <Check className="h-4 w-4 text-white" />
-                            </div>
-                          </motion.div>
-                        )}
-                      </div>
-                    </Card>
-                  </motion.div>
-                )
-              })
-            )}
-          </div>
-        </motion.div>
-
-        {/* Start Chatting Button */}
-        <motion.div 
-          className="flex flex-col items-center"
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.2 }}
-        >
-          <Button
-            onClick={handleStartChatting}
-            disabled={!selectedAgent || isStartingChat}
-            size="lg"
-            className="h-16 px-12 text-lg font-semibold bg-black hover:bg-gray-800 text-white rounded-full shadow-xl hover:shadow-2xl transition-all duration-300"
-          >
-            {isStartingChat ? (
-              <div className="flex items-center justify-center space-x-3">
-                <div className="animate-spin rounded-full h-6 w-6 border-2 border-white border-t-transparent"></div>
-                <span>Starting Chat...</span>
-              </div>
-            ) : (
-              <div className="flex items-center justify-center space-x-3">
-                <MessageSquare className="h-6 w-6" />
-                <span>Start Chatting</span>
-                <ArrowRight className="h-6 w-6" />
-              </div>
-            )}
-          </Button>
-          
-          {currentAgent && (
-            <p className="mt-4 text-sm text-gray-600">
-              Selected: {currentAgent.name}
-            </p>
-          )}
-        </motion.div>
-      </div>
-    </div>
-  )
-}
+// Removed InitialInterface function - now using modal for agent selection
 
 // Three Dots Menu Component
 function ThreeDotsMenu({ onDelete }: any) {
@@ -1919,9 +1709,77 @@ export default function Dashboard() {
         }
         
         console.log('💡 Chat state cleared and new session initiated from sidebar.')
+      },
+      onStartChatting: async () => {
+        console.log('🚀 Starting chat with selected agent:', selectedAgent)
+        if (selectedAgent) {
+          // Reset state first
+          setSessionId('')
+          setHasInitializedChat(false)
+          setChatStarted(false)
+          setMessages([])
+          setCurrentChatSession(null)
+          updateCurrentChatSession(null)
+          
+          // Clear localStorage
+          if (typeof window !== 'undefined') {
+            localStorage.removeItem('chat_session_id')
+            localStorage.removeItem('chat_started')
+            localStorage.removeItem('chat_messages')
+            
+            // Clear URL parameter
+            const url = new URL(window.location.href)
+            url.searchParams.delete('chatid')
+            window.history.replaceState({}, document.title, url.toString())
+          }
+          
+          // Start the chat
+          setIsStartingChat(true)
+          try {
+            const success = await initiateNewChat(true)
+            if (success) {
+              setChatStarted(true)
+              
+              // Wait for sessionId to be available, then update sidebar
+              const checkSessionId = () => {
+                const currentSessionId = sessionId || localStorage.getItem('chat_session_id')
+                if (currentSessionId) {
+                  console.log('🎯 Updating sidebar with session ID:', currentSessionId)
+                  setCurrentChatSession(currentSessionId)
+                  updateCurrentChatSession(currentSessionId)
+                  
+                  // Refresh chat history to get the new session
+                  fetchChatHistory()
+                  console.log('✅ Chat started successfully with agent:', selectedAgent, 'Session ID:', currentSessionId)
+                } else {
+                  // If no session ID yet, try again in 100ms
+                  setTimeout(checkSessionId, 100)
+                }
+              }
+              checkSessionId()
+            } else {
+              console.log('❌ Failed to start chat')
+            }
+          } catch (error) {
+            console.error('Error starting chat:', error)
+          } finally {
+            setIsStartingChat(false)
+          }
+        } else {
+          console.warn('No agent selected, cannot start chat')
+        }
       }
     })
-  }, [setActionRefs, handleSelectAgent, refreshAgents, loadChatSession, fetchChatHistory, deleteChatSession, updateCurrentChatSession])
+  }, [setActionRefs, handleSelectAgent, refreshAgents, loadChatSession, fetchChatHistory, deleteChatSession, updateCurrentChatSession, selectedAgent])
+
+  // Watch for sessionId changes and update sidebar accordingly
+  React.useEffect(() => {
+    if (sessionId && chatStarted) {
+      console.log('🔄 Session ID changed, updating sidebar:', sessionId)
+      setCurrentChatSession(sessionId)
+      updateCurrentChatSession(sessionId)
+    }
+  }, [sessionId, chatStarted, updateCurrentChatSession])
 
   // Send message to chat window webhook
   const sendMessageToChatWindow = async (userPrompt: string, isFirstMessage: boolean = false, sessionIdParam?: string) => {
@@ -2348,6 +2206,27 @@ export default function Dashboard() {
           }
           return newMessages
         })
+
+        // If this is the first message, refresh chat history to get the generated title
+        if (isFirstMessage) {
+          console.log('🔄 First message completed, refreshing chat history to get title...')
+          console.log('🔄 fetchChatHistory function available:', typeof fetchChatHistory)
+          
+          // Try multiple refresh attempts with increasing delays
+          const refreshAttempts = [2000, 4000, 6000] // 2s, 4s, 6s
+          
+          refreshAttempts.forEach((delay, index) => {
+            setTimeout(() => {
+              console.log(`🔄 Refresh attempt ${index + 1} after ${delay}ms`)
+              try {
+                fetchChatHistory()
+                console.log('✅ Chat history refresh called successfully')
+              } catch (error) {
+                console.error('❌ Error calling fetchChatHistory:', error)
+              }
+            }, delay)
+          })
+        }
       } else {
         // Add error message
         const errorMessage = {
@@ -3372,18 +3251,26 @@ export default function Dashboard() {
   return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50/20 text-slate-800 font-sans">
       {!chatStarted && !currentChatSession ? (
-        // Initial interface without separate sidebar
-        <div className="min-h-screen">
-          {/* Initial Interface Content */}
-          <InitialInterface
-            agents={agents}
-            selectedAgent={selectedAgent}
-            onSelectAgent={handleSelectAgent}
-            onStartChatting={handleStartChatting}
-            onRefreshAgents={refreshAgents}
-            isLoadingAgents={isLoadingAgents}
-            isStartingChat={isStartingChat}
-          />
+        // Show empty state or welcome message when no chat is active
+        <div className="min-h-screen flex items-center justify-center">
+          <div className="text-center space-y-6 max-w-md mx-auto px-6">
+            <div className="w-20 h-20 mx-auto bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-2xl flex items-center justify-center shadow-lg">
+              <Sparkles className="h-10 w-10 text-black" />
+            </div>
+            <div className="space-y-2">
+              <h1 className="text-3xl font-bold text-gray-900">Welcome to Copy Ready</h1>
+              <p className="text-gray-600 text-lg">
+                Click the <span className="inline-flex items-center justify-center w-6 h-6 bg-yellow-100 rounded-full mx-1">
+                  <Plus className="h-3 w-3 text-yellow-600" />
+                </span> button in the sidebar to start a new conversation with an AI agent.
+              </p>
+            </div>
+            <div className="space-y-3 text-sm text-gray-500">
+              <p>• Choose from our specialized AI agents</p>
+              <p>• Create high-converting ad copy</p>
+              <p>• Get professional marketing content</p>
+            </div>
+          </div>
         </div>
       ) : (
         // Full dashboard with chat interface

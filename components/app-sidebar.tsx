@@ -51,6 +51,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
 import { Separator } from "@/components/ui/separator"
+import { AgentSelectionModal } from "@/components/agent-selection-modal"
 
 const mainNav = [
   // Knowledge Base moved to bottom section for better placement
@@ -59,18 +60,26 @@ const mainNav = [
 export function AppSidebar() {
   const [activeItem, setActiveItem] = React.useState("/knowledge-base")
   const [deletingChatId, setDeletingChatId] = React.useState<string | null>(null)
+  const [isAgentModalOpen, setIsAgentModalOpen] = React.useState(false)
+  const [isStartingChat, setIsStartingChat] = React.useState(false)
   const { user, logout } = useAuth()
   const { state } = useSidebar()
   
   // Get sidebar state data
   const {
+    agents,
+    selectedAgent,
     chatHistory,
     currentChatSession,
     onLoadChatSession,
     onRefreshChatHistory,
     onDeleteChatSession,
     isLoadingChatHistory,
-    onStartNewChat
+    onStartNewChat,
+    onStartChatting,
+    onSelectAgent,
+    onRefreshAgents,
+    isLoadingAgents
   } = useSidebarState()
 
   const handleLogout = () => {
@@ -80,6 +89,30 @@ export function AppSidebar() {
   const handleNavigation = (href: string) => {
     setActiveItem(href)
     window.location.href = href
+  }
+
+  const handleNewChatClick = () => {
+    setIsAgentModalOpen(true)
+  }
+
+  const handleCloseModal = () => {
+    setIsAgentModalOpen(false)
+  }
+
+  const handleStartChatting = async () => {
+    setIsStartingChat(true)
+    // Call the onStartChatting function to properly initialize the chat
+    if (onStartChatting) {
+      try {
+        await onStartChatting()
+        // Close modal after successful chat start
+        setIsAgentModalOpen(false)
+      } catch (error) {
+        console.error('Error starting chat:', error)
+      } finally {
+        setIsStartingChat(false)
+      }
+    }
   }
 
   const handleDeleteChat = async (chatId: string) => {
@@ -106,7 +139,13 @@ export function AppSidebar() {
     }).format(date)
   }
 
+  // Debug: Watch for currentChatSession changes
+  React.useEffect(() => {
+    console.log('🎯 Sidebar currentChatSession changed:', currentChatSession)
+  }, [currentChatSession])
+
   return (
+    <>
     <Sidebar variant="inset" collapsible="icon" className="border-r border-yellow-600/30 bg-white">
       <SidebarHeader className="border-b border-yellow-600/30 bg-white px-2 py-2">
         {state === 'expanded' ? (
@@ -130,11 +169,9 @@ export function AppSidebar() {
         )}
       </SidebarHeader>
 
-      <SidebarContent className={`flex flex-col justify-between bg-white h-full overflow-hidden ${state === 'expanded' ? 'px-2 py-3' : 'px-0 py-3'}`}>
-        <div className="flex-1 flex flex-col">
-
-          {/* Chat History Section - Now takes up most of the space */}
-          <SidebarGroup className="flex-1">
+      <SidebarContent className={`flex flex-col bg-white h-full overflow-hidden ${state === 'expanded' ? 'px-2 py-3' : 'px-0 py-3'}`}>
+        {/* Chat History Section - Fixed height with scroll */}
+        <SidebarGroup className="flex-1 min-h-0">
             {state === 'expanded' ? (
               <>
                 <div className="flex items-center justify-between px-1 mb-2">
@@ -163,30 +200,35 @@ export function AppSidebar() {
                         </Tooltip>
                       </TooltipProvider>
                     )}
-                    {onStartNewChat && (
-                      <TooltipProvider>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={onStartNewChat}
-                              className="h-5 w-5 p-0 text-gray-600 hover:text-yellow-600 hover:bg-yellow-100 rounded-md"
-                            >
-                              <Plus className="h-2.5 w-2.5" />
-                            </Button>
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            <p>New conversation</p>
-                          </TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>
-                    )}
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={handleNewChatClick}
+                            className="h-5 w-5 p-0 text-gray-600 hover:text-yellow-600 hover:bg-yellow-100 rounded-md"
+                          >
+                            <Plus className="h-2.5 w-2.5" />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>New conversation</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
                   </div>
                 </div>
                 <SidebarGroupContent className="flex-1 overflow-hidden">
                   <div className="px-1 w-full h-full overflow-hidden">
-                    <div className="space-y-2 h-full overflow-y-auto overflow-x-hidden">
+                    <div 
+                      className="space-y-2 h-full overflow-y-auto overflow-x-hidden pr-1 chat-scroll" 
+                      style={{ 
+                        maxHeight: 'calc(100vh - 300px)',
+                        scrollbarWidth: 'thin',
+                        scrollbarColor: '#6b7280 transparent'
+                      }}
+                    >
                       {isLoadingChatHistory ? (
                         <div className="flex items-center justify-center py-6">
                           <Loader2 className="h-4 w-4 animate-spin text-yellow-600" />
@@ -329,32 +371,30 @@ export function AppSidebar() {
                   })}
                   
                   {/* New Chat Button */}
-                  {onStartNewChat && (
-                    <SidebarMenuItem>
-                        <TooltipProvider>
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <SidebarMenuButton
-                                asChild
-                                className="w-full h-8 p-0"
+                  <SidebarMenuItem>
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <SidebarMenuButton
+                              asChild
+                              className="w-full h-8 p-0"
+                            >
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="w-full h-8 p-0 hover:bg-yellow-50 rounded-lg justify-center text-gray-600"
+                                onClick={handleNewChatClick}
                               >
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  className="w-full h-8 p-0 hover:bg-yellow-50 rounded-lg justify-center text-gray-600"
-                                  onClick={onStartNewChat}
-                                >
-                                  <Plus className="h-3 w-3" />
-                                </Button>
-                              </SidebarMenuButton>
-                            </TooltipTrigger>
-                          <TooltipContent side="right">
-                            <p>New conversation</p>
-                          </TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>
-                    </SidebarMenuItem>
-                  )}
+                                <Plus className="h-3 w-3" />
+                              </Button>
+                            </SidebarMenuButton>
+                          </TooltipTrigger>
+                        <TooltipContent side="right">
+                          <p>New conversation</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  </SidebarMenuItem>
                   
                   {/* Show empty state if no chats */}
                   {chatHistory.length === 0 && !isLoadingChatHistory && (
@@ -376,11 +416,10 @@ export function AppSidebar() {
                 </SidebarMenu>
               </SidebarGroupContent>
             )}
-          </SidebarGroup>
-        </div>
+        </SidebarGroup>
 
-         {/* Knowledge Base & Settings Section */}
-         <div className="space-y-2">
+        {/* Knowledge Base & Settings Section - Fixed at bottom */}
+        <div className="mt-auto space-y-2 pt-2">
            <Separator className={`${state === 'expanded' ? 'mx-2' : 'mx-0'} border-yellow-600/30`} />
           <SidebarMenu className={state === 'expanded' ? 'space-y-1' : 'flex flex-col items-center space-y-1'}>
             {/* Knowledge Base Button */}
@@ -496,5 +535,19 @@ export function AppSidebar() {
       </SidebarFooter>
       <SidebarRail />
     </Sidebar>
+
+    {/* Agent Selection Modal */}
+    <AgentSelectionModal
+      isOpen={isAgentModalOpen}
+      onClose={handleCloseModal}
+      agents={agents}
+      selectedAgent={selectedAgent}
+      onSelectAgent={onSelectAgent || (() => {})}
+      onStartChatting={handleStartChatting}
+      onRefreshAgents={onRefreshAgents || (() => {})}
+      isLoadingAgents={isLoadingAgents}
+      isStartingChat={isStartingChat}
+    />
+    </>
   )
 } 

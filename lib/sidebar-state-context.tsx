@@ -18,6 +18,7 @@ interface SidebarActions {
   onRefreshChatHistory: () => void
   onDeleteChatSession: (sessionId: string) => void
   onStartNewChat: () => void
+  onStartChatting: () => void
   updateAgents: (agents: any[]) => void
   updateSelectedAgent: (agent: string) => void
   updateChatHistory: (history: any[]) => void
@@ -31,6 +32,7 @@ interface SidebarActions {
     onRefreshChatHistory?: () => void
     onDeleteChatSession?: (sessionId: string) => void
     onStartNewChat?: () => void
+    onStartChatting?: () => void
   }) => void
 }
 
@@ -59,6 +61,7 @@ export function SidebarStateProvider({ children }: { children: React.ReactNode }
     onRefreshChatHistory?: () => void
     onDeleteChatSession?: (sessionId: string) => void
     onStartNewChat?: () => void
+    onStartChatting?: () => void
   }>({})
 
   const contextValue: SidebarContextType = {
@@ -77,6 +80,7 @@ export function SidebarStateProvider({ children }: { children: React.ReactNode }
     onRefreshChatHistory: () => actionRefs.current.onRefreshChatHistory?.(),
     onDeleteChatSession: (sessionId: string) => actionRefs.current.onDeleteChatSession?.(sessionId),
     onStartNewChat: () => actionRefs.current.onStartNewChat?.(),
+    onStartChatting: () => actionRefs.current.onStartChatting?.(),
     
     // State updaters
     updateAgents: setAgents,
