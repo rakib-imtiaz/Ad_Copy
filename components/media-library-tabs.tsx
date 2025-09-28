@@ -18,7 +18,8 @@ import {
   Clock,
   X,
   Plus,
-  Video
+  Video,
+  MoreHorizontal
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -29,6 +30,9 @@ import { Separator } from "@/components/ui/separator"
 import { Skeleton } from "@/components/ui/skeleton"
 import { AnimatedText, FadeInText, SlideInText } from "@/components/ui/animated-text"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
+import { ContentViewer } from "@/components/content-viewer"
+import { Toast } from "@/components/ui/toast"
+import { authService } from "@/lib/auth-service"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -41,15 +45,136 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
 
+// Three Dots Menu Component
+function ThreeDotsMenu({ onDelete, onDownload, onView, item }: any) {
+  const [isOpen, setIsOpen] = React.useState(false)
+
+  const handleDownload = () => {
+    if (onDownload && item) {
+      onDownload(item)
+    }
+    setIsOpen(false)
+  }
+
+  const handleView = () => {
+    if (onView && item) {
+      onView(item)
+    }
+    setIsOpen(false)
+  }
+
+  return (
+    <div className="relative">
+      <Button 
+        variant="ghost" 
+        size="sm" 
+        className="h-6 w-6 p-0 text-gray-500 hover:text-gray-700 hover:bg-gray-100"
+        onClick={() => setIsOpen(!isOpen)}
+      >
+        <MoreHorizontal className="h-3 w-3" />
+      </Button>
+      
+      {isOpen && (
+        <>
+          <div 
+            className="fixed inset-0 z-10" 
+            onClick={() => setIsOpen(false)}
+          />
+          <div className="absolute right-0 top-6 z-20 bg-white border border-gray-200 rounded-md shadow-lg py-1 min-w-[120px]">
+            {onView && (
+              <button
+                className="w-full px-3 py-2 text-left text-sm text-blue-600 hover:bg-blue-50 flex items-center space-x-2"
+                onClick={handleView}
+              >
+                <Eye className="h-3 w-3" />
+                <span>View</span>
+              </button>
+            )}
+            {onDownload && (
+              <button
+                className="w-full px-3 py-2 text-left text-sm text-green-600 hover:bg-green-50 flex items-center space-x-2"
+                onClick={handleDownload}
+              >
+                <Download className="h-3 w-3" />
+                <span>Download</span>
+              </button>
+            )}
+            <button
+              className="w-full px-3 py-2 text-left text-sm text-red-600 hover:bg-red-50 flex items-center space-x-2"
+              onClick={() => {
+                onDelete()
+                setIsOpen(false)
+              }}
+            >
+              <Trash2 className="h-3 w-3" />
+              <span>Delete</span>
+            </button>
+          </div>
+        </>
+      )}
+    </div>
+  )
+}
+
 // Files Tab Component
-export function FilesTab({ mediaItems, onUpload, onDelete, isDeleting, deletingItemId, isLoadingTabContent }: any) {
+export function FilesTab({ mediaItems, onUpload, onDelete, isDeleting, deletingItemId, isLoadingTabContent, onDownload, onView }: any) {
   const [dragActive, setDragActive] = React.useState(false)
   const [isUploading, setIsUploading] = React.useState(false)
+  const [searchQuery, setSearchQuery] = React.useState('')
   const fileInputRef = React.useRef<HTMLInputElement>(null)
   
-  const fileItems = mediaItems.filter((item: any) => 
-    ['pdf', 'doc', 'txt', 'audio', 'video'].includes(item.type)
-  )
+  // Helper function to format file sizes
+  const formatFileSize = (bytes: number): string => {
+    if (bytes === 0) return '0 Bytes'
+    const k = 1024
+    const sizes = ['Bytes', 'KB', 'MB', 'GB']
+    const i = Math.floor(Math.log(bytes) / Math.log(k))
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i]
+  }
+
+  // Handle file download
+  const handleDownload = (item: any) => {
+    if (item.url) {
+      window.open(item.url, '_blank')
+    } else if (item.filename) {
+      // Create a download link for files without URL
+      const link = document.createElement('a')
+      link.href = item.url || '#'
+      link.download = item.filename
+      link.click()
+    }
+  }
+
+  // Handle file view
+  const handleView = (item: any) => {
+    if (item.url) {
+      window.open(item.url, '_blank')
+    } else if (item.content) {
+      // For text-based files, show content in a modal or new window
+      const newWindow = window.open('', '_blank')
+      if (newWindow) {
+        newWindow.document.write(`
+          <html>
+            <head><title>${item.filename || 'File Content'}</title></head>
+            <body style="font-family: monospace; padding: 20px; white-space: pre-wrap;">
+              ${item.content}
+            </body>
+          </html>
+        `)
+      }
+    }
+  }
+  
+  const fileItems = mediaItems.filter((item: any) => {
+    if (!item || !item.type) return false
+    // Exclude images from files tab - they should only appear in Images tab
+    const isFileType = ['pdf', 'doc', 'docx', 'txt', 'audio', 'video', 'mp3', 'mp4', 'wav', 'm4a'].includes(item.type)
+    const matchesSearch = !searchQuery || 
+      (item.name && item.name.toLowerCase().includes(searchQuery.toLowerCase())) ||
+      (item.title && item.title.toLowerCase().includes(searchQuery.toLowerCase())) ||
+      (item.filename && item.filename.toLowerCase().includes(searchQuery.toLowerCase()))
+    return isFileType && matchesSearch
+  })
 
   const handleDrag = (e: React.DragEvent) => {
     e.preventDefault()
@@ -85,6 +210,16 @@ export function FilesTab({ mediaItems, onUpload, onDelete, isDeleting, deletingI
 
   return (
     <div className="space-y-4">
+      {/* Search Input */}
+      <div className="space-y-2">
+        <Input
+          placeholder="Search files..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="w-full"
+        />
+      </div>
+
       {/* Enhanced Dropzone */}
       <div 
         className={`border-2 border-dashed rounded-xl p-8 text-center transition-all duration-200 cursor-pointer ${
@@ -132,8 +267,14 @@ export function FilesTab({ mediaItems, onUpload, onDelete, isDeleting, deletingI
         />
       </div>
 
-      {/* File list */}
+      {/* File count and list */}
       <div className="space-y-1">
+        {fileItems.length > 0 && (
+          <div className="text-xs text-gray-500 mb-2">
+            {fileItems.length} file{fileItems.length !== 1 ? 's' : ''} found
+            {searchQuery && ` matching "${searchQuery}"`}
+          </div>
+        )}
         {isLoadingTabContent ? (
           <div className="space-y-2">
             {[...Array(3)].map((_, i) => (
@@ -146,11 +287,24 @@ export function FilesTab({ mediaItems, onUpload, onDelete, isDeleting, deletingI
               switch (type) {
                 case 'pdf':
                   return <FileText className="h-4 w-4 text-red-500" />
+                case 'doc':
+                case 'docx':
+                  return <FileText className="h-4 w-4 text-blue-600" />
+                case 'txt':
+                  return <FileText className="h-4 w-4 text-gray-600" />
                 case 'image':
+                case 'jpg':
+                case 'jpeg':
+                case 'png':
+                case 'gif':
                   return <Image className="h-4 w-4 text-green-500" />
                 case 'audio':
+                case 'mp3':
+                case 'wav':
+                case 'm4a':
                   return <Mic className="h-4 w-4 text-blue-500" />
                 case 'video':
+                case 'mp4':
                   return <Video className="h-4 w-4 text-purple-500" />
                 default:
                   return <FileText className="h-4 w-4 text-gray-500" />
@@ -171,43 +325,25 @@ export function FilesTab({ mediaItems, onUpload, onDelete, isDeleting, deletingI
                     {getFileIcon(item.type)}
                     <div className="flex-1 min-w-0">
                       <h4 className="font-medium text-sm truncate text-gray-900">
-                        {item.name || item.title || `File ${index + 1}`}
+                        {item.filename || item.name || item.title || `File ${index + 1}`}
                       </h4>
                       <p className="text-xs text-gray-500 truncate">
-                        {item.type?.toUpperCase()} • {item.size ? `${(item.size / 1024).toFixed(1)}KB` : 'Unknown size'}
+                        {item.type?.toUpperCase()} • {item.size ? formatFileSize(item.size) : 'Unknown size'}
+                        {item.uploadedAt && (
+                          <span className="ml-2">
+                            • {new Date(item.uploadedAt).toLocaleDateString()}
+                          </span>
+                        )}
                       </p>
                     </div>
                   </div>
                   {!isDeletingItem && (
-                    <AlertDialog>
-                      <AlertDialogTrigger asChild>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="h-6 w-6 p-0 text-gray-500 hover:text-red-600 hover:bg-red-50 opacity-0 group-hover:opacity-100 transition-opacity"
-                          onClick={(e) => e.stopPropagation()}
-                        >
-                          <Trash2 className="h-3 w-3" />
-                        </Button>
-                      </AlertDialogTrigger>
-                      <AlertDialogContent className="bg-white border-gray-200">
-                        <AlertDialogHeader>
-                          <AlertDialogTitle className="text-gray-900">Delete File</AlertDialogTitle>
-                          <AlertDialogDescription className="text-gray-600">
-                            Are you sure you want to delete this file? This action cannot be undone.
-                          </AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter>
-                          <AlertDialogCancel className="bg-gray-100 hover:bg-gray-200 text-gray-900">Cancel</AlertDialogCancel>
-                          <AlertDialogAction
-                            onClick={() => onDelete(item.id)}
-                            className="bg-red-600 hover:bg-red-700"
-                          >
-                            Delete
-                          </AlertDialogAction>
-                        </AlertDialogFooter>
-                      </AlertDialogContent>
-                    </AlertDialog>
+                    <ThreeDotsMenu 
+                      onDelete={() => onDelete(item.id)}
+                      onDownload={handleDownload}
+                      onView={handleView}
+                      item={item}
+                    />
                   )}
                   {isDeletingItem && (
                     <div className="h-6 w-6 flex items-center justify-center">
@@ -223,8 +359,17 @@ export function FilesTab({ mediaItems, onUpload, onDelete, isDeleting, deletingI
             <div className="w-12 h-12 mx-auto mb-3 bg-gray-100 rounded-full flex items-center justify-center">
               <FileText className="h-6 w-6 text-gray-400" />
             </div>
-            <p className="text-sm text-gray-500 mb-1">No files uploaded yet</p>
-            <p className="text-xs text-gray-400">Upload your first file to get started</p>
+            {searchQuery ? (
+              <>
+                <p className="text-sm text-gray-500 mb-1">No files found</p>
+                <p className="text-xs text-gray-400">Try adjusting your search terms</p>
+              </>
+            ) : (
+              <>
+                <p className="text-sm text-gray-500 mb-1">No files uploaded yet</p>
+                <p className="text-xs text-gray-400">Upload your first file to get started</p>
+              </>
+            )}
           </div>
         )}
       </div>
@@ -234,32 +379,218 @@ export function FilesTab({ mediaItems, onUpload, onDelete, isDeleting, deletingI
 
 // Links Tab Component
 export function LinksTab({ mediaItems, onDelete, onRefresh, setMediaItems, isDeleting, deletingItemId, isLoadingTabContent }: any) {
+  // Filter to show only webpage/url/scraped type items
+  const webpageItems = mediaItems.filter((item: any) => 
+    item && (item.type === 'webpage' || item.type === 'url' || item.type === 'scraped' || item.type === 'link')
+  )
   const [urlInput, setUrlInput] = React.useState("")
-  const [isSubmitting, setIsSubmitting] = React.useState(false)
+  const [isScraping, setIsScraping] = React.useState(false)
+  const [isLoadingContents, setIsLoadingContents] = React.useState(false)
+  const [toast, setToast] = React.useState<{
+    message: string
+    type: 'success' | 'error' | 'info'
+    isVisible: boolean
+  }>({
+    message: '',
+    type: 'info',
+    isVisible: false
+  })
   
-  const linkItems = mediaItems.filter((item: any) => item.type === 'link')
+  const [viewerContent, setViewerContent] = React.useState<{
+    title: string
+    content: string
+    sourceUrl?: string
+    scrapedAt?: string
+    filename?: string
+  } | null>(null)
+  
+  const [isViewerOpen, setIsViewerOpen] = React.useState(false)
+  
+  // Fetch scraped contents when component mounts
+  React.useEffect(() => {
+    console.log('🔄 LinksTab useEffect - fetching scraped contents...')
+    const fetchScrapedContents = async () => {
+      try {
+        const accessToken = authService.getAuthToken()
+        
+        if (!accessToken) {
+          console.error('❌ No access token available for scraped contents')
+          return
+        }
 
-  const handleSubmitUrl = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!urlInput.trim() || isSubmitting) return
+        console.log('🔍 Making request to: /api/scraped-contents')
+        console.log('🔍 Access token present:', !!accessToken)
 
-    setIsSubmitting(true)
+        const response = await fetch('/api/scraped-contents', {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${accessToken}`,
+            'Content-Type': 'application/json',
+          },
+        })
+
+        console.log('📡 Scraped contents response status:', response.status)
+
+        if (!response.ok) {
+          console.error('❌ Failed to fetch scraped contents:', response.status, response.statusText)
+          return
+        }
+
+        const result = await response.json()
+        console.log('✅ Scraped contents data received:', result.data?.length || 0, 'items')
+        
+        if (result.data && Array.isArray(result.data)) {
+          // Transform scraped contents into media items
+          const scrapedItems = result.data.map((item: any) => ({
+            id: `scraped-${item.resource_id || item.id || Math.random()}`,
+            filename: item.resource_name || item.filename || 'Unknown',
+            type: item.type || 'scraped',
+            content: item.content,
+            transcript: item.transcript,
+            url: item.url,
+            uploadedAt: new Date(item.created_at || Date.now()),
+            size: item.content ? item.content.length : 0,
+            title: item.resource_name || item.title || 'Scraped Content',
+            resourceId: item.resource_id,
+            resourceName: item.resource_name
+          }))
+          
+          console.log('🔄 LinksTab - Updating media items with scraped contents...')
+          console.log('📊 Scraped items to add:', scrapedItems.length)
+          
+          // Update the media items state
+          setMediaItems((prevItems: any[]) => {
+            // Remove existing scraped items and add new ones
+            const nonScrapedItems = prevItems.filter((item: any) => 
+              item && item.id && !item.id.startsWith('scraped-')
+            )
+            const updatedItems = [...nonScrapedItems, ...scrapedItems]
+            console.log('📊 Total items after update:', updatedItems.length)
+            
+            // Force a re-render by returning a completely new array
+            return [...updatedItems]
+          })
+        }
+      } catch (error) {
+        console.error('❌ Error fetching scraped contents:', error)
+      }
+    }
+    
+    fetchScrapedContents()
+  }, [])
+  
+  const showToast = (message: string, type: 'success' | 'error' | 'info') => {
+    setToast({
+      message,
+      type,
+      isVisible: true
+    })
+  }
+  
+  const hideToast = () => {
+    setToast(prev => ({ ...prev, isVisible: false }))
+  }
+
+  const handleViewContent = (item: any) => {
+    // Check if this is scraped content with actual content
+    if (item.content) {
+      setViewerContent({
+        title: item.resourceName || item.filename || 'Scraped Content',
+        content: item.content,
+        sourceUrl: item.url,
+        scrapedAt: item.uploadedAt?.toISOString(),
+        filename: item.filename
+      })
+    } else {
+      // Fallback for items without content
+      setViewerContent({
+        title: item.resourceName || item.filename || 'Scraped Content',
+        content: 'Content not available...',
+        sourceUrl: item.url,
+        scrapedAt: item.uploadedAt?.toISOString(),
+        filename: item.filename
+      })
+    }
+    setIsViewerOpen(true)
+  }
+  
+  const handleScrapeUrl = async () => {
+    console.log('🔍 handleScrapeUrl called with URL:', urlInput)
+    
+    if (!urlInput.trim()) {
+      console.log('❌ URL input is empty, returning early')
+      showToast('Please enter a URL to scrape', 'error')
+      return
+    }
+    
+    // Basic URL validation
     try {
-      // Simulate URL submission - replace with actual API call
-      console.log('Submitting URL:', urlInput)
-      // Add your URL submission logic here
-      setUrlInput("")
+      new URL(urlInput.trim())
+    } catch {
+      showToast('Please enter a valid URL', 'error')
+      return
+    }
+    
+    try {
+      setIsScraping(true)
+      console.log('🔍 Getting access token...')
+      const accessToken = authService.getAuthToken()
+      
+      if (!accessToken) {
+        console.error("❌ No access token available")
+        showToast('Authentication required. Please sign in again.', 'error')
+        return
+      }
+
+      console.log('✅ Access token found:', accessToken ? 'Present' : 'Missing')
+      console.log('🔍 Scraping URL:', urlInput)
+      
+      const apiUrl = `/api/webpage-scrape?url=${encodeURIComponent(urlInput.trim())}`
+      console.log('🔍 Making request to:', apiUrl)
+      
+      const response = await fetch(apiUrl, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+          'Content-Type': 'application/json',
+        },
+      })
+
+      console.log('📡 Webpage scraping response status:', response.status)
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}))
+        console.error('❌ Webpage scraping failed:', response.status, errorData)
+        showToast(`Failed to scrape webpage: ${errorData.error || response.statusText}`, 'error')
+        return
+      }
+
+      const result = await response.json()
+      console.log('✅ Webpage scraping result:', result)
+      
+      if (result.success) {
+        showToast('Webpage scraped successfully! Content will be available shortly.', 'success')
+        setUrlInput("")
+        
+        // Refresh media items to show the new scraped content
+        setTimeout(() => {
+          onRefresh()
+        }, 2000)
+      } else {
+        showToast(`Scraping failed: ${result.error || 'Unknown error'}`, 'error')
+      }
     } catch (error) {
-      console.error('Error submitting URL:', error)
+      console.error('❌ Error scraping webpage:', error)
+      showToast('Network error occurred while scraping', 'error')
     } finally {
-      setIsSubmitting(false)
+      setIsScraping(false)
     }
   }
 
   return (
     <div className="space-y-4">
       {/* URL Input Form */}
-      <form onSubmit={handleSubmitUrl} className="space-y-3">
+      <form onSubmit={(e) => { e.preventDefault(); handleScrapeUrl(); }} className="space-y-3">
         <div className="space-y-2">
           <label className="text-sm font-medium text-gray-700">Add Web Link</label>
           <div className="flex space-x-2">
@@ -268,14 +599,14 @@ export function LinksTab({ mediaItems, onDelete, onRefresh, setMediaItems, isDel
               onChange={(e) => setUrlInput(e.target.value)}
               placeholder="https://example.com"
               className="flex-1"
-              disabled={isSubmitting}
+              disabled={isScraping}
             />
             <Button 
               type="submit" 
-              disabled={!urlInput.trim() || isSubmitting}
+              disabled={!urlInput.trim() || isScraping}
               className="bg-[#1ABC9C] hover:bg-[#16A085] text-white"
             >
-              {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
+              {isScraping ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
             </Button>
           </div>
         </div>
@@ -289,8 +620,8 @@ export function LinksTab({ mediaItems, onDelete, onRefresh, setMediaItems, isDel
               <Skeleton key={i} className="h-12 w-full" />
             ))}
           </div>
-        ) : linkItems.length > 0 ? (
-          linkItems.slice(0, 8).map((item: any, index: number) => {
+        ) : webpageItems.length > 0 ? (
+          webpageItems.slice(0, 8).map((item: any, index: number) => {
             const isDeletingItem = deletingItemId === item.id
 
             return (
@@ -322,6 +653,26 @@ export function LinksTab({ mediaItems, onDelete, onRefresh, setMediaItems, isDel
                             className="h-6 w-6 p-0 text-gray-500 hover:text-blue-600 hover:bg-blue-50"
                             onClick={(e) => {
                               e.stopPropagation()
+                              handleViewContent(item)
+                            }}
+                          >
+                            <Eye className="h-3 w-3" />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>View content</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-6 w-6 p-0 text-gray-500 hover:text-green-600 hover:bg-green-50"
+                            onClick={(e) => {
+                              e.stopPropagation()
                               window.open(item.url || item.link, '_blank')
                             }}
                           >
@@ -334,35 +685,9 @@ export function LinksTab({ mediaItems, onDelete, onRefresh, setMediaItems, isDel
                       </Tooltip>
                     </TooltipProvider>
                     {!isDeletingItem && (
-                      <AlertDialog>
-                        <AlertDialogTrigger asChild>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="h-6 w-6 p-0 text-gray-500 hover:text-red-600 hover:bg-red-50 opacity-0 group-hover:opacity-100 transition-opacity"
-                            onClick={(e) => e.stopPropagation()}
-                          >
-                            <Trash2 className="h-3 w-3" />
-                          </Button>
-                        </AlertDialogTrigger>
-                        <AlertDialogContent className="bg-white border-gray-200">
-                          <AlertDialogHeader>
-                            <AlertDialogTitle className="text-gray-900">Delete Link</AlertDialogTitle>
-                            <AlertDialogDescription className="text-gray-600">
-                              Are you sure you want to delete this link? This action cannot be undone.
-                            </AlertDialogDescription>
-                          </AlertDialogHeader>
-                          <AlertDialogFooter>
-                            <AlertDialogCancel className="bg-gray-100 hover:bg-gray-200 text-gray-900">Cancel</AlertDialogCancel>
-                            <AlertDialogAction
-                              onClick={() => onDelete(item.id)}
-                              className="bg-red-600 hover:bg-red-700"
-                            >
-                              Delete
-                            </AlertDialogAction>
-                          </AlertDialogFooter>
-                        </AlertDialogContent>
-                      </AlertDialog>
+                      <ThreeDotsMenu 
+                        onDelete={() => onDelete(item.id)}
+                      />
                     )}
                     {isDeletingItem && (
                       <div className="h-6 w-6 flex items-center justify-center">
@@ -384,6 +709,23 @@ export function LinksTab({ mediaItems, onDelete, onRefresh, setMediaItems, isDel
           </div>
         )}
       </div>
+      
+      {/* Toast Notification */}
+      <Toast
+        message={toast.message}
+        type={toast.type}
+        isVisible={toast.isVisible}
+        onClose={hideToast}
+      />
+      
+      {/* Content Viewer */}
+      {viewerContent && (
+        <ContentViewer
+          isOpen={isViewerOpen}
+          onClose={() => setIsViewerOpen(false)}
+          content={viewerContent}
+        />
+      )}
     </div>
   )
 }
@@ -393,7 +735,7 @@ export function YouTubeTab({ mediaItems, onDelete, onRefresh, setMediaItems, isD
   const [urlInput, setUrlInput] = React.useState("")
   const [isSubmitting, setIsSubmitting] = React.useState(false)
   
-  const youtubeItems = mediaItems.filter((item: any) => item.type === 'youtube')
+  const youtubeItems = mediaItems.filter((item: any) => item && item.type === 'youtube')
 
   const handleSubmitUrl = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -490,35 +832,9 @@ export function YouTubeTab({ mediaItems, onDelete, onRefresh, setMediaItems, isD
                       </Tooltip>
                     </TooltipProvider>
                     {!isDeletingItem && (
-                      <AlertDialog>
-                        <AlertDialogTrigger asChild>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="h-6 w-6 p-0 text-gray-500 hover:text-red-600 hover:bg-red-50 opacity-0 group-hover:opacity-100 transition-opacity"
-                            onClick={(e) => e.stopPropagation()}
-                          >
-                            <Trash2 className="h-3 w-3" />
-                          </Button>
-                        </AlertDialogTrigger>
-                        <AlertDialogContent className="bg-white border-gray-200">
-                          <AlertDialogHeader>
-                            <AlertDialogTitle className="text-gray-900">Delete Video</AlertDialogTitle>
-                            <AlertDialogDescription className="text-gray-600">
-                              Are you sure you want to delete this video transcription? This action cannot be undone.
-                            </AlertDialogDescription>
-                          </AlertDialogHeader>
-                          <AlertDialogFooter>
-                            <AlertDialogCancel className="bg-gray-100 hover:bg-gray-200 text-gray-900">Cancel</AlertDialogCancel>
-                            <AlertDialogAction
-                              onClick={() => onDelete(item.id)}
-                              className="bg-red-600 hover:bg-red-700"
-                            >
-                              Delete
-                            </AlertDialogAction>
-                          </AlertDialogFooter>
-                        </AlertDialogContent>
-                      </AlertDialog>
+                      <ThreeDotsMenu 
+                        onDelete={() => onDelete(item.id)}
+                      />
                     )}
                     {isDeletingItem && (
                       <div className="h-6 w-6 flex items-center justify-center">
@@ -550,7 +866,7 @@ export function ImageAnalyzerTab({ mediaItems, onUpload, onDelete, isDeleting, d
   const [isUploading, setIsUploading] = React.useState(false)
   const fileInputRef = React.useRef<HTMLInputElement>(null)
   
-  const imageItems = mediaItems.filter((item: any) => item.type === 'image')
+  const imageItems = mediaItems.filter((item: any) => item && item.type === 'image')
 
   const handleDrag = (e: React.DragEvent) => {
     e.preventDefault()
@@ -667,56 +983,10 @@ export function ImageAnalyzerTab({ mediaItems, onUpload, onDelete, isDeleting, d
                     </div>
                   </div>
                   <div className="flex items-center space-x-1">
-                    <TooltipProvider>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="h-6 w-6 p-0 text-gray-500 hover:text-green-600 hover:bg-green-50"
-                            onClick={(e) => {
-                              e.stopPropagation()
-                              // Add image preview logic here
-                            }}
-                          >
-                            <Eye className="h-3 w-3" />
-                          </Button>
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          <p>Preview image</p>
-                        </TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
                     {!isDeletingItem && (
-                      <AlertDialog>
-                        <AlertDialogTrigger asChild>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="h-6 w-6 p-0 text-gray-500 hover:text-red-600 hover:bg-red-50 opacity-0 group-hover:opacity-100 transition-opacity"
-                            onClick={(e) => e.stopPropagation()}
-                          >
-                            <Trash2 className="h-3 w-3" />
-                          </Button>
-                        </AlertDialogTrigger>
-                        <AlertDialogContent className="bg-white border-gray-200">
-                          <AlertDialogHeader>
-                            <AlertDialogTitle className="text-gray-900">Delete Image</AlertDialogTitle>
-                            <AlertDialogDescription className="text-gray-600">
-                              Are you sure you want to delete this image? This action cannot be undone.
-                            </AlertDialogDescription>
-                          </AlertDialogHeader>
-                          <AlertDialogFooter>
-                            <AlertDialogCancel className="bg-gray-100 hover:bg-gray-200 text-gray-900">Cancel</AlertDialogCancel>
-                            <AlertDialogAction
-                              onClick={() => onDelete(item.id)}
-                              className="bg-red-600 hover:bg-red-700"
-                            >
-                              Delete
-                            </AlertDialogAction>
-                          </AlertDialogFooter>
-                        </AlertDialogContent>
-                      </AlertDialog>
+                      <ThreeDotsMenu 
+                        onDelete={() => onDelete(item.id)}
+                      />
                     )}
                     {isDeletingItem && (
                       <div className="h-6 w-6 flex items-center justify-center">
@@ -744,7 +1014,7 @@ export function ImageAnalyzerTab({ mediaItems, onUpload, onDelete, isDeleting, d
 
 // Transcripts Tab Component
 export function TranscriptsTab({ mediaItems, onDelete, isDeleting, deletingItemId, isLoadingTabContent }: any) {
-  const transcriptItems = mediaItems.filter((item: any) => item.type === 'transcript')
+  const transcriptItems = mediaItems.filter((item: any) => item && item.type === 'transcript')
 
   return (
     <div className="space-y-4">
@@ -801,35 +1071,9 @@ export function TranscriptsTab({ mediaItems, onDelete, isDeleting, deletingItemI
                       </Tooltip>
                     </TooltipProvider>
                     {!isDeletingItem && (
-                      <AlertDialog>
-                        <AlertDialogTrigger asChild>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="h-6 w-6 p-0 text-gray-500 hover:text-red-600 hover:bg-red-50 opacity-0 group-hover:opacity-100 transition-opacity"
-                            onClick={(e) => e.stopPropagation()}
-                          >
-                            <Trash2 className="h-3 w-3" />
-                          </Button>
-                        </AlertDialogTrigger>
-                        <AlertDialogContent className="bg-white border-gray-200">
-                          <AlertDialogHeader>
-                            <AlertDialogTitle className="text-gray-900">Delete Transcript</AlertDialogTitle>
-                            <AlertDialogDescription className="text-gray-600">
-                              Are you sure you want to delete this transcript? This action cannot be undone.
-                            </AlertDialogDescription>
-                          </AlertDialogHeader>
-                          <AlertDialogFooter>
-                            <AlertDialogCancel className="bg-gray-100 hover:bg-gray-200 text-gray-900">Cancel</AlertDialogCancel>
-                            <AlertDialogAction
-                              onClick={() => onDelete(item.id)}
-                              className="bg-red-600 hover:bg-red-700"
-                            >
-                              Delete
-                            </AlertDialogAction>
-                          </AlertDialogFooter>
-                        </AlertDialogContent>
-                      </AlertDialog>
+                      <ThreeDotsMenu 
+                        onDelete={() => onDelete(item.id)}
+                      />
                     )}
                     {isDeletingItem && (
                       <div className="h-6 w-6 flex items-center justify-center">

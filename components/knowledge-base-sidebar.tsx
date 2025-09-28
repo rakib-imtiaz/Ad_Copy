@@ -127,7 +127,15 @@ export function KnowledgeBaseSidebar({
   ]
 
   return (
-    <Sidebar variant="inset" collapsible="icon" className="border-r border-gray-700 bg-black">
+    <Sidebar 
+      variant="inset" 
+      collapsible="icon" 
+      className="border-r border-gray-700 bg-black"
+      style={{
+        '--sidebar-width': '20rem',
+        '--sidebar-width-icon': '3rem'
+      } as React.CSSProperties}
+    >
       <SidebarHeader className="border-b border-gray-700 bg-black px-2 py-2">
         {state === 'expanded' ? (
           <div className="flex items-center gap-1">
@@ -229,7 +237,29 @@ export function KnowledgeBaseSidebar({
                             onDelete={onDelete} 
                             isDeleting={isDeleting} 
                             deletingItemId={deletingItemId} 
-                            isLoadingTabContent={isLoadingTabContent} 
+                            isLoadingTabContent={isLoadingTabContent}
+                            onDownload={(item: any) => {
+                              if (item.url) {
+                                window.open(item.url, '_blank')
+                              }
+                            }}
+                            onView={(item: any) => {
+                              if (item.url) {
+                                window.open(item.url, '_blank')
+                              } else if (item.content) {
+                                const newWindow = window.open('', '_blank')
+                                if (newWindow) {
+                                  newWindow.document.write(`
+                                    <html>
+                                      <head><title>${item.filename || 'File Content'}</title></head>
+                                      <body style="font-family: monospace; padding: 20px; white-space: pre-wrap;">
+                                        ${item.content}
+                                      </body>
+                                    </html>
+                                  `)
+                                }
+                              }
+                            }}
                           />
                         )}
                         {activeTab === 'links' && (
