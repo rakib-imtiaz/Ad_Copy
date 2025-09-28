@@ -63,6 +63,13 @@ function ThreeDotsMenu({ onDelete, onDownload, onView, item }: any) {
     setIsOpen(false)
   }
 
+  const handleDelete = () => {
+    if (onDelete) {
+      onDelete()
+    }
+    setIsOpen(false)
+  }
+
   return (
     <div className="relative">
       <Button 
@@ -81,30 +88,9 @@ function ThreeDotsMenu({ onDelete, onDownload, onView, item }: any) {
             onClick={() => setIsOpen(false)}
           />
           <div className="absolute right-0 top-5 z-20 bg-white border border-gray-200 rounded-md shadow-lg py-1 min-w-[100px]">
-            {onView && (
-              <button
-                className="w-full px-2 py-1.5 text-left text-xs text-blue-600 hover:bg-blue-50 flex items-center space-x-1.5"
-                onClick={handleView}
-              >
-                <Eye className="h-2.5 w-2.5" />
-                <span>View</span>
-              </button>
-            )}
-            {onDownload && (
-              <button
-                className="w-full px-2 py-1.5 text-left text-xs text-green-600 hover:bg-green-50 flex items-center space-x-1.5"
-                onClick={handleDownload}
-              >
-                <Download className="h-2.5 w-2.5" />
-                <span>Download</span>
-              </button>
-            )}
             <button
               className="w-full px-2 py-1.5 text-left text-xs text-red-600 hover:bg-red-50 flex items-center space-x-1.5"
-              onClick={() => {
-                onDelete()
-                setIsOpen(false)
-              }}
+              onClick={handleDelete}
             >
               <Trash2 className="h-2.5 w-2.5" />
               <span>Delete</span>
