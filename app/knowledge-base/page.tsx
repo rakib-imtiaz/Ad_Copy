@@ -5,18 +5,165 @@ import { motion } from "framer-motion"
 import { ProtectedRoute } from "@/components/protected-route"
 import { BrandFormClean } from "@/components/brand-form-clean"
 import { KnowledgeBaseViewer } from "@/components/knowledge-base-viewer"
+import { KnowledgeBaseSidebar } from "@/components/knowledge-base-sidebar"
 import { Button } from "@/components/ui/button"
 import { ArrowLeft, Sparkles, Eye, CheckCircle } from "lucide-react"
+import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar"
+import { authService } from "@/lib/auth-service"
+import { API_ENDPOINTS } from "@/lib/api-config"
 
 export default function KnowledgeBasePage() {
   const [isSaving, setIsSaving] = React.useState(false)
   const [isKnowledgeViewerOpen, setIsKnowledgeViewerOpen] = React.useState(false)
   const [isFormCompleted, setIsFormCompleted] = React.useState(false)
+  
+  // Media library state
+  const [mediaItems, setMediaItems] = React.useState<any[]>([])
+  const [isRefreshing, setIsRefreshing] = React.useState(false)
+  const [isLoadingTabContent, setIsLoadingTabContent] = React.useState(false)
+  const [isDeleting, setIsDeleting] = React.useState(false)
+  const [deletingItemId, setDeletingItemId] = React.useState<string | null>(null)
 
   const handleFormSuccess = () => {
     setIsFormCompleted(true)
     setIsKnowledgeViewerOpen(true)
   }
+
+  // Media library functions
+  const fetchMediaLibrary = async () => {
+    try {
+      console.log('📚 Fetching media library for knowledge base...')
+      const accessToken = authService.getAuthToken()
+      if (!accessToken) {
+        console.error("No access token available")
+        setMediaItems([])
+        return
+      }
+
+      const response = await fetch('/api/media/list', {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+          'Content-Type': 'application/json'
+        }
+      })
+
+      if (!response.ok) {
+        console.error('Failed to fetch media library:', response.status, response.statusText)
+        setMediaItems([])
+        return
+      }
+
+      const result = await response.json()
+      console.log('📊 Media library response:', result)
+      
+      if (Array.isArray(result)) {
+        setMediaItems(result)
+      } else if (result.data && Array.isArray(result.data)) {
+        setMediaItems(result.data)
+      } else {
+        setMediaItems([])
+      }
+    } catch (error) {
+      console.error('❌ Error fetching media library:', error)
+      setMediaItems([])
+    }
+  }
+
+  const uploadMediaFiles = async (files: File[]) => {
+    try {
+      console.log('📤 Uploading files to media library...')
+      const accessToken = authService.getAuthToken()
+      if (!accessToken) {
+        console.error("No access token available")
+        return
+      }
+
+      const formData = new FormData()
+      files.forEach(file => {
+        formData.append('files', file)
+      })
+
+      const response = await fetch('/api/media/upload', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+        },
+        body: formData
+      })
+
+      if (!response.ok) {
+        console.error('Failed to upload files:', response.status, response.statusText)
+        return
+      }
+
+      const result = await response.json()
+      console.log('📤 Upload result:', result)
+      
+      // Refresh media library after upload
+      setTimeout(() => {
+        fetchMediaLibrary()
+      }, 500)
+    } catch (error) {
+      console.error('❌ Error uploading files:', error)
+    }
+  }
+
+  const deleteMediaFile = async (id: string) => {
+    try {
+      console.log('🗑️ Deleting media file:', id)
+      setIsDeleting(true)
+      setDeletingItemId(id)
+      
+      const accessToken = authService.getAuthToken()
+      if (!accessToken) {
+        console.error("No access token available")
+        return
+      }
+
+      const response = await fetch(`/api/media/delete/${id}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+          'Content-Type': 'application/json'
+        }
+      })
+
+      if (!response.ok) {
+        console.error('Failed to delete file:', response.status, response.statusText)
+        return
+      }
+
+      // Remove item from local state
+      setMediaItems(prev => prev.filter(item => item.id !== id))
+      console.log('✅ File deleted successfully')
+    } catch (error) {
+      console.error('❌ Error deleting file:', error)
+    } finally {
+      setIsDeleting(false)
+      setDeletingItemId(null)
+    }
+  }
+
+  const refreshAllTabs = async () => {
+    console.log('🔄 Refreshing all media tabs...')
+    setIsRefreshing(true)
+    setIsLoadingTabContent(true)
+    
+    try {
+      await fetchMediaLibrary()
+    } catch (error) {
+      console.error('❌ Error refreshing media library:', error)
+    } finally {
+      setIsRefreshing(false)
+      setIsLoadingTabContent(false)
+    }
+  }
+
+  // Fetch media library on component mount
+  React.useEffect(() => {
+    fetchMediaLibrary()
+  }, [])
 
   const containerVariants = {
     hidden: { opacity: 0, y: 20 },
@@ -41,12 +188,26 @@ export default function KnowledgeBasePage() {
   
   return (
     <ProtectedRoute>
-      <motion.div 
-        className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100"
-        initial="hidden"
-        animate="visible"
-        variants={containerVariants}
-      >
+      <SidebarProvider>
+        <KnowledgeBaseSidebar
+          mediaItems={mediaItems}
+          setMediaItems={setMediaItems}
+          onRefresh={refreshAllTabs}
+          onUpload={uploadMediaFiles}
+          onDelete={deleteMediaFile}
+          isRefreshing={isRefreshing}
+          isLoadingTabContent={isLoadingTabContent}
+          isDeleting={isDeleting}
+          deletingItemId={deletingItemId}
+        />
+        <SidebarInset>
+          <main className="flex-1 overflow-hidden">
+            <motion.div 
+              className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100"
+              initial="hidden"
+              animate="visible"
+              variants={containerVariants}
+            >
         {/* Clean Header */}
         <motion.div 
           className="bg-white/80 backdrop-blur-sm border-b border-slate-200/60 px-6 py-8"
@@ -111,12 +272,15 @@ export default function KnowledgeBasePage() {
           </motion.div>
       </div>
 
-      {/* Knowledge Base Viewer Modal */}
-      <KnowledgeBaseViewer
-        isOpen={isKnowledgeViewerOpen}
-        onClose={() => setIsKnowledgeViewerOpen(false)}
-      />
-      </motion.div>
+              {/* Knowledge Base Viewer Modal */}
+              <KnowledgeBaseViewer
+                isOpen={isKnowledgeViewerOpen}
+                onClose={() => setIsKnowledgeViewerOpen(false)}
+              />
+            </motion.div>
+          </main>
+        </SidebarInset>
+      </SidebarProvider>
     </ProtectedRoute>
   )
 }
