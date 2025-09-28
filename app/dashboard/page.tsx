@@ -3979,9 +3979,9 @@ function LeftSidebar({
   return (
     <div className="h-full flex flex-col bg-white">
       {/* Agent Selector */}
-      <div className="p-4 border-b border-gray-200 flex-shrink-0">
-        <div className="flex items-center justify-between mb-3">
-          <h3 className="text-sm font-semibold text-gray-900">Current Agent</h3>
+      <div className="p-3 border-b border-gray-200 flex-shrink-0">
+        <div className="flex items-center justify-between mb-2">
+          <h3 className="text-xs font-semibold text-gray-900">Current Agent</h3>
           <Button
             variant="ghost"
             size="sm"
@@ -4113,13 +4113,13 @@ function LeftSidebar({
                 return (
                 <div
                     key={chat.session_id}
-                    className={`p-3 rounded-lg border transition-all duration-150 ${
+                    className={`p-2 rounded-lg border transition-all duration-150 ${
                       isSelected
                         ? 'bg-white border-gray-300 shadow-lg'
                         : 'bg-black border-gray-700 hover:border-gray-600'
                     }`}
               >
-                <div className="flex items-start justify-between mb-2">
+                <div className="flex items-start justify-between mb-1">
                       <div 
                         className="flex-1 min-w-0 cursor-pointer"
                         onClick={() => onLoadChatSession(chat.session_id)}
@@ -4177,19 +4177,19 @@ function LeftSidebar({
 function MobileSidebar({ agents, conversations, chatHistory, isLoadingChatHistory, currentChatSession, onLoadChatSession, onRefreshChatHistory, onDeleteChatSession }: any) {
   return (
     <div className="h-full relative flex flex-col bg-white">
-      <div className="p-4 border-b border-[#EEEEEE]">
+      <div className="p-3 border-b border-[#EEEEEE]">
         <div className="flex items-center space-x-2">
-          <div className="flex h-8 w-8 items-center justify-center">
+          <div className="flex h-6 w-6 items-center justify-center">
             <img 
               src="/logo.png" 
               alt="Copy Ready logo" 
-              width={32} 
-              height={32}
+              width={24} 
+              height={24}
               className="rounded-lg"
             />
           </div>
           <div>
-            <div className="font-semibold">Copy Ready</div>
+            <div className="text-sm font-semibold">Copy Ready</div>
             <div className="text-xs text-[#929AAB]">AI Ad Copy Platform</div>
           </div>
         </div>
