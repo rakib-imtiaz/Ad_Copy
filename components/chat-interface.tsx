@@ -225,9 +225,9 @@ export function ChatInterface({
                     isUser
                       ? 'bg-white text-black shadow-lg border border-gray-300'
                       : 'bg-black text-white shadow-md'
-                  } rounded-lg px-2 py-1.5`}>
+                  } rounded-lg px-2 py-1`}>
                     <div className="break-words overflow-hidden">
-                      <div className={`text-sm leading-relaxed ${
+                      <div className={`text-xs leading-relaxed ${
                         isUser 
                           ? 'text-black' 
                           : 'text-white'
@@ -235,22 +235,22 @@ export function ChatInterface({
                       <ReactMarkdown
                         components={{
                           // Headings
-                          h1: ({ children }) => <h1 className={`text-lg font-bold mb-2 mt-3 first:mt-0 ${isUser ? 'text-black' : 'text-white'}`}>{children}</h1>,
-                          h2: ({ children }) => <h2 className={`text-base font-semibold mb-2 mt-3 first:mt-0 ${isUser ? 'text-black' : 'text-white'}`}>{children}</h2>,
-                          h3: ({ children }) => <h3 className={`text-sm font-semibold mb-1 mt-2 first:mt-0 ${isUser ? 'text-black' : 'text-white'}`}>{children}</h3>,
-                          h4: ({ children }) => <h4 className={`text-sm font-medium mb-1 mt-2 first:mt-0 ${isUser ? 'text-black' : 'text-white'}`}>{children}</h4>,
+                          h1: ({ children }) => <h1 className={`text-sm font-bold mb-1 mt-2 first:mt-0 ${isUser ? 'text-black' : 'text-white'}`}>{children}</h1>,
+                          h2: ({ children }) => <h2 className={`text-xs font-semibold mb-1 mt-2 first:mt-0 ${isUser ? 'text-black' : 'text-white'}`}>{children}</h2>,
+                          h3: ({ children }) => <h3 className={`text-xs font-semibold mb-1 mt-1 first:mt-0 ${isUser ? 'text-black' : 'text-white'}`}>{children}</h3>,
+                          h4: ({ children }) => <h4 className={`text-xs font-medium mb-1 mt-1 first:mt-0 ${isUser ? 'text-black' : 'text-white'}`}>{children}</h4>,
                           
                           // Paragraphs
-                          p: ({ children }) => <p className={`leading-relaxed mb-2 last:mb-0 ${isUser ? 'text-black' : 'text-white'}`}>{children}</p>,
+                          p: ({ children }) => <p className={`leading-relaxed mb-1 last:mb-0 text-xs ${isUser ? 'text-black' : 'text-white'}`}>{children}</p>,
                           
                           // Lists
-                          ul: ({ children }) => <ul className={`list-disc list-outside mb-3 space-y-1 pl-4 ${isUser ? 'text-black marker:text-black' : 'text-white marker:text-white'}`}>{children}</ul>,
-                          ol: ({ children }) => <ol className={`list-decimal list-outside mb-3 space-y-1 pl-4 ${isUser ? 'text-black marker:text-black' : 'text-white marker:text-white'}`}>{children}</ol>,
-                          li: ({ children }) => <li className={`leading-relaxed ${isUser ? 'text-black' : 'text-white'}`}>{children}</li>,
+                          ul: ({ children }) => <ul className={`list-disc list-outside mb-2 space-y-0.5 pl-3 text-xs ${isUser ? 'text-black marker:text-black' : 'text-white marker:text-white'}`}>{children}</ul>,
+                          ol: ({ children }) => <ol className={`list-decimal list-outside mb-2 space-y-0.5 pl-3 text-xs ${isUser ? 'text-black marker:text-black' : 'text-white marker:text-white'}`}>{children}</ol>,
+                          li: ({ children }) => <li className={`leading-relaxed text-xs ${isUser ? 'text-black' : 'text-white'}`}>{children}</li>,
                           
                           // Text formatting
-                          strong: ({ children }) => <strong className={`font-semibold ${isUser ? 'text-black' : 'text-white'}`}>{children}</strong>,
-                          em: ({ children }) => <em className={`italic ${isUser ? 'text-black' : 'text-white'}`}>{children}</em>,
+                          strong: ({ children }) => <strong className={`font-semibold text-xs ${isUser ? 'text-black' : 'text-white'}`}>{children}</strong>,
+                          em: ({ children }) => <em className={`italic text-xs ${isUser ? 'text-black' : 'text-white'}`}>{children}</em>,
                           
                           // Code
                           code: ({ children, className }) => {
@@ -260,16 +260,16 @@ export function ChatInterface({
                             }
                             return <code className={className}>{children}</code>
                           },
-                          pre: ({ children }) => <pre className={`p-3 rounded-lg overflow-x-auto mb-3 whitespace-pre-wrap break-words ${isUser ? 'bg-gray-200 text-black' : 'bg-gray-700 text-white'}`}>{children}</pre>,
+                          pre: ({ children }) => <pre className={`p-2 rounded-lg overflow-x-auto mb-2 whitespace-pre-wrap break-words text-xs ${isUser ? 'bg-gray-200 text-black' : 'bg-gray-700 text-white'}`}>{children}</pre>,
                           
                           // Links
-                          a: ({ href, children }) => <a href={href} className={`underline ${isUser ? 'text-blue-600 hover:text-blue-800' : 'text-blue-300 hover:text-blue-200'}`} target="_blank" rel="noopener noreferrer">{children}</a>,
+                          a: ({ href, children }) => <a href={href} className={`underline text-xs ${isUser ? 'text-blue-600 hover:text-blue-800' : 'text-blue-300 hover:text-blue-200'}`} target="_blank" rel="noopener noreferrer">{children}</a>,
                           
                           // Blockquotes
-                          blockquote: ({ children }) => <blockquote className={`border-l-4 pl-3 italic mb-3 ${isUser ? 'border-gray-400 text-gray-800' : 'border-gray-400 text-gray-200'}`}>{children}</blockquote>,
+                          blockquote: ({ children }) => <blockquote className={`border-l-4 pl-2 italic mb-2 text-xs ${isUser ? 'border-gray-400 text-gray-800' : 'border-gray-400 text-gray-200'}`}>{children}</blockquote>,
                           
                           // Horizontal rule
-                          hr: () => <hr className="border-gray-400 my-3" />,
+                          hr: () => <hr className="border-gray-400 my-2" />,
                         }}
                       >
                         {msg.content}
@@ -436,24 +436,24 @@ export function ChatInterface({
 
 
       {/* Input Area - Fixed at Bottom */}
-      <div className="flex-shrink-0 p-4 sm:p-6 pb-8 bg-white/95 backdrop-blur-sm border-t border-slate-200">
+      <div className="flex-shrink-0 p-4 bg-white border-t border-gray-200">
         <div className="max-w-4xl mx-auto">
-          {/* ChatGPT-style input bar */}
+          {/* Clean white input bar */}
           <div className="relative">
-            <div className="flex items-center bg-white rounded-full px-4 py-3 transition-all duration-200 focus-within:outline-none border border-slate-200" style={{ boxShadow: '0 10px 25px -3px rgba(0, 0, 0, 0.5), 0 6px 12px -3px rgba(0, 0, 0, 0.2)' }} onMouseEnter={(e) => e.currentTarget.style.boxShadow = '0 18px 35px -4px rgba(0, 0, 0, 0.6), 0 10px 16px -4px rgba(0, 0, 0, 0.3)'} onMouseLeave={(e) => e.currentTarget.style.boxShadow = '0 10px 25px -3px rgba(0, 0, 0, 0.5), 0 6px 12px -3px rgba(0, 0, 0, 0.2)'}>
+            <div className="flex items-center bg-white rounded-lg px-3 py-2 shadow-sm border border-gray-200">
               {/* Plus icon on the left */}
               <div className="relative mr-3">
                 <Button
                   variant="ghost"
                   size="sm"
                   onClick={onOpenMediaSelector}
-                  className="rounded-full p-2 hover:bg-gray-100 text-gray-600"
+                  className="rounded-full p-2 hover:bg-gray-100 text-gray-600 h-8 w-8"
                   title="Add attachment or drag & drop files anywhere in chat"
                 >
                   <Plus className="h-4 w-4" />
                 </Button>
                 {selectedMediaCount > 0 && (
-                  <div className="absolute -top-1 -right-1 bg-blue-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-medium">
+                  <div className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center font-medium">
                     {selectedMediaCount}
                   </div>
                 )}
@@ -467,19 +467,33 @@ export function ChatInterface({
                 onKeyDown={handleKeyDown}
                 placeholder="Ask anything or drag & drop files here"
                 disabled={!currentAgent && !selectedAgent || isLoading}
-                className="flex-1 border-0 border-none bg-transparent text-gray-800 placeholder:text-gray-500 focus:ring-0 focus:outline-none focus:border-0 focus-visible:ring-0 focus-visible:outline-none focus-visible:ring-offset-0 focus:border-0 focus:shadow-none text-sm resize-none min-h-[24px] max-h-[160px] overflow-y-auto rounded-none"
+                className="flex-1 border-0 border-none bg-transparent text-gray-900 placeholder:text-gray-500 focus:ring-0 focus:outline-none focus:border-0 focus-visible:ring-0 focus-visible:outline-none focus-visible:ring-offset-0 focus:border-0 focus:shadow-none text-sm resize-none min-h-[20px] max-h-[120px] overflow-y-auto rounded-none py-1"
                 style={{ boxShadow: 'none', border: 'none', outline: 'none' }}
                 rows={1}
               />
+              
+              {/* Microphone icon */}
+              <div className="mr-3">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="rounded-full p-2 hover:bg-gray-100 text-gray-600 h-8 w-8"
+                  title="Voice input"
+                >
+                  <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/>
+                    <path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/>
+                  </svg>
+                </Button>
+              </div>
               
               {/* Send Button */}
               <Button
                 onClick={handleSend}
                 disabled={!message.trim() || !currentAgent && !selectedAgent || isLoading}
-                className="ml-3 bg-blue-600 hover:bg-blue-700 text-white border-2 border-white rounded-lg px-4 py-2 h-10 flex items-center space-x-2 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="bg-black hover:bg-gray-800 text-white rounded-full h-8 w-8 flex items-center justify-center transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed p-0"
               >
-                <Send className="h-4 w-4" />
-                <span className="text-sm font-medium">Send</span>
+                <Send className="h-4 w-4 rotate-45" />
               </Button>
               
             </div>
