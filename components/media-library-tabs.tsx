@@ -933,6 +933,16 @@ export function YouTubeTab({ mediaItems, onDelete, onRefresh, setMediaItems, isD
 export function ImageAnalyzerTab({ mediaItems, onUpload, onDelete, isDeleting, deletingItemId, isLoadingTabContent }: any) {
   const [dragActive, setDragActive] = React.useState(false)
   const [isUploading, setIsUploading] = React.useState(false)
+  const [isAnalyzing, setIsAnalyzing] = React.useState(false)
+  const [analyzingImageId, setAnalyzingImageId] = React.useState<string | null>(null)
+  const [analysisResults, setAnalysisResults] = React.useState<{[key: string]: any}>({})
+  const [selectedImageAnalysis, setSelectedImageAnalysis] = React.useState<any>(null)
+  const [showAnalysisPopup, setShowAnalysisPopup] = React.useState<any>(null)
+  const [toast, setToast] = React.useState<{ message: string; type: 'success' | 'error' | 'info'; isVisible: boolean }>({
+    message: '',
+    type: 'info',
+    isVisible: false
+  })
   const [searchQuery, setSearchQuery] = React.useState("")
   const fileInputRef = React.useRef<HTMLInputElement>(null)
   
@@ -978,6 +988,136 @@ export function ImageAnalyzerTab({ mediaItems, onUpload, onDelete, isDeleting, d
       setIsUploading(true)
       await onUpload(files)
       setIsUploading(false)
+    }
+  }
+
+  // Check for existing analysis content when component mounts
+  React.useEffect(() => {
+    const existingResults: {[key: string]: any} = {}
+    imageItems.forEach((item: any) => {
+      if (item.content && item.content.trim()) {
+        existingResults[item.id] = {
+          id: item.id,
+          analysis: item.content,
+          timestamp: new Date().toISOString(),
+          status: 'completed'
+        }
+      }
+    })
+    if (Object.keys(existingResults).length > 0) {
+      setAnalysisResults(existingResults)
+    }
+  }, [imageItems])
+
+  const handleAnalyzeImage = async (imageId: string, imageItem: any) => {
+    setIsAnalyzing(true)
+    setAnalyzingImageId(imageId)
+    
+    try {
+      const token = authService.getAuthToken()
+      if (!token) {
+        throw new Error('No authentication token available')
+      }
+
+      console.log('🔍 Analyzing image:', imageId)
+      
+      const response = await fetch('/api/analyze-image', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          media_id: imageId
+        })
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}))
+        throw new Error(errorData.error || `HTTP error! status: ${response.status}`)
+      }
+
+      const result = await response.json()
+      console.log('✅ Image analysis result:', result)
+      
+      // Extract the data from the API response
+      const analysisData = result.data || result
+      
+      // Process the real analysis result from the webhook
+      let analysisText = ''
+      if (Array.isArray(analysisData) && analysisData.length > 0) {
+        analysisText = analysisData[0]?.text || analysisData[0] || ''
+      } else if (typeof analysisData === 'string') {
+        analysisText = analysisData
+      } else if (analysisData?.text) {
+        analysisText = analysisData.text
+      } else {
+        analysisText = ''
+      }
+
+      const analysisResult = {
+        id: imageId,
+        analysis: analysisText,
+        timestamp: new Date().toISOString(),
+        status: 'completed'
+      }
+
+      setAnalysisResults(prev => ({
+        ...prev,
+        [imageId]: analysisResult
+      }))
+
+      setToast({
+        message: 'Image analysis completed successfully!',
+        type: 'success',
+        isVisible: true
+      })
+
+    } catch (error: any) {
+      console.error('❌ Error analyzing image:', error)
+      setToast({
+        message: `Analysis failed: ${error.message}`,
+        type: 'error',
+        isVisible: true
+      })
+    } finally {
+      setIsAnalyzing(false)
+      setAnalyzingImageId(null)
+    }
+  }
+
+  const handleViewImage = (item: any) => {
+    if (item.url) {
+      window.open(item.url, '_blank')
+    } else if (item.content) {
+      const newWindow = window.open('', '_blank')
+      if (newWindow) {
+        newWindow.document.write(`
+          <html>
+            <head><title>${item.filename || 'Image Content'}</title></head>
+            <body style="font-family: monospace; padding: 20px; white-space: pre-wrap;">
+              ${item.content}
+            </body>
+          </html>
+        `)
+      }
+    }
+  }
+
+  const handleDownloadImage = (item: any) => {
+    if (item.url) {
+      window.open(item.url, '_blank')
+    } else {
+      // Create a download link for the content
+      const blob = new Blob([item.content || ''], { type: 'text/plain' })
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = item.filename || 'image-content.txt'
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+      URL.revokeObjectURL(url)
     }
   }
 
@@ -1058,34 +1198,101 @@ export function ImageAnalyzerTab({ mediaItems, onUpload, onDelete, isDeleting, d
           imageItems.slice(0, 8).map((item: any, index: number) => {
             const isDeletingItem = deletingItemId === item.id
 
+            const hasAnalysis = analysisResults[item.id] || (item.content && item.content.trim())
+            const isAnalyzed = hasAnalysis && (analysisResults[item.id]?.status === 'completed' || item.content)
+
             return (
               <div
                 key={item.id}
-                className={`group relative p-2 rounded-md transition-all duration-200 cursor-pointer ${
+                className={`group relative p-1.5 rounded-md transition-all duration-200 ${
                   'bg-white hover:bg-gray-50 hover:shadow-sm border border-gray-200'
                 } ${isDeletingItem ? 'opacity-50 pointer-events-none' : ''}`}
               >
-                <div className="flex items-start justify-between gap-2">
-                  <div className="flex items-center space-x-2 flex-1 min-w-0">
-                    <Image className="h-4 w-4 text-green-500" />
-                    <div className="flex-1 min-w-0">
-                      <h4 className="font-medium text-sm truncate text-gray-900">
-                        {item.name || item.title || `Image ${index + 1}`}
-                      </h4>
-                      <p className="text-xs text-gray-500 truncate">
-                        IMAGE • {item.size ? `${(item.size / 1024).toFixed(1)}KB` : 'Unknown size'}
-                      </p>
+                <div className="flex items-start gap-1.5">
+                  {/* Image Icon */}
+                  <div className="flex-shrink-0">
+                    <div className="w-5 h-5 bg-gray-100 rounded flex items-center justify-center">
+                      <Image className="h-2.5 w-2.5 text-gray-500" />
                     </div>
                   </div>
-                  <div className="flex items-center space-x-1">
-                    {!isDeletingItem && (
-                      <ThreeDotsMenu 
-                        onDelete={() => onDelete(item.id)}
-                      />
+                  
+                  {/* Content */}
+                  <div className="flex-1 min-w-0">
+                    <h4 className="font-medium text-xs text-gray-900 truncate">
+                      {item.name || item.title || item.filename || `Image ${index + 1}`}
+                    </h4>
+                    
+                    {/* Analysis Status */}
+                    {isAnalyzed ? (
+                      <div className="flex items-center gap-1 mt-0.5">
+                        <div className="w-1.5 h-1.5 bg-green-500 rounded-full"></div>
+                        <span className="text-xs text-green-700">Analyzed</span>
+                      </div>
+                    ) : (
+                      <div className="mt-0.5">
+                        <span className="text-xs text-gray-500">Click buttons to view/analyze</span>
+                      </div>
                     )}
-                    {isDeletingItem && (
-                      <div className="h-6 w-6 flex items-center justify-center">
-                        <Loader2 className="h-3 w-3 animate-spin text-gray-300" />
+                    
+                    {/* Action Buttons */}
+                    <div className="flex items-center gap-1.5 mt-1.5">
+                      {isAnalyzed ? (
+                        <>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="h-5 px-1.5 text-xs border-blue-200 text-blue-600 hover:bg-blue-50"
+                            onClick={() => setShowAnalysisPopup(analysisResults[item.id] || { id: item.id, analysis: item.content })}
+                          >
+                            <span className="text-blue-600">View</span>
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="h-5 px-1.5 text-xs border-blue-200 text-blue-600 hover:bg-blue-50"
+                            onClick={() => handleAnalyzeImage(item.id, item)}
+                            disabled={isAnalyzing && analyzingImageId === item.id}
+                          >
+                            {isAnalyzing && analyzingImageId === item.id ? (
+                              <Loader2 className="h-2.5 w-2.5 animate-spin" />
+                            ) : (
+                              <span className="text-blue-600">Re-analyze</span>
+                            )}
+                          </Button>
+                        </>
+                      ) : (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="h-5 px-1.5 text-xs border-blue-200 text-blue-600 hover:bg-blue-50"
+                          onClick={() => handleAnalyzeImage(item.id, item)}
+                          disabled={isAnalyzing && analyzingImageId === item.id}
+                        >
+                          {isAnalyzing && analyzingImageId === item.id ? (
+                            <Loader2 className="h-2.5 w-2.5 animate-spin" />
+                          ) : (
+                            <span className="text-blue-600">Analyze</span>
+                          )}
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                  
+                  {/* Delete Button */}
+                  <div className="flex-shrink-0">
+                    {!isDeletingItem ? (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-5 w-5 p-0 text-gray-400 hover:text-red-600 hover:bg-red-50"
+                        onClick={() => onDelete(item.id)}
+                        title="Delete"
+                      >
+                        <Trash2 className="h-2.5 w-2.5" />
+                      </Button>
+                    ) : (
+                      <div className="h-5 w-5 flex items-center justify-center">
+                        <Loader2 className="h-2.5 w-2.5 animate-spin text-gray-300" />
                       </div>
                     )}
                   </div>
@@ -1112,6 +1319,41 @@ export function ImageAnalyzerTab({ mediaItems, onUpload, onDelete, isDeleting, d
           </div>
         )}
       </div>
+
+
+      {/* Toast Notification */}
+      <Toast
+        message={toast.message}
+        type={toast.type}
+        isVisible={toast.isVisible}
+        onClose={() => setToast(prev => ({ ...prev, isVisible: false }))}
+      />
+
+      {/* Analysis Popup */}
+      {showAnalysisPopup && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg max-w-2xl w-full max-h-[80vh] overflow-hidden shadow-xl">
+            <div className="p-4 border-b border-gray-200 bg-white">
+              <div className="flex items-center justify-between">
+                <h3 className="text-lg font-semibold text-gray-900">Image Analysis</h3>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setShowAnalysisPopup(null)}
+                  className="h-8 w-8 p-0"
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+            <div className="p-4 overflow-y-auto max-h-[60vh] bg-white">
+              <pre className="whitespace-pre-wrap text-sm text-black font-mono leading-relaxed bg-white p-4 rounded border">
+                {showAnalysisPopup.analysis}
+              </pre>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

@@ -19,7 +19,8 @@ import {
   Link2,
   Mic,
   Image,
-  Upload
+  Upload,
+  Eye
 } from "lucide-react"
 
 import {
@@ -68,6 +69,7 @@ interface KnowledgeBaseSidebarProps {
   isLoadingTabContent: boolean
   isDeleting: boolean
   deletingItemId: string | null
+  onViewKnowledgeBase?: () => void
 }
 
 export function KnowledgeBaseSidebar({
@@ -79,7 +81,8 @@ export function KnowledgeBaseSidebar({
   isRefreshing,
   isLoadingTabContent,
   isDeleting,
-  deletingItemId
+  deletingItemId,
+  onViewKnowledgeBase
 }: KnowledgeBaseSidebarProps) {
   const [activeTab, setActiveTab] = React.useState<'files' | 'links' | 'youtube' | 'image-analyzer' | 'transcripts'>('files')
   const [deletingChatId, setDeletingChatId] = React.useState<string | null>(null)
@@ -400,6 +403,29 @@ export function KnowledgeBaseSidebar({
 
       <SidebarFooter className={`border-t border-gray-200 bg-white py-1 ${state === 'expanded' ? 'px-2' : 'px-0'}`}>
         <SidebarMenu className={`space-y-0.5 ${state === 'expanded' ? '' : 'flex flex-col items-center'}`}>
+          {/* View Knowledge Base Button */}
+          {onViewKnowledgeBase && (
+            <SidebarMenuItem>
+              <SidebarMenuButton
+                asChild
+                tooltip="View Knowledge Base"
+              >
+                <Button
+                  variant="ghost"
+                  className={`w-full h-6 rounded-lg bg-green-50 text-green-700 hover:text-green-800 hover:bg-green-100 overflow-hidden ${
+                    state === 'expanded'
+                      ? 'justify-start px-2'
+                      : 'justify-center p-0'
+                  }`}
+                  size="sm"
+                  onClick={onViewKnowledgeBase}
+                >
+                  <Eye className="h-2.5 w-2.5 flex-shrink-0" />
+                  {state === 'expanded' && <span className="font-medium text-xs truncate ml-1">View Knowledge Base</span>}
+                </Button>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          )}
           <SidebarMenuItem>
             {state === 'expanded' ? (
               <div className="flex items-center gap-1 min-w-0">
