@@ -68,10 +68,10 @@ function ThreeDotsMenu({ onDelete, onDownload, onView, item }: any) {
       <Button 
         variant="ghost" 
         size="sm" 
-        className="h-6 w-6 p-0 text-gray-500 hover:text-gray-700 hover:bg-gray-100"
+        className="h-5 w-5 p-0 text-gray-500 hover:text-gray-700 hover:bg-gray-100"
         onClick={() => setIsOpen(!isOpen)}
       >
-        <MoreHorizontal className="h-3 w-3" />
+        <MoreHorizontal className="h-2.5 w-2.5" />
       </Button>
       
       {isOpen && (
@@ -80,33 +80,33 @@ function ThreeDotsMenu({ onDelete, onDownload, onView, item }: any) {
             className="fixed inset-0 z-10" 
             onClick={() => setIsOpen(false)}
           />
-          <div className="absolute right-0 top-6 z-20 bg-white border border-gray-200 rounded-md shadow-lg py-1 min-w-[120px]">
+          <div className="absolute right-0 top-5 z-20 bg-white border border-gray-200 rounded-md shadow-lg py-1 min-w-[100px]">
             {onView && (
               <button
-                className="w-full px-3 py-2 text-left text-sm text-blue-600 hover:bg-blue-50 flex items-center space-x-2"
+                className="w-full px-2 py-1.5 text-left text-xs text-blue-600 hover:bg-blue-50 flex items-center space-x-1.5"
                 onClick={handleView}
               >
-                <Eye className="h-3 w-3" />
+                <Eye className="h-2.5 w-2.5" />
                 <span>View</span>
               </button>
             )}
             {onDownload && (
               <button
-                className="w-full px-3 py-2 text-left text-sm text-green-600 hover:bg-green-50 flex items-center space-x-2"
+                className="w-full px-2 py-1.5 text-left text-xs text-green-600 hover:bg-green-50 flex items-center space-x-1.5"
                 onClick={handleDownload}
               >
-                <Download className="h-3 w-3" />
+                <Download className="h-2.5 w-2.5" />
                 <span>Download</span>
               </button>
             )}
             <button
-              className="w-full px-3 py-2 text-left text-sm text-red-600 hover:bg-red-50 flex items-center space-x-2"
+              className="w-full px-2 py-1.5 text-left text-xs text-red-600 hover:bg-red-50 flex items-center space-x-1.5"
               onClick={() => {
                 onDelete()
                 setIsOpen(false)
               }}
             >
-              <Trash2 className="h-3 w-3" />
+              <Trash2 className="h-2.5 w-2.5" />
               <span>Delete</span>
             </button>
           </div>
@@ -209,23 +209,23 @@ export function FilesTab({ mediaItems, onUpload, onDelete, isDeleting, deletingI
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-2">
       {/* Search Input */}
-      <div className="space-y-2">
+      <div className="space-y-1">
         <Input
           placeholder="Search files..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          className="w-full"
+          className="w-full h-6 text-xs"
         />
       </div>
 
       {/* Enhanced Dropzone */}
       <div 
-        className={`border-2 border-dashed rounded-xl p-8 text-center transition-all duration-200 cursor-pointer ${
+        className={`border-2 border-dashed rounded-lg p-4 text-center transition-all duration-200 cursor-pointer ${
           dragActive 
-            ? 'border-[#1ABC9C] bg-[#1ABC9C]/10 scale-[1.02] shadow-lg' 
-            : 'border-[#EEEEEE] hover:border-[#1ABC9C] hover:bg-[#1ABC9C]/5 hover:shadow-md'
+            ? 'border-[#1ABC9C] bg-[#1ABC9C]/10 scale-[1.01] shadow-md' 
+            : 'border-gray-200 hover:border-[#1ABC9C] hover:bg-[#1ABC9C]/5 hover:shadow-sm'
         }`}
         onDragEnter={handleDrag}
         onDragLeave={handleDrag}
@@ -233,26 +233,26 @@ export function FilesTab({ mediaItems, onUpload, onDelete, isDeleting, deletingI
         onDrop={handleDrop}
         onClick={() => fileInputRef.current?.click()}
       >
-        <div className="flex flex-col items-center space-y-3">
-          <div className={`p-3 rounded-full transition-all duration-200 ${
+        <div className="flex flex-col items-center space-y-2">
+          <div className={`p-2 rounded-full transition-all duration-200 ${
             dragActive 
-              ? 'bg-gradient-to-br from-[#1ABC9C] to-[#16A085] shadow-lg' 
-              : 'bg-gradient-to-br from-[#EEEEEE] to-[#F5F5F5]'
+              ? 'bg-gradient-to-br from-[#1ABC9C] to-[#16A085] shadow-md' 
+              : 'bg-gradient-to-br from-gray-100 to-gray-200'
           }`}>
-            <Upload className={`h-6 w-6 transition-all duration-200 ${isUploading ? 'animate-bounce' : ''} ${
-              dragActive ? 'text-white' : 'text-black'
+            <Upload className={`h-4 w-4 transition-all duration-200 ${isUploading ? 'animate-bounce' : ''} ${
+              dragActive ? 'text-white' : 'text-gray-700'
             }`} />
           </div>
           <div className="space-y-1">
             <FadeInText 
               text={isUploading ? "Uploading files..." : "Drop files here or click to browse"} 
-              className={`text-sm font-bold text-center transition-colors duration-200 ${
-                isUploading ? 'text-[#1ABC9C]' : dragActive ? 'text-[#1ABC9C]' : 'text-slate-800'
+              className={`text-xs font-medium text-center transition-colors duration-200 ${
+                isUploading ? 'text-[#1ABC9C]' : dragActive ? 'text-[#1ABC9C]' : 'text-gray-700'
               }`} 
             />
             <FadeInText 
               text={isUploading ? "Please wait..." : "Supports PDF, DOC, TXT, MP3, MP4, and more"} 
-              className="text-xs text-slate-600 text-center" 
+              className="text-xs text-gray-500 text-center" 
               delay={0.1} 
             />
           </div>
@@ -270,7 +270,7 @@ export function FilesTab({ mediaItems, onUpload, onDelete, isDeleting, deletingI
       {/* File count and list */}
       <div className="space-y-1">
         {fileItems.length > 0 && (
-          <div className="text-xs text-gray-500 mb-2">
+          <div className="text-xs text-gray-500 mb-1">
             {fileItems.length} file{fileItems.length !== 1 ? 's' : ''} found
             {searchQuery && ` matching "${searchQuery}"`}
           </div>
@@ -278,7 +278,7 @@ export function FilesTab({ mediaItems, onUpload, onDelete, isDeleting, deletingI
         {isLoadingTabContent ? (
           <div className="space-y-2">
             {[...Array(3)].map((_, i) => (
-              <Skeleton key={i} className="h-12 w-full" />
+              <Skeleton key={i} className="h-8 w-full" />
             ))}
           </div>
         ) : fileItems.length > 0 ? (
@@ -316,21 +316,21 @@ export function FilesTab({ mediaItems, onUpload, onDelete, isDeleting, deletingI
             return (
               <div
                 key={item.id}
-                className={`group relative p-2 rounded-md transition-all duration-200 cursor-pointer ${
+                className={`group relative p-1.5 rounded-md transition-all duration-200 cursor-pointer ${
                   'bg-white hover:bg-gray-50 hover:shadow-sm border border-gray-200'
                 } ${isDeletingItem ? 'opacity-50 pointer-events-none' : ''}`}
               >
-                <div className="flex items-start justify-between gap-2">
-                  <div className="flex items-center space-x-2 flex-1 min-w-0">
+                <div className="flex items-start justify-between gap-1">
+                  <div className="flex items-center space-x-1.5 flex-1 min-w-0">
                     {getFileIcon(item.type)}
                     <div className="flex-1 min-w-0">
-                      <h4 className="font-medium text-sm truncate text-gray-900">
+                      <h4 className="font-medium text-xs truncate text-gray-900">
                         {item.filename || item.name || item.title || `File ${index + 1}`}
                       </h4>
                       <p className="text-xs text-gray-500 truncate">
                         {item.type?.toUpperCase()} • {item.size ? formatFileSize(item.size) : 'Unknown size'}
                         {item.uploadedAt && (
-                          <span className="ml-2">
+                          <span className="ml-1">
                             • {new Date(item.uploadedAt).toLocaleDateString()}
                           </span>
                         )}
@@ -355,18 +355,18 @@ export function FilesTab({ mediaItems, onUpload, onDelete, isDeleting, deletingI
             )
           })
         ) : (
-          <div className="text-center py-6">
-            <div className="w-12 h-12 mx-auto mb-3 bg-gray-100 rounded-full flex items-center justify-center">
-              <FileText className="h-6 w-6 text-gray-400" />
+          <div className="text-center py-4">
+            <div className="w-8 h-8 mx-auto mb-2 bg-gray-100 rounded-full flex items-center justify-center">
+              <FileText className="h-4 w-4 text-gray-400" />
             </div>
             {searchQuery ? (
               <>
-                <p className="text-sm text-gray-500 mb-1">No files found</p>
+                <p className="text-xs text-gray-500 mb-1">No files found</p>
                 <p className="text-xs text-gray-400">Try adjusting your search terms</p>
               </>
             ) : (
               <>
-                <p className="text-sm text-gray-500 mb-1">No files uploaded yet</p>
+                <p className="text-xs text-gray-500 mb-1">No files uploaded yet</p>
                 <p className="text-xs text-gray-400">Upload your first file to get started</p>
               </>
             )}
@@ -379,13 +379,22 @@ export function FilesTab({ mediaItems, onUpload, onDelete, isDeleting, deletingI
 
 // Links Tab Component
 export function LinksTab({ mediaItems, onDelete, onRefresh, setMediaItems, isDeleting, deletingItemId, isLoadingTabContent }: any) {
-  // Filter to show only webpage/url/scraped type items
-  const webpageItems = mediaItems.filter((item: any) => 
-    item && (item.type === 'webpage' || item.type === 'url' || item.type === 'scraped' || item.type === 'link')
-  )
   const [urlInput, setUrlInput] = React.useState("")
   const [isScraping, setIsScraping] = React.useState(false)
   const [isLoadingContents, setIsLoadingContents] = React.useState(false)
+  const [searchQuery, setSearchQuery] = React.useState("")
+  
+  // Filter to show only webpage/url/scraped type items with search
+  const webpageItems = mediaItems.filter((item: any) => {
+    if (!item) return false
+    const isWebpageType = item.type === 'webpage' || item.type === 'url' || item.type === 'scraped' || item.type === 'link'
+    const matchesSearch = !searchQuery || 
+      (item.title && item.title.toLowerCase().includes(searchQuery.toLowerCase())) ||
+      (item.name && item.name.toLowerCase().includes(searchQuery.toLowerCase())) ||
+      (item.filename && item.filename.toLowerCase().includes(searchQuery.toLowerCase())) ||
+      (item.url && item.url.toLowerCase().includes(searchQuery.toLowerCase()))
+    return isWebpageType && matchesSearch
+  })
   const [toast, setToast] = React.useState<{
     message: string
     type: 'success' | 'error' | 'info'
@@ -588,36 +597,52 @@ export function LinksTab({ mediaItems, onDelete, onRefresh, setMediaItems, isDel
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-2">
+      {/* Search Input */}
+      <div className="space-y-1">
+        <Input
+          placeholder="Search links..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="w-full h-6 text-xs"
+        />
+      </div>
+
       {/* URL Input Form */}
-      <form onSubmit={(e) => { e.preventDefault(); handleScrapeUrl(); }} className="space-y-3">
-        <div className="space-y-2">
-          <label className="text-sm font-medium text-gray-700">Add Web Link</label>
-          <div className="flex space-x-2">
+      <form onSubmit={(e) => { e.preventDefault(); handleScrapeUrl(); }} className="space-y-2">
+        <div className="space-y-1">
+          <label className="text-xs font-medium text-gray-700">Add Web Link</label>
+          <div className="flex space-x-1">
             <Input
               value={urlInput}
               onChange={(e) => setUrlInput(e.target.value)}
               placeholder="https://example.com"
-              className="flex-1"
+              className="flex-1 h-6 text-xs"
               disabled={isScraping}
             />
             <Button 
               type="submit" 
               disabled={!urlInput.trim() || isScraping}
-              className="bg-[#1ABC9C] hover:bg-[#16A085] text-white"
+              className="bg-[#1ABC9C] hover:bg-[#16A085] text-white h-6 px-2"
             >
-              {isScraping ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
+              {isScraping ? <Loader2 className="h-3 w-3 animate-spin" /> : <Plus className="h-3 w-3" />}
             </Button>
           </div>
         </div>
       </form>
 
-      {/* Links list */}
+      {/* Links count and list */}
       <div className="space-y-1">
+        {webpageItems.length > 0 && (
+          <div className="text-xs text-gray-500 mb-1">
+            {webpageItems.length} link{webpageItems.length !== 1 ? 's' : ''} found
+            {searchQuery && ` matching "${searchQuery}"`}
+          </div>
+        )}
         {isLoadingTabContent ? (
           <div className="space-y-2">
             {[...Array(3)].map((_, i) => (
-              <Skeleton key={i} className="h-12 w-full" />
+              <Skeleton key={i} className="h-8 w-full" />
             ))}
           </div>
         ) : webpageItems.length > 0 ? (
@@ -627,15 +652,15 @@ export function LinksTab({ mediaItems, onDelete, onRefresh, setMediaItems, isDel
             return (
               <div
                 key={item.id}
-                className={`group relative p-2 rounded-md transition-all duration-200 cursor-pointer ${
+                className={`group relative p-1.5 rounded-md transition-all duration-200 cursor-pointer ${
                   'bg-white hover:bg-gray-50 hover:shadow-sm border border-gray-200'
                 } ${isDeletingItem ? 'opacity-50 pointer-events-none' : ''}`}
               >
-                <div className="flex items-start justify-between gap-2">
-                  <div className="flex items-center space-x-2 flex-1 min-w-0">
-                    <Link2 className="h-4 w-4 text-blue-500" />
+                <div className="flex items-start justify-between gap-1">
+                  <div className="flex items-center space-x-1.5 flex-1 min-w-0">
+                    <Link2 className="h-3.5 w-3.5 text-blue-500" />
                     <div className="flex-1 min-w-0">
-                      <h4 className="font-medium text-sm truncate text-gray-900">
+                      <h4 className="font-medium text-xs truncate text-gray-900">
                         {item.title || item.name || `Link ${index + 1}`}
                       </h4>
                       <p className="text-xs text-blue-600 truncate">
@@ -650,13 +675,13 @@ export function LinksTab({ mediaItems, onDelete, onRefresh, setMediaItems, isDel
                           <Button
                             variant="ghost"
                             size="sm"
-                            className="h-6 w-6 p-0 text-gray-500 hover:text-blue-600 hover:bg-blue-50"
+                            className="h-5 w-5 p-0 text-gray-500 hover:text-blue-600 hover:bg-blue-50"
                             onClick={(e) => {
                               e.stopPropagation()
                               handleViewContent(item)
                             }}
                           >
-                            <Eye className="h-3 w-3" />
+                            <Eye className="h-2.5 w-2.5" />
                           </Button>
                         </TooltipTrigger>
                         <TooltipContent>
@@ -670,13 +695,13 @@ export function LinksTab({ mediaItems, onDelete, onRefresh, setMediaItems, isDel
                           <Button
                             variant="ghost"
                             size="sm"
-                            className="h-6 w-6 p-0 text-gray-500 hover:text-green-600 hover:bg-green-50"
+                            className="h-5 w-5 p-0 text-gray-500 hover:text-green-600 hover:bg-green-50"
                             onClick={(e) => {
                               e.stopPropagation()
                               window.open(item.url || item.link, '_blank')
                             }}
                           >
-                            <ExternalLink className="h-3 w-3" />
+                            <ExternalLink className="h-2.5 w-2.5" />
                           </Button>
                         </TooltipTrigger>
                         <TooltipContent>
@@ -700,12 +725,21 @@ export function LinksTab({ mediaItems, onDelete, onRefresh, setMediaItems, isDel
             )
           })
         ) : (
-          <div className="text-center py-6">
-            <div className="w-12 h-12 mx-auto mb-3 bg-gray-100 rounded-full flex items-center justify-center">
-              <Link2 className="h-6 w-6 text-gray-400" />
+          <div className="text-center py-4">
+            <div className="w-8 h-8 mx-auto mb-2 bg-gray-100 rounded-full flex items-center justify-center">
+              <Link2 className="h-4 w-4 text-gray-400" />
             </div>
-            <p className="text-sm text-gray-500 mb-1">No links added yet</p>
-            <p className="text-xs text-gray-400">Add web links to scrape content</p>
+            {searchQuery ? (
+              <>
+                <p className="text-xs text-gray-500 mb-1">No links found</p>
+                <p className="text-xs text-gray-400">Try adjusting your search terms</p>
+              </>
+            ) : (
+              <>
+                <p className="text-xs text-gray-500 mb-1">No links added yet</p>
+                <p className="text-xs text-gray-400">Add web links to scrape content</p>
+              </>
+            )}
           </div>
         )}
       </div>
@@ -734,8 +768,18 @@ export function LinksTab({ mediaItems, onDelete, onRefresh, setMediaItems, isDel
 export function YouTubeTab({ mediaItems, onDelete, onRefresh, setMediaItems, isDeleting, deletingItemId, isLoadingTabContent }: any) {
   const [urlInput, setUrlInput] = React.useState("")
   const [isSubmitting, setIsSubmitting] = React.useState(false)
+  const [searchQuery, setSearchQuery] = React.useState("")
   
-  const youtubeItems = mediaItems.filter((item: any) => item && item.type === 'youtube')
+  const youtubeItems = mediaItems.filter((item: any) => {
+    if (!item) return false
+    const isYouTubeType = item.type === 'youtube' || item.type === 'video'
+    const matchesSearch = !searchQuery || 
+      (item.title && item.title.toLowerCase().includes(searchQuery.toLowerCase())) ||
+      (item.name && item.name.toLowerCase().includes(searchQuery.toLowerCase())) ||
+      (item.filename && item.filename.toLowerCase().includes(searchQuery.toLowerCase())) ||
+      (item.url && item.url.toLowerCase().includes(searchQuery.toLowerCase()))
+    return isYouTubeType && matchesSearch
+  })
 
   const handleSubmitUrl = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -755,36 +799,52 @@ export function YouTubeTab({ mediaItems, onDelete, onRefresh, setMediaItems, isD
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-2">
+      {/* Search Input */}
+      <div className="space-y-1">
+        <Input
+          placeholder="Search YouTube videos..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="w-full h-6 text-xs"
+        />
+      </div>
+
       {/* YouTube URL Input Form */}
-      <form onSubmit={handleSubmitUrl} className="space-y-3">
-        <div className="space-y-2">
-          <label className="text-sm font-medium text-gray-700">Add YouTube Video</label>
-          <div className="flex space-x-2">
+      <form onSubmit={handleSubmitUrl} className="space-y-2">
+        <div className="space-y-1">
+          <label className="text-xs font-medium text-gray-700">Add YouTube Video</label>
+          <div className="flex space-x-1">
             <Input
               value={urlInput}
               onChange={(e) => setUrlInput(e.target.value)}
               placeholder="https://youtube.com/watch?v=..."
-              className="flex-1"
+              className="flex-1 h-6 text-xs"
               disabled={isSubmitting}
             />
             <Button 
               type="submit" 
               disabled={!urlInput.trim() || isSubmitting}
-              className="bg-red-600 hover:bg-red-700 text-white"
+              className="bg-red-600 hover:bg-red-700 text-white h-6 px-2"
             >
-              {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Mic className="h-4 w-4" />}
+              {isSubmitting ? <Loader2 className="h-3 w-3 animate-spin" /> : <Mic className="h-3 w-3" />}
             </Button>
           </div>
         </div>
       </form>
 
-      {/* YouTube videos list */}
+      {/* YouTube videos count and list */}
       <div className="space-y-1">
+        {youtubeItems.length > 0 && (
+          <div className="text-xs text-gray-500 mb-1">
+            {youtubeItems.length} video{youtubeItems.length !== 1 ? 's' : ''} found
+            {searchQuery && ` matching "${searchQuery}"`}
+          </div>
+        )}
         {isLoadingTabContent ? (
           <div className="space-y-2">
             {[...Array(3)].map((_, i) => (
-              <Skeleton key={i} className="h-12 w-full" />
+              <Skeleton key={i} className="h-8 w-full" />
             ))}
           </div>
         ) : youtubeItems.length > 0 ? (
@@ -817,7 +877,7 @@ export function YouTubeTab({ mediaItems, onDelete, onRefresh, setMediaItems, isD
                           <Button
                             variant="ghost"
                             size="sm"
-                            className="h-6 w-6 p-0 text-gray-500 hover:text-red-600 hover:bg-red-50"
+                            className="h-5 w-5 p-0 text-gray-500 hover:text-red-600 hover:bg-red-50"
                             onClick={(e) => {
                               e.stopPropagation()
                               window.open(item.url || item.link, '_blank')
@@ -847,12 +907,21 @@ export function YouTubeTab({ mediaItems, onDelete, onRefresh, setMediaItems, isD
             )
           })
         ) : (
-          <div className="text-center py-6">
-            <div className="w-12 h-12 mx-auto mb-3 bg-gray-100 rounded-full flex items-center justify-center">
-              <Mic className="h-6 w-6 text-gray-400" />
+          <div className="text-center py-4">
+            <div className="w-8 h-8 mx-auto mb-2 bg-gray-100 rounded-full flex items-center justify-center">
+              <Mic className="h-4 w-4 text-gray-400" />
             </div>
-            <p className="text-sm text-gray-500 mb-1">No YouTube videos yet</p>
-            <p className="text-xs text-gray-400">Add YouTube videos to transcribe</p>
+            {searchQuery ? (
+              <>
+                <p className="text-xs text-gray-500 mb-1">No videos found</p>
+                <p className="text-xs text-gray-400">Try adjusting your search terms</p>
+              </>
+            ) : (
+              <>
+                <p className="text-xs text-gray-500 mb-1">No YouTube videos yet</p>
+                <p className="text-xs text-gray-400">Add YouTube videos to transcribe</p>
+              </>
+            )}
           </div>
         )}
       </div>
@@ -864,9 +933,19 @@ export function YouTubeTab({ mediaItems, onDelete, onRefresh, setMediaItems, isD
 export function ImageAnalyzerTab({ mediaItems, onUpload, onDelete, isDeleting, deletingItemId, isLoadingTabContent }: any) {
   const [dragActive, setDragActive] = React.useState(false)
   const [isUploading, setIsUploading] = React.useState(false)
+  const [searchQuery, setSearchQuery] = React.useState("")
   const fileInputRef = React.useRef<HTMLInputElement>(null)
   
-  const imageItems = mediaItems.filter((item: any) => item && item.type === 'image')
+  const imageItems = mediaItems.filter((item: any) => {
+    if (!item) return false
+    const isImageType = item.type === 'image' || 
+      (item.type && ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp'].includes(item.type.toLowerCase()))
+    const matchesSearch = !searchQuery || 
+      (item.title && item.title.toLowerCase().includes(searchQuery.toLowerCase())) ||
+      (item.name && item.name.toLowerCase().includes(searchQuery.toLowerCase())) ||
+      (item.filename && item.filename.toLowerCase().includes(searchQuery.toLowerCase()))
+    return isImageType && matchesSearch
+  })
 
   const handleDrag = (e: React.DragEvent) => {
     e.preventDefault()
@@ -903,13 +982,23 @@ export function ImageAnalyzerTab({ mediaItems, onUpload, onDelete, isDeleting, d
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-2">
+      {/* Search Input */}
+      <div className="space-y-1">
+        <Input
+          placeholder="Search images..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="w-full h-6 text-xs"
+        />
+      </div>
+
       {/* Image Dropzone */}
       <div 
-        className={`border-2 border-dashed rounded-xl p-8 text-center transition-all duration-200 cursor-pointer ${
+        className={`border-2 border-dashed rounded-lg p-4 text-center transition-all duration-200 cursor-pointer ${
           dragActive 
-            ? 'border-[#1ABC9C] bg-[#1ABC9C]/10 scale-[1.02] shadow-lg' 
-            : 'border-[#EEEEEE] hover:border-[#1ABC9C] hover:bg-[#1ABC9C]/5 hover:shadow-md'
+            ? 'border-[#1ABC9C] bg-[#1ABC9C]/10 scale-[1.01] shadow-md' 
+            : 'border-gray-200 hover:border-[#1ABC9C] hover:bg-[#1ABC9C]/5 hover:shadow-sm'
         }`}
         onDragEnter={handleDrag}
         onDragLeave={handleDrag}
@@ -917,26 +1006,26 @@ export function ImageAnalyzerTab({ mediaItems, onUpload, onDelete, isDeleting, d
         onDrop={handleDrop}
         onClick={() => fileInputRef.current?.click()}
       >
-        <div className="flex flex-col items-center space-y-3">
-          <div className={`p-3 rounded-full transition-all duration-200 ${
+        <div className="flex flex-col items-center space-y-2">
+          <div className={`p-2 rounded-full transition-all duration-200 ${
             dragActive 
-              ? 'bg-gradient-to-br from-[#1ABC9C] to-[#16A085] shadow-lg' 
-              : 'bg-gradient-to-br from-[#EEEEEE] to-[#F5F5F5]'
+              ? 'bg-gradient-to-br from-[#1ABC9C] to-[#16A085] shadow-md' 
+              : 'bg-gradient-to-br from-gray-100 to-gray-200'
           }`}>
-            <Image className={`h-6 w-6 transition-all duration-200 ${isUploading ? 'animate-bounce' : ''} ${
-              dragActive ? 'text-white' : 'text-black'
+            <Image className={`h-4 w-4 transition-all duration-200 ${isUploading ? 'animate-bounce' : ''} ${
+              dragActive ? 'text-white' : 'text-gray-700'
             }`} />
           </div>
           <div className="space-y-1">
             <FadeInText 
               text={isUploading ? "Uploading images..." : "Drop images here or click to browse"} 
-              className={`text-sm font-bold text-center transition-colors duration-200 ${
-                isUploading ? 'text-[#1ABC9C]' : dragActive ? 'text-[#1ABC9C]' : 'text-slate-800'
+              className={`text-xs font-medium text-center transition-colors duration-200 ${
+                isUploading ? 'text-[#1ABC9C]' : dragActive ? 'text-[#1ABC9C]' : 'text-gray-700'
               }`} 
             />
             <FadeInText 
               text={isUploading ? "Please wait..." : "Supports JPG, PNG, GIF, and more"} 
-              className="text-xs text-slate-600 text-center" 
+              className="text-xs text-gray-500 text-center" 
               delay={0.1} 
             />
           </div>
@@ -951,12 +1040,18 @@ export function ImageAnalyzerTab({ mediaItems, onUpload, onDelete, isDeleting, d
         />
       </div>
 
-      {/* Images list */}
+      {/* Images count and list */}
       <div className="space-y-1">
+        {imageItems.length > 0 && (
+          <div className="text-xs text-gray-500 mb-1">
+            {imageItems.length} image{imageItems.length !== 1 ? 's' : ''} found
+            {searchQuery && ` matching "${searchQuery}"`}
+          </div>
+        )}
         {isLoadingTabContent ? (
           <div className="space-y-2">
             {[...Array(3)].map((_, i) => (
-              <Skeleton key={i} className="h-12 w-full" />
+              <Skeleton key={i} className="h-8 w-full" />
             ))}
           </div>
         ) : imageItems.length > 0 ? (
@@ -999,12 +1094,21 @@ export function ImageAnalyzerTab({ mediaItems, onUpload, onDelete, isDeleting, d
             )
           })
         ) : (
-          <div className="text-center py-6">
-            <div className="w-12 h-12 mx-auto mb-3 bg-gray-100 rounded-full flex items-center justify-center">
-              <Image className="h-6 w-6 text-gray-400" />
+          <div className="text-center py-4">
+            <div className="w-8 h-8 mx-auto mb-2 bg-gray-100 rounded-full flex items-center justify-center">
+              <Image className="h-4 w-4 text-gray-400" />
             </div>
-            <p className="text-sm text-gray-500 mb-1">No images uploaded yet</p>
-            <p className="text-xs text-gray-400">Upload images for AI analysis</p>
+            {searchQuery ? (
+              <>
+                <p className="text-xs text-gray-500 mb-1">No images found</p>
+                <p className="text-xs text-gray-400">Try adjusting your search terms</p>
+              </>
+            ) : (
+              <>
+                <p className="text-xs text-gray-500 mb-1">No images uploaded yet</p>
+                <p className="text-xs text-gray-400">Upload images for AI analysis</p>
+              </>
+            )}
           </div>
         )}
       </div>
@@ -1014,16 +1118,42 @@ export function ImageAnalyzerTab({ mediaItems, onUpload, onDelete, isDeleting, d
 
 // Transcripts Tab Component
 export function TranscriptsTab({ mediaItems, onDelete, isDeleting, deletingItemId, isLoadingTabContent }: any) {
-  const transcriptItems = mediaItems.filter((item: any) => item && item.type === 'transcript')
+  const [searchQuery, setSearchQuery] = React.useState("")
+  
+  const transcriptItems = mediaItems.filter((item: any) => {
+    if (!item) return false
+    const isTranscriptType = item.type === 'transcript' || item.type === 'audio'
+    const matchesSearch = !searchQuery || 
+      (item.title && item.title.toLowerCase().includes(searchQuery.toLowerCase())) ||
+      (item.name && item.name.toLowerCase().includes(searchQuery.toLowerCase())) ||
+      (item.filename && item.filename.toLowerCase().includes(searchQuery.toLowerCase()))
+    return isTranscriptType && matchesSearch
+  })
 
   return (
-    <div className="space-y-4">
-      {/* Transcripts list */}
+    <div className="space-y-2">
+      {/* Search Input */}
       <div className="space-y-1">
+        <Input
+          placeholder="Search transcripts..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="w-full h-6 text-xs"
+        />
+      </div>
+
+      {/* Transcripts count and list */}
+      <div className="space-y-1">
+        {transcriptItems.length > 0 && (
+          <div className="text-xs text-gray-500 mb-1">
+            {transcriptItems.length} transcript{transcriptItems.length !== 1 ? 's' : ''} found
+            {searchQuery && ` matching "${searchQuery}"`}
+          </div>
+        )}
         {isLoadingTabContent ? (
           <div className="space-y-2">
             {[...Array(3)].map((_, i) => (
-              <Skeleton key={i} className="h-12 w-full" />
+              <Skeleton key={i} className="h-8 w-full" />
             ))}
           </div>
         ) : transcriptItems.length > 0 ? (
@@ -1086,12 +1216,21 @@ export function TranscriptsTab({ mediaItems, onDelete, isDeleting, deletingItemI
             )
           })
         ) : (
-          <div className="text-center py-6">
-            <div className="w-12 h-12 mx-auto mb-3 bg-gray-100 rounded-full flex items-center justify-center">
-              <Mic className="h-6 w-6 text-gray-400" />
+          <div className="text-center py-4">
+            <div className="w-8 h-8 mx-auto mb-2 bg-gray-100 rounded-full flex items-center justify-center">
+              <Mic className="h-4 w-4 text-gray-400" />
             </div>
-            <p className="text-sm text-gray-500 mb-1">No transcripts available</p>
-            <p className="text-xs text-gray-400">Transcripts will appear here after processing</p>
+            {searchQuery ? (
+              <>
+                <p className="text-xs text-gray-500 mb-1">No transcripts found</p>
+                <p className="text-xs text-gray-400">Try adjusting your search terms</p>
+              </>
+            ) : (
+              <>
+                <p className="text-xs text-gray-500 mb-1">No transcripts available</p>
+                <p className="text-xs text-gray-400">Transcripts will appear here after processing</p>
+              </>
+            )}
           </div>
         )}
       </div>

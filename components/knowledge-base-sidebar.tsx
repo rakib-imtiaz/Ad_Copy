@@ -130,42 +130,42 @@ export function KnowledgeBaseSidebar({
     <Sidebar 
       variant="inset" 
       collapsible="icon" 
-      className="border-r border-gray-700 bg-black"
+      className="border-r border-gray-200 bg-white"
       style={{
-        '--sidebar-width': '20rem',
+        '--sidebar-width': '18rem',
         '--sidebar-width-icon': '3rem'
       } as React.CSSProperties}
     >
-      <SidebarHeader className="border-b border-gray-700 bg-black px-2 py-2">
+      <SidebarHeader className="border-b border-gray-200 bg-white px-2 py-2">
         {state === 'expanded' ? (
           <div className="flex items-center gap-1">
-            <div className="flex h-6 w-6 items-center justify-center rounded-md bg-white shadow-sm">
-              <span className="text-sm font-black text-black">C</span>
+            <div className="flex h-5 w-5 items-center justify-center rounded-md bg-gray-900 shadow-sm">
+              <span className="text-xs font-black text-white">C</span>
             </div>
             <div className="flex-1 min-w-0">
-              <h1 className="text-sm font-black text-white truncate">Copy Ready</h1>
-              <p className="text-xs text-gray-300 truncate">Knowledge Base</p>
+              <h1 className="text-xs font-bold text-gray-900 truncate">Copy Ready</h1>
+              <p className="text-xs text-gray-600 truncate">Knowledge Base</p>
             </div>
-            <SidebarTrigger className="h-6 w-6 rounded-md hover:bg-gray-800 transition-colors text-white hover:text-white [&>svg]:text-white [&>svg]:hover:text-white [&[data-sidebar=trigger]]:text-white [&[data-sidebar=trigger]]:hover:text-white" />
+            <SidebarTrigger className="h-5 w-5 rounded-md hover:bg-gray-100 transition-colors text-gray-600 hover:text-gray-900 [&>svg]:text-gray-600 [&>svg]:hover:text-gray-900 [&[data-sidebar=trigger]]:text-gray-600 [&[data-sidebar=trigger]]:hover:text-gray-900" />
           </div>
         ) : (
           <div className="flex flex-col items-center gap-1">
-            <div className="flex h-6 w-6 items-center justify-center rounded-md bg-white shadow-sm">
-              <span className="text-sm font-black text-black">C</span>
+            <div className="flex h-5 w-5 items-center justify-center rounded-md bg-gray-900 shadow-sm">
+              <span className="text-xs font-black text-white">C</span>
             </div>
-            <SidebarTrigger className="h-5 w-5 rounded-md hover:bg-gray-800 transition-colors text-white hover:text-white [&>svg]:text-white [&>svg]:hover:text-white [&[data-sidebar=trigger]]:text-white [&[data-sidebar=trigger]]:hover:text-white" />
+            <SidebarTrigger className="h-4 w-4 rounded-md hover:bg-gray-100 transition-colors text-gray-600 hover:text-gray-900 [&>svg]:text-gray-600 [&>svg]:hover:text-gray-900 [&[data-sidebar=trigger]]:text-gray-600 [&[data-sidebar=trigger]]:hover:text-gray-900" />
           </div>
         )}
       </SidebarHeader>
 
-      <SidebarContent className={`flex flex-col justify-between bg-black h-full overflow-hidden ${state === 'expanded' ? 'px-2 py-3' : 'px-0 py-3'}`}>
-        <div className="flex-1 flex flex-col">
+      <SidebarContent className={`flex flex-col justify-between bg-white h-full overflow-hidden ${state === 'expanded' ? 'px-2 py-2' : 'px-0 py-2'}`}>
+        <div className="flex-1 flex flex-col min-h-0">
           {/* Media Library Section */}
-          <SidebarGroup className="flex-1">
+          <SidebarGroup className="flex-1 min-h-0">
             {state === 'expanded' ? (
               <>
                 <div className="flex items-center justify-between px-1 mb-1">
-                  <SidebarGroupLabel className="text-white font-black text-xs flex items-center gap-1">
+                  <SidebarGroupLabel className="text-gray-900 font-semibold text-xs flex items-center gap-1">
                     <Database className="h-3 w-3" />
                     Media Library
                   </SidebarGroupLabel>
@@ -178,9 +178,9 @@ export function KnowledgeBaseSidebar({
                             size="sm"
                             onClick={onRefresh}
                             disabled={isRefreshing}
-                            className="h-5 w-5 p-0 text-gray-300 hover:text-white hover:bg-gray-800 rounded-md"
+                            className="h-4 w-4 p-0 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-md"
                           >
-                            <RefreshCw className={`h-2.5 w-2.5 ${isRefreshing ? 'animate-spin' : ''}`} />
+                            <RefreshCw className={`h-2 w-2 ${isRefreshing ? 'animate-spin' : ''}`} />
                           </Button>
                         </TooltipTrigger>
                         <TooltipContent>
@@ -194,33 +194,33 @@ export function KnowledgeBaseSidebar({
                   <div className="px-1 w-full h-full overflow-hidden">
                     <div className="space-y-2 h-full overflow-y-auto overflow-x-hidden">
                       {/* Media Library Tabs */}
-                      <div className="space-y-2">
+                      <div className="space-y-1">
                         <Select value={activeTab} onValueChange={(value: any) => setActiveTab(value)}>
-                          <SelectTrigger className="w-full bg-white border border-gray-300 text-black hover:bg-gray-50 focus:ring-2 focus:ring-blue-500/20 text-xs">
+                          <SelectTrigger className="w-full bg-white border border-gray-200 text-gray-900 hover:bg-gray-50 focus:ring-1 focus:ring-blue-500/20 text-xs h-7">
                             <SelectValue placeholder="Select media type">
-                              <div className="flex items-center space-x-2">
+                              <div className="flex items-center space-x-1">
                                 {(() => {
                                   const currentTab = tabs.find(tab => tab.id === activeTab)
                                   return currentTab ? (
                                     <>
-                                      <currentTab.icon className="h-3 w-3 text-black" />
-                                      <span className="text-black text-xs">{currentTab.label}</span>
+                                      <currentTab.icon className="h-2.5 w-2.5 text-gray-700" />
+                                      <span className="text-gray-900 text-xs">{currentTab.label}</span>
                                     </>
                                   ) : null
                                 })()}
                               </div>
                             </SelectValue>
                           </SelectTrigger>
-                          <SelectContent className="bg-white border border-gray-300 shadow-xl">
+                          <SelectContent className="bg-white border border-gray-200 shadow-lg">
                             {tabs.map((tab) => (
                               <SelectItem 
                                 key={tab.id} 
                                 value={tab.id}
-                                className="text-black hover:bg-gray-100 focus:bg-gray-100 cursor-pointer text-xs"
+                                className="text-gray-900 hover:bg-gray-100 focus:bg-gray-100 cursor-pointer text-xs h-7"
                               >
-                                <div className="flex items-center space-x-2">
-                                  <tab.icon className="h-3 w-3 text-black" />
-                                  <span className="text-black text-xs">{tab.label}</span>
+                                <div className="flex items-center space-x-1">
+                                  <tab.icon className="h-2.5 w-2.5 text-gray-700" />
+                                  <span className="text-gray-900 text-xs">{tab.label}</span>
                                 </div>
                               </SelectItem>
                             ))}
@@ -229,7 +229,8 @@ export function KnowledgeBaseSidebar({
                       </div>
 
                       {/* Media Library Tab Content */}
-                      <div className="space-y-2">
+                      <div className="space-y-1 flex-1 min-h-0 overflow-hidden">
+                        <div className="h-full overflow-y-auto overflow-x-hidden scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
                         {activeTab === 'files' && (
                           <FilesTab 
                             mediaItems={mediaItems} 
@@ -303,13 +304,14 @@ export function KnowledgeBaseSidebar({
                             isLoadingTabContent={isLoadingTabContent} 
                           />
                         )}
+                        </div>
                       </div>
                     </div>
                   </div>
                 </SidebarGroupContent>
               </>
             ) : (
-              <SidebarGroupContent className={(state as string) === 'expanded' ? '' : 'px-0'}>
+              <SidebarGroupContent className="px-0">
                 <SidebarMenu className="space-y-1">
                   {/* Media Library Icon */}
                   <SidebarMenuItem>
@@ -318,12 +320,12 @@ export function KnowledgeBaseSidebar({
                         <TooltipTrigger asChild>
                           <SidebarMenuButton
                             asChild
-                            className="w-full h-8 p-0"
+                            className="w-full h-6 p-0"
                           >
                             <Button
                               variant="ghost"
                               size="sm"
-                              className="w-full h-8 p-0 hover:bg-gray-50 rounded-lg justify-center text-gray-600"
+                              className="w-full h-6 p-0 hover:bg-gray-100 rounded-lg justify-center text-gray-600"
                             >
                               <Database className="h-3 w-3" />
                             </Button>
@@ -342,8 +344,8 @@ export function KnowledgeBaseSidebar({
         </div>
 
         {/* Navigation Section */}
-        <div className="space-y-2">
-          <Separator className={state === 'expanded' ? 'mx-3' : 'mx-0'} />
+        <div className="space-y-1">
+          <Separator className={state === 'expanded' ? 'mx-2' : 'mx-0'} />
           <SidebarMenu className={state === 'expanded' ? 'space-y-1' : 'flex flex-col items-center space-y-1'}>
             {/* Dashboard Button */}
             <SidebarMenuItem>
@@ -353,17 +355,17 @@ export function KnowledgeBaseSidebar({
               >
                  <Button
                    variant="ghost"
-                   className={`w-full h-8 rounded-lg transition-all duration-200 overflow-hidden group ${
+                   className={`w-full h-6 rounded-lg transition-all duration-200 overflow-hidden group ${
                      state === 'expanded'
-                      ? `justify-start px-2 hover:bg-gray-800 text-white hover:text-white`
-                      : `justify-center p-0 hover:bg-gray-800 text-white hover:text-white`
+                      ? `justify-start px-2 hover:bg-gray-100 text-gray-700 hover:text-gray-900`
+                      : `justify-center p-0 hover:bg-gray-100 text-gray-700 hover:text-gray-900`
                    }`}
                    size="sm"
                    onClick={() => handleNavigation('/dashboard')}
                  >
-                   <MessageSquare className="h-3 w-3 flex-shrink-0 transition-all duration-200 group-hover:scale-110" />
+                   <MessageSquare className="h-2.5 w-2.5 flex-shrink-0 transition-all duration-200 group-hover:scale-110" />
                    {state === 'expanded' && (
-                     <span className="font-bold text-xs truncate ml-2">
+                     <span className="font-medium text-xs truncate ml-1">
                        Dashboard
                      </span>
                    )}
@@ -379,7 +381,7 @@ export function KnowledgeBaseSidebar({
               >
                 <Button
                   variant="ghost"
-                  className={`w-full h-8 rounded-lg hover:bg-gray-800 text-white overflow-hidden ${
+                  className={`w-full h-6 rounded-lg hover:bg-gray-100 text-gray-700 hover:text-gray-900 overflow-hidden ${
                     state === 'expanded'
                       ? 'justify-start px-2'
                       : 'justify-center p-0'
@@ -387,8 +389,8 @@ export function KnowledgeBaseSidebar({
                   size="sm"
                   onClick={() => handleNavigation('/profile')}
                 >
-                  <Settings className="h-3 w-3 flex-shrink-0" />
-                  {state === 'expanded' && <span className="font-bold text-xs truncate ml-2">Settings</span>}
+                  <Settings className="h-2.5 w-2.5 flex-shrink-0" />
+                  {state === 'expanded' && <span className="font-medium text-xs truncate ml-1">Settings</span>}
                 </Button>
               </SidebarMenuButton>
             </SidebarMenuItem>
@@ -396,24 +398,24 @@ export function KnowledgeBaseSidebar({
         </div>
       </SidebarContent>
 
-      <SidebarFooter className={`border-t border-gray-700 bg-black py-2 ${state === 'expanded' ? 'px-2' : 'px-0'}`}>
+      <SidebarFooter className={`border-t border-gray-200 bg-white py-1 ${state === 'expanded' ? 'px-2' : 'px-0'}`}>
         <SidebarMenu className={`space-y-0.5 ${state === 'expanded' ? '' : 'flex flex-col items-center'}`}>
           <SidebarMenuItem>
             {state === 'expanded' ? (
               <div className="flex items-center gap-1 min-w-0">
-                <Avatar className="h-5 w-5">
-                  <AvatarFallback className="bg-white text-black font-black text-xs">
+                <Avatar className="h-4 w-4">
+                  <AvatarFallback className="bg-gray-900 text-white font-semibold text-xs">
                     {user?.name ? user.name.charAt(0).toUpperCase() : 'U'}
                   </AvatarFallback>
                 </Avatar>
                 <div className="overflow-hidden min-w-0 flex-1">
-                  <p className="text-xs font-black text-white truncate">
+                  <p className="text-xs font-medium text-gray-900 truncate">
                     {user?.name || 'User'}
                   </p>
                   <TooltipProvider>
                     <Tooltip>
                       <TooltipTrigger asChild>
-                        <p className="text-xs text-gray-400 truncate cursor-help">
+                        <p className="text-xs text-gray-600 truncate cursor-help">
                           {user?.email || 'Loading...'}
                         </p>
                       </TooltipTrigger>
@@ -426,8 +428,8 @@ export function KnowledgeBaseSidebar({
               </div>
             ) : (
               <div className="flex justify-center">
-                <Avatar className="h-5 w-5">
-                  <AvatarFallback className="bg-white text-black font-black text-xs">
+                <Avatar className="h-4 w-4">
+                  <AvatarFallback className="bg-gray-900 text-white font-semibold text-xs">
                     {user?.name ? user.name.charAt(0).toUpperCase() : 'U'}
                   </AvatarFallback>
                 </Avatar>
@@ -441,7 +443,7 @@ export function KnowledgeBaseSidebar({
             >
               <Button
                 variant="ghost"
-                className={`w-full h-8 rounded-lg text-red-600 hover:text-red-700 hover:bg-red-50 overflow-hidden ${
+                className={`w-full h-6 rounded-lg text-red-600 hover:text-red-700 hover:bg-red-50 overflow-hidden ${
                   state === 'expanded'
                     ? 'justify-start px-2'
                     : 'justify-center p-0'
@@ -449,8 +451,8 @@ export function KnowledgeBaseSidebar({
                 size="sm"
                 onClick={handleLogout}
               >
-                <LogOut className="h-3 w-3 flex-shrink-0" />
-                {state === 'expanded' && <span className="font-bold text-xs truncate ml-2">Logout</span>}
+                <LogOut className="h-2.5 w-2.5 flex-shrink-0" />
+                {state === 'expanded' && <span className="font-medium text-xs truncate ml-1">Logout</span>}
               </Button>
             </SidebarMenuButton>
           </SidebarMenuItem>
