@@ -13,7 +13,7 @@ export default function DashboardLayout({
     <SidebarProvider>
       <SidebarStateProvider>
         <AppSidebar />
-        <SidebarInset>
+        <SidebarInset className="m-0 h-[calc(100vh-4rem)]">
           <main className="flex-1 overflow-hidden">
             {children}
           </main>

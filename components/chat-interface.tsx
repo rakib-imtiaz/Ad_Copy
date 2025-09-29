@@ -451,7 +451,7 @@ export function ChatInterface({
             )}
 
             {/* Input Wrapper with shadow and border */}
-            <div className="relative bg-white rounded-2xl shadow-xl border-2 border-gray-200/80 hover:border-gray-300/80 transition-all duration-300 overflow-hidden">
+            <div className="relative bg-white rounded-2xl shadow-lg border border-gray-200/60 hover:border-gray-300/80 transition-all duration-300 overflow-hidden">
               {/* Top gradient accent */}
               <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
               
@@ -478,7 +478,7 @@ export function ChatInterface({
                     onKeyDown={handleKeyDown}
                     placeholder={!currentAgent && !selectedAgent 
                       ? "Please select an AI agent to start..." 
-                      : "Type your message here... (Shift+Enter for new line)"
+                      : "Ask anything or drag & drop files here"
                     }
                     disabled={!currentAgent && !selectedAgent || isLoading}
                     className="w-full border-0 bg-transparent text-gray-900 placeholder:text-gray-400 focus:ring-0 focus:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 text-sm sm:text-base resize-none min-h-[40px] max-h-[200px] overflow-y-auto py-2 px-1 leading-relaxed"
@@ -517,13 +517,22 @@ export function ChatInterface({
                   <Button
                     onClick={handleSend}
                     disabled={!message.trim() || !currentAgent && !selectedAgent || isLoading}
-                    className="bg-gradient-to-r from-gray-900 to-gray-700 hover:from-gray-800 hover:to-gray-600 text-white rounded-xl h-10 w-10 sm:h-11 sm:w-11 flex items-center justify-center transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed p-0 shadow-lg hover:shadow-xl hover:scale-105 disabled:hover:scale-100"
+                    className={`rounded-xl px-4 py-2 h-10 sm:h-11 flex items-center justify-center gap-2 transition-all duration-500 ease-out ${
+                      message.trim() && (currentAgent || selectedAgent) && !isLoading
+                        ? 'bg-gradient-to-r from-yellow-300 via-yellow-400 to-yellow-500 hover:from-yellow-400 hover:via-yellow-500 hover:to-yellow-600 text-black shadow-xl hover:shadow-2xl hover:scale-110 animate-button-breathe transform-gpu font-semibold'
+                        : 'bg-white text-gray-400 opacity-60 cursor-not-allowed shadow-md border border-gray-200'
+                    }`}
                     title="Send message (Enter)"
                   >
                     {isLoading ? (
-                      <div className="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent" />
+                      <div className="animate-spin rounded-full h-4 w-4 border-2 border-black border-t-transparent" />
                     ) : (
-                      <Send className="h-5 w-5" />
+                      <>
+                        <Send className={`h-4 w-4 transition-transform duration-300 ${
+                          message.trim() && (currentAgent || selectedAgent) && !isLoading ? 'animate-icon-float' : ''
+                        }`} />
+                        <span className="text-sm font-bold">Send</span>
+                      </>
                     )}
                   </Button>
                 </div>

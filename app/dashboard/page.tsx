@@ -28,6 +28,10 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import ShinyText from "@/components/ui/ShinyText"
+import ReactMarkdown from 'react-markdown'
+import remarkGfm from 'remark-gfm'
+import rehypeHighlight from 'rehype-highlight'
+import 'highlight.js/styles/github-dark.css'
 
 import { authService } from "@/lib/auth-service"
 import { ChatInterface } from "@/components/chat-interface"
@@ -69,6 +73,29 @@ function cleanUserMessage(content: string): string {
   }
   
   return cleanedContent
+}
+
+// Helper function to preprocess markdown for better rendering
+function preprocessMarkdown(content: string): string {
+  // Convert inline bullet points (•) to proper markdown list items
+  // Match patterns like "• Text" and convert to "- Text" on new lines
+  let processed = content
+    // Convert bullet points that follow colons to proper lists
+    .replace(/:\s*•\s*/g, ':\n- ')
+    // Convert standalone bullet points to list items
+    .replace(/\n•\s+/g, '\n- ')
+    // Convert bullet points at start to list items
+    .replace(/^•\s+/gm, '- ')
+    // Handle inline bullet points (with space before)
+    .replace(/\s+•\s+/g, '\n- ')
+    // Remove placeholder links and their preceding text
+    .replace(/Click below.*?👇\s*\{link\}/gi, '')
+    .replace(/\{link\}/g, '')
+    .replace(/\{[^}]+\}/g, '') // Remove any other placeholders like {url}, {button}, etc.
+    // Clean up multiple blank lines
+    .replace(/\n\s*\n\s*\n/g, '\n\n')
+  
+  return processed
 }
 
 // Component to render markdown content
@@ -332,7 +359,7 @@ export default function Dashboard() {
     contentLength: 0,
     lastFetched: null
   })
-  
+
   // Chat input state
   const [messageInput, setMessageInput] = React.useState('')
   const textareaRef = React.useRef<HTMLTextAreaElement>(null)
@@ -3241,7 +3268,7 @@ export default function Dashboard() {
   // Show loading state while authentication is being checked
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 via-white to-blue-50/20">
+      <div className="h-[calc(100vh-4rem)] flex items-center justify-center bg-gradient-to-br from-slate-50 via-white to-blue-50/20">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
         <span className="ml-3 text-gray-600">Loading...</span>
       </div>
@@ -3251,7 +3278,7 @@ export default function Dashboard() {
   // Show error if not authenticated
   if (!isAuthenticated) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 via-white to-blue-50/20">
+      <div className="h-[calc(100vh-4rem)] flex items-center justify-center bg-gradient-to-br from-slate-50 via-white to-blue-50/20">
         <div className="text-center">
           <h2 className="text-xl font-semibold text-gray-800 mb-2">Authentication Required</h2>
           <p className="text-gray-600 mb-4">Please sign in to access the dashboard.</p>
@@ -3267,10 +3294,10 @@ export default function Dashboard() {
   }
 
   return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50/20 text-slate-800 font-sans">
+      <div className="h-[calc(100vh-4rem)] bg-gradient-to-br from-slate-50 via-white to-blue-50/20 text-slate-800 font-sans">
       {!chatStarted && !currentChatSession ? (
         // Show empty state or welcome message when no chat is active
-        <div className="min-h-screen flex items-center justify-center">
+        <div className="h-full flex items-center justify-center">
           <div className="text-center space-y-6 max-w-md mx-auto px-6">
             <div className="w-20 h-20 mx-auto bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-2xl flex items-center justify-center shadow-lg">
               <Sparkles className="h-10 w-10 text-black" />
@@ -3298,30 +3325,42 @@ export default function Dashboard() {
           transition={{ duration: 0.5, ease: "easeOut" }}
           className="h-full"
         >
-      {/* Modern Chat Interface - Black, Golden Yellow & White Theme */}
-      <div className="h-screen flex flex-col bg-white">
-        {/* Compact Header with Agent Info */}
-        <div className="flex-shrink-0 bg-black border-b border-gray-800">
-          <div className="flex items-center justify-between px-4 sm:px-6 py-3">
-            <div className="flex items-center gap-3">
-              <div className="flex items-center gap-2">
-                <div className="w-2 h-2 rounded-full bg-yellow-400 animate-pulse"></div>
-                <span className="text-white font-semibold text-sm sm:text-base">
-                  {selectedAgent || 'No Agent Selected'}
-                </span>
+      {/* Modern Chat Interface - Clean Black & White Theme */}
+      <div className="h-[calc(100vh-4rem)] flex flex-col bg-white">
+        {/* Fixed Header with Agent Info - White Background - Compact */}
+        <div className="flex-shrink-0 bg-white border-b border-gray-200 sticky top-0 z-30 shadow-sm">
+          <div className="flex items-center justify-between px-3 sm:px-4 py-1.5">
+            <div className="flex flex-col gap-0.5">
+              {/* Agent Name with clear label */}
+              <div className="flex items-center gap-1.5">
+                <span className="text-[10px] font-medium text-gray-500 uppercase tracking-wide">Agent:</span>
+                <div className="flex items-center gap-1.5">
+                  <div className="w-1.5 h-1.5 rounded-full bg-black animate-pulse"></div>
+                  <span className="text-black font-bold text-xs">
+                    {selectedAgent || 'No Agent Selected'}
+                  </span>
+                </div>
               </div>
+              
+              {/* Chat Name with clear label */}
+              {currentChatSession && (
+                <div className="flex items-center gap-1.5">
+                  <span className="text-[10px] font-medium text-gray-500 uppercase tracking-wide">Chat:</span>
+                  <div className="flex items-center gap-1.5">
+                    <MessageSquare className="h-2.5 w-2.5 text-gray-600" />
+                    <span className="text-gray-900 font-semibold text-xs">
+                      {chatHistory.find(chat => chat.session_id === currentChatSession)?.title || "Chat Session"}
+                    </span>
+                  </div>
+                </div>
+              )}
             </div>
-            {currentChatSession && (
-              <span className="text-gray-400 text-xs hidden sm:block">
-                {chatHistory.find(chat => chat.session_id === currentChatSession)?.title || "Chat Session"}
-              </span>
-            )}
           </div>
         </div>
 
         {/* Messages Container - Scrollable */}
         <div className="flex-1 overflow-y-auto pb-32">
-          <div className="w-full px-3 sm:px-6 lg:px-8 py-6 space-y-4 sm:space-y-6">
+          <div className="w-full px-3 sm:px-6 lg:px-8 pt-4 pb-6 space-y-4 sm:space-y-6">
             {(messages || []).map((msg: any) => {
               const isUser = msg.role === 'user'
               return (
@@ -3331,8 +3370,8 @@ export default function Dashboard() {
                     {!isUser && (
                       <div className="flex-shrink-0 w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-black flex items-center justify-center">
                         <Bot className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-yellow-400" />
-                      </div>
-                    )}
+            </div>
+          )}
                     
                     <div className="flex-1 min-w-0">
                       {/* Message Bubble */}
@@ -3341,10 +3380,53 @@ export default function Dashboard() {
                           ? 'bg-black text-white' 
                           : 'bg-gray-100 text-gray-900'
                       }`}>
-                        <div className="text-sm leading-relaxed break-words whitespace-pre-wrap">
-                          {msg.content}
-                        </div>
-                      </div>
+                        <div className={`text-xs leading-relaxed break-words prose prose-sm max-w-none ${isUser ? 'prose-invert' : ''}`}>
+                          <ReactMarkdown
+                            remarkPlugins={[remarkGfm]}
+                            rehypePlugins={[rehypeHighlight]}
+                            components={{
+                              // Headings - smaller sizes
+                              h1: ({ children }) => <h1 className={`text-sm font-bold mb-2 mt-3 first:mt-0 ${isUser ? 'text-white' : 'text-gray-900'}`}>{children}</h1>,
+                              h2: ({ children }) => <h2 className={`text-xs font-bold mb-1.5 mt-2.5 first:mt-0 ${isUser ? 'text-white' : 'text-gray-900'}`}>{children}</h2>,
+                              h3: ({ children }) => <h3 className={`text-xs font-semibold mb-1 mt-2 first:mt-0 ${isUser ? 'text-white' : 'text-gray-900'}`}>{children}</h3>,
+                              h4: ({ children }) => <h4 className={`text-xs font-medium mb-1 mt-1.5 first:mt-0 ${isUser ? 'text-white' : 'text-gray-900'}`}>{children}</h4>,
+                              
+                              // Paragraphs - smaller text with preserved line breaks
+                              p: ({ children }) => <p className={`leading-relaxed mb-1.5 last:mb-0 text-xs ${isUser ? 'text-white' : 'text-gray-900'} whitespace-pre-wrap`}>{children}</p>,
+                              
+                              // Lists - smaller text with better spacing
+                              ul: ({ children }) => <ul className={`list-disc list-outside mb-2 space-y-1 pl-5 text-xs ${isUser ? 'text-white marker:text-white' : 'text-gray-900 marker:text-gray-900'}`}>{children}</ul>,
+                              ol: ({ children }) => <ol className={`list-decimal list-outside mb-2 space-y-1 pl-5 text-xs ${isUser ? 'text-white marker:text-white' : 'text-gray-900 marker:text-gray-900'}`}>{children}</ol>,
+                              li: ({ children }) => <li className={`leading-relaxed text-xs mb-0.5 ${isUser ? 'text-white' : 'text-gray-900'}`}>{children}</li>,
+                              
+                              // Text formatting
+                              strong: ({ children }) => <strong className={`font-bold text-xs ${isUser ? 'text-white' : 'text-gray-900'}`}>{children}</strong>,
+                              em: ({ children }) => <em className={`italic text-xs ${isUser ? 'text-white' : 'text-gray-900'}`}>{children}</em>,
+                              
+                              // Code
+                              code: ({ children, className }) => {
+                                const isInline = !className
+                                if (isInline) {
+                                  return <code className={`px-1 py-0.5 rounded text-[11px] font-mono ${isUser ? 'bg-gray-800 text-white' : 'bg-gray-200 text-gray-900'}`}>{children}</code>
+                                }
+                                return <code className={className}>{children}</code>
+                              },
+                              pre: ({ children }) => <pre className={`p-2 rounded-lg overflow-x-auto mb-2 whitespace-pre-wrap break-words text-[11px] ${isUser ? 'bg-gray-800 text-white' : 'bg-gray-200 text-gray-900'}`}>{children}</pre>,
+                              
+                              // Links
+                              a: ({ href, children }) => <a href={href} className={`underline text-xs ${isUser ? 'text-blue-300 hover:text-blue-200' : 'text-blue-600 hover:text-blue-800'}`} target="_blank" rel="noopener noreferrer">{children}</a>,
+                              
+                              // Blockquotes
+                              blockquote: ({ children }) => <blockquote className={`border-l-4 pl-2 italic mb-2 text-xs ${isUser ? 'border-gray-600 text-gray-200' : 'border-gray-400 text-gray-700'}`}>{children}</blockquote>,
+                              
+                              // Horizontal rule
+                              hr: () => <hr className={`my-2 ${isUser ? 'border-gray-600' : 'border-gray-300'}`} />,
+                            }}
+                          >
+                            {preprocessMarkdown(msg.content)}
+                          </ReactMarkdown>
+              </div>
+            </div>
                       
                       {/* Timestamp */}
                       <div className={`flex items-center gap-2 mt-1.5 text-xs text-gray-400 ${isUser ? 'justify-end' : 'justify-start'}`}>
@@ -3391,15 +3473,15 @@ export default function Dashboard() {
                 <div className="flex gap-2 sm:gap-3 max-w-[90%] sm:max-w-[85%] lg:max-w-[75%]">
                   <div className="flex-shrink-0 w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-black flex items-center justify-center">
                     <Bot className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-yellow-400" />
-                  </div>
+                </div>
                   <div className="bg-gray-100 rounded-2xl px-3 sm:px-4 py-2.5 sm:py-3">
                     <div className="flex gap-1">
                       <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
                       <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
                       <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
-                    </div>
-                  </div>
-                </div>
+              </div>
+            </div>
+          </div>
               </div>
             )}
             
@@ -3411,12 +3493,12 @@ export default function Dashboard() {
         {/* Floating Chat Input - Compact & Responsive */}
         <div className="fixed bottom-0 left-0 right-0 sm:left-auto sm:right-0 sm:w-[calc(100%-16rem)] lg:w-[calc(100%-18rem)] z-40 bg-gradient-to-t from-white via-white to-transparent pointer-events-none">
           <div className="pointer-events-auto px-3 sm:px-6 lg:px-8 pb-4 sm:pb-6 flex justify-center">
-            <div className="w-full max-w-2xl bg-white rounded-3xl shadow-xl border border-gray-200 overflow-hidden">
+            <div className="w-full max-w-2xl bg-white rounded-3xl shadow-xl border-2 border-gray-300 overflow-hidden">
               <div className="flex items-end gap-2 sm:gap-3 p-2 sm:p-3">
                 {/* Media Attachment Button */}
                 <button
                   onClick={() => {
-                    setIsMediaSelectorOpen(true)
+                  setIsMediaSelectorOpen(true)
                     if (mediaItems.length === 0) fetchMediaLibrary()
                   }}
                   disabled={isLoading}
@@ -3455,7 +3537,7 @@ export default function Dashboard() {
                     rows={1}
                     style={{ overflow: 'auto' }}
                   />
-                </div>
+      </div>
 
                 {/* Send Button */}
                 <button
@@ -3469,17 +3551,26 @@ export default function Dashboard() {
                     }
                   }}
                   disabled={!messageInput.trim() || !selectedAgent || isLoading}
-                  className="flex-shrink-0 w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-black hover:bg-gray-800 disabled:bg-gray-300 disabled:cursor-not-allowed flex items-center justify-center transition-all hover:scale-105 shadow-lg"
+                  className={`flex-shrink-0 px-4 py-2 h-9 sm:h-10 rounded-xl flex items-center justify-center gap-2 transition-all duration-500 ease-out transform-gpu ${
+                    messageInput.trim() && selectedAgent && !isLoading
+                      ? 'bg-gradient-to-r from-yellow-300 via-yellow-400 to-yellow-500 hover:from-yellow-400 hover:via-yellow-500 hover:to-yellow-600 text-black hover:scale-110 shadow-xl hover:shadow-2xl animate-button-breathe font-semibold'
+                      : 'bg-white text-gray-400 opacity-60 cursor-not-allowed shadow-md border border-gray-200'
+                  }`}
                   title="Send message"
                 >
                   {isLoading ? (
-                    <div className="animate-spin rounded-full h-4 w-4 sm:h-5 sm:w-5 border-2 border-yellow-400 border-t-transparent" />
+                    <div className="animate-spin rounded-full h-4 w-4 border-2 border-black border-t-transparent" />
                   ) : (
-                    <Send className="h-4 w-4 sm:h-5 sm:w-5 text-yellow-400" />
+                    <>
+                      <Send className={`h-4 w-4 transition-transform duration-300 ${
+                        messageInput.trim() && selectedAgent && !isLoading ? 'animate-icon-float' : ''
+                      }`} />
+                      <span className="text-sm font-bold">Send</span>
+                    </>
                   )}
                 </button>
               </div>
-
+              
               {/* Bottom Status Bar */}
               {selectedAgent && (
                 <div className="bg-gray-50 px-3 sm:px-4 py-1.5 border-t border-gray-100">
@@ -3490,9 +3581,9 @@ export default function Dashboard() {
                       <span className="sm:hidden">Ready</span>
                     </span>
                     <span className="hidden sm:inline">Press <kbd className="px-1.5 py-0.5 bg-white rounded text-[10px] font-mono border border-gray-200">Enter</kbd> to send</span>
-                  </div>
-                </div>
-              )}
+              </div>
+            </div>
+      )}
             </div>
           </div>
         </div>
