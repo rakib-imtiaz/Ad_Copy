@@ -154,7 +154,7 @@ export function AppSidebar() {
               <span className="text-xs font-black text-black">C</span>
             </div>
             <div className="flex-1 min-w-0">
-              <h1 className="text-sm font-black text-yellow-400 truncate">Copy Ready</h1>
+              <h1 className="text-xs font-medium text-yellow-400 truncate">Copy Ready</h1>
               <p className="text-xs text-gray-400 truncate">AI Ad Copy Platform</p>
             </div>
             <SidebarTrigger className="h-5 w-5 rounded-md hover:bg-gray-800 transition-colors text-white hover:text-yellow-400 [&>svg]:text-white [&>svg]:hover:text-yellow-400 [&[data-sidebar=trigger]]:text-white [&[data-sidebar=trigger]]:hover:text-yellow-400" />
@@ -175,7 +175,7 @@ export function AppSidebar() {
             {state === 'expanded' ? (
               <>
                 <div className="flex items-center justify-between px-1 mb-2">
-                  <SidebarGroupLabel className="text-yellow-400 font-black text-xs flex items-center gap-1">
+                  <SidebarGroupLabel className="text-yellow-400 font-medium text-xs flex items-center gap-1">
                     <MessageSquare className="h-3 w-3 text-yellow-400" />
                     Chat History
                   </SidebarGroupLabel>
@@ -262,7 +262,7 @@ export function AppSidebar() {
                               <div className="flex items-start justify-between gap-1">
                                 <div className="flex-1 min-w-0 overflow-hidden">
                                   <div className="flex items-center space-x-1">
-                                    <h4 className={`font-bold text-xs truncate ${
+                                    <h4 className={`font-normal text-xs truncate ${
                                       isActive ? 'text-black' : 'text-white'
                                     }`}>
                                       {chat.title || `Chat ${chat.session_id}`}
@@ -275,12 +275,12 @@ export function AppSidebar() {
                                       <Button
                                         variant="ghost"
                                         size="sm"
-                                        className={`h-4 w-4 p-0 hover:text-red-600 hover:bg-red-900/50 opacity-0 group-hover:opacity-100 transition-opacity ${
+                                        className={`h-2.5 w-2.5 p-0 hover:text-red-600 hover:bg-red-900/50 opacity-0 group-hover:opacity-100 transition-opacity ${
                                           isActive ? 'text-gray-700' : 'text-gray-400'
                                         }`}
                                         onClick={(e) => e.stopPropagation()}
                                       >
-                                        <Trash2 className="h-3 w-3" />
+                                        <Trash2 className="h-1.5 w-1.5" />
                                       </Button>
                                     </AlertDialogTrigger>
                                     <AlertDialogContent className="bg-gray-900 border-gray-700">
@@ -442,7 +442,7 @@ export function AppSidebar() {
                   >
                     <Database className="h-3 w-3 flex-shrink-0 transition-all duration-200 group-hover:scale-110" />
                     {state === 'expanded' && (
-                      <span className="font-bold text-xs truncate ml-2">
+                      <span className="font-normal text-xs truncate ml-2">
                         Knowledge Base
                       </span>
                     )}
@@ -467,7 +467,7 @@ export function AppSidebar() {
                   onClick={() => handleNavigation('/profile')}
                 >
                   <Settings className="h-3 w-3 flex-shrink-0" />
-                  {state === 'expanded' && <span className="font-bold text-xs truncate ml-2">Settings</span>}
+                  {state === 'expanded' && <span className="font-normal text-xs truncate ml-2">Settings</span>}
                 </Button>
               </SidebarMenuButton>
             </SidebarMenuItem>
@@ -486,7 +486,7 @@ export function AppSidebar() {
                   </AvatarFallback>
                 </Avatar>
                 <div className="overflow-hidden min-w-0 flex-1">
-                  <p className="text-xs font-black text-yellow-400 truncate">
+                  <p className="text-xs font-medium text-yellow-400 truncate">
                     {user?.name || 'User'}
                   </p>
                   <TooltipProvider>
@@ -529,7 +529,7 @@ export function AppSidebar() {
                 onClick={handleLogout}
               >
                 <LogOut className="h-3 w-3 flex-shrink-0" />
-                {state === 'expanded' && <span className="font-bold text-xs truncate ml-2">Logout</span>}
+                {state === 'expanded' && <span className="font-normal text-xs truncate ml-2">Logout</span>}
               </Button>
             </SidebarMenuButton>
           </SidebarMenuItem>
