@@ -435,76 +435,129 @@ export function ChatInterface({
       )}
 
 
-      {/* Input Area - Fixed at Bottom */}
-      <div className="flex-shrink-0 p-4 bg-white border-t border-gray-200">
-        <div className="max-w-4xl mx-auto">
-          {/* Clean white input bar */}
-          <div className="relative">
-            <div className="flex items-center bg-white rounded-lg px-3 py-2 shadow-sm border border-gray-200">
-              {/* Plus icon on the left */}
-              <div className="relative mr-3">
+      {/* Input Area - Modern Full Width Design */}
+      <div className="flex-shrink-0 border-t bg-gradient-to-b from-gray-50/80 to-white backdrop-blur-sm">
+        <div className="w-full px-4 sm:px-6 lg:px-8 py-4">
+          {/* Main Input Container with glassmorphism effect */}
+          <div className="relative w-full">
+            {/* Selected Media Count Badge - Top Left */}
+            {selectedMediaCount > 0 && (
+              <div className="absolute -top-8 left-0 z-10">
+                <Badge variant="secondary" className="bg-blue-500 text-white shadow-lg border-0 px-3 py-1">
+                  <span className="font-semibold">{selectedMediaCount}</span>
+                  <span className="ml-1 text-xs">file{selectedMediaCount > 1 ? 's' : ''} selected</span>
+                </Badge>
+              </div>
+            )}
+
+            {/* Input Wrapper with shadow and border */}
+            <div className="relative bg-white rounded-2xl shadow-xl border-2 border-gray-200/80 hover:border-gray-300/80 transition-all duration-300 overflow-hidden">
+              {/* Top gradient accent */}
+              <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+              
+              {/* Main input area */}
+              <div className="flex items-end gap-2 p-3 sm:p-4">
+                {/* Attachment Button - Left */}
                 <Button
                   variant="ghost"
                   size="sm"
                   onClick={onOpenMediaSelector}
-                  className="rounded-full p-2 hover:bg-gray-100 text-gray-600 h-8 w-8"
-                  title="Add attachment or drag & drop files anywhere in chat"
+                  className="flex-shrink-0 rounded-xl hover:bg-gray-100 text-gray-600 hover:text-gray-900 h-10 w-10 sm:h-11 sm:w-11 transition-all duration-200 group"
+                  title="Add attachment or drag & drop files anywhere"
+                  disabled={isLoading}
                 >
-                  <Plus className="h-4 w-4" />
+                  <Plus className="h-5 w-5 transition-transform duration-200 group-hover:rotate-90" />
                 </Button>
-                {selectedMediaCount > 0 && (
-                  <div className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center font-medium">
-                    {selectedMediaCount}
-                  </div>
+
+                {/* Text Input Container */}
+                <div className="flex-1 min-w-0">
+                  <Textarea
+                    ref={textareaRef}
+                    value={message}
+                    onChange={(e) => setMessage(e.target.value)}
+                    onKeyDown={handleKeyDown}
+                    placeholder={!currentAgent && !selectedAgent 
+                      ? "Please select an AI agent to start..." 
+                      : "Type your message here... (Shift+Enter for new line)"
+                    }
+                    disabled={!currentAgent && !selectedAgent || isLoading}
+                    className="w-full border-0 bg-transparent text-gray-900 placeholder:text-gray-400 focus:ring-0 focus:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 text-sm sm:text-base resize-none min-h-[40px] max-h-[200px] overflow-y-auto py-2 px-1 leading-relaxed"
+                    style={{ boxShadow: 'none', border: 'none', outline: 'none' }}
+                    rows={1}
+                  />
+                  
+                  {/* Helper text */}
+                  {!currentAgent && !selectedAgent && (
+                    <div className="flex items-center gap-2 mt-1 px-1">
+                      <div className="h-1.5 w-1.5 rounded-full bg-amber-400 animate-pulse" />
+                      <p className="text-xs text-amber-600 font-medium">
+                        Select an agent to start chatting
+                      </p>
+                    </div>
+                  )}
+                </div>
+
+                {/* Action Buttons - Right */}
+                <div className="flex items-center gap-1.5 flex-shrink-0">
+                  {/* Voice Input Button */}
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="rounded-xl hover:bg-gray-100 text-gray-600 hover:text-gray-900 h-10 w-10 sm:h-11 sm:w-11 transition-all duration-200 hover:scale-105"
+                    title="Voice input (coming soon)"
+                    disabled={isLoading}
+                  >
+                    <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/>
+                      <path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/>
+                    </svg>
+                  </Button>
+
+                  {/* Send Button with loading state */}
+                  <Button
+                    onClick={handleSend}
+                    disabled={!message.trim() || !currentAgent && !selectedAgent || isLoading}
+                    className="bg-gradient-to-r from-gray-900 to-gray-700 hover:from-gray-800 hover:to-gray-600 text-white rounded-xl h-10 w-10 sm:h-11 sm:w-11 flex items-center justify-center transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed p-0 shadow-lg hover:shadow-xl hover:scale-105 disabled:hover:scale-100"
+                    title="Send message (Enter)"
+                  >
+                    {isLoading ? (
+                      <div className="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent" />
+                    ) : (
+                      <Send className="h-5 w-5" />
+                    )}
+                  </Button>
+                </div>
+              </div>
+
+              {/* Bottom info bar */}
+              <div className="flex items-center justify-between px-4 pb-3 pt-0">
+                <div className="flex items-center gap-3 text-xs text-gray-500">
+                  {currentAgent || selectedAgent ? (
+                    <>
+                      <span className="flex items-center gap-1.5">
+                        <div className="h-2 w-2 rounded-full bg-green-500 animate-pulse" />
+                        <span className="font-medium">Ready</span>
+                      </span>
+                      <Separator orientation="vertical" className="h-3" />
+                      <span>Press <kbd className="px-1.5 py-0.5 bg-gray-100 rounded text-[10px] font-semibold">Enter</kbd> to send</span>
+                    </>
+                  ) : (
+                    <span className="flex items-center gap-1.5 text-amber-600">
+                      <div className="h-2 w-2 rounded-full bg-amber-400" />
+                      <span className="font-medium">Waiting for agent selection</span>
+                    </span>
+                  )}
+                </div>
+
+                {/* Character counter for longer messages */}
+                {message.length > 100 && (
+                  <span className="text-xs text-gray-400 font-mono">
+                    {message.length} chars
+                  </span>
                 )}
               </div>
-              
-              {/* Textarea field */}
-              <Textarea
-                ref={textareaRef}
-                value={message}
-                onChange={(e) => setMessage(e.target.value)}
-                onKeyDown={handleKeyDown}
-                placeholder="Ask anything or drag & drop files here"
-                disabled={!currentAgent && !selectedAgent || isLoading}
-                className="flex-1 border-0 border-none bg-transparent text-gray-900 placeholder:text-gray-500 focus:ring-0 focus:outline-none focus:border-0 focus-visible:ring-0 focus-visible:outline-none focus-visible:ring-offset-0 focus:border-0 focus:shadow-none text-sm resize-none min-h-[20px] max-h-[120px] overflow-y-auto rounded-none py-1"
-                style={{ boxShadow: 'none', border: 'none', outline: 'none' }}
-                rows={1}
-              />
-              
-              {/* Microphone icon */}
-              <div className="mr-3">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="rounded-full p-2 hover:bg-gray-100 text-gray-600 h-8 w-8"
-                  title="Voice input"
-                >
-                  <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/>
-                    <path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/>
-                  </svg>
-                </Button>
-              </div>
-              
-              {/* Send Button */}
-              <Button
-                onClick={handleSend}
-                disabled={!message.trim() || !currentAgent && !selectedAgent || isLoading}
-                className="bg-black hover:bg-gray-800 text-white rounded-full h-8 w-8 flex items-center justify-center transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed p-0"
-              >
-                <Send className="h-4 w-4 rotate-45" />
-              </Button>
-              
             </div>
-            
           </div>
-          
-          {!currentAgent && !selectedAgent && (
-            <p className="text-sm text-slate-600 mt-3 text-center">
-              Please select an AI agent to start generating ad copy
-            </p>
-          )}
         </div>
       </div>
     </div>

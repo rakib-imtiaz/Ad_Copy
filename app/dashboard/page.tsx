@@ -332,6 +332,24 @@ export default function Dashboard() {
     contentLength: 0,
     lastFetched: null
   })
+  
+  // Chat input state
+  const [messageInput, setMessageInput] = React.useState('')
+  const textareaRef = React.useRef<HTMLTextAreaElement>(null)
+  const messagesEndRef = React.useRef<HTMLDivElement>(null)
+  
+  // Auto-resize textarea
+  React.useEffect(() => {
+    if (textareaRef.current) {
+      textareaRef.current.style.height = 'auto'
+      textareaRef.current.style.height = `${Math.min(textareaRef.current.scrollHeight, 120)}px`
+    }
+  }, [messageInput])
+  
+  // Auto-scroll to bottom when messages change
+  React.useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+  }, [messages])
 
   const showToast = (message: string, type: 'success' | 'error' | 'info') => {
     setToast({
@@ -3280,279 +3298,205 @@ export default function Dashboard() {
           transition={{ duration: 0.5, ease: "easeOut" }}
           className="h-full"
         >
-      {/* Chat Interface Content */}
-
-      <div className="flex h-screen xl:max-w-5xl xl:mx-auto xl:shadow-xl xl:rounded-lg xl:mt-2 xl:mb-2 xl:h-[calc(100vh-1rem)]">
-        {/* Main Chat Area */}
-        <div className={`flex-1 flex flex-col min-w-0 bg-gradient-to-br from-slate-50 via-white to-blue-50/30 h-full transition-all duration-300 ${
-          rightPanelOpen ? 'xl:mr-96' : ''
-        }`}>
-          {/* Knowledge Base Status Indicator */}
-          {knowledgeBaseStatus.isLoaded && (
-            <div className="bg-green-50 px-4 py-2">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-2">
-                  <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                  <span className="text-sm text-green-700 font-medium">
-                    Knowledge Base Active
-                  </span>
-                  <span className="text-xs text-green-600">
-                    ({knowledgeBaseStatus.contentLength.toLocaleString()} characters)
-                  </span>
-                </div>
-                <button
-                  onClick={fetchKnowledgeBaseStatus}
-                  className="text-xs text-green-600 hover:text-green-800 underline"
-                >
-                  Refresh
-                </button>
-              </div>
-            </div>
-          )}
-          {!knowledgeBaseStatus.isLoaded && knowledgeBaseStatus.lastFetched && (
-            <div className="bg-yellow-50 px-4 py-2">
-              <div className="flex items-center space-x-2">
-                <div className="w-2 h-2 bg-yellow-500 rounded-full"></div>
-                <span className="text-sm text-yellow-700 font-medium">
-                  Knowledge Base Not Available
+      {/* Modern Chat Interface - Black, Golden Yellow & White Theme */}
+      <div className="h-screen flex flex-col bg-white">
+        {/* Compact Header with Agent Info */}
+        <div className="flex-shrink-0 bg-black border-b border-gray-800">
+          <div className="flex items-center justify-between px-4 sm:px-6 py-3">
+            <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2">
+                <div className="w-2 h-2 rounded-full bg-yellow-400 animate-pulse"></div>
+                <span className="text-white font-semibold text-sm sm:text-base">
+                  {selectedAgent || 'No Agent Selected'}
                 </span>
-                <button
-                  onClick={fetchKnowledgeBaseStatus}
-                  className="text-xs text-yellow-600 hover:text-yellow-800 underline"
-                >
-                  Retry
-                </button>
               </div>
             </div>
-          )}
-          
-          {/* Chat Header */}
-          <div className="sticky top-0 z-10 bg-white/95 backdrop-blur-sm border-b border-slate-200/60 shadow-sm">
-            <div className="px-3 py-2">
-              <div className="flex items-center justify-between">
-                {/* Left side - Chat title and agent info */}
-                <div className="flex items-center space-x-3">
-                  <div className="flex flex-col">
-                    <h1 className="text-base font-bold text-slate-900 leading-tight">
-                      {currentChatSession ? 
-                        (chatHistory.find(chat => chat.session_id === currentChatSession)?.title || "Chat Session") : 
-                        "New Conversation"
-                      }
-                    </h1>
-                    <div className="flex items-center space-x-1.5 mt-0.5">
-                      <span className="text-xs font-bold text-slate-800 uppercase tracking-wide">Active Agent</span>
-                      <div className="flex items-center space-x-1.5">
-                        <div className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse"></div>
-                        <Badge 
-                          variant="outline" 
-                          className="text-xs font-semibold bg-white text-slate-800 border border-black rounded-full hover:bg-slate-50 transition-all duration-200 px-2 py-0.5"
-                        >
-                          {selectedAgent || 'No Agent Selected'}
-                        </Badge>
+            {currentChatSession && (
+              <span className="text-gray-400 text-xs hidden sm:block">
+                {chatHistory.find(chat => chat.session_id === currentChatSession)?.title || "Chat Session"}
+              </span>
+            )}
+          </div>
+        </div>
+
+        {/* Messages Container - Scrollable */}
+        <div className="flex-1 overflow-y-auto pb-32">
+          <div className="w-full px-3 sm:px-6 lg:px-8 py-6 space-y-4 sm:space-y-6">
+            {(messages || []).map((msg: any) => {
+              const isUser = msg.role === 'user'
+              return (
+                <div key={msg.id} className={`flex ${isUser ? 'justify-end' : 'justify-start'} w-full`}>
+                  <div className={`flex gap-2 sm:gap-3 max-w-[90%] sm:max-w-[85%] lg:max-w-[75%] ${isUser ? 'flex-row-reverse' : 'flex-row'}`}>
+                    {/* Avatar - Only for Bot */}
+                    {!isUser && (
+                      <div className="flex-shrink-0 w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-black flex items-center justify-center">
+                        <Bot className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-yellow-400" />
+                      </div>
+                    )}
+                    
+                    <div className="flex-1 min-w-0">
+                      {/* Message Bubble */}
+                      <div className={`rounded-2xl px-3 sm:px-4 py-2.5 sm:py-3 ${
+                        isUser 
+                          ? 'bg-black text-white' 
+                          : 'bg-gray-100 text-gray-900'
+                      }`}>
+                        <div className="text-sm leading-relaxed break-words whitespace-pre-wrap">
+                          {msg.content}
+                        </div>
+                      </div>
+                      
+                      {/* Timestamp */}
+                      <div className={`flex items-center gap-2 mt-1.5 text-xs text-gray-400 ${isUser ? 'justify-end' : 'justify-start'}`}>
+                        <span>{(() => {
+                          try {
+                            // Handle both string and Date timestamps
+                            if (typeof msg.timestamp === 'string') {
+                              // If it's already formatted (e.g., "09:30 AM"), return as is
+                              if (msg.timestamp.includes('AM') || msg.timestamp.includes('PM')) {
+                                return msg.timestamp
+                              }
+                              // Otherwise try to parse it
+                              const date = new Date(msg.timestamp)
+                              if (isNaN(date.getTime())) {
+                                return 'Just now'
+                              }
+                              return new Intl.DateTimeFormat('en-US', {
+                                hour: '2-digit',
+                                minute: '2-digit',
+                                hour12: true
+                              }).format(date)
+                            } else if (msg.timestamp instanceof Date) {
+                              return new Intl.DateTimeFormat('en-US', {
+                                hour: '2-digit',
+                                minute: '2-digit',
+                                hour12: true
+                              }).format(msg.timestamp)
+                            }
+                            return 'Just now'
+                          } catch (e) {
+                            return 'Just now'
+                          }
+                        })()}</span>
                       </div>
                     </div>
                   </div>
                 </div>
-                
-                {/* Right side - Actions */}
-                <div className="flex items-center space-x-3">
+              )
+            })}
+            
+            {/* Loading State */}
+            {isLoading && (
+              <div className="flex justify-start w-full">
+                <div className="flex gap-2 sm:gap-3 max-w-[90%] sm:max-w-[85%] lg:max-w-[75%]">
+                  <div className="flex-shrink-0 w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-black flex items-center justify-center">
+                    <Bot className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-yellow-400" />
+                  </div>
+                  <div className="bg-gray-100 rounded-2xl px-3 sm:px-4 py-2.5 sm:py-3">
+                    <div className="flex gap-1">
+                      <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
+                      <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+                      <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                    </div>
+                  </div>
                 </div>
               </div>
-            </div>
+            )}
+            
+            {/* Scroll anchor */}
+            <div ref={messagesEndRef} />
           </div>
-          
-          {/* Chat Container with Fixed Height and Proper Scrolling */}
-          <div className="flex-1 w-full h-full flex flex-col overflow-hidden">
-            <div className="flex-1 min-h-0">
-              <ChatInterface 
-                messages={messages} 
-                selectedAgent={selectedAgent}
-                onSendMessage={handleSendMessage}
-                onRetryMessage={handleRetryMessage}
-                isLoading={isLoading}
-                onOpenMediaSelector={() => {
-                  console.log('🚀 MEDIA SELECTOR OPENED - Starting debug...')
-                  console.log('📊 Current mediaItems count:', mediaItems.length)
-                  console.log('📊 Current mediaItems:', mediaItems)
-                  console.log('📊 MediaItems by type:', {
-                    youtube: mediaItems.filter(item => item.type === 'youtube').length,
-                    transcript: mediaItems.filter(item => item.type === 'transcript').length,
-                    scraped: mediaItems.filter(item => item.type === 'scraped').length,
-                    webpage: mediaItems.filter(item => item.type === 'webpage').length,
-                    audio: mediaItems.filter(item => item.type === 'audio').length,
-                    video: mediaItems.filter(item => item.type === 'video').length,
-                    image: mediaItems.filter(item => item.type === 'image').length,
-                    file: mediaItems.filter(item => ['pdf', 'doc', 'txt'].includes(item.type)).length,
-                    url: mediaItems.filter(item => item.type === 'url').length
-                  })
-                  
-                  // Log each item with full details
-                  mediaItems.forEach((item, index) => {
-                    console.log(`📄 Item ${index + 1}:`, {
-                      id: item.id,
-                      type: item.type,
-                      filename: item.filename,
-                      title: item.title,
-                      content: item.content ? `${item.content.substring(0, 100)}...` : 'No content',
-                      transcript: item.transcript ? `${item.transcript.substring(0, 100)}...` : 'No transcript',
-                      resourceName: item.resourceName,
-                      url: item.url,
-                      allKeys: Object.keys(item)
-                    })
-                  })
-                  
-                  // Open the media selector immediately for better UX
-                  setIsMediaSelectorOpen(true)
-                  // Only refresh if we don't have media items or they're stale
-                  if (mediaItems.length === 0) {
-                    console.log('🔄 No media items found, fetching from server...')
-                    fetchMediaLibrary()
-                  } else {
-                    console.log('✅ Using existing media items, no server fetch needed')
-                  }
-                }}
-                selectedMediaCount={selectedMediaItems.size}
-                selectedMediaItems={selectedMediaItems}
-                onUploadFiles={uploadMediaFiles}
-                currentChatSession={currentChatSession}
-                chatHistory={chatHistory}
-              />
+        </div>
+
+        {/* Floating Chat Input - Compact & Responsive */}
+        <div className="fixed bottom-0 left-0 right-0 sm:left-auto sm:right-0 sm:w-[calc(100%-16rem)] lg:w-[calc(100%-18rem)] z-40 bg-gradient-to-t from-white via-white to-transparent pointer-events-none">
+          <div className="pointer-events-auto px-3 sm:px-6 lg:px-8 pb-4 sm:pb-6 flex justify-center">
+            <div className="w-full max-w-2xl bg-white rounded-3xl shadow-xl border border-gray-200 overflow-hidden">
+              <div className="flex items-end gap-2 sm:gap-3 p-2 sm:p-3">
+                {/* Media Attachment Button */}
+                <button
+                  onClick={() => {
+                    setIsMediaSelectorOpen(true)
+                    if (mediaItems.length === 0) fetchMediaLibrary()
+                  }}
+                  disabled={isLoading}
+                  className="relative flex-shrink-0 w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-gray-100 hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center transition-all hover:scale-105"
+                  title="Add media"
+                >
+                  <Plus className="h-4 w-4 sm:h-5 sm:w-5 text-gray-700" />
+                  {selectedMediaItems.size > 0 && (
+                    <span className="absolute -top-1 -right-1 w-5 h-5 bg-yellow-400 text-black text-[10px] font-bold rounded-full flex items-center justify-center shadow-md">
+                      {selectedMediaItems.size}
+                    </span>
+                  )}
+                </button>
+
+                {/* Text Input */}
+                <div className="flex-1 min-w-0">
+                  <textarea
+                    ref={textareaRef}
+                    value={messageInput}
+                    onChange={(e) => setMessageInput(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault()
+                        if (messageInput.trim() && selectedAgent && !isLoading) {
+                          handleSendMessage(messageInput.trim())
+                          setMessageInput('')
+                          if (textareaRef.current) {
+                            textareaRef.current.style.height = 'auto'
+                          }
+                        }
+                      }
+                    }}
+                    placeholder={!selectedAgent ? "Select an agent to start..." : "Type your message..."}
+                    disabled={!selectedAgent || isLoading}
+                    className="w-full border-0 bg-transparent text-sm sm:text-base resize-none min-h-[36px] max-h-[120px] focus:outline-none disabled:cursor-not-allowed placeholder:text-gray-400 py-2"
+                    rows={1}
+                    style={{ overflow: 'auto' }}
+                  />
+                </div>
+
+                {/* Send Button */}
+                <button
+                  onClick={() => {
+                    if (messageInput.trim() && selectedAgent && !isLoading) {
+                      handleSendMessage(messageInput.trim())
+                      setMessageInput('')
+                      if (textareaRef.current) {
+                        textareaRef.current.style.height = 'auto'
+                      }
+                    }
+                  }}
+                  disabled={!messageInput.trim() || !selectedAgent || isLoading}
+                  className="flex-shrink-0 w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-black hover:bg-gray-800 disabled:bg-gray-300 disabled:cursor-not-allowed flex items-center justify-center transition-all hover:scale-105 shadow-lg"
+                  title="Send message"
+                >
+                  {isLoading ? (
+                    <div className="animate-spin rounded-full h-4 w-4 sm:h-5 sm:w-5 border-2 border-yellow-400 border-t-transparent" />
+                  ) : (
+                    <Send className="h-4 w-4 sm:h-5 sm:w-5 text-yellow-400" />
+                  )}
+                </button>
+              </div>
+
+              {/* Bottom Status Bar */}
+              {selectedAgent && (
+                <div className="bg-gray-50 px-3 sm:px-4 py-1.5 border-t border-gray-100">
+                  <div className="flex items-center justify-between text-[10px] sm:text-xs text-gray-500">
+                    <span className="flex items-center gap-1.5">
+                      <div className="w-1.5 h-1.5 rounded-full bg-green-500"></div>
+                      <span className="hidden sm:inline">Ready to chat</span>
+                      <span className="sm:hidden">Ready</span>
+                    </span>
+                    <span className="hidden sm:inline">Press <kbd className="px-1.5 py-0.5 bg-white rounded text-[10px] font-mono border border-gray-200">Enter</kbd> to send</span>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>
       </div>
-
-      {/* Right Media Drawer - Independent Panel */}
-      <motion.div 
-        className={`fixed top-0 right-0 h-screen hidden xl:flex flex-col bg-gradient-to-b from-white via-slate-50 to-white border-l border-slate-200/60 transition-all duration-300 shadow-sm z-10 ${
-          rightPanelOpen ? 'w-96' : 'w-0'
-        }`}
-        initial={false}
-        animate={{ width: rightPanelOpen ? 384 : 0 }}
-      >
-        <div className="flex-1 h-full overflow-hidden">
-        <MediaDrawer 
-          activeTab={activeTab} 
-          onTabChange={handleTabChange} 
-          mediaItems={mediaItems}
-          setMediaItems={setMediaItems}
-          onRefresh={refreshAllTabs}
-          onUpload={uploadMediaFiles}
-          onDelete={deleteMediaFile}
-          handleDeleteItem={handleDeleteItem}
-          isRefreshing={isRefreshing}
-          isLoadingTabContent={isLoadingTabContent}
-          onClose={() => setRightPanelOpen(false)}
-          onToggle={() => setRightPanelOpen(false)}
-          isDeleting={isDeleting}
-          deletingItemId={deletingItemId}
-        />
-      </div>
-      </motion.div>
-
-      {/* Floating Toggle Button - Shows when sidebar is collapsed */}
-      {!rightPanelOpen && (
-        <motion.div
-          initial={{ opacity: 0, x: 20 }}
-          animate={{ opacity: 1, x: 0 }}
-          exit={{ opacity: 0, x: 20 }}
-          className="fixed top-20 right-4 z-20 hidden xl:block"
-        >
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setRightPanelOpen(true)}
-            className="bg-black hover:bg-gray-800 text-white border border-gray-700 shadow-lg hover:shadow-xl transition-all duration-200 font-bold px-4 py-2"
-            title="Open Media Library"
-          >
-            <ChevronDown className="h-5 w-5 text-white rotate-90 font-bold stroke-2" />
-            <span className="ml-2 text-sm font-bold">Media</span>
-          </Button>
-        </motion.div>
-      )}
-
-      {/* Professional Chat Loading Overlay */}
-      {isLoadingChat && (
-        <motion.div 
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: 0.2 }}
-          className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center"
-        >
-          <motion.div 
-            initial={{ scale: 0.8, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            exit={{ scale: 0.8, opacity: 0 }}
-            transition={{ duration: 0.3, ease: "easeOut" }}
-            className="bg-white rounded-2xl p-8 shadow-2xl max-w-sm w-full mx-4"
-          >
-            <div className="text-center">
-              {/* Animated loader with Framer Motion */}
-              <div className="relative mb-6">
-                <motion.div 
-                  className="w-16 h-16 mx-auto relative"
-                  animate={{ rotate: 360 }}
-                  transition={{ 
-                    duration: 1, 
-                    repeat: Infinity, 
-                    ease: "linear" 
-                  }}
-                >
-                  <div className="absolute inset-0 border-4 border-blue-100 rounded-full"></div>
-                  <motion.div 
-                    className="absolute inset-0 border-4 border-transparent border-t-blue-600 rounded-full"
-                    animate={{ rotate: 360 }}
-                    transition={{ 
-                      duration: 1, 
-                      repeat: Infinity, 
-                      ease: "linear" 
-                    }}
-                  ></motion.div>
-                </motion.div>
-              </div>
-              
-              {/* Loading text with fade animation */}
-              <motion.h3 
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.2, duration: 0.3 }}
-                className="text-xl font-semibold text-gray-900 mb-2"
-              >
-                Loading Chat
-              </motion.h3>
-              <motion.p 
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.3, duration: 0.3 }}
-                className="text-gray-600 text-sm"
-              >
-                Please wait while we load your conversation...
-              </motion.p>
-              
-              {/* Progress dots with staggered animation */}
-              <div className="flex justify-center space-x-2 mt-6">
-                {[0, 1, 2].map((index) => (
-                  <motion.div
-                    key={index}
-                    className="w-2 h-2 bg-blue-600 rounded-full"
-                    animate={{
-                      scale: [1, 1.2, 1],
-                      opacity: [0.5, 1, 0.5]
-                    }}
-                    transition={{
-                      duration: 1.5,
-                      repeat: Infinity,
-                      delay: index * 0.2,
-                      ease: "easeInOut"
-                    }}
-                  />
-                ))}
-              </div>
-            </div>
-          </motion.div>
-        </motion.div>
-      )}
 
       {/* Mobile New Chat FAB */}
       <div className="lg:hidden fixed bottom-6 right-6 z-50">
