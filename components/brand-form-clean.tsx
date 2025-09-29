@@ -820,7 +820,12 @@ export function BrandFormClean({ onSuccess }: BrandFormProps) {
           <span>Step {currentStep} of {totalSteps}</span>
           <span>{Math.round((currentStep / totalSteps) * 100)}% Complete</span>
         </div>
-        <Progress value={(currentStep / totalSteps) * 100} className="h-1.5" />
+        <div className="w-full bg-gray-200 rounded-full h-1.5">
+          <div 
+            className="bg-gradient-to-r from-yellow-400 to-yellow-600 h-1.5 rounded-full transition-all duration-300"
+            style={{ width: `${(currentStep / totalSteps) * 100}%` }}
+          />
+        </div>
       </div>
       
       {/* Step indicators - compact */}
@@ -839,17 +844,17 @@ export function BrandFormClean({ onSuccess }: BrandFormProps) {
                     onClick={() => goToStep(stepNumber)}
                     className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-medium transition-all duration-200 ${
                       isCompleted
-                        ? 'bg-green-500 text-white shadow-sm hover:bg-green-600'
+                        ? 'bg-gradient-to-br from-yellow-400 to-yellow-600 text-black shadow-sm hover:from-yellow-500 hover:to-yellow-700'
                         : isCurrent
-                        ? 'bg-primary text-primary-foreground shadow-sm'
-                        : 'bg-muted text-muted-foreground hover:bg-muted/80'
+                        ? 'bg-gradient-to-br from-yellow-400 to-yellow-600 text-black shadow-sm'
+                        : 'bg-gray-200 text-gray-500 hover:bg-gray-300'
                     }`}
                   >
                     {isCompleted ? <Check className="w-3 h-3" /> : stepNumber}
                   </button>
                   <span className={`mt-0.5 text-xs font-medium text-center hidden sm:block max-w-12 ${
-                    isCurrent ? 'text-primary' : 
-                    isCompleted ? 'text-green-600' : 'text-muted-foreground'
+                    isCurrent ? 'text-yellow-600' : 
+                    isCompleted ? 'text-yellow-600' : 'text-gray-500'
                   }`}>
                     {stepNumber === 1 && 'Basic'}
                     {stepNumber === 2 && 'Mission'}
@@ -867,7 +872,7 @@ export function BrandFormClean({ onSuccess }: BrandFormProps) {
                 </div>
                 {stepNumber < totalSteps && (
                   <div className={`w-1 h-0.5 ${
-                    completedSteps.includes(stepNumber) ? 'bg-green-500' : 'bg-muted'
+                    completedSteps.includes(stepNumber) ? 'bg-gradient-to-r from-yellow-400 to-yellow-600' : 'bg-gray-200'
                   }`} />
                 )}
               </React.Fragment>
@@ -926,8 +931,8 @@ export function BrandFormClean({ onSuccess }: BrandFormProps) {
           >
             <Card>
               <CardHeader className="text-center pb-3">
-                <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center mx-auto mb-2">
-                  <span className="text-primary-foreground text-sm font-semibold">1</span>
+                <div className="w-8 h-8 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-full flex items-center justify-center mx-auto mb-2">
+                  <span className="text-black text-sm font-semibold">1</span>
                 </div>
                 <CardTitle className="text-lg">Basic Information</CardTitle>
                 <CardDescription className="text-sm">Let's start with your business basics</CardDescription>
@@ -978,8 +983,8 @@ export function BrandFormClean({ onSuccess }: BrandFormProps) {
           >
             <Card>
               <CardHeader className="text-center pb-3">
-                <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center mx-auto mb-2">
-                  <span className="text-white text-sm font-semibold">2</span>
+                <div className="w-8 h-8 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-full flex items-center justify-center mx-auto mb-2">
+                  <span className="text-black text-sm font-semibold">2</span>
                 </div>
                 <CardTitle className="text-lg">Mission & Values</CardTitle>
                 <CardDescription className="text-sm">Define your company's purpose</CardDescription>
@@ -1030,8 +1035,8 @@ export function BrandFormClean({ onSuccess }: BrandFormProps) {
           >
             <Card>
               <CardHeader className="text-center pb-3">
-                <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-2">
-                  <span className="text-white text-sm font-semibold">3</span>
+                <div className="w-8 h-8 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-full flex items-center justify-center mx-auto mb-2">
+                  <span className="text-black text-sm font-semibold">3</span>
                 </div>
                 <CardTitle className="text-lg">Brand Voice</CardTitle>
                 <CardDescription className="text-sm">How does your brand communicate?</CardDescription>
@@ -1066,20 +1071,22 @@ export function BrandFormClean({ onSuccess }: BrandFormProps) {
                       </Button>
                     </div>
                   ))}
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={(e) => {
-                      e.preventDefault()
-                      e.stopPropagation()
-                      console.log('Add button clicked for style')
-                      addArrayItem(['brandIdentity', 'tonePersonality', 'style'])
-                    }}
-                    className="w-full"
-                  >
-                    <Plus className="w-4 h-4 mr-2" />
-                    Add Communication Style
-                  </Button>
+                  <div className="flex justify-center">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={(e) => {
+                        e.preventDefault()
+                        e.stopPropagation()
+                        console.log('Add button clicked for style')
+                        addArrayItem(['brandIdentity', 'tonePersonality', 'style'])
+                      }}
+                      className="bg-gradient-to-r from-yellow-400 to-yellow-600 hover:from-yellow-500 hover:to-yellow-700 text-black border-yellow-500 shadow-sm"
+                    >
+                      <Plus className="w-4 h-4 mr-2" />
+                      Add Communication Style
+                    </Button>
+                  </div>
                 </div>
 
                 {/* Example Phrases */}
@@ -1109,19 +1116,21 @@ export function BrandFormClean({ onSuccess }: BrandFormProps) {
                       </Button>
                     </div>
                   ))}
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={(e) => {
-                      e.preventDefault()
-                      e.stopPropagation()
-                      addArrayItem(['brandIdentity', 'examplePhrases'])
-                    }}
-                    className="w-full"
-                  >
-                    <Plus className="w-4 h-4 mr-2" />
-                    Add Example Phrase
-                  </Button>
+                  <div className="flex justify-center">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={(e) => {
+                        e.preventDefault()
+                        e.stopPropagation()
+                        addArrayItem(['brandIdentity', 'examplePhrases'])
+                      }}
+                      className="bg-gradient-to-r from-yellow-400 to-yellow-600 hover:from-yellow-500 hover:to-yellow-700 text-black border-yellow-500 shadow-sm"
+                    >
+                      <Plus className="w-4 h-4 mr-2" />
+                      Add Example Phrase
+                    </Button>
+                  </div>
                 </div>
 
                 {/* Brand Power Words */}
@@ -1151,19 +1160,21 @@ export function BrandFormClean({ onSuccess }: BrandFormProps) {
                       </Button>
                     </div>
                   ))}
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={(e) => {
-                      e.preventDefault()
-                      e.stopPropagation()
-                      addArrayItem(['brandIdentity', 'brandPowerWords'])
-                    }}
-                    className="w-full"
-                  >
-                    <Plus className="w-4 h-4 mr-2" />
-                    Add Power Word
-                  </Button>
+                  <div className="flex justify-center">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={(e) => {
+                        e.preventDefault()
+                        e.stopPropagation()
+                        addArrayItem(['brandIdentity', 'brandPowerWords'])
+                      }}
+                      className="bg-gradient-to-r from-yellow-400 to-yellow-600 hover:from-yellow-500 hover:to-yellow-700 text-black border-yellow-500 shadow-sm"
+                    >
+                      <Plus className="w-4 h-4 mr-2" />
+                      Add Power Word
+                    </Button>
+                  </div>
                 </div>
 
                 {/* Things to Avoid */}
@@ -1193,19 +1204,21 @@ export function BrandFormClean({ onSuccess }: BrandFormProps) {
                       </Button>
                     </div>
                   ))}
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={(e) => {
-                      e.preventDefault()
-                      e.stopPropagation()
-                      addArrayItem(['brandIdentity', 'thingsToAvoid'])
-                    }}
-                    className="w-full"
-                  >
-                    <Plus className="w-4 h-4 mr-2" />
-                    Add Thing to Avoid
-                  </Button>
+                  <div className="flex justify-center">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={(e) => {
+                        e.preventDefault()
+                        e.stopPropagation()
+                        addArrayItem(['brandIdentity', 'thingsToAvoid'])
+                      }}
+                      className="bg-gradient-to-r from-yellow-400 to-yellow-600 hover:from-yellow-500 hover:to-yellow-700 text-black border-yellow-500 shadow-sm"
+                    >
+                      <Plus className="w-4 h-4 mr-2" />
+                      Add Thing to Avoid
+                    </Button>
+                  </div>
                 </div>
 
               </CardContent>
@@ -1224,8 +1237,8 @@ export function BrandFormClean({ onSuccess }: BrandFormProps) {
           >
             <Card className="border-0 shadow-xl bg-white">
               <CardHeader className="text-center pb-6">
-                <div className="w-16 h-16 bg-gradient-to-r from-orange-500 to-orange-600 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <span className="text-white text-xl font-bold">4</span>
+                <div className="w-16 h-16 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <span className="text-black text-xl font-bold">4</span>
                 </div>
                 <CardTitle className="text-2xl font-bold text-slate-900">Target Audience</CardTitle>
                 <CardDescription className="text-slate-600">Who are your ideal customers?</CardDescription>
@@ -1259,19 +1272,21 @@ export function BrandFormClean({ onSuccess }: BrandFormProps) {
                       </Button>
                     </div>
                   ))}
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={(e) => {
-                      e.preventDefault()
-                      e.stopPropagation()
-                      addArrayItem(['targetAudience', 'idealCustomerProfile', 'description'])
-                    }}
-                    className="text-purple-600 border-purple-300 hover:bg-purple-50 w-full"
-                  >
-                    <Plus className="w-4 h-4 mr-2" />
-                    Add Customer Type
-                  </Button>
+                  <div className="flex justify-center">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={(e) => {
+                        e.preventDefault()
+                        e.stopPropagation()
+                        addArrayItem(['targetAudience', 'idealCustomerProfile', 'description'])
+                      }}
+                      className="bg-gradient-to-r from-yellow-400 to-yellow-600 hover:from-yellow-500 hover:to-yellow-700 text-black border-yellow-500 shadow-sm"
+                    >
+                      <Plus className="w-4 h-4 mr-2" />
+                      Add Customer Type
+                    </Button>
+                  </div>
                 </div>
 
                 {/* Audience Vocabulary */}
@@ -1301,19 +1316,21 @@ export function BrandFormClean({ onSuccess }: BrandFormProps) {
                       </Button>
                     </div>
                   ))}
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={(e) => {
-                      e.preventDefault()
-                      e.stopPropagation()
-                      addArrayItem(['targetAudience', 'audienceVocabulary'])
-                    }}
-                    className="text-purple-600 border-purple-300 hover:bg-purple-50 w-full"
-                  >
-                    <Plus className="w-4 h-4 mr-2" />
-                    Add Vocabulary Word
-                  </Button>
+                  <div className="flex justify-center">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={(e) => {
+                        e.preventDefault()
+                        e.stopPropagation()
+                        addArrayItem(['targetAudience', 'audienceVocabulary'])
+                      }}
+                      className="bg-gradient-to-r from-yellow-400 to-yellow-600 hover:from-yellow-500 hover:to-yellow-700 text-black border-yellow-500 shadow-sm"
+                    >
+                      <Plus className="w-4 h-4 mr-2" />
+                      Add Vocabulary Word
+                    </Button>
+                  </div>
                 </div>
 
               </CardContent>
@@ -1332,8 +1349,8 @@ export function BrandFormClean({ onSuccess }: BrandFormProps) {
           >
             <Card className="border-0 shadow-xl bg-white">
               <CardHeader className="text-center pb-6">
-                <div className="w-16 h-16 bg-gradient-to-r from-red-500 to-red-600 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <span className="text-white text-xl font-bold">5</span>
+                <div className="w-16 h-16 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <span className="text-black text-xl font-bold">5</span>
                 </div>
                 <CardTitle className="text-2xl font-bold text-slate-900">Pain Points</CardTitle>
                 <CardDescription className="text-slate-600">What problems do you solve?</CardDescription>
@@ -1367,19 +1384,21 @@ export function BrandFormClean({ onSuccess }: BrandFormProps) {
                       </Button>
                     </div>
                   ))}
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={(e) => {
-                      e.preventDefault()
-                      e.stopPropagation()
-                      addArrayItem(['targetAudience', 'primaryPainPoints'])
-                    }}
-                    className="text-purple-600 border-purple-300 hover:bg-purple-50 w-full"
-                  >
-                    <Plus className="w-4 h-4 mr-2" />
-                    Add Pain Point
-                  </Button>
+                  <div className="flex justify-center">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={(e) => {
+                        e.preventDefault()
+                        e.stopPropagation()
+                        addArrayItem(['targetAudience', 'primaryPainPoints'])
+                      }}
+                      className="bg-gradient-to-r from-yellow-400 to-yellow-600 hover:from-yellow-500 hover:to-yellow-700 text-black border-yellow-500 shadow-sm"
+                    >
+                      <Plus className="w-4 h-4 mr-2" />
+                      Add Pain Point
+                    </Button>
+                  </div>
                 </div>
 
                 {/* Common Objections */}
@@ -1409,19 +1428,21 @@ export function BrandFormClean({ onSuccess }: BrandFormProps) {
                       </Button>
                     </div>
                   ))}
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={(e) => {
-                      e.preventDefault()
-                      e.stopPropagation()
-                      addArrayItem(['targetAudience', 'commonObjections'])
-                    }}
-                    className="text-purple-600 border-purple-300 hover:bg-purple-50 w-full"
-                  >
-                    <Plus className="w-4 h-4 mr-2" />
-                    Add Objection
-                  </Button>
+                  <div className="flex justify-center">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={(e) => {
+                        e.preventDefault()
+                        e.stopPropagation()
+                        addArrayItem(['targetAudience', 'commonObjections'])
+                      }}
+                      className="bg-gradient-to-r from-yellow-400 to-yellow-600 hover:from-yellow-500 hover:to-yellow-700 text-black border-yellow-500 shadow-sm"
+                    >
+                      <Plus className="w-4 h-4 mr-2" />
+                      Add Objection
+                    </Button>
+                  </div>
                 </div>
 
               </CardContent>
@@ -1440,8 +1461,8 @@ export function BrandFormClean({ onSuccess }: BrandFormProps) {
           >
             <Card className="border-0 shadow-xl bg-white">
               <CardHeader className="text-center pb-6">
-                <div className="w-16 h-16 bg-gradient-to-r from-emerald-500 to-emerald-600 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <span className="text-white text-xl font-bold">6</span>
+                <div className="w-16 h-16 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <span className="text-black text-xl font-bold">6</span>
                 </div>
                 <CardTitle className="text-2xl font-bold text-slate-900">Customer Goals & Desires</CardTitle>
                 <CardDescription className="text-slate-600">What do your customers want to achieve?</CardDescription>
@@ -1475,19 +1496,21 @@ export function BrandFormClean({ onSuccess }: BrandFormProps) {
                       </Button>
                     </div>
                   ))}
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={(e) => {
-                      e.preventDefault()
-                      e.stopPropagation()
-                      addArrayItem(['targetAudience', 'primaryDesiresGoals'])
-                    }}
-                    className="text-purple-600 border-purple-300 hover:bg-purple-50 w-full"
-                  >
-                    <Plus className="w-4 h-4 mr-2" />
-                    Add Customer Goal
-                  </Button>
+                  <div className="flex justify-center">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={(e) => {
+                        e.preventDefault()
+                        e.stopPropagation()
+                        addArrayItem(['targetAudience', 'primaryDesiresGoals'])
+                      }}
+                      className="bg-gradient-to-r from-yellow-400 to-yellow-600 hover:from-yellow-500 hover:to-yellow-700 text-black border-yellow-500 shadow-sm"
+                    >
+                      <Plus className="w-4 h-4 mr-2" />
+                      Add Customer Goal
+                    </Button>
+                  </div>
                 </div>
 
               </CardContent>
@@ -1506,8 +1529,8 @@ export function BrandFormClean({ onSuccess }: BrandFormProps) {
           >
             <Card>
               <CardHeader className="text-center pb-4">
-                <div className="w-12 h-12 bg-indigo-500 rounded-full flex items-center justify-center mx-auto mb-3">
-                  <span className="text-white text-lg font-semibold">7</span>
+                <div className="w-12 h-12 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-full flex items-center justify-center mx-auto mb-3">
+                  <span className="text-black text-lg font-semibold">7</span>
                 </div>
                 <CardTitle className="text-xl">Products & Services</CardTitle>
                 <CardDescription>Tell us about your offerings</CardDescription>
@@ -1567,15 +1590,17 @@ export function BrandFormClean({ onSuccess }: BrandFormProps) {
                     </div>
                   ))}
                   
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={addOffer}
-                    className="w-full"
-                  >
-                    <Plus className="w-4 h-4 mr-2" />
-                    Add Another Product/Service
-                  </Button>
+                  <div className="flex justify-center">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={addOffer}
+                      className="bg-gradient-to-r from-yellow-400 to-yellow-600 hover:from-yellow-500 hover:to-yellow-700 text-black border-yellow-500 shadow-sm"
+                    >
+                      <Plus className="w-4 h-4 mr-2" />
+                      Add Another Product/Service
+                    </Button>
+                  </div>
                 </div>
 
                 {/* Legacy single product fields (hidden but kept for compatibility) */}
@@ -1629,8 +1654,8 @@ export function BrandFormClean({ onSuccess }: BrandFormProps) {
           >
             <Card className="border-0 shadow-xl bg-white">
               <CardHeader className="text-center pb-6">
-                <div className="w-16 h-16 bg-gradient-to-r from-pink-500 to-pink-600 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <span className="text-white text-xl font-bold">8</span>
+                <div className="w-16 h-16 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <span className="text-black text-xl font-bold">8</span>
                 </div>
                 <CardTitle className="text-2xl font-bold text-slate-900">Social Media</CardTitle>
                 <CardDescription className="text-slate-600">Your online presence</CardDescription>
@@ -1706,8 +1731,8 @@ export function BrandFormClean({ onSuccess }: BrandFormProps) {
           >
             <Card className="border-0 shadow-xl bg-white">
               <CardHeader className="text-center pb-6">
-                <div className="w-16 h-16 bg-gradient-to-r from-teal-500 to-teal-600 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <span className="text-white text-xl font-bold">9</span>
+                <div className="w-16 h-16 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <span className="text-black text-xl font-bold">9</span>
                 </div>
                 <CardTitle className="text-2xl font-bold text-slate-900">Testimonials & Case Studies</CardTitle>
                 <CardDescription className="text-slate-600">Share customer testimonials by industry category</CardDescription>
@@ -1741,19 +1766,21 @@ export function BrandFormClean({ onSuccess }: BrandFormProps) {
                       </Button>
                     </div>
                   ))}
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={(e) => {
-                      e.preventDefault()
-                      e.stopPropagation()
-                      addArrayItem(['clientAssets', 'testimonialsCaseStudies', 'ecommerce'])
-                    }}
-                    className="text-purple-600 border-purple-300 hover:bg-purple-50 w-full"
-                  >
-                    <Plus className="w-4 h-4 mr-2" />
-                    Add Ecommerce Testimonial
-                  </Button>
+                  <div className="flex justify-center">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={(e) => {
+                        e.preventDefault()
+                        e.stopPropagation()
+                        addArrayItem(['clientAssets', 'testimonialsCaseStudies', 'ecommerce'])
+                      }}
+                      className="bg-gradient-to-r from-yellow-400 to-yellow-600 hover:from-yellow-500 hover:to-yellow-700 text-black border-yellow-500 shadow-sm"
+                    >
+                      <Plus className="w-4 h-4 mr-2" />
+                      Add Ecommerce Testimonial
+                    </Button>
+                  </div>
                 </div>
 
                 {/* Financial Services Testimonials */}
@@ -1783,19 +1810,21 @@ export function BrandFormClean({ onSuccess }: BrandFormProps) {
                       </Button>
                     </div>
                   ))}
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={(e) => {
-                      e.preventDefault()
-                      e.stopPropagation()
-                      addArrayItem(['clientAssets', 'testimonialsCaseStudies', 'financialServices'])
-                    }}
-                    className="text-purple-600 border-purple-300 hover:bg-purple-50 w-full"
-                  >
-                    <Plus className="w-4 h-4 mr-2" />
-                    Add Financial Services Testimonial
-                  </Button>
+                  <div className="flex justify-center">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={(e) => {
+                        e.preventDefault()
+                        e.stopPropagation()
+                        addArrayItem(['clientAssets', 'testimonialsCaseStudies', 'financialServices'])
+                      }}
+                      className="bg-gradient-to-r from-yellow-400 to-yellow-600 hover:from-yellow-500 hover:to-yellow-700 text-black border-yellow-500 shadow-sm"
+                    >
+                      <Plus className="w-4 h-4 mr-2" />
+                      Add Financial Services Testimonial
+                    </Button>
+                  </div>
                 </div>
 
                 {/* Entertainment Testimonials */}
@@ -1825,19 +1854,21 @@ export function BrandFormClean({ onSuccess }: BrandFormProps) {
                       </Button>
                     </div>
                   ))}
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={(e) => {
-                      e.preventDefault()
-                      e.stopPropagation()
-                      addArrayItem(['clientAssets', 'testimonialsCaseStudies', 'entertainment'])
-                    }}
-                    className="text-purple-600 border-purple-300 hover:bg-purple-50 w-full"
-                  >
-                    <Plus className="w-4 h-4 mr-2" />
-                    Add Entertainment Testimonial
-                  </Button>
+                  <div className="flex justify-center">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={(e) => {
+                        e.preventDefault()
+                        e.stopPropagation()
+                        addArrayItem(['clientAssets', 'testimonialsCaseStudies', 'entertainment'])
+                      }}
+                      className="bg-gradient-to-r from-yellow-400 to-yellow-600 hover:from-yellow-500 hover:to-yellow-700 text-black border-yellow-500 shadow-sm"
+                    >
+                      <Plus className="w-4 h-4 mr-2" />
+                      Add Entertainment Testimonial
+                    </Button>
+                  </div>
                 </div>
 
                 {/* Coaches/Consultants Testimonials */}
@@ -1867,19 +1898,21 @@ export function BrandFormClean({ onSuccess }: BrandFormProps) {
                       </Button>
                     </div>
                   ))}
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={(e) => {
-                      e.preventDefault()
-                      e.stopPropagation()
-                      addArrayItem(['clientAssets', 'testimonialsCaseStudies', 'coachesConsultants'])
-                    }}
-                    className="text-purple-600 border-purple-300 hover:bg-purple-50 w-full"
-                  >
-                    <Plus className="w-4 h-4 mr-2" />
-                    Add Coach/Consultant Testimonial
-                  </Button>
+                  <div className="flex justify-center">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={(e) => {
+                        e.preventDefault()
+                        e.stopPropagation()
+                        addArrayItem(['clientAssets', 'testimonialsCaseStudies', 'coachesConsultants'])
+                      }}
+                      className="bg-gradient-to-r from-yellow-400 to-yellow-600 hover:from-yellow-500 hover:to-yellow-700 text-black border-yellow-500 shadow-sm"
+                    >
+                      <Plus className="w-4 h-4 mr-2" />
+                      Add Coach/Consultant Testimonial
+                    </Button>
+                  </div>
                 </div>
 
                 {/* Brick & Mortar Testimonials */}
@@ -1909,19 +1942,21 @@ export function BrandFormClean({ onSuccess }: BrandFormProps) {
                       </Button>
                     </div>
                   ))}
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={(e) => {
-                      e.preventDefault()
-                      e.stopPropagation()
-                      addArrayItem(['clientAssets', 'testimonialsCaseStudies', 'brickMortar'])
-                    }}
-                    className="text-purple-600 border-purple-300 hover:bg-purple-50 w-full"
-                  >
-                    <Plus className="w-4 h-4 mr-2" />
-                    Add Brick & Mortar Testimonial
-                  </Button>
+                  <div className="flex justify-center">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={(e) => {
+                        e.preventDefault()
+                        e.stopPropagation()
+                        addArrayItem(['clientAssets', 'testimonialsCaseStudies', 'brickMortar'])
+                      }}
+                      className="bg-gradient-to-r from-yellow-400 to-yellow-600 hover:from-yellow-500 hover:to-yellow-700 text-black border-yellow-500 shadow-sm"
+                    >
+                      <Plus className="w-4 h-4 mr-2" />
+                      Add Brick & Mortar Testimonial
+                    </Button>
+                  </div>
                 </div>
 
                 {/* Legacy single testimonial field (hidden but kept for compatibility) */}
@@ -1953,8 +1988,8 @@ export function BrandFormClean({ onSuccess }: BrandFormProps) {
           >
             <Card className="border-0 shadow-xl bg-white">
               <CardHeader className="text-center pb-6">
-                <div className="w-16 h-16 bg-gradient-to-r from-amber-500 to-amber-600 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <span className="text-white text-xl font-bold">10</span>
+                <div className="w-16 h-16 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <span className="text-black text-xl font-bold">10</span>
                 </div>
                 <CardTitle className="text-2xl font-bold text-slate-900">Founders & Backstory</CardTitle>
                 <CardDescription className="text-slate-600">Tell us about the people behind the brand</CardDescription>
@@ -1997,8 +2032,8 @@ export function BrandFormClean({ onSuccess }: BrandFormProps) {
           >
             <Card className="border-0 shadow-xl bg-white">
               <CardHeader className="text-center pb-6">
-                <div className="w-16 h-16 bg-gradient-to-r from-violet-500 to-violet-600 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <span className="text-white text-xl font-bold">11</span>
+                <div className="w-16 h-16 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <span className="text-black text-xl font-bold">11</span>
                 </div>
                 <CardTitle className="text-2xl font-bold text-slate-900">Other Information</CardTitle>
                 <CardDescription className="text-slate-600">Any additional information about your business</CardDescription>
@@ -2030,8 +2065,8 @@ export function BrandFormClean({ onSuccess }: BrandFormProps) {
           >
             <Card>
               <CardHeader className="text-center pb-4">
-                <div className="w-12 h-12 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-3">
-                  <Check className="w-6 h-6 text-white" />
+                <div className="w-12 h-12 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-full flex items-center justify-center mx-auto mb-3">
+                  <Check className="w-6 h-6 text-black" />
                 </div>
                 <CardTitle className="text-xl">Ready to Complete!</CardTitle>
                 <CardDescription>Review your information and submit to save your brand profile</CardDescription>
@@ -2074,7 +2109,7 @@ export function BrandFormClean({ onSuccess }: BrandFormProps) {
               variant="outline"
               onClick={saveProgress}
               disabled={isSaving}
-              className="flex items-center gap-2"
+              className="flex items-center gap-2 bg-gradient-to-r from-yellow-400 to-yellow-600 hover:from-yellow-500 hover:to-yellow-700 text-black border-yellow-500 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <Save className="w-4 h-4" />
               <span className="hidden sm:inline">{isSaving ? 'Saving...' : 'Save'}</span>
@@ -2090,7 +2125,7 @@ export function BrandFormClean({ onSuccess }: BrandFormProps) {
               <Button
                 type="button"
                 onClick={nextStep}
-                className="flex items-center gap-2"
+                className="flex items-center gap-2 bg-gradient-to-r from-yellow-400 to-yellow-600 hover:from-yellow-500 hover:to-yellow-700 text-black border-0 shadow-sm"
               >
                 <span>Next</span>
                 <ChevronRight className="w-4 h-4" />
@@ -2099,7 +2134,7 @@ export function BrandFormClean({ onSuccess }: BrandFormProps) {
               <Button
                 type="submit"
                 disabled={isSubmitting}
-                className="flex items-center gap-2"
+                className="flex items-center gap-2 bg-gradient-to-r from-yellow-400 to-yellow-600 hover:from-yellow-500 hover:to-yellow-700 text-black border-0 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <Save className="w-4 h-4" />
                 {isSubmitting ? 'Saving...' : 'Complete Setup'}
