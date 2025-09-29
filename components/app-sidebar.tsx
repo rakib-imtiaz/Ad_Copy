@@ -52,10 +52,76 @@ import {
 } from "@/components/ui/alert-dialog"
 import { Separator } from "@/components/ui/separator"
 import { AgentSelectionModal } from "@/components/agent-selection-modal"
+import { TypingText } from "@/components/ui/animated-text"
 
 const mainNav = [
   // Knowledge Base moved to bottom section for better placement
 ]
+
+// Custom looping typewriter component
+function LoopingTypewriter({ 
+  texts, 
+  className, 
+  typingSpeed = 100, 
+  pauseDuration = 2000 
+}: { 
+  texts: string[]
+  className?: string
+  typingSpeed?: number
+  pauseDuration?: number
+}) {
+  const [currentTextIndex, setCurrentTextIndex] = React.useState(0)
+  const [displayedText, setDisplayedText] = React.useState("")
+  const [isTyping, setIsTyping] = React.useState(true)
+  const [showCursor, setShowCursor] = React.useState(true)
+
+  React.useEffect(() => {
+    const currentText = texts[currentTextIndex]
+    
+    if (isTyping) {
+      // Typing phase
+      if (displayedText.length < currentText.length) {
+        const timer = setTimeout(() => {
+          setDisplayedText(currentText.slice(0, displayedText.length + 1))
+        }, typingSpeed)
+        return () => clearTimeout(timer)
+      } else {
+        // Finished typing, pause then start erasing
+        const timer = setTimeout(() => {
+          setIsTyping(false)
+        }, pauseDuration)
+        return () => clearTimeout(timer)
+      }
+    } else {
+      // Erasing phase
+      if (displayedText.length > 0) {
+        const timer = setTimeout(() => {
+          setDisplayedText(displayedText.slice(0, -1))
+        }, typingSpeed / 2)
+        return () => clearTimeout(timer)
+      } else {
+        // Finished erasing, move to next text
+        setCurrentTextIndex((prev) => (prev + 1) % texts.length)
+        setIsTyping(true)
+      }
+    }
+  }, [displayedText, isTyping, currentTextIndex, texts, typingSpeed, pauseDuration])
+
+  // Cursor blinking effect
+  React.useEffect(() => {
+    const timer = setInterval(() => {
+      setShowCursor(prev => !prev)
+    }, 500)
+    return () => clearInterval(timer)
+  }, [])
+
+  return (
+    <span className={className}>
+      {displayedText}
+      {showCursor && <span className="animate-pulse">|</span>}
+    </span>
+  )
+}
 
 export function AppSidebar() {
   const [activeItem, setActiveItem] = React.useState("/knowledge-base")
@@ -153,10 +219,14 @@ export function AppSidebar() {
             <div className="flex h-6 w-6 items-center justify-center rounded-md bg-gradient-to-br from-yellow-400 to-yellow-600 shadow-sm">
               <span className="text-xs font-black text-black">C</span>
             </div>
-            <div className="flex-1 min-w-0">
-              <h1 className="text-xs font-medium text-yellow-400 truncate">Copy Ready</h1>
-              <p className="text-xs text-gray-400 truncate">AI Ad Copy Platform</p>
-            </div>
+             <div className="flex-1 min-w-0">
+               <LoopingTypewriter 
+                 texts={["Copy Ready", "AI Ad Copy Platform"]}
+                 className="text-xs font-medium text-yellow-400 truncate"
+                 typingSpeed={80}
+                 pauseDuration={1500}
+               />
+             </div>
             <SidebarTrigger className="h-5 w-5 rounded-md hover:bg-gray-800 transition-colors text-white hover:text-yellow-400 [&>svg]:text-white [&>svg]:hover:text-yellow-400 [&[data-sidebar=trigger]]:text-white [&[data-sidebar=trigger]]:hover:text-yellow-400" />
           </div>
         ) : (

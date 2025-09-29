@@ -3327,36 +3327,71 @@ export default function Dashboard() {
         >
       {/* Modern Chat Interface - Clean Black & White Theme */}
       <div className="h-[calc(100vh-4rem)] flex flex-col bg-white">
-        {/* Fixed Header with Agent Info - White Background - Compact */}
-        <div className="flex-shrink-0 bg-white border-b border-gray-200 sticky top-0 z-30 shadow-sm">
-          <div className="flex items-center justify-between px-3 sm:px-4 py-1.5">
-            <div className="flex flex-col gap-0.5">
-              {/* Agent Name with clear label */}
-              <div className="flex items-center gap-1.5">
-                <span className="text-[10px] font-medium text-gray-500 uppercase tracking-wide">Agent:</span>
-                <div className="flex items-center gap-1.5">
-                  <div className="w-1.5 h-1.5 rounded-full bg-black animate-pulse"></div>
-                  <span className="text-black font-bold text-xs">
-                    {selectedAgent || 'No Agent Selected'}
-                  </span>
-                </div>
+        {/* Compact Animated Header - Yellow/Black/White Theme */}
+        <motion.div 
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, ease: "easeOut" }}
+          className="flex-shrink-0 bg-white border-b border-gray-200 sticky top-0 z-30 shadow-sm"
+        >
+          <div className="px-3 py-2">
+            {/* First Row - Agent */}
+            <motion.div 
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.2, duration: 0.5 }}
+              className="flex items-center mb-1"
+            >
+              <div className="flex items-center space-x-1.5 w-16">
+                <div className="w-1.5 h-1.5 rounded-full bg-yellow-500 animate-pulse"></div>
+                <span className="text-[10px] font-medium text-gray-500 uppercase tracking-wide">Agent</span>
               </div>
-              
-              {/* Chat Name with clear label */}
-              {currentChatSession && (
-                <div className="flex items-center gap-1.5">
-                  <span className="text-[10px] font-medium text-gray-500 uppercase tracking-wide">Chat:</span>
-                  <div className="flex items-center gap-1.5">
-                    <MessageSquare className="h-2.5 w-2.5 text-gray-600" />
-                    <span className="text-gray-900 font-semibold text-xs">
-                      {chatHistory.find(chat => chat.session_id === currentChatSession)?.title || "Chat Session"}
-                    </span>
-                  </div>
+              <motion.div
+                key={selectedAgent}
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.3 }}
+                className="flex items-center space-x-1.5"
+              >
+                <div className="w-4 h-4 rounded-full bg-yellow-500 flex items-center justify-center">
+                  <Bot className="w-2.5 h-2.5 text-black" />
                 </div>
-              )}
-            </div>
+                <span className="text-xs font-bold text-black">
+                  {selectedAgent || 'No Agent Selected'}
+                </span>
+              </motion.div>
+            </motion.div>
+
+            {/* Second Row - Chat */}
+            {currentChatSession && (
+              <motion.div 
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.4, duration: 0.5 }}
+                className="flex items-center"
+              >
+                <div className="flex items-center space-x-1.5 w-16">
+                  <div className="w-1.5 h-1.5 rounded-full bg-yellow-500 animate-pulse"></div>
+                  <span className="text-[10px] font-medium text-gray-500 uppercase tracking-wide">Chat</span>
+                </div>
+                <motion.div
+                  key={currentChatSession}
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ duration: 0.3 }}
+                  className="flex items-center space-x-1.5"
+                >
+                  <div className="w-4 h-4 rounded-full bg-yellow-500 flex items-center justify-center">
+                    <MessageSquare className="w-2.5 h-2.5 text-black" />
+                  </div>
+                  <span className="text-xs font-bold text-black">
+                    {chatHistory.find(chat => chat.session_id === currentChatSession)?.title || "Chat Session"}
+                  </span>
+                </motion.div>
+              </motion.div>
+            )}
           </div>
-        </div>
+        </motion.div>
 
         {/* Messages Container - Scrollable */}
         <div className="flex-1 overflow-y-auto pb-32">
@@ -3551,9 +3586,9 @@ export default function Dashboard() {
                     }
                   }}
                   disabled={!messageInput.trim() || !selectedAgent || isLoading}
-                  className={`flex-shrink-0 px-4 py-2 h-9 sm:h-10 rounded-xl flex items-center justify-center gap-2 transition-all duration-500 ease-out transform-gpu ${
+                  className={`flex-shrink-0 px-4 py-2 h-9 sm:h-10 rounded-xl flex items-center justify-center gap-2 transition-colors duration-200 ${
                     messageInput.trim() && selectedAgent && !isLoading
-                      ? 'bg-gradient-to-r from-yellow-300 via-yellow-400 to-yellow-500 hover:from-yellow-400 hover:via-yellow-500 hover:to-yellow-600 text-black hover:scale-110 shadow-xl hover:shadow-2xl animate-button-breathe font-semibold'
+                      ? 'bg-gradient-to-r from-yellow-300 via-yellow-400 to-yellow-500 hover:from-yellow-400 hover:via-yellow-500 hover:to-yellow-600 text-black shadow-md font-semibold'
                       : 'bg-white text-gray-400 opacity-60 cursor-not-allowed shadow-md border border-gray-200'
                   }`}
                   title="Send message"
@@ -3562,28 +3597,13 @@ export default function Dashboard() {
                     <div className="animate-spin rounded-full h-4 w-4 border-2 border-black border-t-transparent" />
                   ) : (
                     <>
-                      <Send className={`h-4 w-4 transition-transform duration-300 ${
-                        messageInput.trim() && selectedAgent && !isLoading ? 'animate-icon-float' : ''
-                      }`} />
+                      <Send className="h-4 w-4" />
                       <span className="text-sm font-bold">Send</span>
                     </>
                   )}
                 </button>
               </div>
               
-              {/* Bottom Status Bar */}
-              {selectedAgent && (
-                <div className="bg-gray-50 px-3 sm:px-4 py-1.5 border-t border-gray-100">
-                  <div className="flex items-center justify-between text-[10px] sm:text-xs text-gray-500">
-                    <span className="flex items-center gap-1.5">
-                      <div className="w-1.5 h-1.5 rounded-full bg-green-500"></div>
-                      <span className="hidden sm:inline">Ready to chat</span>
-                      <span className="sm:hidden">Ready</span>
-                    </span>
-                    <span className="hidden sm:inline">Press <kbd className="px-1.5 py-0.5 bg-white rounded text-[10px] font-mono border border-gray-200">Enter</kbd> to send</span>
-              </div>
-            </div>
-      )}
             </div>
           </div>
         </div>

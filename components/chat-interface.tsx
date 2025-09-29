@@ -517,9 +517,9 @@ export function ChatInterface({
                   <Button
                     onClick={handleSend}
                     disabled={!message.trim() || !currentAgent && !selectedAgent || isLoading}
-                    className={`rounded-xl px-4 py-2 h-10 sm:h-11 flex items-center justify-center gap-2 transition-all duration-500 ease-out ${
+                    className={`rounded-xl px-4 py-2 h-10 sm:h-11 flex items-center justify-center gap-2 transition-colors duration-200 ${
                       message.trim() && (currentAgent || selectedAgent) && !isLoading
-                        ? 'bg-gradient-to-r from-yellow-300 via-yellow-400 to-yellow-500 hover:from-yellow-400 hover:via-yellow-500 hover:to-yellow-600 text-black shadow-xl hover:shadow-2xl hover:scale-110 animate-button-breathe transform-gpu font-semibold'
+                        ? 'bg-gradient-to-r from-yellow-300 via-yellow-400 to-yellow-500 hover:from-yellow-400 hover:via-yellow-500 hover:to-yellow-600 text-black shadow-md font-semibold'
                         : 'bg-white text-gray-400 opacity-60 cursor-not-allowed shadow-md border border-gray-200'
                     }`}
                     title="Send message (Enter)"
@@ -528,9 +528,7 @@ export function ChatInterface({
                       <div className="animate-spin rounded-full h-4 w-4 border-2 border-black border-t-transparent" />
                     ) : (
                       <>
-                        <Send className={`h-4 w-4 transition-transform duration-300 ${
-                          message.trim() && (currentAgent || selectedAgent) && !isLoading ? 'animate-icon-float' : ''
-                        }`} />
+                        <Send className="h-4 w-4" />
                         <span className="text-sm font-bold">Send</span>
                       </>
                     )}
@@ -538,33 +536,14 @@ export function ChatInterface({
                 </div>
               </div>
 
-              {/* Bottom info bar */}
-              <div className="flex items-center justify-between px-4 pb-3 pt-0">
-                <div className="flex items-center gap-3 text-xs text-gray-500">
-                  {currentAgent || selectedAgent ? (
-                    <>
-                      <span className="flex items-center gap-1.5">
-                        <div className="h-2 w-2 rounded-full bg-green-500 animate-pulse" />
-                        <span className="font-medium">Ready</span>
-                      </span>
-                      <Separator orientation="vertical" className="h-3" />
-                      <span>Press <kbd className="px-1.5 py-0.5 bg-gray-100 rounded text-[10px] font-semibold">Enter</kbd> to send</span>
-                    </>
-                  ) : (
-                    <span className="flex items-center gap-1.5 text-amber-600">
-                      <div className="h-2 w-2 rounded-full bg-amber-400" />
-                      <span className="font-medium">Waiting for agent selection</span>
-                    </span>
-                  )}
-                </div>
-
-                {/* Character counter for longer messages */}
-                {message.length > 100 && (
+              {/* Character counter for longer messages */}
+              {message.length > 100 && (
+                <div className="flex justify-end px-4 pb-3 pt-0">
                   <span className="text-xs text-gray-400 font-mono">
                     {message.length} chars
                   </span>
-                )}
-              </div>
+                </div>
+              )}
             </div>
           </div>
         </div>
