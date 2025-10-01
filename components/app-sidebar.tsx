@@ -321,7 +321,7 @@ export function AppSidebar() {
                           return (
                             <div
                               key={chat.session_id}
-                              className={`group relative p-2 rounded-md transition-all duration-200 cursor-pointer ${
+                              className={`chat-bubble-hover relative p-2 rounded-md transition-all duration-200 cursor-pointer ${
                                 isActive
                                   ? 'bg-gray-800 shadow-sm border border-white text-white'
                                   : 'bg-gray-800 hover:bg-gray-700 hover:shadow-sm border border-gray-800 hover:border-white text-white'
@@ -331,8 +331,8 @@ export function AppSidebar() {
                               <div className="flex items-start justify-between gap-1">
                                 <div className="flex-1 min-w-0 overflow-hidden">
                                   <div className="flex items-center space-x-1">
-                                    <h4 className={`font-normal text-xs truncate transition-colors duration-200 ${
-                                      isActive ? 'text-white' : 'text-white hover:text-yellow-400'
+                                    <h4 className={`chat-bubble-text font-normal text-xs truncate transition-colors duration-200 ${
+                                      isActive ? 'text-white' : 'text-white'
                                     }`}>
                                       {chat.title || `Chat ${chat.session_id}`}
                                     </h4>
@@ -344,7 +344,7 @@ export function AppSidebar() {
                                       <Button
                                         variant="ghost"
                                         size="sm"
-                                        className={`h-2.5 w-2.5 p-0 hover:text-red-600 hover:bg-red-900/50 opacity-0 group-hover:opacity-100 transition-opacity ${
+                                        className={`h-2.5 w-2.5 p-0 hover:text-red-600 hover:bg-red-900/50 opacity-0 hover:opacity-100 transition-opacity ${
                                           isActive ? 'text-gray-300' : 'text-gray-400'
                                         }`}
                                         onClick={(e) => e.stopPropagation()}

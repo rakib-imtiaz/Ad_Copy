@@ -756,3 +756,8 @@
 .chat-scroll::-webkit-scrollbar-thumb:hover {
   background: #374151;
 }
+
+/* Chat bubble hover effect */
+.chat-bubble-hover:hover .chat-bubble-text {
+  color: #fbbf24 !important; /* yellow-400 */
+}
