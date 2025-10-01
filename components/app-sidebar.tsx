@@ -331,8 +331,8 @@ export function AppSidebar() {
                               <div className="flex items-start justify-between gap-1">
                                 <div className="flex-1 min-w-0 overflow-hidden">
                                   <div className="flex items-center space-x-1">
-                                    <h4 className={`font-normal text-xs truncate ${
-                                      isActive ? 'text-white' : 'text-white'
+                                    <h4 className={`font-normal text-xs truncate transition-colors duration-200 ${
+                                      isActive ? 'text-white' : 'text-white hover:text-yellow-400'
                                     }`}>
                                       {chat.title || `Chat ${chat.session_id}`}
                                     </h4>
