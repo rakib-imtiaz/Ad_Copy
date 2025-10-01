@@ -3362,34 +3362,6 @@ export default function Dashboard() {
               </motion.div>
             </motion.div>
 
-            {/* Second Row - Chat */}
-            {currentChatSession && (
-              <motion.div 
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.4, duration: 0.5 }}
-                className="flex items-center"
-              >
-                <div className="flex items-center space-x-1.5 w-16">
-                  <div className="w-1.5 h-1.5 rounded-full bg-yellow-500 animate-pulse"></div>
-                  <span className="text-[10px] font-medium text-gray-500 uppercase tracking-wide">Chat</span>
-                </div>
-                <motion.div
-                  key={currentChatSession}
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ duration: 0.3 }}
-                  className="flex items-center space-x-1.5"
-                >
-                  <div className="w-4 h-4 rounded-full bg-yellow-500 flex items-center justify-center">
-                    <MessageSquare className="w-2.5 h-2.5 text-black" />
-                  </div>
-                  <span className="text-xs font-bold text-black">
-                    {chatHistory.find(chat => chat.session_id === currentChatSession)?.title || "Chat Session"}
-                  </span>
-                </motion.div>
-              </motion.div>
-            )}
           </div>
         </motion.div>
 
