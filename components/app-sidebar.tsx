@@ -239,55 +239,54 @@ export function AppSidebar() {
         )}
       </SidebarHeader>
 
-      <SidebarContent className={`flex flex-col bg-black h-full overflow-hidden ${state === 'expanded' ? 'px-2 py-3' : 'px-0 py-3'}`}>
+      <SidebarContent className={`flex flex-col bg-black h-full overflow-hidden ${state === 'expanded' ? 'px-3 py-4' : 'px-0 py-4'}`}>
+        {/* New Chat Button - Top Section */}
+        <div className={`mb-3 px-1 flex justify-start`}>
+          <Button
+            variant="outline"
+            onClick={handleNewChatClick}
+            className={`bg-black border-transparent text-white hover:bg-black hover:text-white transition-all duration-200 group ${
+              state === 'expanded'
+                ? 'w-1/2 h-7 px-2 flex items-center gap-1'
+                : 'w-7 h-7 p-0'
+            }`}
+          >
+            <Plus className={`${state === 'expanded' ? 'h-2.5 w-2.5 group-hover:text-yellow-400 transition-colors duration-200' : 'h-2.5 w-2.5'}`} />
+            {state === 'expanded' && (
+              <span className="text-xs font-medium group-hover:text-yellow-400 transition-colors duration-200">New chat</span>
+            )}
+          </Button>
+        </div>
+
         {/* Chat History Section - Fixed height with scroll */}
         <SidebarGroup className="flex-1 min-h-0">
             {state === 'expanded' ? (
               <>
-                <div className="flex items-center justify-between px-1 mb-2">
+                <div className="flex items-center justify-between px-1 mb-4">
                   <SidebarGroupLabel className="text-white font-medium text-xs flex items-center gap-1">
                     <MessageSquare className="h-3 w-3 text-white" />
                     Chat History
                   </SidebarGroupLabel>
-                  <div className="flex items-center space-x-1">
-                    {onRefreshChatHistory && (
-                      <TooltipProvider>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={onRefreshChatHistory}
-                              disabled={isLoadingChatHistory}
-                              className="h-5 w-5 p-0 text-white hover:text-white hover:bg-gray-600 rounded-md"
-                            >
-                              <RefreshCw className={`h-2.5 w-2.5 ${isLoadingChatHistory ? 'animate-spin' : ''}`} />
-                            </Button>
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            <p>Refresh chat history</p>
-                          </TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>
-                    )}
+                  {onRefreshChatHistory && (
                     <TooltipProvider>
                       <Tooltip>
                         <TooltipTrigger asChild>
                           <Button
                             variant="ghost"
                             size="sm"
-                            onClick={handleNewChatClick}
-                            className="h-5 w-5 p-0 text-white hover:text-white hover:bg-gray-600 rounded-md"
+                            onClick={onRefreshChatHistory}
+                            disabled={isLoadingChatHistory}
+                            className="h-6 w-6 p-0 text-white hover:text-white hover:bg-gray-700 rounded-md"
                           >
-                            <Plus className="h-2.5 w-2.5" />
+                            <RefreshCw className={`h-3 w-3 ${isLoadingChatHistory ? 'animate-spin' : ''}`} />
                           </Button>
                         </TooltipTrigger>
                         <TooltipContent>
-                          <p>New conversation</p>
+                          <p>Refresh chat history</p>
                         </TooltipContent>
                       </Tooltip>
                     </TooltipProvider>
-                  </div>
+                  )}
                 </div>
                 <SidebarGroupContent className="flex-1 overflow-hidden">
                   <div className="px-1 w-full h-full overflow-hidden">
@@ -324,8 +323,8 @@ export function AppSidebar() {
                               key={chat.session_id}
                               className={`group relative p-2 rounded-md transition-all duration-200 cursor-pointer ${
                                 isActive
-                                  ? 'bg-slate-700 shadow-sm border border-yellow-400 text-white'
-                                  : 'bg-slate-700 hover:bg-slate-600 hover:shadow-sm border border-slate-700 hover:border-yellow-400 text-white'
+                                  ? 'bg-gray-800 shadow-sm border border-yellow-400 text-white'
+                                  : 'bg-gray-800 hover:bg-gray-700 hover:shadow-sm border border-gray-800 hover:border-yellow-400 text-white'
                               } ${isDeleting ? 'opacity-50 pointer-events-none' : ''}`}
                               onClick={() => !isDeleting && onLoadChatSession?.(chat.session_id)}
                             >
@@ -417,8 +416,8 @@ export function AppSidebar() {
                                   size="sm"
                                   className={`w-full h-8 p-0 rounded-lg transition-all justify-center ${
                                     isActive
-                                      ? 'bg-slate-700 hover:bg-slate-600 text-white border border-yellow-400'
-                                      : 'hover:bg-slate-600 text-white'
+                                      ? 'bg-gray-800 hover:bg-gray-700 text-white border border-yellow-400'
+                                      : 'hover:bg-gray-700 text-white'
                                   }`}
                                   onClick={() => onLoadChatSession?.(chat.session_id)}
                                 >
@@ -454,7 +453,7 @@ export function AppSidebar() {
                               <Button
                                 variant="ghost"
                                 size="sm"
-                                className="w-full h-8 p-0 hover:bg-slate-600 rounded-lg justify-center text-white"
+                                className="w-full h-8 p-0 hover:bg-gray-700 rounded-lg justify-center text-white"
                                 onClick={handleNewChatClick}
                               >
                                 <Plus className="h-3 w-3" />
@@ -462,7 +461,7 @@ export function AppSidebar() {
                             </SidebarMenuButton>
                           </TooltipTrigger>
                         <TooltipContent side="right">
-                          <p>New conversation</p>
+                          <p>New Chat</p>
                         </TooltipContent>
                       </Tooltip>
                     </TooltipProvider>
@@ -492,7 +491,7 @@ export function AppSidebar() {
 
         {/* Knowledge Base & Settings Section - Fixed at bottom */}
         <div className="mt-auto space-y-2 pt-2">
-           <Separator className={`${state === 'expanded' ? 'mx-2' : 'mx-0'} border-gray-800`} />
+           <Separator className={`${state === 'expanded' ? 'mx-3' : 'mx-0'} border-gray-800`} />
           <SidebarMenu className={state === 'expanded' ? 'space-y-1' : 'flex flex-col items-center space-y-1'}>
             {/* Knowledge Base Button */}
             <SidebarMenuItem>
@@ -502,10 +501,10 @@ export function AppSidebar() {
               >
                   <Button
                     variant="ghost"
-                    className={`w-full h-8 rounded-lg transition-all duration-200 overflow-hidden group ${
+                    className={`w-full h-8 rounded-lg transition-all duration-200 overflow-hidden group border border-transparent hover:border-yellow-400 hover:border-2 hover:bg-gray-800 ${
                       state === 'expanded'
-                       ? `justify-start px-2 hover:bg-gray-100 text-white hover:text-white`
-                       : `justify-center p-0 hover:bg-gray-100 text-white hover:text-white`
+                       ? `justify-start px-2 text-white hover:text-white`
+                       : `justify-center p-0 text-white hover:text-white`
                     }`}
                     size="sm"
                     onClick={() => handleNavigation('/knowledge-base')}
@@ -528,7 +527,7 @@ export function AppSidebar() {
               >
                 <Button
                   variant="ghost"
-                  className={`w-full h-8 rounded-lg hover:bg-gray-100 text-white hover:text-white overflow-hidden ${
+                  className={`w-full h-8 rounded-lg border border-transparent hover:border-yellow-400 hover:border-2 hover:bg-gray-800 text-white hover:text-white overflow-hidden ${
                     state === 'expanded'
                       ? 'justify-start px-2'
                       : 'justify-center p-0'

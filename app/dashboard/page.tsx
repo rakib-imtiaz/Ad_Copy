@@ -3581,15 +3581,6 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* Mobile New Chat FAB */}
-      <div className="lg:hidden fixed bottom-6 right-6 z-50">
-        <Button 
-          onClick={startNewConversation}
-          className="h-16 w-16 rounded-full bg-gradient-to-r from-[#1ABC9C] to-emerald-500 hover:from-[#1ABC9C]/90 hover:to-emerald-500/90 shadow-xl hover:shadow-2xl transition-all duration-200"
-        >
-          <Plus className="h-6 w-6 text-white" />
-        </Button>
-      </div>
 
       {/* Credit Limit Popup */}
       {showCreditPopup && (
