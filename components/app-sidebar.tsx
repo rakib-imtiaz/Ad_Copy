@@ -222,19 +222,19 @@ export function AppSidebar() {
              <div className="flex-1 min-w-0">
                <LoopingTypewriter 
                  texts={["Copy Ready", "AI Ad Copy Platform"]}
-                 className="text-xs font-medium text-yellow-400 truncate"
+                 className="text-xs font-medium text-white truncate"
                  typingSpeed={80}
                  pauseDuration={1500}
                />
              </div>
-            <SidebarTrigger className="h-5 w-5 rounded-md hover:bg-gray-800 transition-colors text-white hover:text-yellow-400 [&>svg]:text-white [&>svg]:hover:text-yellow-400 [&[data-sidebar=trigger]]:text-white [&[data-sidebar=trigger]]:hover:text-yellow-400" />
+            <SidebarTrigger className="h-5 w-5 rounded-md hover:bg-gray-800 transition-colors text-white hover:text-white [&>svg]:text-white [&>svg]:hover:text-white [&[data-sidebar=trigger]]:text-white [&[data-sidebar=trigger]]:hover:text-white" />
           </div>
         ) : (
           <div className="flex flex-col items-center gap-1">
             <div className="flex h-5 w-5 items-center justify-center rounded-md bg-gradient-to-br from-yellow-400 to-yellow-600 shadow-sm">
               <span className="text-xs font-black text-black">C</span>
             </div>
-            <SidebarTrigger className="h-4 w-4 rounded-md hover:bg-gray-800 transition-colors text-white hover:text-yellow-400 [&>svg]:text-white [&>svg]:hover:text-yellow-400 [&[data-sidebar=trigger]]:text-white [&[data-sidebar=trigger]]:hover:text-yellow-400" />
+            <SidebarTrigger className="h-4 w-4 rounded-md hover:bg-gray-800 transition-colors text-white hover:text-white [&>svg]:text-white [&>svg]:hover:text-white [&[data-sidebar=trigger]]:text-white [&[data-sidebar=trigger]]:hover:text-white" />
           </div>
         )}
       </SidebarHeader>
@@ -251,9 +251,9 @@ export function AppSidebar() {
                 : 'w-7 h-7 p-0'
             }`}
           >
-            <Plus className={`${state === 'expanded' ? 'h-2.5 w-2.5 group-hover:text-yellow-400 transition-colors duration-200' : 'h-2.5 w-2.5'}`} />
+            <Plus className={`${state === 'expanded' ? 'h-2.5 w-2.5 group-hover:text-white transition-colors duration-200' : 'h-2.5 w-2.5'}`} />
             {state === 'expanded' && (
-              <span className="text-xs font-medium group-hover:text-yellow-400 transition-colors duration-200">New chat</span>
+              <span className="text-xs font-medium group-hover:text-white transition-colors duration-200">New chat</span>
             )}
           </Button>
         </div>
@@ -295,12 +295,12 @@ export function AppSidebar() {
                       style={{ 
                         maxHeight: 'calc(100vh - 300px)',
                         scrollbarWidth: 'thin',
-                        scrollbarColor: '#facc15 #000000'
+                        scrollbarColor: '#ffffff #000000'
                       }}
                     >
                       {isLoadingChatHistory ? (
                         <div className="flex items-center justify-center py-6">
-                          <Loader2 className="h-4 w-4 animate-spin text-yellow-400" />
+                          <Loader2 className="h-4 w-4 animate-spin text-white" />
                           <span className="ml-2 text-xs text-white">Loading conversations...</span>
                         </div>
                       ) : chatHistory.length > 0 ? (
@@ -323,8 +323,8 @@ export function AppSidebar() {
                               key={chat.session_id}
                               className={`group relative p-2 rounded-md transition-all duration-200 cursor-pointer ${
                                 isActive
-                                  ? 'bg-gray-800 shadow-sm border border-yellow-400 text-white'
-                                  : 'bg-gray-800 hover:bg-gray-700 hover:shadow-sm border border-gray-800 hover:border-yellow-400 text-white'
+                                  ? 'bg-gray-800 shadow-sm border border-white text-white'
+                                  : 'bg-gray-800 hover:bg-gray-700 hover:shadow-sm border border-gray-800 hover:border-white text-white'
                               } ${isDeleting ? 'opacity-50 pointer-events-none' : ''}`}
                               onClick={() => !isDeleting && onLoadChatSession?.(chat.session_id)}
                             >
@@ -382,8 +382,8 @@ export function AppSidebar() {
                         })
                       ) : (
                         <div className="text-center py-6">
-                          <div className="w-10 h-10 mx-auto mb-2 bg-gray-800 border border-yellow-500 rounded-full flex items-center justify-center">
-                            <MessageSquare className="h-5 w-5 text-yellow-400" />
+                          <div className="w-10 h-10 mx-auto mb-2 bg-gray-800 border border-white rounded-full flex items-center justify-center">
+                            <MessageSquare className="h-5 w-5 text-white" />
                           </div>
                           <p className="text-xs text-white mb-1">No conversations yet</p>
                           <p className="text-xs text-gray-300">Start a new chat to begin</p>
@@ -416,7 +416,7 @@ export function AppSidebar() {
                                   size="sm"
                                   className={`w-full h-8 p-0 rounded-lg transition-all justify-center ${
                                     isActive
-                                      ? 'bg-gray-800 hover:bg-gray-700 text-white border border-yellow-400'
+                                      ? 'bg-gray-800 hover:bg-gray-700 text-white border border-white'
                                       : 'hover:bg-gray-700 text-white'
                                   }`}
                                   onClick={() => onLoadChatSession?.(chat.session_id)}
@@ -501,7 +501,7 @@ export function AppSidebar() {
               >
                   <Button
                     variant="ghost"
-                    className={`w-full h-8 rounded-lg transition-all duration-200 overflow-hidden group border border-transparent hover:border-yellow-400 hover:border-2 hover:bg-gray-800 ${
+                    className={`w-full h-8 rounded-lg transition-all duration-200 overflow-hidden group border border-transparent hover:border-white hover:border-2 hover:bg-gray-800 ${
                       state === 'expanded'
                        ? `justify-start px-2 text-white hover:text-white`
                        : `justify-center p-0 text-white hover:text-white`
@@ -527,7 +527,7 @@ export function AppSidebar() {
               >
                 <Button
                   variant="ghost"
-                  className={`w-full h-8 rounded-lg border border-transparent hover:border-yellow-400 hover:border-2 hover:bg-gray-800 text-white hover:text-white overflow-hidden ${
+                  className={`w-full h-8 rounded-lg border border-transparent hover:border-white hover:border-2 hover:bg-gray-800 text-white hover:text-white overflow-hidden ${
                     state === 'expanded'
                       ? 'justify-start px-2'
                       : 'justify-center p-0'
@@ -550,7 +550,7 @@ export function AppSidebar() {
             {state === 'expanded' ? (
               <div className="flex items-center gap-1 min-w-0">
                 <Avatar className="h-5 w-5">
-                  <AvatarFallback className="bg-gradient-to-br from-yellow-400 to-yellow-600 text-black font-black text-xs">
+                  <AvatarFallback className="bg-white text-black font-black text-xs">
                     {user?.name ? user.name.charAt(0).toUpperCase() : 'U'}
                   </AvatarFallback>
                 </Avatar>
@@ -575,7 +575,7 @@ export function AppSidebar() {
             ) : (
               <div className="flex justify-center">
                 <Avatar className="h-5 w-5">
-                  <AvatarFallback className="bg-gradient-to-br from-yellow-400 to-yellow-600 text-black font-black text-xs">
+                  <AvatarFallback className="bg-white text-black font-black text-xs">
                     {user?.name ? user.name.charAt(0).toUpperCase() : 'U'}
                   </AvatarFallback>
                 </Avatar>
