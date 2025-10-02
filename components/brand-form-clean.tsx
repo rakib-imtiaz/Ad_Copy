@@ -32,9 +32,6 @@ interface BrandFormData {
     tonePersonality: {
       style: string[]
     }
-    examplePhrases: string[]
-    brandPowerWords: string[]
-    thingsToAvoid: string[]
   }
   targetAudience: {
     idealCustomerProfile: {
@@ -57,14 +54,7 @@ interface BrandFormData {
       facebook: string
       tiktok: string
     }
-    testimonialsCaseStudies: {
-      ecommerce: string[]
-      financialServices: string[]
-      entertainment: string[]
-      coachesConsultants: string[]
-      brickMortar: string[]
-      others: string[]
-    }
+    testimonialsCaseStudies: string[]
   }
   // Additional fields used in the form
   productName: string
@@ -92,12 +82,9 @@ const defaultFormData: BrandFormData = {
     },
     businessModelType: "",
     uniqueSellingProposition: "",
-    tonePersonality: {
-      style: [""]
-    },
-    examplePhrases: [""],
-    brandPowerWords: [""],
-    thingsToAvoid: [""]
+      tonePersonality: {
+        style: [""]
+      }
   },
   targetAudience: {
     idealCustomerProfile: {
@@ -122,14 +109,7 @@ const defaultFormData: BrandFormData = {
       facebook: "",
       tiktok: ""
     },
-    testimonialsCaseStudies: {
-      ecommerce: [""],
-      financialServices: [""],
-      entertainment: [""],
-      coachesConsultants: [""],
-      brickMortar: [""],
-      others: [""]
-    }
+    testimonialsCaseStudies: [""]
   },
   // Additional fields
   productName: "",
@@ -256,9 +236,6 @@ export function BrandFormClean({ onSuccess }: BrandFormProps) {
         }
       }
       
-      transformed.brandIdentity.examplePhrases = brandData['Example Phrases'] || ['']
-      transformed.brandIdentity.brandPowerWords = brandData['Brand Power Words/Phrases'] || ['']
-      transformed.brandIdentity.thingsToAvoid = brandData['Things to Avoid'] || ['']
     }
 
     // Transform Target Audience
@@ -314,14 +291,17 @@ export function BrandFormClean({ onSuccess }: BrandFormProps) {
       
       if (assetsData['Testimonials & Case Studies']) {
         const testimonialsData = assetsData['Testimonials & Case Studies']
-        transformed.clientAssets.testimonialsCaseStudies = {
-          ecommerce: testimonialsData['Ecommerce'] || [''],
-          financialServices: testimonialsData['Financial Services'] || [''],
-          entertainment: testimonialsData['Entertainment'] || [''],
-          coachesConsultants: testimonialsData['Coaches / Consultants'] || [''],
-          brickMortar: testimonialsData['Brick & Mortar'] || [''],
-          others: testimonialsData['Others'] || ['']
-        }
+        // Combine all testimonials from different categories into one array
+        const allTestimonials = [
+          ...(testimonialsData['Ecommerce'] || []),
+          ...(testimonialsData['Financial Services'] || []),
+          ...(testimonialsData['Entertainment'] || []),
+          ...(testimonialsData['Coaches / Consultants'] || []),
+          ...(testimonialsData['Brick & Mortar'] || []),
+          ...(testimonialsData['Others'] || [])
+        ].filter(t => t.trim() !== '')
+        
+        transformed.clientAssets.testimonialsCaseStudies = allTestimonials.length > 0 ? allTestimonials : ['']
       }
     }
 
@@ -486,9 +466,6 @@ export function BrandFormClean({ onSuccess }: BrandFormProps) {
             "Tone & Personality": {
               "Style": data.brandIdentity?.tonePersonality?.style?.filter((s: string) => s.trim() !== '') || []
             },
-            "Example Phrases": data.brandIdentity?.examplePhrases?.filter((p: string) => p.trim() !== '') || [],
-            "Brand Power Words/Phrases": data.brandIdentity?.brandPowerWords?.filter((w: string) => w.trim() !== '') || [],
-            "Things to Avoid": data.brandIdentity?.thingsToAvoid?.filter((t: string) => t.trim() !== '') || []
           },
           "2. Target Audience": {
             "Ideal Customer Profile(s)": {
@@ -531,14 +508,7 @@ export function BrandFormClean({ onSuccess }: BrandFormProps) {
               "Facebook": data.clientAssets?.socialMediaProfiles?.facebook || null,
               "TikTok": data.clientAssets?.socialMediaProfiles?.tiktok || null
             },
-            "Testimonials & Case Studies": {
-              "Ecommerce": data.clientAssets?.testimonialsCaseStudies?.ecommerce?.filter((t: string) => t.trim() !== '') || [],
-              "Financial Services": data.clientAssets?.testimonialsCaseStudies?.financialServices?.filter((t: string) => t.trim() !== '') || [],
-              "Entertainment": data.clientAssets?.testimonialsCaseStudies?.entertainment?.filter((t: string) => t.trim() !== '') || [],
-              "Coaches / Consultants": data.clientAssets?.testimonialsCaseStudies?.coachesConsultants?.filter((t: string) => t.trim() !== '') || [],
-              "Brick & Mortar": data.clientAssets?.testimonialsCaseStudies?.brickMortar?.filter((t: string) => t.trim() !== '') || [],
-              "Others": data.testimonial && data.testimonial.trim() !== '' ? [data.testimonial] : []
-            }
+            "Testimonials & Case Studies": data.clientAssets?.testimonialsCaseStudies?.filter((t: string) => t.trim() !== '') || []
           },
           "6. Other Information": data.otherInformation && data.otherInformation.trim() !== '' ? data.otherInformation : null
         }
@@ -633,9 +603,6 @@ export function BrandFormClean({ onSuccess }: BrandFormProps) {
             "Tone & Personality": {
               "Style": data.brandIdentity?.tonePersonality?.style?.filter((s: string) => s.trim() !== '') || []
             },
-            "Example Phrases": data.brandIdentity?.examplePhrases?.filter((p: string) => p.trim() !== '') || [],
-            "Brand Power Words/Phrases": data.brandIdentity?.brandPowerWords?.filter((w: string) => w.trim() !== '') || [],
-            "Things to Avoid": data.brandIdentity?.thingsToAvoid?.filter((t: string) => t.trim() !== '') || []
           },
           "2. Target Audience": {
             "Ideal Customer Profile(s)": {
@@ -678,14 +645,7 @@ export function BrandFormClean({ onSuccess }: BrandFormProps) {
               "Facebook": data.clientAssets?.socialMediaProfiles?.facebook || null,
               "TikTok": data.clientAssets?.socialMediaProfiles?.tiktok || null
             },
-            "Testimonials & Case Studies": {
-              "Ecommerce": data.clientAssets?.testimonialsCaseStudies?.ecommerce?.filter((t: string) => t.trim() !== '') || [],
-              "Financial Services": data.clientAssets?.testimonialsCaseStudies?.financialServices?.filter((t: string) => t.trim() !== '') || [],
-              "Entertainment": data.clientAssets?.testimonialsCaseStudies?.entertainment?.filter((t: string) => t.trim() !== '') || [],
-              "Coaches / Consultants": data.clientAssets?.testimonialsCaseStudies?.coachesConsultants?.filter((t: string) => t.trim() !== '') || [],
-              "Brick & Mortar": data.clientAssets?.testimonialsCaseStudies?.brickMortar?.filter((t: string) => t.trim() !== '') || [],
-              "Others": data.testimonial && data.testimonial.trim() !== '' ? [data.testimonial] : []
-            }
+            "Testimonials & Case Studies": data.clientAssets?.testimonialsCaseStudies?.filter((t: string) => t.trim() !== '') || []
           },
           "6. Other Information": data.otherInformation && data.otherInformation.trim() !== '' ? data.otherInformation : null
         }
@@ -1089,137 +1049,6 @@ export function BrandFormClean({ onSuccess }: BrandFormProps) {
                   </div>
                 </div>
 
-                {/* Example Phrases */}
-                <div className="space-y-3">
-                  <label className="text-sm font-medium">Example Phrases</label>
-                  {formData.brandIdentity.examplePhrases.map((phrase, index) => (
-                    <div key={index} className="flex gap-2">
-                      <Input
-                        type="text"
-                        value={phrase}
-                        onChange={(e) => updateArrayField(['brandIdentity', 'examplePhrases'], index, e.target.value)}
-                        placeholder="e.g., 'Innovating for tomorrow', 'Your success is our mission'"
-                        className="flex-1"
-                      />
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        onClick={(e) => {
-                          e.preventDefault()
-                          e.stopPropagation()
-                          removeArrayItem(['brandIdentity', 'examplePhrases'], index)
-                        }}
-                        className="text-destructive hover:text-destructive"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
-                    </div>
-                  ))}
-                  <div className="flex justify-center">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={(e) => {
-                        e.preventDefault()
-                        e.stopPropagation()
-                        addArrayItem(['brandIdentity', 'examplePhrases'])
-                      }}
-                      className="bg-gradient-to-r from-yellow-400 to-yellow-600 hover:from-yellow-500 hover:to-yellow-700 text-black border-yellow-500 shadow-sm"
-                    >
-                      <Plus className="w-4 h-4 mr-2" />
-                      Add Example Phrase
-                    </Button>
-                  </div>
-                </div>
-
-                {/* Brand Power Words */}
-                <div className="space-y-3">
-                  <label className="text-sm font-medium">Brand Power Words</label>
-                  {formData.brandIdentity.brandPowerWords.map((word, index) => (
-                    <div key={index} className="flex gap-2">
-                      <Input
-                        type="text"
-                        value={word}
-                        onChange={(e) => updateArrayField(['brandIdentity', 'brandPowerWords'], index, e.target.value)}
-                        placeholder="e.g., innovative, reliable, cutting-edge, transformative"
-                        className="flex-1"
-                      />
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        onClick={(e) => {
-                          e.preventDefault()
-                          e.stopPropagation()
-                          removeArrayItem(['brandIdentity', 'brandPowerWords'], index)
-                        }}
-                        className="text-destructive hover:text-destructive"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
-                    </div>
-                  ))}
-                  <div className="flex justify-center">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={(e) => {
-                        e.preventDefault()
-                        e.stopPropagation()
-                        addArrayItem(['brandIdentity', 'brandPowerWords'])
-                      }}
-                      className="bg-gradient-to-r from-yellow-400 to-yellow-600 hover:from-yellow-500 hover:to-yellow-700 text-black border-yellow-500 shadow-sm"
-                    >
-                      <Plus className="w-4 h-4 mr-2" />
-                      Add Power Word
-                    </Button>
-                  </div>
-                </div>
-
-                {/* Things to Avoid */}
-                <div className="space-y-3">
-                  <label className="text-sm font-medium">Things to Avoid</label>
-                  {formData.brandIdentity.thingsToAvoid.map((thing, index) => (
-                    <div key={index} className="flex gap-2">
-                      <Input
-                        type="text"
-                        value={thing}
-                        onChange={(e) => updateArrayField(['brandIdentity', 'thingsToAvoid'], index, e.target.value)}
-                        placeholder="e.g., overly technical jargon, aggressive sales language"
-                        className="flex-1"
-                      />
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        onClick={(e) => {
-                          e.preventDefault()
-                          e.stopPropagation()
-                          removeArrayItem(['brandIdentity', 'thingsToAvoid'], index)
-                        }}
-                        className="text-destructive hover:text-destructive"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
-                    </div>
-                  ))}
-                  <div className="flex justify-center">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={(e) => {
-                        e.preventDefault()
-                        e.stopPropagation()
-                        addArrayItem(['brandIdentity', 'thingsToAvoid'])
-                      }}
-                      className="bg-gradient-to-r from-yellow-400 to-yellow-600 hover:from-yellow-500 hover:to-yellow-700 text-black border-yellow-500 shadow-sm"
-                    >
-                      <Plus className="w-4 h-4 mr-2" />
-                      Add Thing to Avoid
-                    </Button>
-                  </div>
-                </div>
 
               </CardContent>
             </Card>
@@ -1735,20 +1564,20 @@ export function BrandFormClean({ onSuccess }: BrandFormProps) {
                   <span className="text-black text-xl font-bold">9</span>
                 </div>
                 <CardTitle className="text-2xl font-bold text-slate-900">Testimonials & Case Studies</CardTitle>
-                <CardDescription className="text-slate-600">Share customer testimonials by industry category</CardDescription>
+                <CardDescription className="text-slate-600">Share customer testimonials and case studies</CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
                 
-                {/* Ecommerce Testimonials */}
+                {/* Testimonials & Case Studies */}
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-3">Ecommerce Testimonials</label>
-                  {formData.clientAssets.testimonialsCaseStudies.ecommerce.map((testimonial, index) => (
+                  <label className="block text-sm font-medium text-slate-700 mb-3">Testimonials & Case Studies</label>
+                  {formData.clientAssets.testimonialsCaseStudies.map((testimonial, index) => (
                     <div key={index} className="flex gap-2 mb-3">
                       <Textarea
                         value={testimonial}
-                        onChange={(e) => updateArrayField(['clientAssets', 'testimonialsCaseStudies', 'ecommerce'], index, e.target.value)}
+                        onChange={(e) => updateArrayField(['clientAssets', 'testimonialsCaseStudies'], index, e.target.value)}
                         rows={3}
-                        placeholder="Share testimonials from ecommerce customers..."
+                        placeholder="Share testimonials and case studies from your customers..."
                         className="flex-1 focus:ring-purple-500 focus:border-purple-500"
                       />
                       <Button
@@ -1758,7 +1587,7 @@ export function BrandFormClean({ onSuccess }: BrandFormProps) {
                         onClick={(e) => {
                           e.preventDefault()
                           e.stopPropagation()
-                          removeArrayItem(['clientAssets', 'testimonialsCaseStudies', 'ecommerce'], index)
+                          removeArrayItem(['clientAssets', 'testimonialsCaseStudies'], index)
                         }}
                         className="text-red-600 border-red-300 hover:bg-red-50 self-start mt-2"
                       >
@@ -1773,188 +1602,12 @@ export function BrandFormClean({ onSuccess }: BrandFormProps) {
                       onClick={(e) => {
                         e.preventDefault()
                         e.stopPropagation()
-                        addArrayItem(['clientAssets', 'testimonialsCaseStudies', 'ecommerce'])
+                        addArrayItem(['clientAssets', 'testimonialsCaseStudies'])
                       }}
                       className="bg-gradient-to-r from-yellow-400 to-yellow-600 hover:from-yellow-500 hover:to-yellow-700 text-black border-yellow-500 shadow-sm"
                     >
                       <Plus className="w-4 h-4 mr-2" />
-                      Add Ecommerce Testimonial
-                    </Button>
-                  </div>
-                </div>
-
-                {/* Financial Services Testimonials */}
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-3">Financial Services Testimonials</label>
-                  {formData.clientAssets.testimonialsCaseStudies.financialServices.map((testimonial, index) => (
-                    <div key={index} className="flex gap-2 mb-3">
-                      <Textarea
-                        value={testimonial}
-                        onChange={(e) => updateArrayField(['clientAssets', 'testimonialsCaseStudies', 'financialServices'], index, e.target.value)}
-                        rows={3}
-                        placeholder="Share testimonials from financial services clients..."
-                        className="flex-1 focus:ring-purple-500 focus:border-purple-500"
-                      />
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        onClick={(e) => {
-                          e.preventDefault()
-                          e.stopPropagation()
-                          removeArrayItem(['clientAssets', 'testimonialsCaseStudies', 'financialServices'], index)
-                        }}
-                        className="text-red-600 border-red-300 hover:bg-red-50 self-start mt-2"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
-                    </div>
-                  ))}
-                  <div className="flex justify-center">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={(e) => {
-                        e.preventDefault()
-                        e.stopPropagation()
-                        addArrayItem(['clientAssets', 'testimonialsCaseStudies', 'financialServices'])
-                      }}
-                      className="bg-gradient-to-r from-yellow-400 to-yellow-600 hover:from-yellow-500 hover:to-yellow-700 text-black border-yellow-500 shadow-sm"
-                    >
-                      <Plus className="w-4 h-4 mr-2" />
-                      Add Financial Services Testimonial
-                    </Button>
-                  </div>
-                </div>
-
-                {/* Entertainment Testimonials */}
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-3">Entertainment Testimonials</label>
-                  {formData.clientAssets.testimonialsCaseStudies.entertainment.map((testimonial, index) => (
-                    <div key={index} className="flex gap-2 mb-3">
-                      <Textarea
-                        value={testimonial}
-                        onChange={(e) => updateArrayField(['clientAssets', 'testimonialsCaseStudies', 'entertainment'], index, e.target.value)}
-                        rows={3}
-                        placeholder="Share testimonials from entertainment industry clients..."
-                        className="flex-1 focus:ring-purple-500 focus:border-purple-500"
-                      />
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        onClick={(e) => {
-                          e.preventDefault()
-                          e.stopPropagation()
-                          removeArrayItem(['clientAssets', 'testimonialsCaseStudies', 'entertainment'], index)
-                        }}
-                        className="text-red-600 border-red-300 hover:bg-red-50 self-start mt-2"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
-                    </div>
-                  ))}
-                  <div className="flex justify-center">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={(e) => {
-                        e.preventDefault()
-                        e.stopPropagation()
-                        addArrayItem(['clientAssets', 'testimonialsCaseStudies', 'entertainment'])
-                      }}
-                      className="bg-gradient-to-r from-yellow-400 to-yellow-600 hover:from-yellow-500 hover:to-yellow-700 text-black border-yellow-500 shadow-sm"
-                    >
-                      <Plus className="w-4 h-4 mr-2" />
-                      Add Entertainment Testimonial
-                    </Button>
-                  </div>
-                </div>
-
-                {/* Coaches/Consultants Testimonials */}
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-3">Coaches & Consultants Testimonials</label>
-                  {formData.clientAssets.testimonialsCaseStudies.coachesConsultants.map((testimonial, index) => (
-                    <div key={index} className="flex gap-2 mb-3">
-                      <Textarea
-                        value={testimonial}
-                        onChange={(e) => updateArrayField(['clientAssets', 'testimonialsCaseStudies', 'coachesConsultants'], index, e.target.value)}
-                        rows={3}
-                        placeholder="Share testimonials from coaches and consultants..."
-                        className="flex-1 focus:ring-purple-500 focus:border-purple-500"
-                      />
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        onClick={(e) => {
-                          e.preventDefault()
-                          e.stopPropagation()
-                          removeArrayItem(['clientAssets', 'testimonialsCaseStudies', 'coachesConsultants'], index)
-                        }}
-                        className="text-red-600 border-red-300 hover:bg-red-50 self-start mt-2"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
-                    </div>
-                  ))}
-                  <div className="flex justify-center">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={(e) => {
-                        e.preventDefault()
-                        e.stopPropagation()
-                        addArrayItem(['clientAssets', 'testimonialsCaseStudies', 'coachesConsultants'])
-                      }}
-                      className="bg-gradient-to-r from-yellow-400 to-yellow-600 hover:from-yellow-500 hover:to-yellow-700 text-black border-yellow-500 shadow-sm"
-                    >
-                      <Plus className="w-4 h-4 mr-2" />
-                      Add Coach/Consultant Testimonial
-                    </Button>
-                  </div>
-                </div>
-
-                {/* Brick & Mortar Testimonials */}
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-3">Brick & Mortar Testimonials</label>
-                  {formData.clientAssets.testimonialsCaseStudies.brickMortar.map((testimonial, index) => (
-                    <div key={index} className="flex gap-2 mb-3">
-                      <Textarea
-                        value={testimonial}
-                        onChange={(e) => updateArrayField(['clientAssets', 'testimonialsCaseStudies', 'brickMortar'], index, e.target.value)}
-                        rows={3}
-                        placeholder="Share testimonials from brick & mortar business clients..."
-                        className="flex-1 focus:ring-purple-500 focus:border-purple-500"
-                      />
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        onClick={(e) => {
-                          e.preventDefault()
-                          e.stopPropagation()
-                          removeArrayItem(['clientAssets', 'testimonialsCaseStudies', 'brickMortar'], index)
-                        }}
-                        className="text-red-600 border-red-300 hover:bg-red-50 self-start mt-2"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
-                    </div>
-                  ))}
-                  <div className="flex justify-center">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={(e) => {
-                        e.preventDefault()
-                        e.stopPropagation()
-                        addArrayItem(['clientAssets', 'testimonialsCaseStudies', 'brickMortar'])
-                      }}
-                      className="bg-gradient-to-r from-yellow-400 to-yellow-600 hover:from-yellow-500 hover:to-yellow-700 text-black border-yellow-500 shadow-sm"
-                    >
-                      <Plus className="w-4 h-4 mr-2" />
-                      Add Brick & Mortar Testimonial
+                      Add Testimonial
                     </Button>
                   </div>
                 </div>

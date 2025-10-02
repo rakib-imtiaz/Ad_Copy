@@ -22,9 +22,6 @@ export interface KnowledgeBaseResponse {
       tonePersonality: {
         style: string[]
       }
-      examplePhrases: string[]
-      brandPowerWords: string[]
-      thingsToAvoid: string[]
     }
     
     // Target Audience
@@ -53,13 +50,7 @@ export interface KnowledgeBaseResponse {
         facebook: string
         tiktok: string
       }
-      testimonialsCaseStudies: {
-        ecommerce: string[]
-        financialServices: string[]
-        entertainment: string[]
-        coachesConsultants: string[]
-        brickMortar: string[]
-      }
+      testimonialsCaseStudies: string[]
     }
   }
 }
@@ -91,9 +82,6 @@ export interface KnowledgeBase {
     tonePersonality: {
       style: string[]
     }
-    examplePhrases: string[]
-    brandPowerWords: string[]
-    thingsToAvoid: string[]
   }
   
   // Target Audience
@@ -122,14 +110,7 @@ export interface KnowledgeBase {
       facebook: string
       tiktok: string
     }
-    testimonialsCaseStudies: {
-      ecommerce: string[]
-      financialServices: string[]
-      entertainment: string[]
-      coachesConsultants: string[]
-      brickMortar: string[]
-      others: string[]
-    }
+    testimonialsCaseStudies: string[]
   }
   
   // Other Information

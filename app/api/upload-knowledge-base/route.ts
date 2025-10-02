@@ -50,10 +50,6 @@ function transformKnowledgeBaseData(oldData: any): any {
       }
     }
     
-    // Arrays
-    transformed.brandIdentity.examplePhrases = brandData['Example Phrases'] || []
-    transformed.brandIdentity.brandPowerWords = brandData['Brand Power Words/Phrases'] || []
-    transformed.brandIdentity.thingsToAvoid = brandData['Things to Avoid'] || []
   }
 
   // Transform Target Audience
@@ -114,12 +110,21 @@ function transformKnowledgeBaseData(oldData: any): any {
     // Testimonials & Case Studies
     if (assetsData['Testimonials & Case Studies']) {
       const testimonialsData = assetsData['Testimonials & Case Studies']
-      transformed.clientAssets.testimonialsCaseStudies = {
-        ecommerce: testimonialsData['Ecommerce'] || [],
-        financialServices: testimonialsData['Financial Services'] || [],
-        entertainment: testimonialsData['Entertainment'] || [],
-        coachesConsultants: testimonialsData['Coaches / Consultants'] || [],
-        brickMortar: testimonialsData['Brick & Mortar'] || []
+      // Handle both old categorized format and new single array format
+      if (Array.isArray(testimonialsData)) {
+        transformed.clientAssets.testimonialsCaseStudies = testimonialsData.filter(t => t.trim() !== '')
+      } else {
+        // Combine all testimonials from different categories into one array
+        const allTestimonials = [
+          ...(testimonialsData['Ecommerce'] || []),
+          ...(testimonialsData['Financial Services'] || []),
+          ...(testimonialsData['Entertainment'] || []),
+          ...(testimonialsData['Coaches / Consultants'] || []),
+          ...(testimonialsData['Brick & Mortar'] || []),
+          ...(testimonialsData['Others'] || [])
+        ].filter(t => t.trim() !== '')
+        
+        transformed.clientAssets.testimonialsCaseStudies = allTestimonials.length > 0 ? allTestimonials : ['']
       }
     }
   }

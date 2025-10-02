@@ -32,9 +32,6 @@ interface BrandFormData {
     tonePersonality: {
       style: string[]
     }
-    examplePhrases: string[]
-    brandPowerWords: string[]
-    thingsToAvoid: string[]
   }
   targetAudience: {
     idealCustomerProfile: {
@@ -57,14 +54,7 @@ interface BrandFormData {
       facebook: string
       tiktok: string
     }
-    testimonialsCaseStudies: {
-      ecommerce: string[]
-      financialServices: string[]
-      entertainment: string[]
-      coachesConsultants: string[]
-      brickMortar: string[]
-      others: string[]
-    }
+    testimonialsCaseStudies: string[]
   }
   otherInformation: string
 }
@@ -85,12 +75,9 @@ const defaultFormData: BrandFormData = {
     },
     businessModelType: "",
     uniqueSellingProposition: "",
-    tonePersonality: {
-      style: [""]
-    },
-    examplePhrases: [""],
-    brandPowerWords: [""],
-    thingsToAvoid: [""]
+      tonePersonality: {
+        style: [""]
+      }
   },
   targetAudience: {
     idealCustomerProfile: {
@@ -115,14 +102,7 @@ const defaultFormData: BrandFormData = {
       facebook: "",
       tiktok: ""
     },
-    testimonialsCaseStudies: {
-      ecommerce: [""],
-      financialServices: [""],
-      entertainment: [""],
-      coachesConsultants: [""],
-      brickMortar: [""],
-      others: [""]
-    }
+    testimonialsCaseStudies: [""]
   },
   otherInformation: ""
 }
@@ -939,21 +919,21 @@ export function BrandForm({ onSuccess }: BrandFormProps) {
             <div className="space-y-6">
               <h3 className="text-lg font-medium text-gray-900">Testimonials & Case Studies</h3>
 
-              {/* Ecommerce */}
+              {/* Testimonials */}
               <div className="space-y-4">
-                <h4 className="text-md font-medium text-gray-800">Ecommerce</h4>
-                {formData.clientAssets.testimonialsCaseStudies.ecommerce.map((testimonial, index) => (
+                <h4 className="text-md font-medium text-gray-800">Testimonials & Case Studies</h4>
+                {formData.clientAssets.testimonialsCaseStudies.map((testimonial, index) => (
                   <div key={index} className="flex gap-2">
                     <textarea
                       value={testimonial}
-                      onChange={(e) => updateArrayField(['clientAssets', 'testimonialsCaseStudies', 'ecommerce'], index, e.target.value)}
+                      onChange={(e) => updateArrayField(['clientAssets', 'testimonialsCaseStudies'], index, e.target.value)}
                       rows={2}
                       className="flex-1 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
-                      placeholder="Enter ecommerce testimonial"
+                      placeholder="Enter testimonial or case study"
                     />
                     <button
                       type="button"
-                      onClick={() => removeArrayItem(['clientAssets', 'testimonialsCaseStudies', 'ecommerce'], index)}
+                      onClick={() => removeArrayItem(['clientAssets', 'testimonialsCaseStudies'], index)}
                       className="px-3 py-2 text-red-600 border border-red-300 rounded-lg hover:bg-red-50"
                     >
                       Remove
@@ -965,183 +945,13 @@ export function BrandForm({ onSuccess }: BrandFormProps) {
                   onClick={(e) => {
                     e.preventDefault()
                     e.stopPropagation()
-                    addArrayItem(['clientAssets', 'testimonialsCaseStudies', 'ecommerce'])
+                    addArrayItem(['clientAssets', 'testimonialsCaseStudies'])
                   }}
                   className="px-4 py-2 text-purple-600 border border-purple-300 rounded-lg hover:bg-purple-50"
                 >
-                  Add Ecommerce Testimonial
+                  Add Testimonial
                 </button>
               </div>
-
-              {/* Financial Services */}
-              <div className="space-y-4">
-                <h4 className="text-md font-medium text-gray-800">Financial Services</h4>
-                {formData.clientAssets.testimonialsCaseStudies.financialServices.map((testimonial, index) => (
-                  <div key={index} className="flex gap-2">
-                    <textarea
-                      value={testimonial}
-                      onChange={(e) => updateArrayField(['clientAssets', 'testimonialsCaseStudies', 'financialServices'], index, e.target.value)}
-                      rows={2}
-                      className="flex-1 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
-                      placeholder="Enter financial services testimonial"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => removeArrayItem(['clientAssets', 'testimonialsCaseStudies', 'financialServices'], index)}
-                      className="px-3 py-2 text-red-600 border border-red-300 rounded-lg hover:bg-red-50"
-                    >
-                      Remove
-                    </button>
-                  </div>
-                ))}
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.preventDefault()
-                    e.stopPropagation()
-                    addArrayItem(['clientAssets', 'testimonialsCaseStudies', 'financialServices'])
-                  }}
-                  className="px-4 py-2 text-purple-600 border border-purple-300 rounded-lg hover:bg-purple-50"
-                >
-                  Add Financial Services Testimonial
-                </button>
-              </div>
-
-              {/* Entertainment */}
-              <div className="space-y-4">
-                <h4 className="text-md font-medium text-gray-800">Entertainment</h4>
-                {formData.clientAssets.testimonialsCaseStudies.entertainment.map((testimonial, index) => (
-                  <div key={index} className="flex gap-2">
-                    <textarea
-                      value={testimonial}
-                      onChange={(e) => updateArrayField(['clientAssets', 'testimonialsCaseStudies', 'entertainment'], index, e.target.value)}
-                      rows={2}
-                      className="flex-1 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
-                      placeholder="Enter entertainment testimonial"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => removeArrayItem(['clientAssets', 'testimonialsCaseStudies', 'entertainment'], index)}
-                      className="px-3 py-2 text-red-600 border border-red-300 rounded-lg hover:bg-red-50"
-                    >
-                      Remove
-                    </button>
-                  </div>
-                ))}
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.preventDefault()
-                    e.stopPropagation()
-                    addArrayItem(['clientAssets', 'testimonialsCaseStudies', 'entertainment'])
-                  }}
-                  className="px-4 py-2 text-purple-600 border border-purple-300 rounded-lg hover:bg-purple-50"
-                >
-                  Add Entertainment Testimonial
-                </button>
-              </div>
-
-              {/* Coaches / Consultants */}
-              <div className="space-y-4">
-                <h4 className="text-md font-medium text-gray-800">Coaches / Consultants</h4>
-                {formData.clientAssets.testimonialsCaseStudies.coachesConsultants.map((testimonial, index) => (
-                  <div key={index} className="flex gap-2">
-                    <textarea
-                      value={testimonial}
-                      onChange={(e) => updateArrayField(['clientAssets', 'testimonialsCaseStudies', 'coachesConsultants'], index, e.target.value)}
-                      rows={2}
-                      className="flex-1 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
-                      placeholder="Enter coach/consultant testimonial"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => removeArrayItem(['clientAssets', 'testimonialsCaseStudies', 'coachesConsultants'], index)}
-                      className="px-3 py-2 text-red-600 border border-red-300 rounded-lg hover:bg-red-50"
-                    >
-                      Remove
-                    </button>
-                  </div>
-                ))}
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.preventDefault()
-                    e.stopPropagation()
-                    addArrayItem(['clientAssets', 'testimonialsCaseStudies', 'coachesConsultants'])
-                  }}
-                  className="px-4 py-2 text-purple-600 border border-purple-300 rounded-lg hover:bg-purple-50"
-                >
-                  Add Coach/Consultant Testimonial
-                </button>
-              </div>
-
-              {/* Brick & Mortar */}
-              <div className="space-y-4">
-                <h4 className="text-md font-medium text-gray-800">Brick & Mortar</h4>
-                {formData.clientAssets.testimonialsCaseStudies.brickMortar.map((testimonial, index) => (
-                  <div key={index} className="flex gap-2">
-                    <textarea
-                      value={testimonial}
-                      onChange={(e) => updateArrayField(['clientAssets', 'testimonialsCaseStudies', 'brickMortar'], index, e.target.value)}
-                      rows={2}
-                      className="flex-1 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
-                      placeholder="Enter brick & mortar testimonial"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => removeArrayItem(['clientAssets', 'testimonialsCaseStudies', 'brickMortar'], index)}
-                      className="px-3 py-2 text-red-600 border border-red-300 rounded-lg hover:bg-red-50"
-                    >
-                      Remove
-                    </button>
-                  </div>
-                ))}
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.preventDefault()
-                    e.stopPropagation()
-                    addArrayItem(['clientAssets', 'testimonialsCaseStudies', 'brickMortar'])
-                  }}
-                  className="px-4 py-2 text-purple-600 border border-purple-300 rounded-lg hover:bg-purple-50"
-                >
-                  Add Brick & Mortar Testimonial
-                </button>
-              </div>
-
-              {/* Others */}
-              <div className="space-y-4">
-                <h4 className="text-md font-medium text-gray-800">Others</h4>
-                {formData.clientAssets.testimonialsCaseStudies.others.map((testimonial, index) => (
-                  <div key={index} className="flex gap-2">
-                    <textarea
-                      value={testimonial}
-                      onChange={(e) => updateArrayField(['clientAssets', 'testimonialsCaseStudies', 'others'], index, e.target.value)}
-                      rows={2}
-                      className="flex-1 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
-                      placeholder="Enter other testimonial or case study"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => removeArrayItem(['clientAssets', 'testimonialsCaseStudies', 'others'], index)}
-                      className="px-3 py-2 text-red-600 border border-red-300 rounded-lg hover:bg-red-50"
-                    >
-                      Remove
-                    </button>
-            </div>
-                ))}
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.preventDefault()
-                    e.stopPropagation()
-                    addArrayItem(['clientAssets', 'testimonialsCaseStudies', 'others'])
-                  }}
-                  className="px-4 py-2 text-purple-600 border border-purple-300 rounded-lg hover:bg-purple-50"
-                >
-                  Add Other Testimonial
-                </button>
-          </div>
         </div>
               </CardContent>
             </Card>
