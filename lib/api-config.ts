@@ -109,6 +109,7 @@ export const API_ENDPOINTS = {
       EXTRA_RESOURCES_CONTENT_EXTRACT: 'https://n8n.srv934833.hstgr.cloud/webhook/extra-resources-content-extract',
       SEE_USER_PASSWORD: 'https://n8n.srv934833.hstgr.cloud/webhook/see-user-password',
       GET_KNOWLEDGE_BASE_IN_FIELD: 'https://n8n.srv934833.hstgr.cloud/webhook/get-knowledge-base-in-field',
+      UPDATE_WEBPAGE_CONTENT: 'https://n8n.srv934833.hstgr.cloud/webhook/update-webpage-content',
       },
   
   // User Management

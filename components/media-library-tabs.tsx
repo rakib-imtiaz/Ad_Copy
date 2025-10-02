@@ -411,6 +411,7 @@ export function LinksTab({ mediaItems, onDelete, onRefresh, setMediaItems, isDel
     sourceUrl?: string
     scrapedAt?: string
     filename?: string
+    resourceId?: string
   } | null>(null)
   
   const [isViewerOpen, setIsViewerOpen] = React.useState(false)
@@ -508,7 +509,8 @@ export function LinksTab({ mediaItems, onDelete, onRefresh, setMediaItems, isDel
         content: item.content,
         sourceUrl: item.url,
         scrapedAt: item.uploadedAt?.toISOString(),
-        filename: item.filename
+        filename: item.filename,
+        resourceId: item.resourceId
       })
     } else {
       // Fallback for items without content
@@ -517,7 +519,8 @@ export function LinksTab({ mediaItems, onDelete, onRefresh, setMediaItems, isDel
         content: 'Content not available...',
         sourceUrl: item.url,
         scrapedAt: item.uploadedAt?.toISOString(),
-        filename: item.filename
+        filename: item.filename,
+        resourceId: item.resourceId
       })
     }
     setIsViewerOpen(true)
@@ -710,9 +713,26 @@ export function LinksTab({ mediaItems, onDelete, onRefresh, setMediaItems, isDel
                       </Tooltip>
                     </TooltipProvider>
                     {!isDeletingItem && (
-                      <ThreeDotsMenu 
-                        onDelete={() => onDelete(item.id)}
-                      />
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-5 w-5 p-0 text-gray-500 hover:text-red-600 hover:bg-red-50"
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                onDelete(item.id)
+                              }}
+                            >
+                              <Trash2 className="h-2.5 w-2.5" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>Delete link</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
                     )}
                     {isDeletingItem && (
                       <div className="h-6 w-6 flex items-center justify-center">

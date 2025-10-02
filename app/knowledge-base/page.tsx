@@ -287,8 +287,7 @@ export default function KnowledgeBasePage() {
             'Authorization': `Bearer ${accessToken}`,
           },
           body: JSON.stringify({
-            resource_id: item.resourceId || id.replace('scraped-', ''),
-            resource_name: item.resourceName || filename
+            file_name: item.resourceName || filename
           }),
         })
       } else {
