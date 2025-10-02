@@ -525,6 +525,27 @@ export function LinksTab({ mediaItems, onDelete, onRefresh, setMediaItems, isDel
     }
     setIsViewerOpen(true)
   }
+
+  const handleContentUpdate = (updatedContent: string) => {
+    // Update the content locally in the media items
+    setMediaItems((prevItems: any[]) => {
+      return prevItems.map((item: any) => {
+        if (item.id === viewerContent?.resourceId || 
+            (viewerContent?.resourceId && item.resourceId === viewerContent.resourceId)) {
+          return {
+            ...item,
+            content: updatedContent
+          }
+        }
+        return item
+      })
+    })
+    
+    // Refresh the media library to get the latest data from the server
+    setTimeout(() => {
+      onRefresh()
+    }, 2000)
+  }
   
   const handleScrapeUrl = async () => {
     console.log('🔍 handleScrapeUrl called with URL:', urlInput)
@@ -778,6 +799,7 @@ export function LinksTab({ mediaItems, onDelete, onRefresh, setMediaItems, isDel
           isOpen={isViewerOpen}
           onClose={() => setIsViewerOpen(false)}
           content={viewerContent}
+          onContentUpdate={handleContentUpdate}
         />
       )}
     </div>
