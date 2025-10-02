@@ -14,7 +14,9 @@ import {
   Trash2,
   Loader2,
   Database,
-  BookOpen
+  BookOpen,
+  MoreHorizontal,
+  Edit
 } from "lucide-react"
 
 import {
@@ -35,6 +37,7 @@ import {
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { useAuth } from "@/lib/auth-context"
 import { useSidebarState } from "@/lib/sidebar-state-context"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -339,8 +342,8 @@ export function AppSidebar() {
                                   </div>
                                 </div>
                                 {!isDeleting && (
-                                  <AlertDialog>
-                                    <AlertDialogTrigger asChild>
+                                  <DropdownMenu>
+                                    <DropdownMenuTrigger asChild>
                                       <Button
                                         variant="ghost"
                                         size="sm"
@@ -349,27 +352,33 @@ export function AppSidebar() {
                                         }`}
                                         onClick={(e) => e.stopPropagation()}
                                       >
-                                        <Trash2 className="h-3 w-3" />
+                                        <MoreHorizontal className="h-3 w-3" />
                                       </Button>
-                                    </AlertDialogTrigger>
-                                    <AlertDialogContent className="bg-gray-900 border-gray-700">
-                                      <AlertDialogHeader>
-                                        <AlertDialogTitle className="text-white">Delete Conversation</AlertDialogTitle>
-                                        <AlertDialogDescription className="text-gray-400">
-                                          Are you sure you want to delete this conversation? This action cannot be undone.
-                                        </AlertDialogDescription>
-                                      </AlertDialogHeader>
-                                      <AlertDialogFooter>
-                                        <AlertDialogCancel className="bg-gray-800 hover:bg-gray-700 text-white border-gray-700">Cancel</AlertDialogCancel>
-                                        <AlertDialogAction
-                                          onClick={() => handleDeleteChat(chat.session_id)}
-                                          className="bg-red-600 hover:bg-red-700 text-white"
-                                        >
-                                          Delete
-                                        </AlertDialogAction>
-                                      </AlertDialogFooter>
-                                    </AlertDialogContent>
-                                  </AlertDialog>
+                                    </DropdownMenuTrigger>
+                                    <DropdownMenuContent align="end" className="w-32">
+                                      <DropdownMenuItem
+                                        onClick={(e) => {
+                                          e.stopPropagation()
+                                          // TODO: Implement rename functionality
+                                          console.log('Rename chat:', chat.session_id)
+                                        }}
+                                        className="text-gray-700 hover:text-gray-900 hover:bg-gray-100 focus:text-gray-900 focus:bg-gray-100 text-xs py-1.5 cursor-pointer transition-colors duration-150"
+                                      >
+                                        <Edit className="h-3 w-3 mr-1.5" />
+                                        Rename
+                                      </DropdownMenuItem>
+                                      <DropdownMenuItem
+                                        onClick={(e) => {
+                                          e.stopPropagation()
+                                          handleDeleteChat(chat.session_id)
+                                        }}
+                                        className="text-red-600 hover:text-red-700 hover:bg-red-50 focus:text-red-700 focus:bg-red-50 text-xs py-1.5 cursor-pointer transition-colors duration-150"
+                                      >
+                                        <Trash2 className="h-3 w-3 mr-1.5" />
+                                        Delete
+                                      </DropdownMenuItem>
+                                    </DropdownMenuContent>
+                                  </DropdownMenu>
                                 )}
                                 {isDeleting && (
                                   <div className="h-6 w-6 flex items-center justify-center">

@@ -8,7 +8,7 @@ import {
   PanelLeftClose, Send, Paperclip,
   ChevronRight, MoreHorizontal, Star, Clock, Zap, RefreshCw, Image, Activity,
   Sparkles, ArrowRight, ChevronDown, Check, Power, Headphones, Video,
-  Library, X, PanelRight, PanelRightOpen, Archive, Shield, Cpu, Brain
+  Library, X, PanelRight, PanelRightOpen, Archive, Shield, Cpu, Brain, Edit
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -18,6 +18,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog"
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 
 import { AnimatedText, FadeInText, SlideInText, WordByWordText } from "@/components/ui/animated-text"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
@@ -4043,19 +4044,43 @@ function LeftSidebar({
                         <p className={`text-xs ${isSelected ? 'text-gray-600' : 'text-gray-400'}`}>{timeAgo}</p>
                       </div>
                   <div className="flex items-center space-x-2">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className={`h-6 w-6 opacity-0 group-hover:opacity-100 transition-all duration-200 ${isSelected ? 'text-gray-400 hover:text-black hover:bg-yellow-400/90' : 'text-gray-500 hover:text-black hover:bg-yellow-400/90'}`}
-                          onClick={(e) => {
-                            e.stopPropagation()
-                            onDeleteChatSession(chat.session_id)
-                          }}
-                        >
-                          <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                          </svg>
-                        </Button>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className={`h-6 w-6 opacity-0 group-hover:opacity-100 transition-all duration-200 ${isSelected ? 'text-gray-400 hover:text-black hover:bg-yellow-400/90' : 'text-gray-500 hover:text-black hover:bg-yellow-400/90'}`}
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              <MoreHorizontal className="h-3 w-3" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end" className="w-32">
+                            <DropdownMenuItem
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                // TODO: Implement rename functionality
+                                console.log('Rename chat:', chat.session_id)
+                              }}
+                              className="text-gray-700 hover:text-gray-900 hover:bg-gray-100 focus:text-gray-900 focus:bg-gray-100 text-xs py-1.5 cursor-pointer transition-colors duration-150"
+                            >
+                              <Edit className="h-3 w-3 mr-1.5" />
+                              Rename
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                onDeleteChatSession(chat.session_id)
+                              }}
+                              className="text-red-600 hover:text-red-700 hover:bg-red-50 focus:text-red-700 focus:bg-red-50 text-xs py-1.5 cursor-pointer transition-colors duration-150"
+                            >
+                              <svg className="h-3 w-3 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                              </svg>
+                              Delete
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
                   </div>
                 </div>
 
