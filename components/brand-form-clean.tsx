@@ -12,6 +12,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
 import { ChevronLeft, ChevronRight, Check, Save, Plus, Trash2, ArrowLeft } from "lucide-react"
+import { URLScrapingSection } from "@/components/url-scraping-section"
 
 interface BrandFormData {
   brandIdentity: {
@@ -125,6 +126,7 @@ interface BrandFormProps {
   onSuccess?: () => void
 }
 
+
 export function BrandFormClean({ onSuccess }: BrandFormProps) {
   const [formData, setFormData] = React.useState<BrandFormData>(defaultFormData)
   const [isSubmitting, setIsSubmitting] = React.useState(false)
@@ -137,6 +139,19 @@ export function BrandFormClean({ onSuccess }: BrandFormProps) {
   const [isLoading, setIsLoading] = React.useState(true)
 
   const totalSteps = 12
+
+  // Show toast helper
+  const showToastMessage = (message: string, type: 'success' | 'error' | 'info') => {
+    setToastMessage(message)
+    setToastType(type)
+    setShowToast(true)
+  }
+
+  // Simple data handler for URL scraping
+  const handleDataScraped = (data: any) => {
+    console.log('📊 Scraped data received:', data)
+    // The URLScrapingSection component handles the auto-filling internally
+  }
 
   // Load saved progress on component mount
   React.useEffect(() => {
@@ -877,6 +892,15 @@ export function BrandFormClean({ onSuccess }: BrandFormProps) {
           animate="visible"
         >
           <StepIndicator />
+          
+          {/* URL Scraping Section */}
+          <URLScrapingSection 
+            onDataScraped={handleDataScraped} 
+            onShowToast={showToastMessage}
+            formData={formData}
+            updateNestedField={updateNestedField}
+            updateField={updateField}
+          />
           
           <form onSubmit={handleSubmit} className="space-y-4">
         

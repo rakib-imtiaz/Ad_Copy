@@ -110,6 +110,7 @@ export const API_ENDPOINTS = {
       SEE_USER_PASSWORD: 'https://n8n.srv934833.hstgr.cloud/webhook/see-user-password',
       GET_KNOWLEDGE_BASE_IN_FIELD: 'https://n8n.srv934833.hstgr.cloud/webhook/get-knowledge-base-in-field',
       UPDATE_WEBPAGE_CONTENT: 'https://n8n.srv934833.hstgr.cloud/webhook/update-webpage-content',
+      UPLOAD_KNOWLEDGE_BASE_BY_LINK: 'https://n8n.srv934833.hstgr.cloud/webhook/upload-knowledgebase-by-link',
       },
   
   // User Management

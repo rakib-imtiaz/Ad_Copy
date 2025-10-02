@@ -3,7 +3,7 @@ import { API_ENDPOINTS } from '@/lib/api-config'
 
 export async function POST(request: NextRequest) {
   try {
-    console.log('=== WEBPAGE SCRAPE API START ===')
+    console.log('=== UPLOAD KNOWLEDGE BASE BY LINK API START ===')
     console.log('Timestamp:', new Date().toISOString())
     
     // Get the authorization header from the request
@@ -24,11 +24,10 @@ export async function POST(request: NextRequest) {
     }
 
     console.log('✅ Authorization header found')
-    console.log('🔗 Webhook URL being used:', API_ENDPOINTS.N8N_WEBHOOKS.WEBPAGE_SCRAPE)
 
     // Parse the request body
     const body = await request.json()
-    const { url } = body
+    const { access_token, url } = body
 
     if (!url) {
       return NextResponse.json(
@@ -43,42 +42,56 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    console.log('📋 URL to scrape:', url)
+    if (!access_token) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: {
+            code: "VALIDATION_ERROR",
+            message: "access_token is required"
+          }
+        },
+        { status: 400 }
+      )
+    }
 
-    // Extract access token from authorization header
-    const accessToken = authHeader.replace('Bearer ', '')
+    console.log('📋 URL to scrape:', url)
+    console.log('📋 Access token provided:', access_token ? 'Yes' : 'No')
+
+    // Use the webhook endpoint from configuration
+    const webhookUrl = API_ENDPOINTS.N8N_WEBHOOKS.UPLOAD_KNOWLEDGE_BASE_BY_LINK
+    console.log('🔗 Webhook URL being used:', webhookUrl)
     
     // Prepare request to n8n webhook
     const requestBody = JSON.stringify({
-      access_token: accessToken,
+      access_token: access_token,
       url: url
     })
 
     // Use Bearer authentication for the webhook (consistent with other API routes)
     const requestHeaders: Record<string, string> = {
       'Content-Type': 'application/json',
-      'Authorization': `Bearer ${accessToken}`,
+      'Authorization': `Bearer ${access_token}`,
     }
     
     console.log('📤 Sending scrape request to n8n webhook:', {
-      url: API_ENDPOINTS.N8N_WEBHOOKS.WEBPAGE_SCRAPE,
+      url: webhookUrl,
       data_type: 'JSON',
       data_size: requestBody.length,
-      auth_method: 'Bearer',
-      access_token_length: accessToken.length,
-      target_url: url
+      target_url: url,
+      auth_method: 'Bearer'
     })
     
     // Debug: Log the actual data being sent
     console.log('🔍 Data being sent to webhook:')
     console.log(JSON.stringify(JSON.parse(requestBody), null, 2))
 
-    // Call the n8n webhook with Bearer token authentication
+    // Call the n8n webhook
     const controller = new AbortController()
-    const timeoutId = setTimeout(() => controller.abort(), 60000) // 60 second timeout for scraping
+    const timeoutId = setTimeout(() => controller.abort(), 120000) // 2 minute timeout for scraping and processing
     
     try {
-      const response = await fetch(API_ENDPOINTS.N8N_WEBHOOKS.WEBPAGE_SCRAPE, {
+      const response = await fetch(webhookUrl, {
         method: 'POST',
         headers: requestHeaders,
         body: requestBody,
@@ -136,11 +149,11 @@ export async function POST(request: NextRequest) {
           console.log('Empty response from webhook, providing default success response')
           data = { 
             success: true,
-            message: 'URL scraped successfully',
+            message: 'URL scraped and knowledge base updated successfully',
             data: {
               url: url,
-              scraped_at: new Date().toISOString(),
-              content: 'Content extracted successfully'
+              processed_at: new Date().toISOString(),
+              status: 'success'
             }
           }
         }
@@ -148,11 +161,12 @@ export async function POST(request: NextRequest) {
         console.log('Response is not JSON, treating as text:', responseText)
         data = { 
           success: true,
-          message: responseText || 'URL scraped successfully',
+          message: responseText || 'URL scraped and knowledge base updated successfully',
           data: {
             url: url,
-            scraped_at: new Date().toISOString(),
-            content: responseText || 'Content extracted successfully'
+            processed_at: new Date().toISOString(),
+            status: 'success',
+            content: responseText
           }
         }
       }
@@ -226,7 +240,7 @@ export async function POST(request: NextRequest) {
       )
     }
   } catch (error) {
-    console.error('Error in webpage scrape API:', error)
+    console.error('Error in upload knowledge base by link API:', error)
     return NextResponse.json(
       {
         success: false,
