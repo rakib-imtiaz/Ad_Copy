@@ -70,6 +70,23 @@ function ThreeDotsMenu({ onDelete, onDownload, onView, item }: any) {
     setIsOpen(false)
   }
 
+  // Close menu when clicking outside
+  React.useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (isOpen) {
+        setIsOpen(false)
+      }
+    }
+
+    if (isOpen) {
+      document.addEventListener('mousedown', handleClickOutside)
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [isOpen])
+
   return (
     <div className="relative">
       <Button 
@@ -82,21 +99,15 @@ function ThreeDotsMenu({ onDelete, onDownload, onView, item }: any) {
       </Button>
       
       {isOpen && (
-        <>
-          <div 
-            className="fixed inset-0 z-10" 
-            onClick={() => setIsOpen(false)}
-          />
-          <div className="absolute right-0 top-5 z-20 bg-white border border-gray-200 rounded-md shadow-lg py-1 min-w-[100px]">
-            <button
-              className="w-full px-2 py-1.5 text-left text-xs text-red-600 hover:bg-red-50 flex items-center space-x-1.5"
-              onClick={handleDelete}
-            >
-              <Trash2 className="h-2.5 w-2.5" />
-              <span>Delete</span>
-            </button>
-          </div>
-        </>
+        <div className="absolute right-0 top-5 z-50 bg-white border border-gray-200 rounded-md shadow-lg py-1 min-w-[100px]">
+          <button
+            className="w-full px-2 py-1.5 text-left text-xs text-red-600 hover:bg-red-50 flex items-center space-x-1.5"
+            onClick={handleDelete}
+          >
+            <Trash2 className="h-2.5 w-2.5" />
+            <span>Delete</span>
+          </button>
+        </div>
       )}
     </div>
   )
@@ -324,12 +335,15 @@ export function FilesTab({ mediaItems, onUpload, onDelete, isDeleting, deletingI
                     </div>
                   </div>
                   {!isDeletingItem && (
-                    <ThreeDotsMenu 
-                      onDelete={() => onDelete(item.id)}
-                      onDownload={handleDownload}
-                      onView={handleView}
-                      item={item}
-                    />
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-5 w-5 p-0 text-gray-400 hover:text-red-600 hover:bg-red-50"
+                      onClick={() => onDelete(item.id)}
+                      title="Delete"
+                    >
+                      <Trash2 className="h-2.5 w-2.5" />
+                    </Button>
                   )}
                   {isDeletingItem && (
                     <div className="h-6 w-6 flex items-center justify-center">
