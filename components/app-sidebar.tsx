@@ -321,7 +321,7 @@ export function AppSidebar() {
                           return (
                             <div
                               key={chat.session_id}
-                              className={`chat-bubble-hover relative p-2 rounded-md transition-all duration-200 cursor-pointer ${
+                              className={`chat-bubble-hover chat-history-item group relative p-2 rounded-md transition-all duration-200 cursor-pointer ${
                                 isActive
                                   ? 'bg-gray-800 shadow-sm border border-white text-white'
                                   : 'bg-gray-800 hover:bg-gray-700 hover:shadow-sm border border-gray-800 hover:border-white text-white'
@@ -344,12 +344,12 @@ export function AppSidebar() {
                                       <Button
                                         variant="ghost"
                                         size="sm"
-                                        className={`h-2.5 w-2.5 p-0 hover:text-red-600 hover:bg-red-900/50 opacity-0 hover:opacity-100 transition-opacity ${
+                                        className={`h-6 w-6 p-0 hover:text-red-600 hover:bg-red-900/50 opacity-0 group-hover:opacity-100 transition-all duration-200 ${
                                           isActive ? 'text-gray-300' : 'text-gray-400'
                                         }`}
                                         onClick={(e) => e.stopPropagation()}
                                       >
-                                        <Trash2 className="h-1.5 w-1.5" />
+                                        <Trash2 className="h-3 w-3" />
                                       </Button>
                                     </AlertDialogTrigger>
                                     <AlertDialogContent className="bg-gray-900 border-gray-700">

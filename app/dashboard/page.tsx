@@ -4018,7 +4018,7 @@ function LeftSidebar({
                 return (
                 <div
                     key={chat.session_id}
-                    className={`p-2 rounded-lg border transition-all duration-150 ${
+                    className={`chat-history-item group p-2 rounded-lg border transition-all duration-150 ${
                       isSelected
                         ? 'bg-white border-gray-300 shadow-lg'
                         : 'bg-black border-gray-700 hover:border-gray-600'
@@ -4046,7 +4046,7 @@ function LeftSidebar({
                         <Button
                           variant="ghost"
                           size="icon"
-                          className={`h-6 w-6 ${isSelected ? 'text-gray-400 hover:text-red-500 hover:bg-red-50' : 'text-gray-500 hover:text-red-400 hover:bg-red-900/20'}`}
+                          className={`h-6 w-6 opacity-0 group-hover:opacity-100 transition-all duration-200 ${isSelected ? 'text-gray-400 hover:text-red-500 hover:bg-red-50' : 'text-gray-500 hover:text-red-400 hover:bg-red-900/20'}`}
                           onClick={(e) => {
                             e.stopPropagation()
                             onDeleteChatSession(chat.session_id)
