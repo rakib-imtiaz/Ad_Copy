@@ -344,7 +344,7 @@ export function AppSidebar() {
                                       <Button
                                         variant="ghost"
                                         size="sm"
-                                        className={`h-6 w-6 p-0 hover:text-red-600 hover:bg-red-900/50 opacity-0 group-hover:opacity-100 transition-all duration-200 ${
+                                        className={`h-6 w-6 p-0 hover:text-black hover:bg-yellow-400/90 opacity-0 group-hover:opacity-100 transition-all duration-200 ${
                                           isActive ? 'text-gray-300' : 'text-gray-400'
                                         }`}
                                         onClick={(e) => e.stopPropagation()}

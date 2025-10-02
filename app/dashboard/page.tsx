@@ -4046,7 +4046,7 @@ function LeftSidebar({
                         <Button
                           variant="ghost"
                           size="icon"
-                          className={`h-6 w-6 opacity-0 group-hover:opacity-100 transition-all duration-200 ${isSelected ? 'text-gray-400 hover:text-red-500 hover:bg-red-50' : 'text-gray-500 hover:text-red-400 hover:bg-red-900/20'}`}
+                          className={`h-6 w-6 opacity-0 group-hover:opacity-100 transition-all duration-200 ${isSelected ? 'text-gray-400 hover:text-black hover:bg-yellow-400/90' : 'text-gray-500 hover:text-black hover:bg-yellow-400/90'}`}
                           onClick={(e) => {
                             e.stopPropagation()
                             onDeleteChatSession(chat.session_id)
