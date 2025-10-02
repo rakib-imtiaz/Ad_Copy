@@ -324,22 +324,20 @@ export function AppSidebar() {
                           return (
                             <div
                               key={chat.session_id}
-                              className={`chat-bubble-hover chat-history-item group relative p-2 rounded-md transition-all duration-200 cursor-pointer ${
+                              className={`chat-bubble-hover chat-history-item group relative p-1.5 rounded-md transition-all duration-200 cursor-pointer ${
                                 isActive
                                   ? 'bg-gray-800 shadow-sm border border-white text-white'
                                   : 'bg-gray-800 hover:bg-gray-700 hover:shadow-sm border border-gray-800 hover:border-white text-white'
                               } ${isDeleting ? 'opacity-50 pointer-events-none' : ''}`}
                               onClick={() => !isDeleting && onLoadChatSession?.(chat.session_id)}
                             >
-                              <div className="flex items-start justify-between gap-1">
+                              <div className="flex items-center justify-between gap-1">
                                 <div className="flex-1 min-w-0 overflow-hidden">
-                                  <div className="flex items-center space-x-1">
-                                    <h4 className={`chat-bubble-text font-normal text-xs truncate transition-colors duration-200 ${
-                                      isActive ? 'text-white' : 'text-white'
-                                    }`}>
-                                      {chat.title || `Chat ${chat.session_id}`}
-                                    </h4>
-                                  </div>
+                                  <h4 className={`chat-bubble-text font-normal text-xs truncate transition-colors duration-200 ${
+                                    isActive ? 'text-white' : 'text-white'
+                                  }`}>
+                                    {chat.title || `Chat ${chat.session_id}`}
+                                  </h4>
                                 </div>
                                 {!isDeleting && (
                                   <DropdownMenu>

@@ -3994,18 +3994,18 @@ function LeftSidebar({
                 return (
                 <div
                     key={chat.session_id}
-                    className={`chat-history-item group p-2 rounded-lg border transition-all duration-150 ${
+                    className={`chat-history-item group p-1.5 rounded-lg border transition-all duration-150 ${
                       isSelected
                         ? 'bg-white border-gray-300 shadow-lg'
                         : 'bg-black border-gray-700 hover:border-gray-600'
                     }`}
               >
-                <div className="flex items-start justify-between mb-1">
+                <div className="flex items-center justify-between">
                       <div 
                         className="flex-1 min-w-0 cursor-pointer"
                         onClick={() => onLoadChatSession(chat.session_id)}
                       >
-                        <div className="flex items-center space-x-2 mb-1">
+                        <div className="flex items-center space-x-2">
                           <h4 className={`font-medium text-sm truncate ${isSelected ? 'text-black' : 'text-white'}`}>
                             {chat.title || `Chat ${chat.session_id}`}
                           </h4>
@@ -4016,7 +4016,6 @@ function LeftSidebar({
                             </span>
                           )}
                         </div>
-                        <p className={`text-xs ${isSelected ? 'text-gray-600' : 'text-gray-400'}`}>{timeAgo}</p>
                       </div>
                   <div className="flex items-center space-x-2">
                         <DropdownMenu>
