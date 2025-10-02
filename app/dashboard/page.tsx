@@ -39,7 +39,8 @@ import { ChatInterface } from "@/components/chat-interface"
 import { useAuth } from "@/lib/auth-context"
 import { ProtectedRoute } from "@/components/protected-route"
 import { API_ENDPOINTS, getAuthHeaders } from "@/lib/api-config"
-import { Toast } from "@/components/ui/toast"
+import { Toaster } from "@/components/ui/sonner"
+import { toast } from "sonner"
 import { ContentViewer } from "@/components/content-viewer"
 import { useSidebarState } from "@/lib/sidebar-state-context"
 
@@ -329,11 +330,6 @@ export default function Dashboard() {
   const [isAgentSelectorOpen, setIsAgentSelectorOpen] = React.useState(false)
   const [isMediaSelectorOpen, setIsMediaSelectorOpen] = React.useState(false)
   const [selectedMediaItems, setSelectedMediaItems] = React.useState<Set<string>>(new Set())
-  const [toast, setToast] = React.useState<{ message: string; type: 'success' | 'error' | 'info'; isVisible: boolean }>({
-    message: '',
-    type: 'info',
-    isVisible: false
-  })
   // Add chat history state
   const [chatHistory, setChatHistory] = React.useState<Array<{
     session_id: string
@@ -378,21 +374,6 @@ export default function Dashboard() {
   React.useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages])
-
-  const showToast = (message: string, type: 'success' | 'error' | 'info') => {
-    setToast({
-      message,
-      type,
-      isVisible: true
-    })
-    setTimeout(() => {
-      setToast(prev => ({ ...prev, isVisible: false }))
-    }, 3000)
-  }
-
-  const hideToast = () => {
-    setToast(prev => ({ ...prev, isVisible: false }))
-  }
 
   // Fetch knowledge base status
   const fetchKnowledgeBaseStatus = async () => {
@@ -928,7 +909,7 @@ export default function Dashboard() {
       
       if (!accessToken) {
         console.error("❌ No access token available for deleting chat")
-        showToast('Authentication required', 'error')
+        toast.error('Authentication required')
         return
       }
 
@@ -967,7 +948,7 @@ export default function Dashboard() {
           }
         }
         
-        showToast('Failed to delete chat session', 'error')
+        toast.error('Failed to delete chat session')
         return
       }
 
@@ -1008,7 +989,7 @@ export default function Dashboard() {
         // Don't show error toast for refresh failure as deletion was successful
       }
       
-      showToast('Chat session deleted successfully', 'success')
+      toast.success('Chat session deleted successfully')
       console.log('✅ Chat session deleted:', sessionId)
       
     } catch (error) {
@@ -1019,7 +1000,7 @@ export default function Dashboard() {
         name: error instanceof Error ? error.name : 'Unknown'
       })
       
-      showToast('Error deleting chat session', 'error')
+      toast.error('Error deleting chat session')
     }
   }
 
@@ -1247,11 +1228,11 @@ export default function Dashboard() {
       }
     } else {
       console.error('❌ Failed to start chat')
-        showToast('Failed to start chat. Please try again.', 'error')
+        toast.error('Failed to start chat. Please try again.')
       }
     } catch (error) {
       console.error('❌ Error starting chat:', error)
-      showToast('Error starting chat. Please try again.', 'error')
+      toast.error('Error starting chat. Please try again.')
     } finally {
       setIsStartingChat(false)
     }
@@ -1690,7 +1671,7 @@ export default function Dashboard() {
             setTimeout(() => fetchChatHistory(retryCount + 1), 2000) // Retry after 2 seconds
             return null
           }
-          showToast('Chat history request timed out. Please try again.', 'error')
+          toast.error('Chat history request timed out. Please try again.')
         } else if (error.message.includes('Failed to fetch')) {
           console.error('❌ Network error - unable to reach the server')
           console.error('❌ This could be due to:')
@@ -1704,12 +1685,12 @@ export default function Dashboard() {
             setTimeout(() => fetchChatHistory(retryCount + 1), 2000) // Retry after 2 seconds
             return null
           }
-          showToast('Unable to load chat history. Please check your connection and try again.', 'error')
+          toast.error('Unable to load chat history. Please check your connection and try again.')
         } else {
-          showToast('Failed to load chat history. Please try again.', 'error')
+          toast.error('Failed to load chat history. Please try again.')
         }
       } else {
-        showToast('An unexpected error occurred while loading chat history.', 'error')
+        toast.error('An unexpected error occurred while loading chat history.')
       }
       
       // Return empty chat history instead of null to prevent UI errors
@@ -2337,9 +2318,9 @@ export default function Dashboard() {
       
       // Show toast notification for critical errors
       if (error instanceof Error && (error.message.includes('401') || error.message.includes('Unauthorized'))) {
-        showToast('Session expired. Please refresh the page.', 'error')
+        toast.error('Session expired. Please refresh the page.')
       } else if (error instanceof Error && (error.name === 'TimeoutError' || error.message.includes('timeout'))) {
-        showToast('Request timed out. You can retry using the button below.', 'info')
+        toast.info('Request timed out. You can retry using the button below.')
       }
     } finally {
       // Clear scraped content from selection after sending message
@@ -2983,7 +2964,7 @@ export default function Dashboard() {
         })
         
         // Show user-friendly error message
-        showToast(`Failed to delete "${filename}": ${errorMessage}`, 'error')
+        toast.error(`Failed to delete "${filename}": ${errorMessage}`)
         return false
       }
 
@@ -2994,13 +2975,13 @@ export default function Dashboard() {
       setMediaItems(prev => prev.filter(item => item.id !== mediaId))
       
       // Show success message
-      showToast(`Successfully deleted "${filename}"`, 'success')
+      toast.success(`Successfully deleted "${filename}"`)
       
       return true
     } catch (error) {
       console.error('Error deleting file:', error)
       const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred'
-      showToast(`Failed to delete "${filename}": ${errorMessage}`, 'error')
+      toast.error(`Failed to delete "${filename}": ${errorMessage}`)
       return false
     }
   }
@@ -3070,7 +3051,7 @@ export default function Dashboard() {
           console.log('📄 Adding scraped content for direct message passing:', item.filename)
           console.log('📄 Content will be passed directly with the next message')
           console.log('📄 Content preview:', item.content ? item.content.substring(0, 100) + '...' : 'No content')
-          showToast('Scraped content added - will be included with your next message', 'success')
+          toast.success('Scraped content added - will be included with your next message')
         } else {
           // For regular media files, add to RAG
           console.log('🔗 Adding item to RAG:', item.filename)
@@ -3103,17 +3084,17 @@ export default function Dashboard() {
             console.error('❌ Failed to add item to RAG:', response.status, response.statusText)
             const errorText = await response.text().catch(() => 'Unable to read error response')
             console.error('❌ Error response body:', errorText)
-            showToast('Failed to add item to chat context', 'error')
+            toast.error('Failed to add item to chat context')
           } else {
             console.log('✅ Successfully added item to RAG context')
-            showToast('Item added to chat context', 'success')
+            toast.success('Item added to chat context')
           }
         }
       } else {
         if (isScrapedContent) {
           // For scraped content, just remove from selection
           console.log('📄 Removing scraped content from direct message passing:', item.filename)
-          showToast('Scraped content removed from next message', 'success')
+          toast.success('Scraped content removed from next message')
         } else {
           // For regular media files, remove from RAG
           console.log('🗑️ Removing item from RAG:', item.filename)
@@ -3142,10 +3123,10 @@ export default function Dashboard() {
             console.error('❌ Failed to remove item from RAG:', response.status, response.statusText)
             const errorText = await response.text().catch(() => 'Unable to read error response')
             console.error('❌ Error response body:', errorText)
-            showToast('Failed to remove item from chat context', 'error')
+            toast.error('Failed to remove item from chat context')
           } else {
             console.log('✅ Successfully removed item from RAG context')
-            showToast('Item removed from chat context', 'success')
+            toast.success('Item removed from chat context')
           }
         }
       }
@@ -3161,7 +3142,7 @@ export default function Dashboard() {
         setSelectedMediaItems(prev => new Set([...prev, itemId]))
       }
       console.error('❌ Error handling media selection:', error)
-      showToast('Error updating chat context', 'error')
+      toast.error('Error updating chat context')
     }
     
     console.log('📎 ===== MEDIA SELECTION END =====')
@@ -3252,13 +3233,13 @@ export default function Dashboard() {
         console.log('🔄 Deletion successful, removing item from local state...')
         // Immediately remove the item from local state
         setMediaItems(prevItems => prevItems.filter(mediaItem => mediaItem.id !== itemId))
-        showToast(`Successfully deleted "${itemName}"`, 'success')
+        toast.success(`Successfully deleted "${itemName}"`)
       }
       
       return deleteResult
     } catch (error) {
       console.error('Error in handleDeleteItem:', error)
-      showToast(`Failed to delete "${itemName}"`, 'error')
+      toast.error(`Failed to delete "${itemName}"`)
       return false
     } finally {
       setIsDeleting(false)
@@ -3636,12 +3617,6 @@ export default function Dashboard() {
 
 
       {/* Toast Notification */}
-      <Toast
-        message={toast.message}
-        type={toast.type}
-        isVisible={toast.isVisible}
-        onClose={hideToast}
-      />
         </motion.div>
       )}
 
@@ -4441,15 +4416,6 @@ function LinksTab({ mediaItems, onDelete, onRefresh, setMediaItems, isDeleting, 
   const [urlInput, setUrlInput] = React.useState("")
   const [isScraping, setIsScraping] = React.useState(false)
   const [isLoadingContents, setIsLoadingContents] = React.useState(false)
-  const [toast, setToast] = React.useState<{
-    message: string
-    type: 'success' | 'error' | 'info'
-    isVisible: boolean
-  }>({
-    message: '',
-    type: 'info',
-    isVisible: false
-  })
   
   const [viewerContent, setViewerContent] = React.useState<{
     title: string
@@ -4541,18 +4507,6 @@ function LinksTab({ mediaItems, onDelete, onRefresh, setMediaItems, isDeleting, 
     fetchScrapedContents()
   }, [])
   
-  const showToast = (message: string, type: 'success' | 'error' | 'info') => {
-    setToast({
-      message,
-      type,
-      isVisible: true
-    })
-  }
-  
-  const hideToast = () => {
-    setToast(prev => ({ ...prev, isVisible: false }))
-  }
-  
 
 
   const handleViewContent = (item: any) => {
@@ -4583,7 +4537,7 @@ function LinksTab({ mediaItems, onDelete, onRefresh, setMediaItems, isDeleting, 
     
     if (!urlInput.trim()) {
       console.log('❌ URL input is empty, returning early')
-      showToast('Please enter a URL to scrape', 'error')
+      toast.error('Please enter a URL to scrape')
       return
     }
     
@@ -4594,7 +4548,7 @@ function LinksTab({ mediaItems, onDelete, onRefresh, setMediaItems, isDeleting, 
       
       if (!accessToken) {
         console.error("❌ No access token available")
-        showToast('Authentication required. Please sign in again.', 'error')
+        toast.error('Authentication required. Please sign in again.')
         return
       }
 
@@ -4621,13 +4575,13 @@ function LinksTab({ mediaItems, onDelete, onRefresh, setMediaItems, isDeleting, 
         
         // Show user-friendly error message
         if (response.status === 404) {
-          showToast('Webpage scraping service is currently unavailable. Please try again later.', 'error')
+          toast.error('Webpage scraping service is currently unavailable. Please try again later.')
         } else if (response.status === 401) {
-          showToast('Authentication failed. Please sign in again.', 'error')
+          toast.error('Authentication failed. Please sign in again.')
         } else if (response.status === 400) {
-          showToast('Invalid URL. Please check the URL and try again.', 'error')
+          toast.error('Invalid URL. Please check the URL and try again.')
         } else {
-          showToast(`Failed to scrape webpage. Error: ${response.status} ${response.statusText}`, 'error')
+          toast.error(`Failed to scrape webpage. Error: ${response.status} ${response.statusText}`)
         }
         return
       }
@@ -4636,7 +4590,7 @@ function LinksTab({ mediaItems, onDelete, onRefresh, setMediaItems, isDeleting, 
       console.log('✅ URL scraped successfully:', data)
       
       // Show success message
-      showToast('Webpage scraped and saved successfully!', 'success')
+      toast.success('Webpage scraped and saved successfully!')
       
       // Clear the input after successful scraping
       setUrlInput("")
@@ -4682,7 +4636,7 @@ function LinksTab({ mediaItems, onDelete, onRefresh, setMediaItems, isDeleting, 
       
       // Show user-friendly error message
       const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred'
-      showToast(`Failed to scrape webpage: ${errorMessage}`, 'error')
+      toast.error(`Failed to scrape webpage: ${errorMessage}`)
     } finally {
       console.log('🔍 Setting isScraping to false')
       setIsScraping(false)
@@ -4691,12 +4645,6 @@ function LinksTab({ mediaItems, onDelete, onRefresh, setMediaItems, isDeleting, 
   
   return (
     <div className="space-y-4">
-      <Toast 
-        message={toast.message}
-        type={toast.type}
-        isVisible={toast.isVisible}
-        onClose={hideToast}
-      />
       
       {viewerContent && (
         <ContentViewer
@@ -4800,15 +4748,6 @@ function YouTubeTab({ mediaItems, onDelete, onRefresh, setMediaItems, isDeleting
   const youtubeItems = mediaItems.filter((item: any) => item.type === 'youtube')
   const [urlInput, setUrlInput] = React.useState("")
   const [isTranscribing, setIsTranscribing] = React.useState(false)
-  const [toast, setToast] = React.useState<{
-    message: string
-    type: 'success' | 'error' | 'info'
-    isVisible: boolean
-  }>({
-    message: '',
-    type: 'info',
-    isVisible: false
-  })
   
   const [viewerContent, setViewerContent] = React.useState<{
     title: string
@@ -4820,17 +4759,6 @@ function YouTubeTab({ mediaItems, onDelete, onRefresh, setMediaItems, isDeleting
   
   const [isViewerOpen, setIsViewerOpen] = React.useState(false)
   
-  const showToast = (message: string, type: 'success' | 'error' | 'info') => {
-    setToast({
-      message,
-      type,
-      isVisible: true
-    })
-  }
-  
-  const hideToast = () => {
-    setToast(prev => ({ ...prev, isVisible: false }))
-  }
 
   const handleViewContent = (item: any) => {
     if (item.content) {
@@ -4858,14 +4786,14 @@ function YouTubeTab({ mediaItems, onDelete, onRefresh, setMediaItems, isDeleting
     
     if (!urlInput.trim()) {
       console.log('❌ URL input is empty, returning early')
-      showToast('Please enter a YouTube URL to transcribe', 'error')
+      toast.error('Please enter a YouTube URL to transcribe')
       return
     }
     
     // Validate YouTube URL
     const youtubeRegex = /^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.be)\/.+/
     if (!youtubeRegex.test(urlInput.trim())) {
-      showToast('Please enter a valid YouTube URL', 'error')
+      toast.error('Please enter a valid YouTube URL')
       return
     }
     
@@ -4876,7 +4804,7 @@ function YouTubeTab({ mediaItems, onDelete, onRefresh, setMediaItems, isDeleting
       
       if (!accessToken) {
         console.error("❌ No access token available")
-        showToast('Authentication required. Please sign in again.', 'error')
+        toast.error('Authentication required. Please sign in again.')
         return
       }
 
@@ -4899,7 +4827,7 @@ function YouTubeTab({ mediaItems, onDelete, onRefresh, setMediaItems, isDeleting
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}))
         console.error('❌ YouTube transcription failed:', response.status, errorData)
-        showToast(`Failed to transcribe video: ${errorData.error || response.statusText}`, 'error')
+        toast.error(`Failed to transcribe video: ${errorData.error || response.statusText}`)
         return
       }
 
@@ -4909,7 +4837,7 @@ function YouTubeTab({ mediaItems, onDelete, onRefresh, setMediaItems, isDeleting
        if (result.success) {
          if (result.data && result.data.status === 'processing') {
            // Transcription is being processed
-           showToast('YouTube transcription submitted! It will be available shortly in your media library.', 'info')
+           toast.info('YouTube transcription submitted! It will be available shortly in your media library.')
            setUrlInput("")
            
            // Refresh media items to show the new transcription
@@ -4938,10 +4866,10 @@ function YouTubeTab({ mediaItems, onDelete, onRefresh, setMediaItems, isDeleting
            // Clear input
            setUrlInput("")
            
-           showToast('YouTube video transcribed successfully!', 'success')
+           toast.success('YouTube video transcribed successfully!')
          } else {
            // Success but no data - might be processing
-           showToast('YouTube transcription submitted! Check your media library shortly.', 'info')
+           toast.info('YouTube transcription submitted! Check your media library shortly.')
            setUrlInput("")
            
            // Refresh media items
@@ -4950,12 +4878,12 @@ function YouTubeTab({ mediaItems, onDelete, onRefresh, setMediaItems, isDeleting
            }, 2000)
          }
        } else {
-         showToast('Failed to transcribe video. Please try again.', 'error')
+         toast.error('Failed to transcribe video. Please try again.')
        }
       
     } catch (error) {
       console.error('❌ Error transcribing YouTube video:', error)
-      showToast('An error occurred while transcribing the video', 'error')
+      toast.error('An error occurred while transcribing the video')
     } finally {
       setIsTranscribing(false)
     }
@@ -4963,12 +4891,6 @@ function YouTubeTab({ mediaItems, onDelete, onRefresh, setMediaItems, isDeleting
   
   return (
     <div className="space-y-4">
-      <Toast 
-        message={toast.message}
-        type={toast.type}
-        isVisible={toast.isVisible}
-        onClose={hideToast}
-      />
       
       {viewerContent && (
         <ContentViewer
@@ -5080,11 +5002,6 @@ function ImageAnalyzerTab({ mediaItems, onUpload, onDelete, isDeleting, deleting
   const [analysisResults, setAnalysisResults] = React.useState<{[key: string]: any}>({})
   const [selectedImageAnalysis, setSelectedImageAnalysis] = React.useState<any>(null)
   const [showAnalysisPopup, setShowAnalysisPopup] = React.useState<any>(null)
-  const [toast, setToast] = React.useState<{ message: string; type: 'success' | 'error' | 'info'; isVisible: boolean }>({
-    message: '',
-    type: 'info',
-    isVisible: false
-  })
   const fileInputRef = React.useRef<HTMLInputElement>(null)
   
   const imageItems = React.useMemo(() => 
@@ -5126,20 +5043,6 @@ function ImageAnalyzerTab({ mediaItems, onUpload, onDelete, isDeleting, deleting
     checkExistingAnalysis()
   }, [imageItems])
   
-  const showToast = (message: string, type: 'success' | 'error' | 'info') => {
-    setToast({
-      message,
-      type,
-      isVisible: true
-    })
-    setTimeout(() => {
-      setToast(prev => ({ ...prev, isVisible: false }))
-    }, 3000)
-  }
-
-  const hideToast = () => {
-    setToast(prev => ({ ...prev, isVisible: false }))
-  }
 
   const handleDrag = (e: React.DragEvent) => {
     e.preventDefault()
@@ -5259,10 +5162,10 @@ function ImageAnalyzerTab({ mediaItems, onUpload, onDelete, isDeleting, deleting
         }
       }))
       
-      showToast('Image analysis completed!', 'success')
+      toast.success('Image analysis completed!')
     } catch (error) {
       console.error('❌ Error analyzing image:', error)
-      showToast('Failed to analyze image. Please try again.', 'error')
+      toast.error('Failed to analyze image. Please try again.')
     } finally {
       setIsAnalyzing(false)
       setAnalyzingImageId(null)
@@ -5540,7 +5443,7 @@ function ImageAnalyzerTab({ mediaItems, onUpload, onDelete, isDeleting, deleting
                   size="sm"
                   onClick={() => {
                     navigator.clipboard.writeText(showAnalysisPopup.analysis.textContent)
-                    showToast('Analysis copied to clipboard!', 'success')
+                    toast.success('Analysis copied to clipboard!')
                   }}
                   className="h-8 px-3 text-xs border-green-200 text-green-600 hover:bg-green-50"
                 >
@@ -5659,12 +5562,6 @@ function ImageAnalyzerTab({ mediaItems, onUpload, onDelete, isDeleting, deleting
       )}
 
       {/* Toast Notification */}
-      <Toast
-        message={toast.message}
-        type={toast.type}
-        isVisible={toast.isVisible}
-        onClose={hideToast}
-      />
     </div>
   )
 }
