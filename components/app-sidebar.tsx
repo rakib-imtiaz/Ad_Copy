@@ -246,17 +246,17 @@ export function AppSidebar() {
         {/* New Chat Button - Top Section */}
         <div className={`mb-3 px-1 flex justify-start`}>
           <Button
-            variant="outline"
+            variant="ghost"
             onClick={handleNewChatClick}
-            className={`bg-black border-transparent text-white hover:bg-black hover:text-white transition-all duration-200 group ${
+            className={`bg-black text-white hover:bg-gray-800 hover:text-white transition-all duration-200 group ${
               state === 'expanded'
                 ? 'w-1/2 h-7 px-2 flex items-center gap-1'
                 : 'w-7 h-7 p-0'
             }`}
           >
-            <Plus className={`${state === 'expanded' ? 'h-2.5 w-2.5 group-hover:text-white transition-colors duration-200' : 'h-2.5 w-2.5'}`} />
+            <Plus className={`${state === 'expanded' ? 'h-2.5 w-2.5 transition-colors duration-200' : 'h-2.5 w-2.5 transition-colors duration-200'}`} />
             {state === 'expanded' && (
-              <span className="text-xs font-medium group-hover:text-white transition-colors duration-200">New chat</span>
+              <span className="text-xs font-medium group-hover:font-bold transition-all duration-200">New chat</span>
             )}
           </Button>
         </div>

@@ -3978,9 +3978,9 @@ function LeftSidebar({
                     }}
                     variant="ghost" 
                     size="icon" 
-                    className="h-8 w-8 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg"
+                    className="h-8 w-8 text-gray-600 hover:bg-gray-100 rounded-lg transition-all duration-200"
                   >
-                    <Plus className="h-4 w-4" />
+                    <Plus className="h-4 w-4 transition-colors duration-200" />
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent>
