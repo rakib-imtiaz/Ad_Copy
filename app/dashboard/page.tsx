@@ -45,6 +45,8 @@ import { ContentViewer } from "@/components/content-viewer"
 import { useSidebarState } from "@/lib/sidebar-state-context"
 import { useKnowledgeBase } from "@/hooks/use-cache"
 import { cacheHelpers } from "@/lib/cache-manager"
+import { useKnowledgeBaseSafety } from "@/hooks/use-knowledge-base-safety"
+import { KnowledgeBaseWarningModal } from "@/components/ui/knowledge-base-warning-modal"
 
   // Helper function to format time ago
 function formatTimeAgo(date: Date): string {
@@ -305,6 +307,15 @@ export default function Dashboard() {
     error: kbError 
   } = useKnowledgeBase()
   
+  // Knowledge base safety check
+  const { 
+    isKnowledgeBaseEmpty, 
+    isValidating: isValidatingKB, 
+    error: kbSafetyError, 
+    canStartChat, 
+    refreshValidation 
+  } = useKnowledgeBaseSafety()
+  
   
   // Memoize the setSelectedAgent function to prevent unnecessary re-renders
   const handleSelectAgent = React.useCallback((agentName: string) => {
@@ -330,6 +341,7 @@ export default function Dashboard() {
   const [isLoading, setIsLoading] = React.useState(false)
   const [sessionId, setSessionId] = React.useState<string>('')
   const [showCreditPopup, setShowCreditPopup] = React.useState(false)
+  const [showKnowledgeBaseWarning, setShowKnowledgeBaseWarning] = React.useState(false)
   const [mediaItems, setMediaItems] = React.useState<any[]>([])
   const [isRefreshing, setIsRefreshing] = React.useState(false)
   const [isLoadingMedia, setIsLoadingMedia] = React.useState(false)
@@ -2109,9 +2121,21 @@ export default function Dashboard() {
     await handleSendMessage(originalMessage)
   }
 
+  // Knowledge base warning modal handlers
+
+  const handleRetryValidation = () => {
+    refreshValidation()
+  }
+
   // Handle sending messages
   const handleSendMessage = async (content: string) => {
     if (!content.trim() || !currentUser) return
+
+    // Check knowledge base safety before allowing send
+    if (isKnowledgeBaseEmpty && !showKnowledgeBaseWarning) {
+      setShowKnowledgeBaseWarning(true)
+      return
+    }
 
     console.log('🚀 ===== CHAT MESSAGE FLOW START =====')
     console.log('📝 User message content:', content.trim())
@@ -3538,7 +3562,7 @@ export default function Dashboard() {
                     onKeyDown={(e) => {
                       if (e.key === 'Enter' && !e.shiftKey) {
                         e.preventDefault()
-                        if (messageInput.trim() && selectedAgent && !isLoading) {
+                        if (messageInput.trim() && selectedAgent && !isLoading && !isValidatingKB) {
                           handleSendMessage(messageInput.trim())
                           setMessageInput('')
                           if (textareaRef.current) {
@@ -3558,7 +3582,7 @@ export default function Dashboard() {
                 {/* Send Button */}
                 <button
                   onClick={() => {
-                    if (messageInput.trim() && selectedAgent && !isLoading) {
+                    if (messageInput.trim() && selectedAgent && !isLoading && !isValidatingKB) {
                       handleSendMessage(messageInput.trim())
                       setMessageInput('')
                       if (textareaRef.current) {
@@ -3566,13 +3590,19 @@ export default function Dashboard() {
                       }
                     }
                   }}
-                  disabled={!messageInput.trim() || !selectedAgent || isLoading}
+                  disabled={!messageInput.trim() || !selectedAgent || isLoading || isValidatingKB}
                   className={`flex-shrink-0 px-4 py-2 h-9 sm:h-10 rounded-xl flex items-center justify-center gap-2 transition-colors duration-200 ${
-                    messageInput.trim() && selectedAgent && !isLoading
+                    messageInput.trim() && selectedAgent && !isLoading && !isValidatingKB
                       ? 'bg-gradient-to-r from-yellow-300 via-yellow-400 to-yellow-500 hover:from-yellow-400 hover:via-yellow-500 hover:to-yellow-600 text-black shadow-md font-semibold'
                       : 'bg-white text-gray-400 opacity-60 cursor-not-allowed shadow-md border border-gray-200'
                   }`}
-                  title="Send message"
+                  title={
+                    isKnowledgeBaseEmpty 
+                      ? "Knowledge base is empty - upload content first"
+                      : isValidatingKB 
+                      ? "Validating knowledge base..."
+                      : "Send message"
+                  }
                 >
                   {isLoading ? (
                     <div className="animate-spin rounded-full h-4 w-4 border-2 border-black border-t-transparent" />
@@ -3644,6 +3674,15 @@ export default function Dashboard() {
 
 
       {/* Toast Notification */}
+
+      {/* Knowledge Base Warning Modal */}
+      <KnowledgeBaseWarningModal
+        isOpen={showKnowledgeBaseWarning}
+        onClose={() => setShowKnowledgeBaseWarning(false)}
+        onRetryValidation={handleRetryValidation}
+        isLoading={isValidatingKB}
+        error={kbSafetyError}
+      />
         </motion.div>
       )}
 

@@ -14,6 +14,8 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { MarkdownRenderer } from "@/components/ui/markdown-renderer"
 import ReactMarkdown from 'react-markdown'
 import { Conversation, ChatMessage, Agent, MediaItem } from "@/types"
+import { useKnowledgeBaseSafety } from "@/hooks/use-knowledge-base-safety"
+import { KnowledgeBaseWarningModal } from "@/components/ui/knowledge-base-warning-modal"
 
 interface ChatInterfaceProps {
   conversation?: Conversation
@@ -72,9 +74,19 @@ export function ChatInterface({
   const [message, setMessage] = React.useState("")
   const [isDragOver, setIsDragOver] = React.useState(false)
   const [isUploading, setIsUploading] = React.useState(false)
+  const [showKnowledgeBaseWarning, setShowKnowledgeBaseWarning] = React.useState(false)
 
   const messagesEndRef = React.useRef<HTMLDivElement>(null)
   const textareaRef = React.useRef<HTMLTextAreaElement>(null)
+
+  // Knowledge base safety check
+  const { 
+    isKnowledgeBaseEmpty, 
+    isValidating, 
+    error: kbError, 
+    canStartChat, 
+    refreshValidation 
+  } = useKnowledgeBaseSafety()
 
   const currentAgent = availableAgents.find(agent => agent.id === conversation?.agentId)
 
@@ -98,6 +110,12 @@ export function ChatInterface({
   }, [message])
 
   const handleSend = () => {
+    // Check knowledge base safety before allowing send
+    if (isKnowledgeBaseEmpty && !showKnowledgeBaseWarning) {
+      setShowKnowledgeBaseWarning(true)
+      return
+    }
+
     if (message.trim() && onSendMessage) {
       onSendMessage(message.trim(), [])
       setMessage("")
@@ -106,6 +124,17 @@ export function ChatInterface({
         textareaRef.current.style.height = 'auto'
       }
     }
+  }
+
+  const handleUploadContent = () => {
+    setShowKnowledgeBaseWarning(false)
+    // You can navigate to knowledge base upload page or trigger upload modal
+    // For now, we'll just close the modal - navigation logic can be added later
+    window.location.href = '/admin/branding' // Adjust URL as needed
+  }
+
+  const handleRetryValidation = () => {
+    refreshValidation()
   }
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
@@ -516,13 +545,19 @@ export function ChatInterface({
                   {/* Send Button with loading state */}
                   <Button
                     onClick={handleSend}
-                    disabled={!message.trim() || !currentAgent && !selectedAgent || isLoading}
+                    disabled={!message.trim() || !currentAgent && !selectedAgent || isLoading || isValidating}
                     className={`rounded-xl px-4 py-2 h-10 sm:h-11 flex items-center justify-center gap-2 transition-colors duration-200 ${
-                      message.trim() && (currentAgent || selectedAgent) && !isLoading
+                      message.trim() && (currentAgent || selectedAgent) && !isLoading && !isValidating
                         ? 'bg-gradient-to-r from-yellow-300 via-yellow-400 to-yellow-500 hover:from-yellow-400 hover:via-yellow-500 hover:to-yellow-600 text-black shadow-md font-semibold'
                         : 'bg-white text-gray-400 opacity-60 cursor-not-allowed shadow-md border border-gray-200'
                     }`}
-                    title="Send message (Enter)"
+                    title={
+                      isKnowledgeBaseEmpty 
+                        ? "Knowledge base is empty - upload content first"
+                        : isValidating 
+                        ? "Validating knowledge base..."
+                        : "Send message (Enter)"
+                    }
                   >
                     {isLoading ? (
                       <div className="animate-spin rounded-full h-4 w-4 border-2 border-black border-t-transparent" />
@@ -548,6 +583,16 @@ export function ChatInterface({
           </div>
         </div>
       </div>
+
+      {/* Knowledge Base Warning Modal */}
+      <KnowledgeBaseWarningModal
+        isOpen={showKnowledgeBaseWarning}
+        onClose={() => setShowKnowledgeBaseWarning(false)}
+        onUploadContent={handleUploadContent}
+        onRetryValidation={handleRetryValidation}
+        isLoading={isValidating}
+        error={kbError}
+      />
     </div>
   )
 }
