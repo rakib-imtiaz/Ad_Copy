@@ -4,7 +4,6 @@ import * as React from "react"
 import { 
   AlertTriangle, 
   Upload, 
-  RefreshCw, 
   X, 
   FileText, 
   Lightbulb,
@@ -20,8 +19,6 @@ import { useAuth } from "@/lib/auth-context"
 interface KnowledgeBaseWarningModalProps {
   isOpen: boolean
   onClose: () => void
-  onUploadContent?: () => void
-  onRetryValidation?: () => void
   isLoading?: boolean
   error?: string | null
 }
@@ -29,8 +26,6 @@ interface KnowledgeBaseWarningModalProps {
 export function KnowledgeBaseWarningModal({
   isOpen,
   onClose,
-  onUploadContent,
-  onRetryValidation,
   isLoading = false,
   error = null
 }: KnowledgeBaseWarningModalProps) {
@@ -94,20 +89,6 @@ export function KnowledgeBaseWarningModal({
                 <ArrowRight className="w-4 h-4 ml-auto" />
               </Button>
 
-              {/* Retry validation button */}
-              <Button
-                onClick={onRetryValidation}
-                variant="outline"
-                className="w-full justify-start gap-3 h-11"
-                disabled={isLoading}
-              >
-                {isLoading ? (
-                  <RefreshCw className="w-4 h-4 animate-spin" />
-                ) : (
-                  <RefreshCw className="w-4 h-4" />
-                )}
-                <span>Re-check Knowledge Base</span>
-              </Button>
             </div>
           </div >
 

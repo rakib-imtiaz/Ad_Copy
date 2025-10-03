@@ -2123,10 +2123,6 @@ export default function Dashboard() {
 
   // Knowledge base warning modal handlers
 
-  const handleRetryValidation = () => {
-    refreshValidation()
-  }
-
   // Handle sending messages
   const handleSendMessage = async (content: string) => {
     if (!content.trim() || !currentUser) return
@@ -3679,7 +3675,6 @@ export default function Dashboard() {
       <KnowledgeBaseWarningModal
         isOpen={showKnowledgeBaseWarning}
         onClose={() => setShowKnowledgeBaseWarning(false)}
-        onRetryValidation={handleRetryValidation}
         isLoading={isValidatingKB}
         error={kbSafetyError}
       />
