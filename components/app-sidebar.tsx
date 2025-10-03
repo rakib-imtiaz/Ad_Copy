@@ -56,6 +56,8 @@ import {
 import { Separator } from "@/components/ui/separator"
 import { AgentSelectionModal } from "@/components/agent-selection-modal"
 import { TypingText } from "@/components/ui/animated-text"
+import { useKnowledgeBaseSafety } from "@/hooks/use-knowledge-base-safety"
+import { KnowledgeBaseWarningModal } from "@/components/ui/knowledge-base-warning-modal"
 
 const mainNav = [
   // Knowledge Base moved to bottom section for better placement
@@ -131,8 +133,18 @@ export function AppSidebar() {
   const [deletingChatId, setDeletingChatId] = React.useState<string | null>(null)
   const [isAgentModalOpen, setIsAgentModalOpen] = React.useState(false)
   const [isStartingChat, setIsStartingChat] = React.useState(false)
+  const [showKnowledgeBaseWarning, setShowKnowledgeBaseWarning] = React.useState(false)
   const { user, logout } = useAuth()
   const { state } = useSidebar()
+  
+  // Knowledge base safety check
+  const { 
+    isKnowledgeBaseEmpty, 
+    isValidating: isValidatingKB, 
+    error: kbSafetyError, 
+    canStartChat, 
+    refreshValidation 
+  } = useKnowledgeBaseSafety()
   
   // Get sidebar state data
   const {
@@ -161,6 +173,14 @@ export function AppSidebar() {
   }
 
   const handleNewChatClick = () => {
+    // Check knowledge base safety before opening new chat modal
+    if (isKnowledgeBaseEmpty) {
+      console.log('❌ Knowledge base is empty - showing warning modal')
+      setShowKnowledgeBaseWarning(true)
+      return
+    }
+    
+    console.log('✅ Knowledge base validated - opening agent selection modal')
     setIsAgentModalOpen(true)
   }
 
@@ -625,6 +645,16 @@ export function AppSidebar() {
       onRefreshAgents={onRefreshAgents || (() => {})}
       isLoadingAgents={isLoadingAgents}
       isStartingChat={isStartingChat}
+    />
+
+    {/* Knowledge Base Warning Modal */}
+    <KnowledgeBaseWarningModal
+      isOpen={showKnowledgeBaseWarning}
+      onClose={() => setShowKnowledgeBaseWarning(false)}
+      onUploadContent={() => { window.location.href = '/knowledge-base' }}
+      onRetryValidation={refreshValidation}
+      isLoading={isValidatingKB}
+      error={kbSafetyError}
     />
     </>
   )
