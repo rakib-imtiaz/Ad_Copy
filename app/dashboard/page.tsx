@@ -3675,6 +3675,8 @@ export default function Dashboard() {
       <KnowledgeBaseWarningModal
         isOpen={showKnowledgeBaseWarning}
         onClose={() => setShowKnowledgeBaseWarning(false)}
+        onUploadContent={() => { window.location.href = '/knowledge-base' }}
+        onRetryValidation={refreshValidation}
         isLoading={isValidatingKB}
         error={kbSafetyError}
       />

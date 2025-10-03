@@ -19,6 +19,8 @@ import { useAuth } from "@/lib/auth-context"
 interface KnowledgeBaseWarningModalProps {
   isOpen: boolean
   onClose: () => void
+  onUploadContent: () => void
+  onRetryValidation: () => void
   isLoading?: boolean
   error?: string | null
 }
@@ -26,6 +28,8 @@ interface KnowledgeBaseWarningModalProps {
 export function KnowledgeBaseWarningModal({
   isOpen,
   onClose,
+  onUploadContent,
+  onRetryValidation,
   isLoading = false,
   error = null
 }: KnowledgeBaseWarningModalProps) {
