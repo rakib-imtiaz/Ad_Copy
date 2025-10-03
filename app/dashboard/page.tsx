@@ -44,6 +44,7 @@ import { toast } from "sonner"
 import { ContentViewer } from "@/components/content-viewer"
 import { useSidebarState } from "@/lib/sidebar-state-context"
 import { useKnowledgeBase } from "@/hooks/use-cache"
+import { cacheHelpers } from "@/lib/cache-manager"
 
   // Helper function to format time ago
 function formatTimeAgo(date: Date): string {
@@ -971,6 +972,14 @@ export default function Dashboard() {
       // Remove the chat from the chat history
       setChatHistory(prev => prev.filter(chat => chat.session_id !== sessionId))
       
+      // 🚀 FIX: Always clear localStorage when ANY chat is deleted to prevent stale data
+      console.log('🗑️ Clearing localStorage to prevent stale chat data...')
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('chat_session_id')
+        localStorage.removeItem('chat_started')
+        localStorage.removeItem('chat_messages')
+      }
+      
       // If the deleted chat was the current one, clear the current session
       if (currentChatSession === sessionId) {
         setCurrentChatSession(null)
@@ -978,18 +987,15 @@ export default function Dashboard() {
         setSessionId('')
         setChatStarted(false)
         setMessages([])
-        
-        // Clear localStorage
-        if (typeof window !== 'undefined') {
-          localStorage.removeItem('chat_session_id')
-          localStorage.removeItem('chat_started')
-          localStorage.removeItem('chat_messages')
-        }
       }
       
       // Auto-refresh chat history to ensure consistency with server
       console.log('🔄 Auto-refreshing chat history after deletion...')
       try {
+        // 🚀 FIX: Clear chat history cache before refreshing to prevent stale data
+        console.log('🗑️ Clearing chat history cache to ensure fresh data...')
+        cacheHelpers.invalidate('chatHistory')
+        
         await fetchChatHistory()
         
         // Check if this was the last chat deleted - if so, reset to welcome state
@@ -1659,6 +1665,26 @@ export default function Dashboard() {
       // Update chat history state
       setChatHistory(chatHistoryData)
       updateChatHistory(chatHistoryData)
+      
+      // 🚀 FIX: Clear localStorage if API returns empty data but localStorage has stale data
+      if (chatHistoryData.length === 0 && typeof window !== 'undefined') {
+        const savedSessionId = localStorage.getItem('chat_session_id')
+        const savedMessages = localStorage.getItem('chat_messages')
+        
+        if (savedSessionId || savedMessages) {
+          console.log('🗑️ API returned empty chat history but localStorage has stale data - clearing localStorage')
+          localStorage.removeItem('chat_session_id')
+          localStorage.removeItem('chat_started')
+          localStorage.removeItem('chat_messages')
+          
+          // Reset UI state
+          setCurrentChatSession(null)
+          updateCurrentChatSession(null)
+          setSessionId('')
+          setChatStarted(false)
+          setMessages([])
+        }
+      }
       
       // Sync current chat session with sidebar context
       if (currentChatSession) {

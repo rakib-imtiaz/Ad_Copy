@@ -25,7 +25,7 @@ export const CACHE_CONFIG: CacheConfig = {
   knowledgeBase: 300000,  // 5 minutes - KB doesn't change often
   agents: 600000,         // 10 minutes - agents rarely change
   mediaLibrary: 120000,   // 2 minutes - media might update
-  chatHistory: 60000,     // 1 minute - chat history updates frequently
+  chatHistory: 30000,     // 30 seconds - chat history updates very frequently
   userProfile: 900000,    // 15 minutes - user profile is stable
 };
 
