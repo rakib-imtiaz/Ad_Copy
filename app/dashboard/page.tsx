@@ -991,6 +991,25 @@ export default function Dashboard() {
       console.log('🔄 Auto-refreshing chat history after deletion...')
       try {
         await fetchChatHistory()
+        
+        // Check if this was the last chat deleted - if so, reset to welcome state
+        setTimeout(() => {
+          if (chatHistory.length <= 1) {
+            console.log('🔄 Last chat deleted, resetting to welcome state')
+            setCurrentChatSession(null)
+            updateCurrentChatSession(null)
+            setSessionId('')
+            setChatStarted(false)
+            setMessages([])
+            
+            // Clear localStorage
+            if (typeof window !== 'undefined') {
+              localStorage.removeItem('chat_session_id')
+              localStorage.removeItem('chat_started')
+              localStorage.removeItem('chat_messages')
+            }
+          }
+        }, 500)
         console.log('✅ Chat history refreshed successfully after deletion')
       } catch (refreshError) {
         console.error('❌ Error refreshing chat history after deletion:', refreshError)
