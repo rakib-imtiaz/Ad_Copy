@@ -43,6 +43,7 @@ import { Toaster } from "@/components/ui/sonner"
 import { toast } from "sonner"
 import { ContentViewer } from "@/components/content-viewer"
 import { useSidebarState } from "@/lib/sidebar-state-context"
+import { useKnowledgeBase } from "@/hooks/use-cache"
 
   // Helper function to format time ago
 function formatTimeAgo(date: Date): string {
@@ -295,6 +296,13 @@ export default function Dashboard() {
     updateIsLoadingChatHistory,
     setActionRefs
   } = useSidebarState()
+  
+  // 🚀 OPTIMIZATION: Use cached knowledge base instead of fetching on every message
+  const { 
+    data: cachedKnowledgeBase, 
+    isLoading: isLoadingKB,
+    error: kbError 
+  } = useKnowledgeBase()
   
   
   // Memoize the setSelectedAgent function to prevent unnecessary re-renders
@@ -1461,7 +1469,7 @@ export default function Dashboard() {
           agent_id: agentId,
           knowledge_base: knowledgeBaseData.length > 0 ? knowledgeBaseData : undefined
         }),
-        signal: AbortSignal.timeout(10000), // 10 second timeout
+        signal: AbortSignal.timeout(60000), // 60 second timeout for reliable connection
       })
 
       console.log('New chat webhook response:', {
@@ -1926,58 +1934,32 @@ export default function Dashboard() {
       }
       console.log('📄 ===== END SCRAPED CONTENT ANALYSIS =====')
 
-      // Prepare knowledge base data for every message
+      // 🚀 OPTIMIZATION: Use cached knowledge base instead of fetching every time
       let knowledgeBaseForMessage: ScrapedContentItem[] = []
-      console.log('📚 ===== FETCHING KNOWLEDGE BASE FOR MESSAGE =====')
-      try {
-        // Fetch knowledge base data from n8n webhook
-        const kbResponse = await fetch('/api/webhook/see-knowledge-base', {
-          method: 'GET',
-          headers: getAuthHeaders(accessToken),
-          signal: AbortSignal.timeout(10000), // 10 second timeout
-        })
+      console.log('📚 ===== USING CACHED KNOWLEDGE BASE =====')
+      
+      if (cachedKnowledgeBase) {
+        console.log('📦 Using cached knowledge base:', cachedKnowledgeBase.length, 'characters')
         
-        if (kbResponse.ok) {
-          const kbData = await kbResponse.json()
-          console.log('📚 Knowledge base API response:', kbData)
-          
-          // Extract knowledge base items from the response
-          if (kbData && Array.isArray(kbData)) {
-            knowledgeBaseForMessage = kbData.map((item: any) => ({
-              id: item.id || item.resource_id || `kb-${Math.random()}`,
-              filename: item.filename || item.resource_name || item.title || 'Unknown',
-              type: item.type || 'document',
-              content: item.content,
-              transcript: item.transcript,
-              url: item.url
-            }))
-          } else if (kbData && kbData.data && Array.isArray(kbData.data)) {
-            knowledgeBaseForMessage = kbData.data.map((item: any) => ({
-              id: item.id || item.resource_id || `kb-${Math.random()}`,
-              filename: item.filename || item.resource_name || item.title || 'Unknown',
-              type: item.type || 'document',
-              content: item.content,
-              transcript: item.transcript,
-              url: item.url
-            }))
-          }
-          
-          console.log('📚 Knowledge base items fetched:', knowledgeBaseForMessage.length)
-          if (knowledgeBaseForMessage.length > 0) {
-            knowledgeBaseForMessage.forEach((item, index) => {
-              console.log(`  ${index + 1}. ${item.filename} (${item.type})`)
-              console.log(`     Content length: ${item.content ? item.content.length : 0}`)
-              console.log(`     Transcript length: ${item.transcript ? item.transcript.length : 0}`)
-            })
-          } else {
-            console.log('📚 No knowledge base items found in API response')
-          }
-        } else {
-          console.error('📚 Failed to fetch knowledge base:', kbResponse.status, kbResponse.statusText)
-        }
-      } catch (error) {
-        console.error('📚 Error fetching knowledge base:', error)
+        // Transform cached KB into the expected format
+        knowledgeBaseForMessage = [{
+          id: 'cached-kb',
+          filename: 'Knowledge Base',
+          type: 'document',
+          content: cachedKnowledgeBase,
+          transcript: '',
+          url: ''
+        }]
+        
+        console.log('📦 Cached knowledge base formatted for message')
+      } else {
+        console.log('📦 No cached knowledge base available yet')
       }
+      
+      if (kbError) {
+        console.warn('📚 Knowledge base cache error:', kbError.message)
+      }
+      
       console.log('📚 ===== END KNOWLEDGE BASE FOR MESSAGE =====')
 
       // Enhance user prompt with scraped content context if available
@@ -2033,7 +2015,7 @@ export default function Dashboard() {
         method: 'POST',
         headers: getAuthHeaders(accessToken),
         body: JSON.stringify(requestPayload),
-        signal: AbortSignal.timeout(30000), // 30 second timeout for chat
+        signal: AbortSignal.timeout(60000), // 60 second timeout for chat to handle longer AI responses
       })
 
       console.log('Chat window webhook response:', {

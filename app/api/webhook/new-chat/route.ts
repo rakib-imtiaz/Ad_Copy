@@ -50,7 +50,7 @@ export async function POST(request: NextRequest) {
         access_token: accessToken,
         knowledge_base: knowledge_base || undefined
       }),
-      signal: AbortSignal.timeout(30000), // 30 second timeout
+      signal: AbortSignal.timeout(90000), // 90 second timeout for reliable connection
     })
 
     console.log('n8n response status:', response.status)
