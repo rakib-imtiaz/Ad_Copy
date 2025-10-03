@@ -298,3 +298,57 @@ export interface Citation {
   page?: number
   quote?: string
 }
+
+// Brand Form Data interface for form components
+export interface BrandFormData {
+  brandIdentity: {
+    businessNameTagline: {
+      name: string
+      tagline: string
+    }
+    founderNameBackstory: {
+      founders: string
+      backstory: string
+    }
+    missionStatement: {
+      whyWeExist: string
+      principles: string
+    }
+    businessModelType: string
+    uniqueSellingProposition: string
+    tonePersonality: {
+      style: string[]
+    }
+  }
+  targetAudience: {
+    idealCustomerProfile: {
+      description: string[]
+    }
+    primaryPainPoints: string[]
+    primaryDesiresGoals: string[]
+    commonObjections: string[]
+    audienceVocabulary: string[]
+  }
+  offers: {
+    name: string
+    price: string
+    description: string
+  }[]
+  clientAssets: {
+    socialMediaProfiles: {
+      instagram: string
+      youtube: string
+      facebook: string
+      tiktok: string
+    }
+    testimonialsCaseStudies: string[]
+  }
+  // Additional fields used in the form
+  productName?: string
+  productPrice?: string
+  productDescription?: string
+  socialInstagram?: string
+  socialLinkedIn?: string
+  testimonial?: string
+  otherInformation?: string
+}
