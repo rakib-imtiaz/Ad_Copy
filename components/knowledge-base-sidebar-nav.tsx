@@ -105,7 +105,7 @@ export function KnowledgeBaseSidebarNav({
         <div className="text-center space-y-4">
           <p className="text-xs font-medium text-gray-600">Need a head start?</p>
           <Button 
-            className="w-full bg-black hover:bg-gray-800 text-white text-xs py-2"
+            className="max-w-xs bg-black hover:bg-gray-800 text-white text-xs py-1 px-4 h-8"
             onClick={onAutoFillClick}
           >
             Auto-fill from Website

@@ -30,7 +30,7 @@ export function Header() {
       <div className="flex items-center space-x-4">
         <SidebarTrigger />
         <h1 className="text-xl font-semibold hidden sm:block">
-          Legal Dashboard
+          Copy Ready Dashboard
         </h1>
       </div>
 

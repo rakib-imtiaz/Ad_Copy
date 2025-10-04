@@ -217,10 +217,10 @@ function AgentSelector({ agents, selectedAgent, onSelectAgent, onOpenChange, isL
           </div>
                 <div className="flex-1 min-w-0 text-left">
                   <div className="font-semibold text-sm text-foreground">
-                    {currentAgent?.name || "Select an AI Agent"}
+                    {currentAgent?.name || "Select an Agent"}
         </div>
                   <div className="text-xs text-muted-foreground line-clamp-2 mt-1">
-                    {currentAgent?.description || "Choose your AI assistant to start creating amazing ad copy"}
+                    {currentAgent?.description || "Choose your AI assistant to create professional ad copy"}
             </div>
                 </div>
                 <ChevronDown className="h-4 w-4 text-muted-foreground" />
@@ -3365,30 +3365,25 @@ export default function Dashboard() {
         >
           <div className="px-3 py-2">
             {/* First Row - Agent */}
-            <motion.div 
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2, duration: 0.5 }}
-              className="flex items-center mb-1"
+              className="flex items-center justify-between mb-2"
             >
-              <div className="flex items-center space-x-1.5 w-16">
-                <div className="w-1.5 h-1.5 rounded-full bg-yellow-500 animate-pulse"></div>
-                <span className="text-[10px] font-medium text-gray-500 uppercase tracking-wide">Agent</span>
-              </div>
-              <motion.div
-                key={selectedAgent}
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.3 }}
-                className="flex items-center space-x-1.5"
-              >
-                <div className="w-4 h-4 rounded-full bg-yellow-500 flex items-center justify-center">
-                  <Bot className="w-2.5 h-2.5 text-black" />
+              <div className="flex items-center space-x-3">
+                <div className="h-8 w-8 rounded-lg bg-black flex items-center justify-center shadow-sm">
+                  <Bot className="h-4 w-4 text-white" />
                 </div>
-                <span className="text-xs font-bold text-black">
-                  {selectedAgent || 'No Agent Selected'}
-                </span>
-              </motion.div>
+                <div>
+                  <h2 className="text-sm font-medium text-black">
+                    Agent
+                  </h2>
+                  <p className="text-xs text-gray-600">
+                    {selectedAgent || 'Select an agent to get started'}
+                  </p>
+                </div>
+              </div>
             </motion.div>
 
           </div>
@@ -3925,7 +3920,7 @@ function LeftSidebar({
       {/* Agent Selector */}
       <div className="p-3 border-b border-gray-200 flex-shrink-0">
         <div className="flex items-center justify-between mb-2">
-          <h3 className="text-xs font-semibold text-gray-900">Current Agent</h3>
+          <h3 className="text-xs font-semibold text-gray-900">Agent</h3>
           <Button
             variant="ghost"
             size="sm"
