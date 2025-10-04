@@ -2,7 +2,7 @@
 
 import * as React from "react"
 import { Button } from "@/components/ui/button"
-import { ChevronRight, Check, Building2, Target, Eye, Users, Package, Link, Star, User, Award, FileText, BookOpen, Zap } from "lucide-react"
+import { ChevronRight, Check, Building2, Target, Eye, Users, Package, Link, Star, User, Award, FileText, BookOpen, Zap, Share2 } from "lucide-react"
 
 interface KnowledgeBaseSidebarNavProps {
   currentStep: number
@@ -15,14 +15,14 @@ interface KnowledgeBaseSidebarNavProps {
 const stepLabels = [
   "Basic Information",
   "Mission",
-  "Vision", 
+  "Brand Voice", 
   "Audience",
+  "Pain Points",
+  "Customer Goals",
   "Products",
-  "Social Links",
-  "Reviews",
-  "Founders",
+  "Social Media",
   "Testimonials",
-  "Case Studies",
+  "Founders",
   "Other",
   "Done"
 ]
@@ -35,9 +35,9 @@ const stepIcons = [
   Package,     // Products
   Link,        // Social Links
   Star,        // Reviews
-  User,        // Founders
+  Share2,      // Social Media
   Award,       // Testimonials
-  FileText,    // Case Studies
+  User,        // Founders
   BookOpen,    // Other
   Zap          // Done
 ]

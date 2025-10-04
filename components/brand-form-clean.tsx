@@ -874,9 +874,9 @@ export function BrandFormClean({ onSuccess }: BrandFormProps) {
                     {stepNumber === 5 && 'Products'}
                     {stepNumber === 6 && 'Social'}
                     {stepNumber === 7 && 'Reviews'}
-                    {stepNumber === 8 && 'Founders'}
+                    {stepNumber === 8 && 'Social Media'}
                     {stepNumber === 9 && 'Testimonials'}
-                    {stepNumber === 10 && 'Case'}
+                    {stepNumber === 10 && 'Founders'}
                     {stepNumber === 11 && 'Other'}
                     {stepNumber === 12 && 'Done'}
                   </span>
@@ -954,9 +954,9 @@ export function BrandFormClean({ onSuccess }: BrandFormProps) {
                 {currentStep === 5 && 'Products'}
                 {currentStep === 6 && 'Social Links'}
                 {currentStep === 7 && 'Reviews'}
-                {currentStep === 8 && 'Founders'}
+                {currentStep === 8 && 'Social Media'}
                 {currentStep === 9 && 'Testimonials'}
-                {currentStep === 10 && 'Case Studies'}
+                {currentStep === 10 && 'Founders'}
                 {currentStep === 11 && 'Other'}
                 {currentStep === 12 && 'Done'}
               </h2>
@@ -1140,7 +1140,7 @@ export function BrandFormClean({ onSuccess }: BrandFormProps) {
           </motion.div>
         )}
 
-        {/* Step 3: Brand Voice */}
+        {/* Step 3: Vision */}
         {currentStep === 3 && (
           <motion.div 
             variants={itemVariants}
