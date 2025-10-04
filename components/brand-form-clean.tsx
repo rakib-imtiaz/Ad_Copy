@@ -14,6 +14,7 @@ import { Progress } from "@/components/ui/progress"
 import { ChevronLeft, ChevronRight, Check, Save, Plus, Trash2, ArrowLeft } from "lucide-react"
 import { URLScrapingSection } from "@/components/url-scraping-section"
 import { PopulateDataButton } from "@/components/populate-data-button"
+import { KnowledgeBaseSidebarNav } from "@/components/knowledge-base-sidebar-nav"
 
 interface BrandFormData {
   brandIdentity: {
@@ -137,6 +138,7 @@ export function BrandFormClean({ onSuccess }: BrandFormProps) {
   const [completedSteps, setCompletedSteps] = React.useState<number[]>([])
   const [isSaving, setIsSaving] = React.useState(false)
   const [isLoading, setIsLoading] = React.useState(true)
+  const [showAutoFill, setShowAutoFill] = React.useState(false)
 
   const totalSteps = 12
 
@@ -797,22 +799,28 @@ export function BrandFormClean({ onSuccess }: BrandFormProps) {
     visible: {
       opacity: 1,
       transition: {
-        staggerChildren: 0.1
+        duration: 0.4,
+        staggerChildren: 0.05
       }
     }
   }
 
   const itemVariants = {
-    hidden: { opacity: 0, y: 20 },
+    hidden: { opacity: 0, y: 10 },
     visible: {
       opacity: 1,
       y: 0,
-      transition: { duration: 0.5 }
+      transition: { duration: 0.3 }
+    },
+    exit: {
+      opacity: 0,
+      y: -10,
+      transition: { duration: 0.2 }
     }
   }
 
-  // Step indicator component - compact
-  const StepIndicator = () => (
+  // All steps map function (removed StepIndicator component as we now use sidebar)
+  const renderSteps = () => (
     <div className="w-full mb-8 bg-white rounded-xl shadow-sm border border-slate-100 p-6">
       {/* Progress bar */}
       <div className="mb-6">
@@ -860,14 +868,14 @@ export function BrandFormClean({ onSuccess }: BrandFormProps) {
                   }`}>
                     {stepNumber === 1 && 'Basic'}
                     {stepNumber === 2 && 'Mission'}
-                    {stepNumber === 3 && 'Voice'}
+                    {stepNumber === 3 && 'Vision'}
                     {stepNumber === 4 && 'Audience'}
-                    {stepNumber === 5 && 'Pain'}
-                    {stepNumber === 6 && 'Goals'}
-                    {stepNumber === 7 && 'Products'}
-                    {stepNumber === 8 && 'Social'}
-                    {stepNumber === 9 && 'Reviews'}
-                    {stepNumber === 10 && 'Founders'}
+                    {stepNumber === 5 && 'Products'}
+                    {stepNumber === 6 && 'Social'}
+                    {stepNumber === 7 && 'Reviews'}
+                    {stepNumber === 8 && 'Founders'}
+                    {stepNumber === 9 && 'Testimonials'}
+                    {stepNumber === 10 && 'Case'}
                     {stepNumber === 11 && 'Other'}
                     {stepNumber === 12 && 'Done'}
                   </span>
@@ -920,44 +928,112 @@ export function BrandFormClean({ onSuccess }: BrandFormProps) {
   }
 
   return (
-    <div className="max-w-3xl mx-auto px-6 py-6">
-      {/* Simple back button */}
-      <div className="mb-6">
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => window.history.back()}
-          className="p-1 h-7 text-xs text-center"
-        >
-          <ArrowLeft className="h-3 w-3" />
-          <span className="ml-1">Back</span>
-        </Button>
-      </div>
+    <div className="min-h-screen bg-white flex">
+      {/* Sidebar Navigation */}
+      <KnowledgeBaseSidebarNav
+        currentStep={currentStep}
+        totalSteps={totalSteps}
+        completedSteps={completedSteps}
+        onStepClick={goToStep}
+        onAutoFillClick={() => setShowAutoFill(true)}
+      />
+      
+      {/* Main Content Area */}
+      <div className="flex-1 flex flex-col">
+        {/* Header */}
+        <div className="border-b border-slate-200 bg-white px-8 py-3">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-xs font-medium text-slate-600 tracking-wide uppercase">STEP {currentStep} OF {totalSteps}</h1>
+              <h2 className="text-xl font-semibold text-slate-900 mt-0.5">
+                {currentStep === 1 && 'Basic Information'}
+                {currentStep === 2 && 'Mission'}
+                {currentStep === 3 && 'Vision'}
+                {currentStep === 4 && 'Audience'}
+                {currentStep === 5 && 'Products'}
+                {currentStep === 6 && 'Social Links'}
+                {currentStep === 7 && 'Reviews'}
+                {currentStep === 8 && 'Founders'}
+                {currentStep === 9 && 'Testimonials'}
+                {currentStep === 10 && 'Case Studies'}
+                {currentStep === 11 && 'Other'}
+                {currentStep === 12 && 'Done'}
+              </h2>
+              <p className="text-sm text-slate-500 mt-1">Complete this section to move to the next step.</p>
+            </div>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => window.history.back()}
+              className="p-1.5 h-7 text-xs"
+            >
+              <ArrowLeft className="h-3 w-3 mr-1" />
+              Back
+            </Button>
+          </div>
+        </div>
 
-      {/* URL Scraping Section - moved to top */}
-      <motion.div
-        variants={containerVariants}
-        initial="hidden"
-        animate="visible"
-        className="mb-6"
-      >
-        <URLScrapingSection 
-          onDataScraped={handleDataScraped} 
-          onShowToast={showToastMessage}
-          formData={formData}
-          updateNestedField={updateNestedField}
-          updateField={updateField}
-        />
-      </motion.div>
+        {/* Auto-fill Modal */}
+        {showAutoFill && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/20 backdrop-blur-sm"
+            onClick={() => setShowAutoFill(false)}
+          >
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="bg-white rounded-xl shadow-2xl border max-w-lg w-full mx-4"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="text-xl font-semibold text-gray-900">Auto-Fill from Website</h2>
+                  <Button
+                    variant="ghost"
+                    onClick={() => setShowAutoFill(false)}
+                    className="text-gray-500 hover:text-gray-700"
+                  >
+                    ×
+                  </Button>
+                </div>
+                
+                <URLScrapingSection
+                  onDataScraped={(data) => {
+                    handleDataScraped(data)
+                    setShowAutoFill(false) // Close modal after successful scraping
+                  }}
+                  onShowToast={showToastMessage}
+                  formData={formData}
+                  updateNestedField={updateNestedField}
+                  updateField={updateField}
+                />
+                
+                <div className="flex justify-end mt-4">
+                  <Button
+                    variant="outline"
+                    onClick={() => setShowAutoFill(false)}
+                    className="text-sm"
+                  >
+                    Cancel
+                  </Button>
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
 
-        <motion.div 
-          variants={containerVariants}
-          initial="hidden"
-          animate="visible"
-        >
-          <StepIndicator />
-          
-          <form onSubmit={handleSubmit} className="space-y-4">
+        {/* Content Area */}
+        <div className="flex-1 px-8 py-3 overflow-y-auto">
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <motion.div 
+              variants={containerVariants}
+              initial="hidden"
+              animate="visible"
+            >
         
         {/* Step 1: Basic Business Information */}
         {currentStep === 1 && (
@@ -1143,18 +1219,18 @@ export function BrandFormClean({ onSuccess }: BrandFormProps) {
             transition={{ duration: 0.3 }}
           >
             <Card className="border border-slate-200 shadow-sm bg-white rounded-xl overflow-hidden">
-              <CardHeader className="text-center pb-8 bg-gradient-to-b from-slate-50 to-white border-b border-slate-100">
-                <div className="w-16 h-16 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-full flex items-center justify-center mx-auto mb-5 shadow-md">
-                  <span className="text-black text-xl font-bold">4</span>
+              <CardHeader className="text-center pb-6 bg-gradient-to-b from-amber-50/30 to-white border-b border-amber-100 shadow-sm">
+                <div className="w-12 h-12 bg-gradient-to-br from-amber-400 to-yellow-600 rounded-full flex items-center justify-center mx-auto mb-4 shadow-md transition-transform duration-300 hover:scale-105">
+                  <span className="text-black text-lg font-bold">4</span>
                 </div>
-                <CardTitle className="text-2xl font-bold text-slate-900 mb-2">Target Audience</CardTitle>
-                <CardDescription className="text-slate-600 text-base">Who are your ideal customers?</CardDescription>
+                <CardTitle className="text-lg font-semibold text-slate-900 mb-2">Target Audience</CardTitle>
+                <CardDescription className="text-slate-500 text-sm">Who are your ideal customers?</CardDescription>
               </CardHeader>
-              <CardContent className="space-y-8 p-8">
+              <CardContent className="space-y-6 p-6">
                 
                 {/* Ideal Customer Profile */}
                 <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-4">Ideal Customer Descriptions</label>
+                  <label className="block text-xs font-medium text-slate-600 mb-2">Ideal Customer Descriptions</label>
                   {formData.targetAudience.idealCustomerProfile.description.map((desc, index) => (
                     <div key={index} className="flex gap-2 mb-3">
                       <Textarea
@@ -1253,14 +1329,14 @@ export function BrandFormClean({ onSuccess }: BrandFormProps) {
             transition={{ duration: 0.3 }}
           >
             <Card className="border border-slate-200 shadow-sm bg-white rounded-xl overflow-hidden">
-              <CardHeader className="text-center pb-8 bg-gradient-to-b from-slate-50 to-white border-b border-slate-100">
-                <div className="w-16 h-16 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-full flex items-center justify-center mx-auto mb-5 shadow-md">
-                  <span className="text-black text-xl font-bold">5</span>
+              <CardHeader className="text-center pb-6 bg-gradient-to-b from-amber-50/30 to-white border-b border-amber-100 shadow-sm">
+                <div className="w-12 h-12 bg-gradient-to-br from-amber-400 to-yellow-600 rounded-full flex items-center justify-center mx-auto mb-4 shadow-md transition-transform duration-300 hover:scale-105">
+                  <span className="text-black text-lg font-bold">5</span>
                 </div>
-                <CardTitle className="text-2xl font-bold text-slate-900 mb-2">Pain Points</CardTitle>
-                <CardDescription className="text-slate-600 text-base">What problems do you solve?</CardDescription>
+                <CardTitle className="text-lg font-semibold text-slate-900 mb-2">Pain Points</CardTitle>
+                <CardDescription className="text-slate-500 text-sm">What problems do you solve?</CardDescription>
               </CardHeader>
-              <CardContent className="space-y-8 p-8">
+              <CardContent className="space-y-6 p-6">
                 
                 {/* Primary Pain Points */}
                 <div>
@@ -1363,14 +1439,14 @@ export function BrandFormClean({ onSuccess }: BrandFormProps) {
             transition={{ duration: 0.3 }}
           >
             <Card className="border border-slate-200 shadow-sm bg-white rounded-xl overflow-hidden">
-              <CardHeader className="text-center pb-8 bg-gradient-to-b from-slate-50 to-white border-b border-slate-100">
-                <div className="w-16 h-16 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-full flex items-center justify-center mx-auto mb-5 shadow-md">
-                  <span className="text-black text-xl font-bold">6</span>
+              <CardHeader className="text-center pb-6 bg-gradient-to-b from-amber-50/30 to-white border-b border-amber-100 shadow-sm">
+                <div className="w-12 h-12 bg-gradient-to-br from-amber-400 to-yellow-600 rounded-full flex items-center justify-center mx-auto mb-4 shadow-md transition-transform duration-300 hover:scale-105">
+                  <span className="text-black text-lg font-bold">6</span>
                 </div>
-                <CardTitle className="text-2xl font-bold text-slate-900 mb-2">Customer Goals & Desires</CardTitle>
-                <CardDescription className="text-slate-600 text-base">What do your customers want to achieve?</CardDescription>
+                <CardTitle className="text-lg font-semibold text-slate-900 mb-2">Customer Goals & Desires</CardTitle>
+                <CardDescription className="text-slate-500 text-sm">What do your customers want to achieve?</CardDescription>
               </CardHeader>
-              <CardContent className="space-y-8 p-8">
+              <CardContent className="space-y-6 p-6">
                 
                 {/* Primary Desires & Goals */}
                 <div>
@@ -1554,14 +1630,14 @@ export function BrandFormClean({ onSuccess }: BrandFormProps) {
             transition={{ duration: 0.3 }}
           >
             <Card className="border border-slate-200 shadow-sm bg-white rounded-xl overflow-hidden">
-              <CardHeader className="text-center pb-8 bg-gradient-to-b from-slate-50 to-white border-b border-slate-100">
-                <div className="w-16 h-16 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-full flex items-center justify-center mx-auto mb-5 shadow-md">
-                  <span className="text-black text-xl font-bold">8</span>
+              <CardHeader className="text-center pb-6 bg-gradient-to-b from-amber-50/30 to-white border-b border-amber-100 shadow-sm">
+                <div className="w-12 h-12 bg-gradient-to-br from-amber-400 to-yellow-600 rounded-full flex items-center justify-center mx-auto mb-4 shadow-md transition-transform duration-300 hover:scale-105">
+                  <span className="text-black text-lg font-bold">8</span>
                 </div>
-                <CardTitle className="text-2xl font-bold text-slate-900 mb-2">Social Media</CardTitle>
-                <CardDescription className="text-slate-600 text-base">Your online presence</CardDescription>
+                <CardTitle className="text-lg font-semibold text-slate-900 mb-2">Social Media</CardTitle>
+                <CardDescription className="text-slate-500 text-sm">Your online presence</CardDescription>
               </CardHeader>
-              <CardContent className="space-y-8 p-8">
+              <CardContent className="space-y-6 p-6">
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-3">Instagram Profile</label>
                   <Input
@@ -1631,14 +1707,14 @@ export function BrandFormClean({ onSuccess }: BrandFormProps) {
             transition={{ duration: 0.3 }}
           >
             <Card className="border border-slate-200 shadow-sm bg-white rounded-xl overflow-hidden">
-              <CardHeader className="text-center pb-8 bg-gradient-to-b from-slate-50 to-white border-b border-slate-100">
-                <div className="w-16 h-16 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-full flex items-center justify-center mx-auto mb-5 shadow-md">
-                  <span className="text-black text-xl font-bold">9</span>
+              <CardHeader className="text-center pb-6 bg-gradient-to-b from-amber-50/30 to-white border-b border-amber-100 shadow-sm">
+                <div className="w-12 h-12 bg-gradient-to-br from-amber-400 to-yellow-600 rounded-full flex items-center justify-center mx-auto mb-4 shadow-md transition-transform duration-300 hover:scale-105">
+                  <span className="text-black text-lg font-bold">9</span>
                 </div>
-                <CardTitle className="text-2xl font-bold text-slate-900 mb-2">Testimonials & Case Studies</CardTitle>
-                <CardDescription className="text-slate-600 text-base">Share customer testimonials and case studies</CardDescription>
+                <CardTitle className="text-lg font-semibold text-slate-900 mb-2">Testimonials & Case Studies</CardTitle>
+                <CardDescription className="text-slate-500 text-sm">Share customer testimonials and case studies</CardDescription>
               </CardHeader>
-              <CardContent className="space-y-8 p-8">
+              <CardContent className="space-y-6 p-6">
                 
                 {/* Testimonials & Case Studies */}
                 <div>
@@ -1711,14 +1787,14 @@ export function BrandFormClean({ onSuccess }: BrandFormProps) {
             transition={{ duration: 0.3 }}
           >
             <Card className="border border-slate-200 shadow-sm bg-white rounded-xl overflow-hidden">
-              <CardHeader className="text-center pb-8 bg-gradient-to-b from-slate-50 to-white border-b border-slate-100">
-                <div className="w-16 h-16 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-full flex items-center justify-center mx-auto mb-5 shadow-md">
-                  <span className="text-black text-xl font-bold">10</span>
+              <CardHeader className="text-center pb-6 bg-gradient-to-b from-amber-50/30 to-white border-b border-amber-100 shadow-sm">
+                <div className="w-12 h-12 bg-gradient-to-br from-amber-400 to-yellow-600 rounded-full flex items-center justify-center mx-auto mb-4 shadow-md transition-transform duration-300 hover:scale-105">
+                  <span className="text-black text-lg font-bold">10</span>
                 </div>
-                <CardTitle className="text-2xl font-bold text-slate-900 mb-2">Founders & Backstory</CardTitle>
-                <CardDescription className="text-slate-600 text-base">Tell us about the people behind the brand</CardDescription>
+                <CardTitle className="text-lg font-semibold text-slate-900 mb-2">Founders & Backstory</CardTitle>
+                <CardDescription className="text-slate-500 text-sm">Tell us about the people behind the brand</CardDescription>
               </CardHeader>
-              <CardContent className="space-y-8 p-8">
+              <CardContent className="space-y-6 p-6">
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-3">Founder(s) Name(s)</label>
                   <Input
@@ -1755,14 +1831,14 @@ export function BrandFormClean({ onSuccess }: BrandFormProps) {
             transition={{ duration: 0.3 }}
           >
             <Card className="border border-slate-200 shadow-sm bg-white rounded-xl overflow-hidden">
-              <CardHeader className="text-center pb-8 bg-gradient-to-b from-slate-50 to-white border-b border-slate-100">
-                <div className="w-16 h-16 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-full flex items-center justify-center mx-auto mb-5 shadow-md">
-                  <span className="text-black text-xl font-bold">11</span>
+              <CardHeader className="text-center pb-6 bg-gradient-to-b from-amber-50/30 to-white border-b border-amber-100 shadow-sm">
+                <div className="w-12 h-12 bg-gradient-to-br from-amber-400 to-yellow-600 rounded-full flex items-center justify-center mx-auto mb-4 shadow-md transition-transform duration-300 hover:scale-105">
+                  <span className="text-black text-lg font-bold">11</span>
                 </div>
-                <CardTitle className="text-2xl font-bold text-slate-900 mb-2">Other Information</CardTitle>
-                <CardDescription className="text-slate-600 text-base">Any additional information about your business</CardDescription>
+                <CardTitle className="text-lg font-semibold text-slate-900 mb-2">Other Information</CardTitle>
+                <CardDescription className="text-slate-500 text-sm">Any additional information about your business</CardDescription>
               </CardHeader>
-              <CardContent className="space-y-8 p-8">
+              <CardContent className="space-y-6 p-6">
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-3">Additional Information</label>
                   <Textarea
@@ -1811,22 +1887,22 @@ export function BrandFormClean({ onSuccess }: BrandFormProps) {
           </motion.div>
         )}
 
-        {/* Navigation Buttons */}
-        <motion.div 
-          className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-8 mt-6 bg-slate-50 border-t border-slate-200 rounded-xl p-6"
-          variants={itemVariants}
-        >
-          <div className="flex items-center gap-2 order-2 sm:order-1">
+            </motion.div>
+          </form>
+        </div>
+
+        {/* Bottom Navigation Bar */}
+        <div className="border-t border-amber-100 bg-gradient-to-t from-amber-50/50 to-white px-8 py-3 shadow-sm">
+          <div className="flex items-center justify-between">
             <Button
               type="button"
               variant="outline"
               onClick={prevStep}
               disabled={currentStep === 1}
-              size="sm"
-              className="flex items-center justify-center gap-1 h-7 text-xs"
+              className="px-3 py-1.5 text-xs"
             >
-              <ChevronLeft className="w-3 h-3" />
-              <span className="hidden sm:inline">Back</span>
+              <ChevronLeft className="w-3 h-3 mr-1" />
+              Back
             </Button>
             
             <Button
@@ -1834,52 +1910,41 @@ export function BrandFormClean({ onSuccess }: BrandFormProps) {
               variant="outline"
               onClick={saveProgress}
               disabled={isSaving}
-              size="sm"
-              className="flex items-center gap-1 h-7 text-xs bg-gradient-to-r from-yellow-400 to-yellow-600 hover:from-yellow-500 hover:to-yellow-700 text-black border-yellow-500 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-3 py-1.5 text-xs"
             >
-              <Save className="w-3 h-3" />
-              <span className="hidden sm:inline">{isSaving ? 'Saving...' : 'Save'}</span>
+              <Save className="w-3 h-3 mr-1" />
+              Save & Finish Later
             </Button>
-          </div>
 
-          <Badge variant="secondary" className="order-1 sm:order-2">
-            Step {currentStep} of {totalSteps}
-          </Badge>
-
-          <div className="flex items-center gap-2 order-3">
             {currentStep < totalSteps ? (
               <Button
                 type="button"
                 onClick={nextStep}
-                size="sm"
-                className="flex items-center gap-1 h-7 text-xs bg-gradient-to-r from-yellow-400 to-yellow-600 hover:from-yellow-500 hover:to-yellow-700 text-black border-0 shadow-sm"
+                className="px-4 py-1.5 bg-gradient-to-r from-amber-500 to-yellow-600 hover:from-amber-600 hover:to-yellow-700 text-white text-xs shadow-sm transition-all duration-200"
               >
-                <span>Next</span>
-                <ChevronRight className="w-3 h-3" />
+                Next Step
+                <ChevronRight className="w-3 h-3 ml-1" />
               </Button>
             ) : (
               <Button
-                type="submit"
+                type="submit" 
                 disabled={isSubmitting}
-                size="sm"
-                className="flex items-center gap-1 h-7 text-xs bg-gradient-to-r from-yellow-400 to-yellow-600 hover:from-yellow-500 hover:to-yellow-700 text-black border-0 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                className="px-4 py-1.5 bg-gradient-to-r from-amber-500 to-yellow-600 hover:from-amber-600 hover:to-yellow-700 text-white text-xs disabled:opacity-50 shadow-sm"
               >
-                <Save className="w-3 h-3" />
-                {isSubmitting ? 'Saving...' : 'Complete Setup'}
+                <Save className="w-3 h-3 mr-1" />
+                Complete Setup
               </Button>
             )}
           </div>
-        </motion.div>
-          </form>
-
-          {/* Toast Notification */}
-          <Toast
-            message={toastMessage}
-            type={toastType}
-            isVisible={showToast}
-            onClose={() => setShowToast(false)}
-          />
-        </motion.div>
+        </div>
+        {/* Toast Notification */}
+        <Toast
+          message={toastMessage}
+          type={toastType}
+          isVisible={showToast}
+          onClose={() => setShowToast(false)}
+        />
+      </div>
     </div>
   )
 }

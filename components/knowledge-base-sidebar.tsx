@@ -135,7 +135,7 @@ export function KnowledgeBaseSidebar({
       collapsible="icon" 
       className="border-r border-gray-200 bg-white"
       style={{
-        '--sidebar-width': '18rem',
+        '--sidebar-width': '14rem',
         '--sidebar-width-icon': '3rem'
       } as React.CSSProperties}
     >
