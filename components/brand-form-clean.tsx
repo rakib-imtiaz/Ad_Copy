@@ -15,6 +15,7 @@ import { ChevronLeft, ChevronRight, Check, Save, Plus, Trash2, ArrowLeft } from 
 import { URLScrapingSection } from "@/components/url-scraping-section"
 import { PopulateDataButton } from "@/components/populate-data-button"
 import { KnowledgeBaseSidebarNav } from "@/components/knowledge-base-sidebar-nav"
+import { BrandVoiceLinkExtractor } from "@/components/brand-voice-link-extractor"
 
 interface BrandFormData {
   brandIdentity: {
@@ -991,7 +992,7 @@ export function BrandFormClean({ onSuccess }: BrandFormProps) {
             >
               <div className="p-6">
                 <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-xl font-semibold text-gray-900">Auto-Fill from Website</h2>
+                  <h2 className="text-xl font-semibold text-gray-900">Extract Information from Web</h2>
                   <Button
                     variant="ghost"
                     onClick={() => setShowAutoFill(false)}
@@ -1156,8 +1157,18 @@ export function BrandFormClean({ onSuccess }: BrandFormProps) {
                 <CardTitle className="text-lg">Brand Voice</CardTitle>
                 <CardDescription className="text-sm">How does your brand communicate?</CardDescription>
               </CardHeader>
-              <CardContent className="space-y-3">
+              <CardContent className="space-y-4">
                 
+                {/* Brand Voice Link Extractor */}
+                <BrandVoiceLinkExtractor 
+                  onPatternsExtracted={(patterns: any[]) => {
+                    const styles = patterns.map((p: any) => p.style)
+                    updateArrayField(['brandIdentity', 'tonePersonality', 'style'], 0, styles.join(', '))
+                    showToastMessage(`Applied ${patterns.length} communication patterns`, 'success')
+                  }}
+                  onShowToast={showToastMessage}
+                />
+
                 {/* Tone & Personality Style */}
                 <div className="space-y-3">
                   <label className="text-sm font-medium">Communication Style</label>
@@ -1185,24 +1196,7 @@ export function BrandFormClean({ onSuccess }: BrandFormProps) {
                       </Button>
                     </div>
                   ))}
-                  <div className="flex justify-center">
-                      <Button
-                        type="button"
-                        variant="outline"
-                        onClick={(e) => {
-                          e.preventDefault()
-                          e.stopPropagation()
-                          console.log('Add button clicked for style')
-                          addArrayItem(['brandIdentity', 'tonePersonality', 'style'])
-                        }}
-                        className="h-7 px-3 text-xs text-center bg-gradient-to-r from-yellow-400 to-yellow-600 hover:from-yellow-500 hover:to-yellow-700 text-black border-yellow-500 shadow-sm"
-                      >
-                        <Plus className="w-3 h-3 mr-1" />
-                        Add Style
-                      </Button>
-                  </div>
                 </div>
-
 
               </CardContent>
             </Card>

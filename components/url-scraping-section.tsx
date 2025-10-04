@@ -126,7 +126,7 @@ export function URLScrapingSection({
           <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center mr-3">
             <Link className="h-4 w-4" />
           </div>
-          Auto-Fill from Website
+          Extract Information from Web
         </CardTitle>
         <CardDescription className="text-blue-600 text-sm">
           Enter a website URL to automatically extract and fill your knowledge base
