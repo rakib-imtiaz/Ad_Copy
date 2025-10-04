@@ -8,6 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { authService } from "@/lib/auth-service"
+import { toast } from "sonner"
 
 interface BrandVoicePattern {
   style: string
@@ -18,12 +19,10 @@ interface BrandVoicePattern {
 
 interface BrandVoiceLinkExtractorProps {
   onPatternsExtracted: (patterns: BrandVoicePattern[]) => void
-  onShowToast: (message: string, type: 'success' | 'error' | 'info') => void
 }
 
 export function BrandVoiceLinkExtractor({ 
-  onPatternsExtracted, 
-  onShowToast
+  onPatternsExtracted
 }: BrandVoiceLinkExtractorProps) {
   const [url, setUrl] = React.useState("")
   const [isExtracting, setIsExtracting] = React.useState(false)
@@ -95,9 +94,9 @@ export function BrandVoiceLinkExtractor({
       onPatternsExtracted(patterns)
       
       if (isYouTubeUrl) {
-        onShowToast(`Found ${patterns.length} tone patterns from YouTube video`, 'success')
+        toast.success(`Found ${patterns.length} tone patterns from YouTube video`)
       } else {
-        onShowToast(`Found ${patterns.length} communication patterns`, 'success')
+        toast.success(`Found ${patterns.length} communication patterns`)
       }
 
       console.log('✅ Brand voice pattern extraction completed successfully')

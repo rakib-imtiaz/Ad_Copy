@@ -3,7 +3,7 @@
 import * as React from "react"
 import { motion } from "framer-motion"
 import { authService } from "@/lib/auth-service"
-import { Toast } from "@/components/ui/toast"
+import { toast } from "sonner"
 import { API_ENDPOINTS } from "@/lib/api-config"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -133,9 +133,6 @@ interface BrandFormProps {
 export function BrandFormClean({ onSuccess }: BrandFormProps) {
   const [formData, setFormData] = React.useState<BrandFormData>(defaultFormData)
   const [isSubmitting, setIsSubmitting] = React.useState(false)
-  const [showToast, setShowToast] = React.useState(false)
-  const [toastMessage, setToastMessage] = React.useState("")
-  const [toastType, setToastType] = React.useState<'success' | 'error' | 'info'>('success')
   const [currentStep, setCurrentStep] = React.useState(1)
   const [completedSteps, setCompletedSteps] = React.useState<number[]>([])
   const [isSaving, setIsSaving] = React.useState(false)
@@ -149,9 +146,7 @@ export function BrandFormClean({ onSuccess }: BrandFormProps) {
     setFormData(data)
     
     // Show success message
-    setToastMessage("Knowledge base data loaded successfully! You can now edit each step.")
-    setToastType('success')
-    setShowToast(true)
+    showToastMessage("Knowledge base data loaded successfully! You can now edit each step.", 'success')
     
     // Navigate to first step to show the data
     setCurrentStep(1)
@@ -171,9 +166,13 @@ export function BrandFormClean({ onSuccess }: BrandFormProps) {
 
   // Show toast helper
   const showToastMessage = (message: string, type: 'success' | 'error' | 'info') => {
-    setToastMessage(message)
-    setToastType(type)
-    setShowToast(true)
+    if (type === 'success') {
+      toast.success(message)
+    } else if (type === 'error') {
+      toast.error(message)
+    } else {
+      toast(message)
+    }
   }
 
   // Simple data handler for URL scraping
@@ -219,9 +218,7 @@ export function BrandFormClean({ onSuccess }: BrandFormProps) {
                 const transformedData = transformFromWebhookFormat(bodyContent)
                 setFormData(transformedData)
                 
-                setToastMessage("Previous progress loaded successfully!")
-                setToastType('info')
-                setShowToast(true)
+                showToastMessage("Previous progress loaded successfully!", 'info')
               } else {
                 // Load regular knowledge base data
                 const transformedData = transformFromWebhookFormat(bodyContent)
@@ -483,9 +480,7 @@ export function BrandFormClean({ onSuccess }: BrandFormProps) {
     try {
       const accessToken = authService.getAuthToken()
       if (!accessToken) {
-        setToastMessage("Authentication required. Please log in again.")
-        setToastType('error')
-        setShowToast(true)
+        showToastMessage("Authentication required. Please log in again.", 'error')
         return
       }
 
@@ -584,18 +579,12 @@ export function BrandFormClean({ onSuccess }: BrandFormProps) {
       })
 
       if (response.ok) {
-        setToastMessage("Progress saved successfully!")
-        setToastType('success')
-        setShowToast(true)
+        showToastMessage("Progress saved successfully!", 'success')
       } else {
-        setToastMessage("Failed to save progress")
-        setToastType('error')
-        setShowToast(true)
+        showToastMessage("Failed to save progress", 'error')
       }
     } catch (error: any) {
-      setToastMessage("Error saving progress: " + error.message)
-      setToastType('error')
-      setShowToast(true)
+      showToastMessage("Error saving progress: " + error.message, 'error')
     } finally {
       setIsSaving(false)
     }
@@ -613,9 +602,7 @@ export function BrandFormClean({ onSuccess }: BrandFormProps) {
       const accessToken = authService.getAuthToken()
       if (!accessToken) {
         console.log('❌ No access token found')
-        setToastMessage("Authentication required. Please log in again.")
-        setToastType('error')
-        setShowToast(true)
+        showToastMessage("Authentication required. Please log in again.", 'error')
         return
       }
 
@@ -758,15 +745,11 @@ export function BrandFormClean({ onSuccess }: BrandFormProps) {
 
       if (response.ok) {
         console.log('✅ Form submission successful!')
-        setToastMessage("Brand information updated successfully!")
-        setToastType('success')
-        setShowToast(true)
+        showToastMessage("Brand information updated successfully!", 'success')
         onSuccess?.()
       } else {
         console.log('❌ Form submission failed with status:', response.status)
-        setToastMessage(`Failed to update brand information (${response.status})`)
-        setToastType('error')
-        setShowToast(true)
+        showToastMessage(`Failed to update brand information (${response.status})`, 'error')
       }
     } catch (error: any) {
       console.log('💥 Form submission error:')
@@ -787,9 +770,7 @@ export function BrandFormClean({ onSuccess }: BrandFormProps) {
         errorMessage += error.message
       }
       
-      setToastMessage(errorMessage)
-      setToastType('error')
-      setShowToast(true)
+      showToastMessage(errorMessage, 'error')
     } finally {
       console.log('=== FORM SUBMISSION END ===')
       setIsSubmitting(false)
@@ -901,14 +882,10 @@ export function BrandFormClean({ onSuccess }: BrandFormProps) {
           <PopulateDataButton 
             size="sm"
             onSuccess={() => {
-              setToastMessage("Knowledge base data loaded successfully! You can now edit each step.")
-              setToastType('success')
-              setShowToast(true)
+              showToastMessage("Knowledge base data loaded successfully! You can now edit each step.", 'success')
             }}
             onError={(message) => {
-              setToastMessage(`Failed to populate data: ${message}`)
-              setToastType('error')
-              setShowToast(true)
+              showToastMessage(`Failed to populate data: ${message}`, 'error')
             }}
           />
         </div>
@@ -1167,7 +1144,6 @@ export function BrandFormClean({ onSuccess }: BrandFormProps) {
                     updateArrayField(['brandIdentity', 'tonePersonality', 'style'], 0, styles.join(', '))
                     showToastMessage(`Applied ${patterns.length} communication patterns`, 'success')
                   }}
-                  onShowToast={showToastMessage}
                 />
 
                 {/* Tone & Personality Style */}
@@ -1177,7 +1153,7 @@ export function BrandFormClean({ onSuccess }: BrandFormProps) {
                     <div key={index} className="space-y-2">
                       {/* Show Markdown preview for YouTube tone analysis */}
                       {style.includes('##') || style.includes('**') ? (
-                        <div className="border rounded-lg p-4 bg-slate-50">
+                        <div className="border rounded-lg p-4 bg-slate-50 max-h-48 overflow-y-auto overflow-x-hidden">
                           <MarkdownRenderer 
                             content={style}
                             className="text-sm"
@@ -1946,13 +1922,6 @@ export function BrandFormClean({ onSuccess }: BrandFormProps) {
             )}
           </div>
         </div>
-        {/* Toast Notification */}
-        <Toast
-          message={toastMessage}
-          type={toastType}
-          isVisible={showToast}
-          onClose={() => setShowToast(false)}
-        />
       </div>
     </div>
   )
