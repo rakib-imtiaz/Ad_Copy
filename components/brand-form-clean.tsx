@@ -813,16 +813,18 @@ export function BrandFormClean({ onSuccess }: BrandFormProps) {
 
   // Step indicator component - compact
   const StepIndicator = () => (
-    <div className="w-full mb-4">
+    <div className="w-full mb-8 bg-white rounded-xl shadow-sm border border-slate-100 p-6">
       {/* Progress bar */}
-      <div className="mb-3">
-        <div className="flex justify-between text-xs text-muted-foreground mb-1">
-          <span>Step {currentStep} of {totalSteps}</span>
-          <span>{Math.round((currentStep / totalSteps) * 100)}% Complete</span>
+      <div className="mb-6">
+        <div className="flex justify-between items-center mb-3">
+          <span className="text-sm font-semibold text-slate-700">Step {currentStep} of {totalSteps}</span>
+          <div className="px-3 py-1 bg-yellow-50 text-yellow-700 text-xs font-medium rounded-full border border-yellow-200">
+            {Math.round((currentStep / totalSteps) * 100)}% Complete
+          </div>
         </div>
-        <div className="w-full bg-gray-200 rounded-full h-1.5">
+        <div className="w-full bg-slate-100 rounded-full h-2 overflow-hidden">
           <div 
-            className="bg-gradient-to-r from-yellow-400 to-yellow-600 h-1.5 rounded-full transition-all duration-300"
+            className="bg-gradient-to-r from-yellow-400 to-yellow-600 h-2 rounded-full transition-all duration-500 ease-out"
             style={{ width: `${(currentStep / totalSteps) * 100}%` }}
           />
         </div>
@@ -842,7 +844,7 @@ export function BrandFormClean({ onSuccess }: BrandFormProps) {
                   <button
                     type="button"
                     onClick={() => goToStep(stepNumber)}
-                    className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-medium transition-all duration-200 ${
+                    className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-medium transition-all duration-200 ${
                       isCompleted
                         ? 'bg-gradient-to-br from-yellow-400 to-yellow-600 text-black shadow-sm hover:from-yellow-500 hover:to-yellow-700'
                         : isCurrent
@@ -850,9 +852,9 @@ export function BrandFormClean({ onSuccess }: BrandFormProps) {
                         : 'bg-gray-200 text-gray-500 hover:bg-gray-300'
                     }`}
                   >
-                    {isCompleted ? <Check className="w-3 h-3" /> : stepNumber}
+                    {isCompleted ? <Check className="w-2.5 h-2.5" /> : stepNumber}
                   </button>
-                  <span className={`mt-0.5 text-xs font-medium text-center hidden sm:block max-w-12 ${
+                  <span className={`mt-0.5 text-[10px] font-medium text-center hidden sm:block max-w-12 ${
                     isCurrent ? 'text-yellow-600' : 
                     isCompleted ? 'text-yellow-600' : 'text-gray-500'
                   }`}>
@@ -882,19 +884,24 @@ export function BrandFormClean({ onSuccess }: BrandFormProps) {
       </div>
       
       {/* Populate Data Button */}
-      <div className="flex justify-center mt-3">
-        <PopulateDataButton 
-          onSuccess={() => {
-            setToastMessage("Knowledge base data loaded successfully! You can now edit each step.")
-            setToastType('success')
-            setShowToast(true)
-          }}
-          onError={(message) => {
-            setToastMessage(`Failed to populate data: ${message}`)
-            setToastType('error')
-            setShowToast(true)
-          }}
-        />
+      <div className="bg-gradient-to-r from-yellow-50 to-orange-50 rounded-xl border border-yellow-200 p-4 mb-6">
+        <div className="text-center">
+          <h3 className="text-sm font-semibold text-slate-700 mb-2">Quick Setup</h3>
+          <p className="text-xs text-slate-600 mb-3">Load your existing brand information to speed up the process</p>
+          <PopulateDataButton 
+            size="sm"
+            onSuccess={() => {
+              setToastMessage("Knowledge base data loaded successfully! You can now edit each step.")
+              setToastType('success')
+              setShowToast(true)
+            }}
+            onError={(message) => {
+              setToastMessage(`Failed to populate data: ${message}`)
+              setToastType('error')
+              setShowToast(true)
+            }}
+          />
+        </div>
       </div>
     </div>
   )
@@ -913,19 +920,35 @@ export function BrandFormClean({ onSuccess }: BrandFormProps) {
   }
 
   return (
-    <div className="max-w-2xl mx-auto px-4 py-4">
+    <div className="max-w-3xl mx-auto px-6 py-6">
       {/* Simple back button */}
-      <div className="mb-4">
+      <div className="mb-6">
         <Button
           variant="ghost"
           size="sm"
           onClick={() => window.history.back()}
-          className="p-1.5"
+          className="p-1 h-7 text-xs text-center"
         >
-          <ArrowLeft className="h-4 w-4" />
-          <span className="ml-2">Back</span>
+          <ArrowLeft className="h-3 w-3" />
+          <span className="ml-1">Back</span>
         </Button>
       </div>
+
+      {/* URL Scraping Section - moved to top */}
+      <motion.div
+        variants={containerVariants}
+        initial="hidden"
+        animate="visible"
+        className="mb-6"
+      >
+        <URLScrapingSection 
+          onDataScraped={handleDataScraped} 
+          onShowToast={showToastMessage}
+          formData={formData}
+          updateNestedField={updateNestedField}
+          updateField={updateField}
+        />
+      </motion.div>
 
         <motion.div 
           variants={containerVariants}
@@ -933,15 +956,6 @@ export function BrandFormClean({ onSuccess }: BrandFormProps) {
           animate="visible"
         >
           <StepIndicator />
-          
-          {/* URL Scraping Section */}
-          <URLScrapingSection 
-            onDataScraped={handleDataScraped} 
-            onShowToast={showToastMessage}
-            formData={formData}
-            updateNestedField={updateNestedField}
-            updateField={updateField}
-          />
           
           <form onSubmit={handleSubmit} className="space-y-4">
         
@@ -1083,34 +1097,33 @@ export function BrandFormClean({ onSuccess }: BrandFormProps) {
                       <Button
                         type="button"
                         variant="outline"
-                        size="sm"
                         onClick={(e) => {
                           e.preventDefault()
                           e.stopPropagation()
                           console.log('Remove button clicked for style', index)
                           removeArrayItem(['brandIdentity', 'tonePersonality', 'style'], index)
                         }}
-                        className="text-destructive hover:text-destructive"
+                        className="h-7 w-7 p-0 text-center text-destructive hover:text-destructive"
                       >
-                        <Trash2 className="w-4 h-4" />
+                        <Trash2 className="w-3 h-3" />
                       </Button>
                     </div>
                   ))}
                   <div className="flex justify-center">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={(e) => {
-                        e.preventDefault()
-                        e.stopPropagation()
-                        console.log('Add button clicked for style')
-                        addArrayItem(['brandIdentity', 'tonePersonality', 'style'])
-                      }}
-                      className="bg-gradient-to-r from-yellow-400 to-yellow-600 hover:from-yellow-500 hover:to-yellow-700 text-black border-yellow-500 shadow-sm"
-                    >
-                      <Plus className="w-4 h-4 mr-2" />
-                      Add Communication Style
-                    </Button>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={(e) => {
+                          e.preventDefault()
+                          e.stopPropagation()
+                          console.log('Add button clicked for style')
+                          addArrayItem(['brandIdentity', 'tonePersonality', 'style'])
+                        }}
+                        className="h-7 px-3 text-xs text-center bg-gradient-to-r from-yellow-400 to-yellow-600 hover:from-yellow-500 hover:to-yellow-700 text-black border-yellow-500 shadow-sm"
+                      >
+                        <Plus className="w-3 h-3 mr-1" />
+                        Add Style
+                      </Button>
                   </div>
                 </div>
 
@@ -1129,19 +1142,19 @@ export function BrandFormClean({ onSuccess }: BrandFormProps) {
             exit={{ opacity: 0, x: -20 }}
             transition={{ duration: 0.3 }}
           >
-            <Card className="border-0 shadow-xl bg-white">
-              <CardHeader className="text-center pb-6">
-                <div className="w-16 h-16 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-full flex items-center justify-center mx-auto mb-4">
+            <Card className="border border-slate-200 shadow-sm bg-white rounded-xl overflow-hidden">
+              <CardHeader className="text-center pb-8 bg-gradient-to-b from-slate-50 to-white border-b border-slate-100">
+                <div className="w-16 h-16 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-full flex items-center justify-center mx-auto mb-5 shadow-md">
                   <span className="text-black text-xl font-bold">4</span>
                 </div>
-                <CardTitle className="text-2xl font-bold text-slate-900">Target Audience</CardTitle>
-                <CardDescription className="text-slate-600">Who are your ideal customers?</CardDescription>
+                <CardTitle className="text-2xl font-bold text-slate-900 mb-2">Target Audience</CardTitle>
+                <CardDescription className="text-slate-600 text-base">Who are your ideal customers?</CardDescription>
               </CardHeader>
-              <CardContent className="space-y-6">
+              <CardContent className="space-y-8 p-8">
                 
                 {/* Ideal Customer Profile */}
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-3">Ideal Customer Descriptions</label>
+                  <label className="block text-sm font-semibold text-slate-700 mb-4">Ideal Customer Descriptions</label>
                   {formData.targetAudience.idealCustomerProfile.description.map((desc, index) => (
                     <div key={index} className="flex gap-2 mb-3">
                       <Textarea
@@ -1149,12 +1162,11 @@ export function BrandFormClean({ onSuccess }: BrandFormProps) {
                         onChange={(e) => updateArrayField(['targetAudience', 'idealCustomerProfile', 'description'], index, e.target.value)}
                         rows={3}
                         placeholder="Describe one type of ideal customer: demographics, job roles, company size, etc..."
-                        className="flex-1 focus:ring-purple-500 focus:border-purple-500"
+                        className="flex-1 focus:ring-yellow-500 focus:border-yellow-500 border-slate-200 rounded-lg"
                       />
                       <Button
                         type="button"
                         variant="outline"
-                        size="sm"
                         onClick={(e) => {
                           e.preventDefault()
                           e.stopPropagation()
@@ -1162,7 +1174,7 @@ export function BrandFormClean({ onSuccess }: BrandFormProps) {
                         }}
                         className="text-red-600 border-red-300 hover:bg-red-50 self-start mt-2"
                       >
-                        <Trash2 className="w-4 h-4" />
+                        <Trash2 className="w-3 h-3" />
                       </Button>
                     </div>
                   ))}
@@ -1175,10 +1187,10 @@ export function BrandFormClean({ onSuccess }: BrandFormProps) {
                         e.stopPropagation()
                         addArrayItem(['targetAudience', 'idealCustomerProfile', 'description'])
                       }}
-                      className="bg-gradient-to-r from-yellow-400 to-yellow-600 hover:from-yellow-500 hover:to-yellow-700 text-black border-yellow-500 shadow-sm"
+                      className="h-7 px-3 text-xs text-center bg-gradient-to-r from-yellow-400 to-yellow-600 hover:from-yellow-500 hover:to-yellow-700 text-black border-yellow-500 shadow-sm"
                     >
-                      <Plus className="w-4 h-4 mr-2" />
-                      Add Customer Type
+                        <Plus className="w-3 h-3 mr-1" />
+                      Add Type
                     </Button>
                   </div>
                 </div>
@@ -1193,20 +1205,19 @@ export function BrandFormClean({ onSuccess }: BrandFormProps) {
                         value={word}
                         onChange={(e) => updateArrayField(['targetAudience', 'audienceVocabulary'], index, e.target.value)}
                         placeholder="e.g., ROI, scalability, efficiency, KPIs"
-                        className="flex-1 focus:ring-purple-500 focus:border-purple-500"
+                        className="flex-1 focus:ring-yellow-500 focus:border-yellow-500 border-slate-200 rounded-lg"
                       />
                       <Button
                         type="button"
                         variant="outline"
-                        size="sm"
                         onClick={(e) => {
                           e.preventDefault()
                           e.stopPropagation()
                           removeArrayItem(['targetAudience', 'audienceVocabulary'], index)
                         }}
-                        className="text-red-600 border-red-300 hover:bg-red-50"
+                        className="h-7 w-7 p-0 text-center text-red-600 border-red-300 hover:bg-red-50"
                       >
-                        <Trash2 className="w-4 h-4" />
+                        <Trash2 className="w-3 h-3" />
                       </Button>
                     </div>
                   ))}
@@ -1219,10 +1230,10 @@ export function BrandFormClean({ onSuccess }: BrandFormProps) {
                         e.stopPropagation()
                         addArrayItem(['targetAudience', 'audienceVocabulary'])
                       }}
-                      className="bg-gradient-to-r from-yellow-400 to-yellow-600 hover:from-yellow-500 hover:to-yellow-700 text-black border-yellow-500 shadow-sm"
+                      className="h-7 px-3 text-xs text-center bg-gradient-to-r from-yellow-400 to-yellow-600 hover:from-yellow-500 hover:to-yellow-700 text-black border-yellow-500 shadow-sm"
                     >
-                      <Plus className="w-4 h-4 mr-2" />
-                      Add Vocabulary Word
+                        <Plus className="w-3 h-3 mr-1" />
+                      Add Word
                     </Button>
                   </div>
                 </div>
@@ -1241,15 +1252,15 @@ export function BrandFormClean({ onSuccess }: BrandFormProps) {
             exit={{ opacity: 0, x: -20 }}
             transition={{ duration: 0.3 }}
           >
-            <Card className="border-0 shadow-xl bg-white">
-              <CardHeader className="text-center pb-6">
-                <div className="w-16 h-16 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-full flex items-center justify-center mx-auto mb-4">
+            <Card className="border border-slate-200 shadow-sm bg-white rounded-xl overflow-hidden">
+              <CardHeader className="text-center pb-8 bg-gradient-to-b from-slate-50 to-white border-b border-slate-100">
+                <div className="w-16 h-16 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-full flex items-center justify-center mx-auto mb-5 shadow-md">
                   <span className="text-black text-xl font-bold">5</span>
                 </div>
-                <CardTitle className="text-2xl font-bold text-slate-900">Pain Points</CardTitle>
-                <CardDescription className="text-slate-600">What problems do you solve?</CardDescription>
+                <CardTitle className="text-2xl font-bold text-slate-900 mb-2">Pain Points</CardTitle>
+                <CardDescription className="text-slate-600 text-base">What problems do you solve?</CardDescription>
               </CardHeader>
-              <CardContent className="space-y-6">
+              <CardContent className="space-y-8 p-8">
                 
                 {/* Primary Pain Points */}
                 <div>
@@ -1261,20 +1272,19 @@ export function BrandFormClean({ onSuccess }: BrandFormProps) {
                         value={pain}
                         onChange={(e) => updateArrayField(['targetAudience', 'primaryPainPoints'], index, e.target.value)}
                         placeholder="e.g., Wasting time on manual processes, struggling with scalability"
-                        className="flex-1 focus:ring-purple-500 focus:border-purple-500"
+                        className="flex-1 focus:ring-yellow-500 focus:border-yellow-500 border-slate-200 rounded-lg"
                       />
                       <Button
                         type="button"
                         variant="outline"
-                        size="sm"
                         onClick={(e) => {
                           e.preventDefault()
                           e.stopPropagation()
                           removeArrayItem(['targetAudience', 'primaryPainPoints'], index)
                         }}
-                        className="text-red-600 border-red-300 hover:bg-red-50"
+                        className="h-7 w-7 p-0 text-center text-red-600 border-red-300 hover:bg-red-50"
                       >
-                        <Trash2 className="w-4 h-4" />
+                        <Trash2 className="w-3 h-3" />
                       </Button>
                     </div>
                   ))}
@@ -1287,10 +1297,10 @@ export function BrandFormClean({ onSuccess }: BrandFormProps) {
                         e.stopPropagation()
                         addArrayItem(['targetAudience', 'primaryPainPoints'])
                       }}
-                      className="bg-gradient-to-r from-yellow-400 to-yellow-600 hover:from-yellow-500 hover:to-yellow-700 text-black border-yellow-500 shadow-sm"
+                      className="h-7 px-3 text-xs text-center bg-gradient-to-r from-yellow-400 to-yellow-600 hover:from-yellow-500 hover:to-yellow-700 text-black border-yellow-500 shadow-sm"
                     >
-                      <Plus className="w-4 h-4 mr-2" />
-                      Add Pain Point
+                        <Plus className="w-3 h-3 mr-1" />
+                      Add Pain
                     </Button>
                   </div>
                 </div>
@@ -1305,20 +1315,19 @@ export function BrandFormClean({ onSuccess }: BrandFormProps) {
                         value={objection}
                         onChange={(e) => updateArrayField(['targetAudience', 'commonObjections'], index, e.target.value)}
                         placeholder="e.g., It's too expensive, We don't have time to implement"
-                        className="flex-1 focus:ring-purple-500 focus:border-purple-500"
+                        className="flex-1 focus:ring-yellow-500 focus:border-yellow-500 border-slate-200 rounded-lg"
                       />
                       <Button
                         type="button"
                         variant="outline"
-                        size="sm"
                         onClick={(e) => {
                           e.preventDefault()
                           e.stopPropagation()
                           removeArrayItem(['targetAudience', 'commonObjections'], index)
                         }}
-                        className="text-red-600 border-red-300 hover:bg-red-50"
+                        className="h-7 w-7 p-0 text-center text-red-600 border-red-300 hover:bg-red-50"
                       >
-                        <Trash2 className="w-4 h-4" />
+                        <Trash2 className="w-3 h-3" />
                       </Button>
                     </div>
                   ))}
@@ -1331,10 +1340,10 @@ export function BrandFormClean({ onSuccess }: BrandFormProps) {
                         e.stopPropagation()
                         addArrayItem(['targetAudience', 'commonObjections'])
                       }}
-                      className="bg-gradient-to-r from-yellow-400 to-yellow-600 hover:from-yellow-500 hover:to-yellow-700 text-black border-yellow-500 shadow-sm"
+                      className="h-7 px-3 text-xs text-center bg-gradient-to-r from-yellow-400 to-yellow-600 hover:from-yellow-500 hover:to-yellow-700 text-black border-yellow-500 shadow-sm"
                     >
-                      <Plus className="w-4 h-4 mr-2" />
-                      Add Objection
+                        <Plus className="w-3 h-3 mr-1" />
+                      Add +
                     </Button>
                   </div>
                 </div>
@@ -1353,15 +1362,15 @@ export function BrandFormClean({ onSuccess }: BrandFormProps) {
             exit={{ opacity: 0, x: -20 }}
             transition={{ duration: 0.3 }}
           >
-            <Card className="border-0 shadow-xl bg-white">
-              <CardHeader className="text-center pb-6">
-                <div className="w-16 h-16 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-full flex items-center justify-center mx-auto mb-4">
+            <Card className="border border-slate-200 shadow-sm bg-white rounded-xl overflow-hidden">
+              <CardHeader className="text-center pb-8 bg-gradient-to-b from-slate-50 to-white border-b border-slate-100">
+                <div className="w-16 h-16 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-full flex items-center justify-center mx-auto mb-5 shadow-md">
                   <span className="text-black text-xl font-bold">6</span>
                 </div>
-                <CardTitle className="text-2xl font-bold text-slate-900">Customer Goals & Desires</CardTitle>
-                <CardDescription className="text-slate-600">What do your customers want to achieve?</CardDescription>
+                <CardTitle className="text-2xl font-bold text-slate-900 mb-2">Customer Goals & Desires</CardTitle>
+                <CardDescription className="text-slate-600 text-base">What do your customers want to achieve?</CardDescription>
               </CardHeader>
-              <CardContent className="space-y-6">
+              <CardContent className="space-y-8 p-8">
                 
                 {/* Primary Desires & Goals */}
                 <div>
@@ -1373,20 +1382,19 @@ export function BrandFormClean({ onSuccess }: BrandFormProps) {
                         value={goal}
                         onChange={(e) => updateArrayField(['targetAudience', 'primaryDesiresGoals'], index, e.target.value)}
                         placeholder="e.g., Increase revenue by 50%, Scale to 100+ employees, Reduce operational costs"
-                        className="flex-1 focus:ring-purple-500 focus:border-purple-500"
+                        className="flex-1 focus:ring-yellow-500 focus:border-yellow-500 border-slate-200 rounded-lg"
                       />
                       <Button
                         type="button"
                         variant="outline"
-                        size="sm"
                         onClick={(e) => {
                           e.preventDefault()
                           e.stopPropagation()
                           removeArrayItem(['targetAudience', 'primaryDesiresGoals'], index)
                         }}
-                        className="text-red-600 border-red-300 hover:bg-red-50"
+                        className="h-7 w-7 p-0 text-center text-red-600 border-red-300 hover:bg-red-50"
                       >
-                        <Trash2 className="w-4 h-4" />
+                        <Trash2 className="w-3 h-3" />
                       </Button>
                     </div>
                   ))}
@@ -1399,10 +1407,10 @@ export function BrandFormClean({ onSuccess }: BrandFormProps) {
                         e.stopPropagation()
                         addArrayItem(['targetAudience', 'primaryDesiresGoals'])
                       }}
-                      className="bg-gradient-to-r from-yellow-400 to-yellow-600 hover:from-yellow-500 hover:to-yellow-700 text-black border-yellow-500 shadow-sm"
+                      className="h-7 px-3 text-xs text-center bg-gradient-to-r from-yellow-400 to-yellow-600 hover:from-yellow-500 hover:to-yellow-700 text-black border-yellow-500 shadow-sm"
                     >
-                      <Plus className="w-4 h-4 mr-2" />
-                      Add Customer Goal
+                        <Plus className="w-3 h-3 mr-1" />
+                      Add Goal
                     </Button>
                   </div>
                 </div>
@@ -1441,11 +1449,10 @@ export function BrandFormClean({ onSuccess }: BrandFormProps) {
                           <Button
                             type="button"
                             variant="outline"
-                            size="sm"
                             onClick={() => removeOffer(index)}
-                            className="text-destructive hover:text-destructive"
+                            className="h-7 w-7 p-0 text-center text-destructive hover:text-destructive"
                           >
-                            <Trash2 className="w-4 h-4" />
+                            <Trash2 className="w-3 h-3" />
                           </Button>
                         )}
                       </div>
@@ -1489,10 +1496,10 @@ export function BrandFormClean({ onSuccess }: BrandFormProps) {
                       type="button"
                       variant="outline"
                       onClick={addOffer}
-                      className="bg-gradient-to-r from-yellow-400 to-yellow-600 hover:from-yellow-500 hover:to-yellow-700 text-black border-yellow-500 shadow-sm"
+                      className="h-7 px-3 text-xs text-center bg-gradient-to-r from-yellow-400 to-yellow-600 hover:from-yellow-500 hover:to-yellow-700 text-black border-yellow-500 shadow-sm"
                     >
-                      <Plus className="w-4 h-4 mr-2" />
-                      Add Another Product/Service
+                        <Plus className="w-3 h-3 mr-1" />
+                      Add Product
                     </Button>
                   </div>
                 </div>
@@ -1546,15 +1553,15 @@ export function BrandFormClean({ onSuccess }: BrandFormProps) {
             exit={{ opacity: 0, x: -20 }}
             transition={{ duration: 0.3 }}
           >
-            <Card className="border-0 shadow-xl bg-white">
-              <CardHeader className="text-center pb-6">
-                <div className="w-16 h-16 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-full flex items-center justify-center mx-auto mb-4">
+            <Card className="border border-slate-200 shadow-sm bg-white rounded-xl overflow-hidden">
+              <CardHeader className="text-center pb-8 bg-gradient-to-b from-slate-50 to-white border-b border-slate-100">
+                <div className="w-16 h-16 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-full flex items-center justify-center mx-auto mb-5 shadow-md">
                   <span className="text-black text-xl font-bold">8</span>
                 </div>
-                <CardTitle className="text-2xl font-bold text-slate-900">Social Media</CardTitle>
-                <CardDescription className="text-slate-600">Your online presence</CardDescription>
+                <CardTitle className="text-2xl font-bold text-slate-900 mb-2">Social Media</CardTitle>
+                <CardDescription className="text-slate-600 text-base">Your online presence</CardDescription>
               </CardHeader>
-              <CardContent className="space-y-6">
+              <CardContent className="space-y-8 p-8">
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-3">Instagram Profile</label>
                   <Input
@@ -1623,15 +1630,15 @@ export function BrandFormClean({ onSuccess }: BrandFormProps) {
             exit={{ opacity: 0, x: -20 }}
             transition={{ duration: 0.3 }}
           >
-            <Card className="border-0 shadow-xl bg-white">
-              <CardHeader className="text-center pb-6">
-                <div className="w-16 h-16 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-full flex items-center justify-center mx-auto mb-4">
+            <Card className="border border-slate-200 shadow-sm bg-white rounded-xl overflow-hidden">
+              <CardHeader className="text-center pb-8 bg-gradient-to-b from-slate-50 to-white border-b border-slate-100">
+                <div className="w-16 h-16 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-full flex items-center justify-center mx-auto mb-5 shadow-md">
                   <span className="text-black text-xl font-bold">9</span>
                 </div>
-                <CardTitle className="text-2xl font-bold text-slate-900">Testimonials & Case Studies</CardTitle>
-                <CardDescription className="text-slate-600">Share customer testimonials and case studies</CardDescription>
+                <CardTitle className="text-2xl font-bold text-slate-900 mb-2">Testimonials & Case Studies</CardTitle>
+                <CardDescription className="text-slate-600 text-base">Share customer testimonials and case studies</CardDescription>
               </CardHeader>
-              <CardContent className="space-y-6">
+              <CardContent className="space-y-8 p-8">
                 
                 {/* Testimonials & Case Studies */}
                 <div>
@@ -1643,12 +1650,11 @@ export function BrandFormClean({ onSuccess }: BrandFormProps) {
                         onChange={(e) => updateArrayField(['clientAssets', 'testimonialsCaseStudies'], index, e.target.value)}
                         rows={3}
                         placeholder="Share testimonials and case studies from your customers..."
-                        className="flex-1 focus:ring-purple-500 focus:border-purple-500"
+                        className="flex-1 focus:ring-yellow-500 focus:border-yellow-500 border-slate-200 rounded-lg"
                       />
                       <Button
                         type="button"
                         variant="outline"
-                        size="sm"
                         onClick={(e) => {
                           e.preventDefault()
                           e.stopPropagation()
@@ -1656,7 +1662,7 @@ export function BrandFormClean({ onSuccess }: BrandFormProps) {
                         }}
                         className="text-red-600 border-red-300 hover:bg-red-50 self-start mt-2"
                       >
-                        <Trash2 className="w-4 h-4" />
+                        <Trash2 className="w-3 h-3" />
                       </Button>
                     </div>
                   ))}
@@ -1669,10 +1675,10 @@ export function BrandFormClean({ onSuccess }: BrandFormProps) {
                         e.stopPropagation()
                         addArrayItem(['clientAssets', 'testimonialsCaseStudies'])
                       }}
-                      className="bg-gradient-to-r from-yellow-400 to-yellow-600 hover:from-yellow-500 hover:to-yellow-700 text-black border-yellow-500 shadow-sm"
+                      className="h-7 px-3 text-xs text-center bg-gradient-to-r from-yellow-400 to-yellow-600 hover:from-yellow-500 hover:to-yellow-700 text-black border-yellow-500 shadow-sm"
                     >
-                      <Plus className="w-4 h-4 mr-2" />
-                      Add Testimonial
+                        <Plus className="w-3 h-3 mr-1" />
+                      Add +
                     </Button>
                   </div>
                 </div>
@@ -1704,15 +1710,15 @@ export function BrandFormClean({ onSuccess }: BrandFormProps) {
             exit={{ opacity: 0, x: -20 }}
             transition={{ duration: 0.3 }}
           >
-            <Card className="border-0 shadow-xl bg-white">
-              <CardHeader className="text-center pb-6">
-                <div className="w-16 h-16 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-full flex items-center justify-center mx-auto mb-4">
+            <Card className="border border-slate-200 shadow-sm bg-white rounded-xl overflow-hidden">
+              <CardHeader className="text-center pb-8 bg-gradient-to-b from-slate-50 to-white border-b border-slate-100">
+                <div className="w-16 h-16 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-full flex items-center justify-center mx-auto mb-5 shadow-md">
                   <span className="text-black text-xl font-bold">10</span>
                 </div>
-                <CardTitle className="text-2xl font-bold text-slate-900">Founders & Backstory</CardTitle>
-                <CardDescription className="text-slate-600">Tell us about the people behind the brand</CardDescription>
+                <CardTitle className="text-2xl font-bold text-slate-900 mb-2">Founders & Backstory</CardTitle>
+                <CardDescription className="text-slate-600 text-base">Tell us about the people behind the brand</CardDescription>
               </CardHeader>
-              <CardContent className="space-y-6">
+              <CardContent className="space-y-8 p-8">
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-3">Founder(s) Name(s)</label>
                   <Input
@@ -1748,15 +1754,15 @@ export function BrandFormClean({ onSuccess }: BrandFormProps) {
             exit={{ opacity: 0, x: -20 }}
             transition={{ duration: 0.3 }}
           >
-            <Card className="border-0 shadow-xl bg-white">
-              <CardHeader className="text-center pb-6">
-                <div className="w-16 h-16 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-full flex items-center justify-center mx-auto mb-4">
+            <Card className="border border-slate-200 shadow-sm bg-white rounded-xl overflow-hidden">
+              <CardHeader className="text-center pb-8 bg-gradient-to-b from-slate-50 to-white border-b border-slate-100">
+                <div className="w-16 h-16 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-full flex items-center justify-center mx-auto mb-5 shadow-md">
                   <span className="text-black text-xl font-bold">11</span>
                 </div>
-                <CardTitle className="text-2xl font-bold text-slate-900">Other Information</CardTitle>
-                <CardDescription className="text-slate-600">Any additional information about your business</CardDescription>
+                <CardTitle className="text-2xl font-bold text-slate-900 mb-2">Other Information</CardTitle>
+                <CardDescription className="text-slate-600 text-base">Any additional information about your business</CardDescription>
               </CardHeader>
-              <CardContent className="space-y-6">
+              <CardContent className="space-y-8 p-8">
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-3">Additional Information</label>
                   <Textarea
@@ -1783,8 +1789,8 @@ export function BrandFormClean({ onSuccess }: BrandFormProps) {
           >
             <Card>
               <CardHeader className="text-center pb-4">
-                <div className="w-12 h-12 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-full flex items-center justify-center mx-auto mb-3">
-                  <Check className="w-6 h-6 text-black" />
+                <div className="w-10 h-10 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-full flex items-center justify-center mx-auto mb-3">
+                  <Check className="w-4 h-4 text-black" />
                 </div>
                 <CardTitle className="text-xl">Ready to Complete!</CardTitle>
                 <CardDescription>Review your information and submit to save your brand profile</CardDescription>
@@ -1807,7 +1813,7 @@ export function BrandFormClean({ onSuccess }: BrandFormProps) {
 
         {/* Navigation Buttons */}
         <motion.div 
-          className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-4"
+          className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-8 mt-6 bg-slate-50 border-t border-slate-200 rounded-xl p-6"
           variants={itemVariants}
         >
           <div className="flex items-center gap-2 order-2 sm:order-1">
@@ -1816,9 +1822,10 @@ export function BrandFormClean({ onSuccess }: BrandFormProps) {
               variant="outline"
               onClick={prevStep}
               disabled={currentStep === 1}
-              className="flex items-center gap-2"
+              size="sm"
+              className="flex items-center justify-center gap-1 h-7 text-xs"
             >
-              <ChevronLeft className="w-4 h-4" />
+              <ChevronLeft className="w-3 h-3" />
               <span className="hidden sm:inline">Back</span>
             </Button>
             
@@ -1827,9 +1834,10 @@ export function BrandFormClean({ onSuccess }: BrandFormProps) {
               variant="outline"
               onClick={saveProgress}
               disabled={isSaving}
-              className="flex items-center gap-2 bg-gradient-to-r from-yellow-400 to-yellow-600 hover:from-yellow-500 hover:to-yellow-700 text-black border-yellow-500 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+              size="sm"
+              className="flex items-center gap-1 h-7 text-xs bg-gradient-to-r from-yellow-400 to-yellow-600 hover:from-yellow-500 hover:to-yellow-700 text-black border-yellow-500 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              <Save className="w-4 h-4" />
+              <Save className="w-3 h-3" />
               <span className="hidden sm:inline">{isSaving ? 'Saving...' : 'Save'}</span>
             </Button>
           </div>
@@ -1843,18 +1851,20 @@ export function BrandFormClean({ onSuccess }: BrandFormProps) {
               <Button
                 type="button"
                 onClick={nextStep}
-                className="flex items-center gap-2 bg-gradient-to-r from-yellow-400 to-yellow-600 hover:from-yellow-500 hover:to-yellow-700 text-black border-0 shadow-sm"
+                size="sm"
+                className="flex items-center gap-1 h-7 text-xs bg-gradient-to-r from-yellow-400 to-yellow-600 hover:from-yellow-500 hover:to-yellow-700 text-black border-0 shadow-sm"
               >
                 <span>Next</span>
-                <ChevronRight className="w-4 h-4" />
+                <ChevronRight className="w-3 h-3" />
               </Button>
             ) : (
               <Button
                 type="submit"
                 disabled={isSubmitting}
-                className="flex items-center gap-2 bg-gradient-to-r from-yellow-400 to-yellow-600 hover:from-yellow-500 hover:to-yellow-700 text-black border-0 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                size="sm"
+                className="flex items-center gap-1 h-7 text-xs bg-gradient-to-r from-yellow-400 to-yellow-600 hover:from-yellow-500 hover:to-yellow-700 text-black border-0 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                <Save className="w-4 h-4" />
+                <Save className="w-3 h-3" />
                 {isSubmitting ? 'Saving...' : 'Complete Setup'}
               </Button>
             )}

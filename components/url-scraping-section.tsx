@@ -120,13 +120,15 @@ export function URLScrapingSection({
   }
 
   return (
-    <Card className="mb-6 border-blue-200 bg-blue-50/50">
-      <CardHeader className="pb-3">
-        <CardTitle className="flex items-center text-blue-800">
-          <Link className="h-5 w-5 mr-2" />
+    <Card className="mb-6 border-blue-200 bg-gradient-to-br from-blue-50 to-indigo-50 shadow-sm">
+      <CardHeader className="pb-4">
+        <CardTitle className="flex items-center text-blue-800 text-base font-semibold">
+          <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center mr-3">
+            <Link className="h-4 w-4" />
+          </div>
           Auto-Fill from Website
         </CardTitle>
-        <CardDescription className="text-blue-600">
+        <CardDescription className="text-blue-600 text-sm">
           Enter a website URL to automatically extract and fill your knowledge base
         </CardDescription>
       </CardHeader>
@@ -144,16 +146,17 @@ export function URLScrapingSection({
           <Button
             onClick={handleScrape}
             disabled={isScraping || !url.trim()}
-            className="bg-blue-600 hover:bg-blue-700"
+            size="sm"
+            className="h-7 text-xs text-center bg-blue-600 hover:bg-blue-700"
           >
             {isScraping ? (
               <>
-                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                <Loader2 className="h-3 w-3 mr-1 animate-spin" />
                 Scraping...
               </>
             ) : (
               <>
-                <Link className="h-4 w-4 mr-2" />
+                <Link className="h-3 w-3 mr-1" />
                 Scrape
               </>
             )}
