@@ -1214,46 +1214,91 @@ export function BrandFormClean({ onSuccess }: BrandFormProps) {
               <CardContent className="space-y-6 p-6">
                 
                 {/* Ideal Customer Profile */}
-                <div>
-                  <label className="block text-xs font-medium text-slate-600 mb-2">Ideal Customer Descriptions</label>
-                  {formData.targetAudience.idealCustomerProfile.description.map((desc, index) => (
-                    <div key={index} className="flex gap-2 mb-3">
-                      <Textarea
-                        value={desc}
-                        onChange={(e) => updateArrayField(['targetAudience', 'idealCustomerProfile', 'description'], index, e.target.value)}
-                        rows={3}
-                        placeholder="Describe one type of ideal customer: demographics, job roles, company size, etc..."
-                        className="flex-1 focus:ring-yellow-500 focus:border-yellow-500 border-slate-200 rounded-lg"
-                      />
+                <div className="bg-white border border-slate-200 rounded-xl p-5 hover:shadow-sm transition-shadow duration-200">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-3">
+                      <div>
+                        <div className="flex items-center gap-2 mb-1">
+                          <label className="text-sm font-semibold text-slate-800">Ideal Customer Descriptions</label>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={(e) => {
+                              e.preventDefault()
+                              e.stopPropagation()
+                              addArrayItem(['targetAudience', 'idealCustomerProfile', 'description'])
+                            }}
+                            className="h-6 w-6 p-0 hover:bg-green-100 hover:text-green-600 rounded-full transition-colors duration-150"
+                            title="Add customer type"
+                          >
+                            <Plus className="w-4 h-4" />
+                          </Button>
+                        </div>
+                        <p className="text-xs text-slate-500">Describe different types of ideal customers</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <span className="text-xs text-slate-400">{formData.targetAudience.idealCustomerProfile.description.length}</span>
+                      <span className="text-xs text-slate-400">types</span>
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-3">
+                    {formData.targetAudience.idealCustomerProfile.description.map((desc, index) => (
+                      <div key={index} className="group relative bg-slate-50 rounded-lg border border-slate-100 hover:border-slate-200 transition-colors duration-150">
+                        <div className="p-3">
+                          <Textarea
+                            value={desc}
+                            onChange={(e) => updateArrayField(['targetAudience', 'idealCustomerProfile', 'description'], index, e.target.value)}
+                            rows={3}
+                            placeholder="Describe one type of ideal customer: demographics, job roles, company size, etc..."
+                            className="border-0 bg-transparent focus:ring-0 text-sm placeholder:text-slate-400 font-medium text-slate-700 resize-none"
+                          />
+                          <div className="flex justify-end mt-2">
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              onClick={(e) => {
+                                e.preventDefault()
+                                e.stopPropagation()
+                                removeArrayItem(['targetAudience', 'idealCustomerProfile', 'description'], index)
+                              }}
+                              className="h-6 w-6 p-0 hover:bg-red-100 hover:text-red-600 rounded-full transition-colors duration-150 opacity-0 group-hover:opacity-100"
+                              title="Remove this customer type"
+                            >
+                              <Trash2 className="w-3 h-3" />
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  
+                  {formData.targetAudience.idealCustomerProfile.description.length === 0 && (
+                    <div className="text-center py-6 text-slate-400">
+                      <div className="w-12 h-12 mx-auto mb-3 bg-slate-100 rounded-xl flex items-center justify-center">
+                        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 20h5v-2a3 3 0 00-5.196-2.121M12 6.75v2.25M12 6.75V3a1.5 1.5 0 00-1.5-1.5h-1.5M12 6.75H8.25m3.75 0H3m9 15v-2.25m0 0v-2.25m0 0h-2.25M12 6.75a1.5 1.5 0 011.5-1.5h1.5M12 6.75h.375m0 0h.375m-.375 0V3a1.5 1.5 0 00-1.5-1.5h-.375M12 6.75V3a1.5 1.5 0 011.5-1.5h1.5V3a1.5 1.5 0 011.5 1.5h1.5M12 6.75V3a1.5 1.5 0 011.5-1.5h1.5" />
+                        </svg>
+                      </div>
+                      <p className="text-sm mb-2">No customer types added yet</p>
                       <Button
                         type="button"
                         variant="outline"
                         onClick={(e) => {
                           e.preventDefault()
                           e.stopPropagation()
-                          removeArrayItem(['targetAudience', 'idealCustomerProfile', 'description'], index)
+                          addArrayItem(['targetAudience', 'idealCustomerProfile', 'description'])
                         }}
-                        className="text-red-600 border-red-300 hover:bg-red-50 self-start mt-2"
+                        className="h-8 px-4 text-xs bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white border-0 rounded-lg shadow-sm transition-all duration-200"
                       >
-                        <Trash2 className="w-3 h-3" />
+                        <Plus className="w-3 h-3 mr-1" />
+                        Add First Customer Type
                       </Button>
                     </div>
-                  ))}
-                  <div className="flex justify-center">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={(e) => {
-                        e.preventDefault()
-                        e.stopPropagation()
-                        addArrayItem(['targetAudience', 'idealCustomerProfile', 'description'])
-                      }}
-                      className="h-7 px-3 text-xs text-center bg-gradient-to-r from-yellow-400 to-yellow-600 hover:from-yellow-500 hover:to-yellow-700 text-black border-yellow-500 shadow-sm"
-                    >
-                        <Plus className="w-3 h-3 mr-1" />
-                      Add Type
-                    </Button>
-                  </div>
+                  )}
                 </div>
 
                 {/* Audience Vocabulary */}
@@ -1324,89 +1369,179 @@ export function BrandFormClean({ onSuccess }: BrandFormProps) {
               <CardContent className="space-y-6 p-6">
                 
                 {/* Primary Pain Points */}
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-3">Customer Pain Points</label>
-                  {formData.targetAudience.primaryPainPoints.map((pain, index) => (
-                    <div key={index} className="flex gap-2 mb-3">
-                      <Input
-                        type="text"
-                        value={pain}
-                        onChange={(e) => updateArrayField(['targetAudience', 'primaryPainPoints'], index, e.target.value)}
-                        placeholder="e.g., Wasting time on manual processes, struggling with scalability"
-                        className="flex-1 focus:ring-yellow-500 focus:border-yellow-500 border-slate-200 rounded-lg"
-                      />
+                <div className="bg-white border border-slate-200 rounded-xl p-5 hover:shadow-sm transition-shadow duration-200">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-3">
+                      <div>
+                        <div className="flex items-center gap-2 mb-1">
+                          <label className="text-sm font-semibold text-slate-800">Customer Pain Points</label>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={(e) => {
+                              e.preventDefault()
+                              e.stopPropagation()
+                              addArrayItem(['targetAudience', 'primaryPainPoints'])
+                            }}
+                            className="h-6 w-6 p-0 hover:bg-green-100 hover:text-green-600 rounded-full transition-colors duration-150"
+                            title="Add pain point"
+                          >
+                            <Plus className="w-4 h-4" />
+                          </Button>
+                        </div>
+                        <p className="text-xs text-slate-500">What challenges do your customers face?</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <span className="text-xs text-slate-400">{formData.targetAudience.primaryPainPoints.length}</span>
+                      <span className="text-xs text-slate-400">items</span>
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-3">
+                    {formData.targetAudience.primaryPainPoints.map((pain, index) => (
+                      <div key={index} className="group relative bg-slate-50 rounded-lg border border-slate-100 hover:border-slate-200 transition-colors duration-150">
+                        <div className="flex items-center p-3">
+                          <div className="flex-1 mr-3">
+                            <Input
+                              type="text"
+                              value={pain}
+                              onChange={(e) => updateArrayField(['targetAudience', 'primaryPainPoints'], index, e.target.value)}
+                              placeholder="e.g., Wasting time on manual processes, struggling with scalability"
+                              className="border-0 bg-transparent focus:ring-0 text-sm placeholder:text-slate-400 font-medium text-slate-700"
+                            />
+                          </div>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={(e) => {
+                              e.preventDefault()
+                              e.stopPropagation()
+                              removeArrayItem(['targetAudience', 'primaryPainPoints'], index)
+                            }}
+                            className="h-8 w-8 p-0 hover:bg-red-100 hover:text-red-600 rounded-full transition-colors duration-150 opacity-0 group-hover:opacity-100"
+                            title="Remove this pain point"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  
+                  {formData.targetAudience.primaryPainPoints.length === 0 && (
+                    <div className="text-center py-6 text-slate-400">
+                      <div className="w-12 h-12 mx-auto mb-3 bg-slate-100 rounded-xl flex items-center justify-center">
+                        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                      </div>
+                      <p className="text-sm mb-2">No pain points added yet</p>
                       <Button
                         type="button"
                         variant="outline"
                         onClick={(e) => {
                           e.preventDefault()
                           e.stopPropagation()
-                          removeArrayItem(['targetAudience', 'primaryPainPoints'], index)
+                          addArrayItem(['targetAudience', 'primaryPainPoints'])
                         }}
-                        className="h-7 w-7 p-0 text-center text-red-600 border-red-300 hover:bg-red-50"
+                        className="h-8 px-4 text-xs bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white border-0 rounded-lg shadow-sm transition-all duration-200"
                       >
-                        <Trash2 className="w-3 h-3" />
+                        <Plus className="w-3 h-3 mr-1" />
+                        Add First Pain Point
                       </Button>
                     </div>
-                  ))}
-                  <div className="flex justify-center">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={(e) => {
-                        e.preventDefault()
-                        e.stopPropagation()
-                        addArrayItem(['targetAudience', 'primaryPainPoints'])
-                      }}
-                      className="h-7 px-3 text-xs text-center bg-gradient-to-r from-yellow-400 to-yellow-600 hover:from-yellow-500 hover:to-yellow-700 text-black border-yellow-500 shadow-sm"
-                    >
-                        <Plus className="w-3 h-3 mr-1" />
-                      Add Pain
-                    </Button>
-                  </div>
+                  )}
                 </div>
 
                 {/* Common Objections */}
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-3">Common Objections</label>
-                  {formData.targetAudience.commonObjections.map((objection, index) => (
-                    <div key={index} className="flex gap-2 mb-3">
-                      <Input
-                        type="text"
-                        value={objection}
-                        onChange={(e) => updateArrayField(['targetAudience', 'commonObjections'], index, e.target.value)}
-                        placeholder="e.g., It's too expensive, We don't have time to implement"
-                        className="flex-1 focus:ring-yellow-500 focus:border-yellow-500 border-slate-200 rounded-lg"
-                      />
+                <div className="bg-white border border-slate-200 rounded-xl p-5 hover:shadow-sm transition-shadow duration-200">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-3">
+                      <div>
+                        <div className="flex items-center gap-2 mb-1">
+                          <label className="text-sm font-semibold text-slate-800">Common Objections</label>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={(e) => {
+                              e.preventDefault()
+                              e.stopPropagation()
+                              addArrayItem(['targetAudience', 'commonObjections'])
+                            }}
+                            className="h-6 w-6 p-0 hover:bg-green-100 hover:text-green-600 rounded-full transition-colors duration-150"
+                            title="Add objection"
+                          >
+                            <Plus className="w-4 h-4" />
+                          </Button>
+                        </div>
+                        <p className="text-xs text-slate-500">What concerns do customers have about your solution?</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <span className="text-xs text-slate-400">{formData.targetAudience.commonObjections.length}</span>
+                      <span className="text-xs text-slate-400">items</span>
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-3">
+                    {formData.targetAudience.commonObjections.map((objection, index) => (
+                      <div key={index} className="group relative bg-slate-50 rounded-lg border border-slate-100 hover:border-slate-200 transition-colors duration-150">
+                        <div className="flex items-center p-3">
+                          <div className="flex-1 mr-3">
+                            <Input
+                              type="text"
+                              value={objection}
+                              onChange={(e) => updateArrayField(['targetAudience', 'commonObjections'], index, e.target.value)}
+                              placeholder="e.g., It's too expensive, We don't have time to implement"
+                              className="border-0 bg-transparent focus:ring-0 text-sm placeholder:text-slate-400 font-medium text-slate-700"
+                            />
+                          </div>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={(e) => {
+                              e.preventDefault()
+                              e.stopPropagation()
+                              removeArrayItem(['targetAudience', 'commonObjections'], index)
+                            }}
+                            className="h-8 w-8 p-0 hover:bg-red-100 hover:text-red-600 rounded-full transition-colors duration-150 opacity-0 group-hover:opacity-100"
+                            title="Remove this objection"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  
+                  {formData.targetAudience.commonObjections.length === 0 && (
+                    <div className="text-center py-6 text-slate-400">
+                      <div className="w-12 h-12 mx-auto mb-3 bg-slate-100 rounded-xl flex items-center justify-center">
+                        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                        </svg>
+                      </div>
+                      <p className="text-sm mb-2">No objections added yet</p>
                       <Button
                         type="button"
                         variant="outline"
                         onClick={(e) => {
                           e.preventDefault()
                           e.stopPropagation()
-                          removeArrayItem(['targetAudience', 'commonObjections'], index)
+                          addArrayItem(['targetAudience', 'commonObjections'])
                         }}
-                        className="h-7 w-7 p-0 text-center text-red-600 border-red-300 hover:bg-red-50"
+                        className="h-8 px-4 text-xs bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white border-0 rounded-lg shadow-sm transition-all duration-200"
                       >
-                        <Trash2 className="w-3 h-3" />
+                        <Plus className="w-3 h-3 mr-1" />
+                        Add First Objection
                       </Button>
                     </div>
-                  ))}
-                  <div className="flex justify-center">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={(e) => {
-                        e.preventDefault()
-                        e.stopPropagation()
-                        addArrayItem(['targetAudience', 'commonObjections'])
-                      }}
-                      className="h-7 px-3 text-xs text-center bg-gradient-to-r from-yellow-400 to-yellow-600 hover:from-yellow-500 hover:to-yellow-700 text-black border-yellow-500 shadow-sm"
-                    >
-                        <Plus className="w-3 h-3 mr-1" />
-                      Add +
-                    </Button>
-                  </div>
+                  )}
                 </div>
 
               </CardContent>
