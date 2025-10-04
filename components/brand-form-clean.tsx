@@ -13,6 +13,7 @@ import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
 import { ChevronLeft, ChevronRight, Check, Save, Plus, Trash2, ArrowLeft } from "lucide-react"
 import { URLScrapingSection } from "@/components/url-scraping-section"
+import { PopulateDataButton } from "@/components/populate-data-button"
 
 interface BrandFormData {
   brandIdentity: {
@@ -126,7 +127,6 @@ interface BrandFormProps {
   onSuccess?: () => void
 }
 
-
 export function BrandFormClean({ onSuccess }: BrandFormProps) {
   const [formData, setFormData] = React.useState<BrandFormData>(defaultFormData)
   const [isSubmitting, setIsSubmitting] = React.useState(false)
@@ -139,6 +139,31 @@ export function BrandFormClean({ onSuccess }: BrandFormProps) {
   const [isLoading, setIsLoading] = React.useState(true)
 
   const totalSteps = 12
+
+  // Function to populate form with structured data
+  const populateFormWithData = React.useCallback((data: BrandFormData) => {
+    setFormData(data)
+    
+    // Show success message
+    setToastMessage("Knowledge base data loaded successfully! You can now edit each step.")
+    setToastType('success')
+    setShowToast(true)
+    
+    // Navigate to first step to show the data
+    setCurrentStep(1)
+    
+    console.log('✅ Form populated with knowledge base data:', data)
+  }, [])
+
+  // Global reference for form population - accessible from parent
+  React.useEffect(() => {
+    (window as any).brandFormPopulation = {
+      populateFormWithData
+    }
+    return () => {
+      delete (window as any).brandFormPopulation
+    }
+  }, [populateFormWithData])
 
   // Show toast helper
   const showToastMessage = (message: string, type: 'success' | 'error' | 'info') => {
@@ -854,6 +879,22 @@ export function BrandFormClean({ onSuccess }: BrandFormProps) {
             )
           })}
         </div>
+      </div>
+      
+      {/* Populate Data Button */}
+      <div className="flex justify-center mt-3">
+        <PopulateDataButton 
+          onSuccess={() => {
+            setToastMessage("Knowledge base data loaded successfully! You can now edit each step.")
+            setToastType('success')
+            setShowToast(true)
+          }}
+          onError={(message) => {
+            setToastMessage(`Failed to populate data: ${message}`)
+            setToastType('error')
+            setShowToast(true)
+          }}
+        />
       </div>
     </div>
   )

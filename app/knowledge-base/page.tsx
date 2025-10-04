@@ -29,6 +29,7 @@ export default function KnowledgeBasePage() {
     setIsKnowledgeViewerOpen(true)
   }
 
+
   // Helper function to detect file type from webhook data
   const getFileType = (fileType: string | null): string => {
     if (!fileType) return 'doc'
@@ -400,7 +401,9 @@ export default function KnowledgeBasePage() {
               {/* Form Container - Full Width for Scrolling */}
               <div className="w-full">
                 <motion.div variants={itemVariants}>
-                  <BrandFormClean onSuccess={handleFormSuccess} />
+                  <BrandFormClean 
+                    onSuccess={handleFormSuccess} 
+                  />
                 </motion.div>
               </div>
 
