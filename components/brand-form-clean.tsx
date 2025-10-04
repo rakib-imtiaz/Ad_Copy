@@ -1301,47 +1301,91 @@ export function BrandFormClean({ onSuccess }: BrandFormProps) {
                   )}
                 </div>
 
-                {/* Audience Vocabulary */}
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-3">Audience Vocabulary</label>
-                  {formData.targetAudience.audienceVocabulary.map((word, index) => (
-                    <div key={index} className="flex gap-2 mb-3">
-                      <Input
-                        type="text"
-                        value={word}
-                        onChange={(e) => updateArrayField(['targetAudience', 'audienceVocabulary'], index, e.target.value)}
-                        placeholder="e.g., ROI, scalability, efficiency, KPIs"
-                        className="flex-1 focus:ring-yellow-500 focus:border-yellow-500 border-slate-200 rounded-lg"
-                      />
+                <div className="bg-white border border-slate-200 rounded-xl p-5 hover:shadow-sm transition-shadow duration-200">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-3">
+                      <div>
+                        <div className="flex items-center gap-2 mb-1">
+                          <label className="text-sm font-semibold text-slate-800">Audience Vocabulary</label>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={(e) => {
+                              e.preventDefault()
+                              e.stopPropagation()
+                              addArrayItem(['targetAudience', 'audienceVocabulary'])
+                            }}
+                            className="h-6 w-6 p-0 hover:bg-green-100 hover:text-green-600 rounded-full transition-colors duration-150"
+                            title="Add vocabulary word"
+                          >
+                            <Plus className="w-4 h-4" />
+                          </Button>
+                        </div>
+                        <p className="text-xs text-slate-500">Industry terms and language your audience uses</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <span className="text-xs text-slate-400">{formData.targetAudience.audienceVocabulary.length}</span>
+                      <span className="text-xs text-slate-400">words</span>
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-3">
+                    {formData.targetAudience.audienceVocabulary.map((word, index) => (
+                      <div key={index} className="group relative bg-slate-50 rounded-lg border border-slate-100 hover:border-slate-200 transition-colors duration-150">
+                        <div className="flex items-center p-3">
+                          <div className="flex-1 mr-3">
+                            <Input
+                              type="text"
+                              value={word}
+                              onChange={(e) => updateArrayField(['targetAudience', 'audienceVocabulary'], index, e.target.value)}
+                              placeholder="e.g., ROI, scalability, efficiency, KPIs"
+                              className="border-0 bg-transparent focus:ring-0 text-sm placeholder:text-slate-400 font-medium text-slate-700"
+                            />
+                          </div>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={(e) => {
+                              e.preventDefault()
+                              e.stopPropagation()
+                              removeArrayItem(['targetAudience', 'audienceVocabulary'], index)
+                            }}
+                            className="h-8 w-8 p-0 hover:bg-red-100 hover:text-red-600 rounded-full transition-colors duration-150 opacity-0 group-hover:opacity-100"
+                            title="Remove this word"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  
+                  {formData.targetAudience.audienceVocabulary.length === 0 && (
+                    <div className="text-center py-6 text-slate-400">
+                      <div className="w-12 h-12 mx-auto mb-3 bg-slate-100 rounded-xl flex items-center justify-center">
+                        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-1.974.55-2.492 1.378-.517.83-.517 1.85 0 2.678.518.828 1.44 1.378 2.492 1.378a8.967 8.967 0 016 2.292zm6.792 0A8.967 8.967 0 0018 3.75c-1.052 0-1.974.55-2.492 1.378-.518.828-.518 1.85 0 2.678.519.828 1.44 1.378 2.492 1.378a8.967 8.967 0 016 2.292zM9 12.25A3.75 3.75 0 012.25 16a3.75 3.75 0 003.75 3.75A3.75 3.75 0 0112.75 16a3.75 3.75 0 003.75-3.75" />
+                        </svg>
+                      </div>
+                      <p className="text-sm mb-2">No vocabulary words added yet</p>
                       <Button
                         type="button"
                         variant="outline"
                         onClick={(e) => {
                           e.preventDefault()
                           e.stopPropagation()
-                          removeArrayItem(['targetAudience', 'audienceVocabulary'], index)
+                          addArrayItem(['targetAudience', 'audienceVocabulary'])
                         }}
-                        className="h-7 w-7 p-0 text-center text-red-600 border-red-300 hover:bg-red-50"
+                        className="h-8 px-4 text-xs bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white border-0 rounded-lg shadow-sm transition-all duration-200"
                       >
-                        <Trash2 className="w-3 h-3" />
+                        <Plus className="w-3 h-3 mr-1" />
+                        Add First Vocabulary Word
                       </Button>
                     </div>
-                  ))}
-                  <div className="flex justify-center">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={(e) => {
-                        e.preventDefault()
-                        e.stopPropagation()
-                        addArrayItem(['targetAudience', 'audienceVocabulary'])
-                      }}
-                      className="h-7 px-3 text-xs text-center bg-gradient-to-r from-yellow-400 to-yellow-600 hover:from-yellow-500 hover:to-yellow-700 text-black border-yellow-500 shadow-sm"
-                    >
-                        <Plus className="w-3 h-3 mr-1" />
-                      Add Word
-                    </Button>
-                  </div>
+                  )}
                 </div>
 
               </CardContent>
@@ -1568,47 +1612,91 @@ export function BrandFormClean({ onSuccess }: BrandFormProps) {
               </CardHeader>
               <CardContent className="space-y-6 p-6">
                 
-                {/* Primary Desires & Goals */}
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-3">Customer Goals & Desires</label>
-                  {formData.targetAudience.primaryDesiresGoals.map((goal, index) => (
-                    <div key={index} className="flex gap-2 mb-3">
-                      <Input
-                        type="text"
-                        value={goal}
-                        onChange={(e) => updateArrayField(['targetAudience', 'primaryDesiresGoals'], index, e.target.value)}
-                        placeholder="e.g., Increase revenue by 50%, Scale to 100+ employees, Reduce operational costs"
-                        className="flex-1 focus:ring-yellow-500 focus:border-yellow-500 border-slate-200 rounded-lg"
-                      />
+                <div className="bg-white border border-slate-200 rounded-xl p-5 hover:shadow-sm transition-shadow duration-200">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-3">
+                      <div>
+                        <div className="flex items-center gap-2 mb-1">
+                          <label className="text-sm font-semibold text-slate-800">Customer Goals & Desires</label>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={(e) => {
+                              e.preventDefault()
+                              e.stopPropagation()
+                              addArrayItem(['targetAudience', 'primaryDesiresGoals'])
+                            }}
+                            className="h-6 w-6 p-0 hover:bg-green-100 hover:text-green-600 rounded-full transition-colors duration-150"
+                            title="Add goal or desire"
+                          >
+                            <Plus className="w-4 h-4" />
+                          </Button>
+                        </div>
+                        <p className="text-xs text-slate-500">What do your customers want to achieve?</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <span className="text-xs text-slate-400">{formData.targetAudience.primaryDesiresGoals.length}</span>
+                      <span className="text-xs text-slate-400">goals</span>
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-3">
+                    {formData.targetAudience.primaryDesiresGoals.map((goal, index) => (
+                      <div key={index} className="group relative bg-slate-50 rounded-lg border border-slate-100 hover:border-slate-200 transition-colors duration-150">
+                        <div className="flex items-center p-3">
+                          <div className="flex-1 mr-3">
+                            <Input
+                              type="text"
+                              value={goal}
+                              onChange={(e) => updateArrayField(['targetAudience', 'primaryDesiresGoals'], index, e.target.value)}
+                              placeholder="e.g., Increase revenue by 50%, Scale to 100+ employees, Reduce operational costs"
+                              className="border-0 bg-transparent focus:ring-0 text-sm placeholder:text-slate-400 font-medium text-slate-700"
+                            />
+                          </div>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={(e) => {
+                              e.preventDefault()
+                              e.stopPropagation()
+                              removeArrayItem(['targetAudience', 'primaryDesiresGoals'], index)
+                            }}
+                            className="h-8 w-8 p-0 hover:bg-red-100 hover:text-red-600 rounded-full transition-colors duration-150 opacity-0 group-hover:opacity-100"
+                            title="Remove this goal"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  
+                  {formData.targetAudience.primaryDesiresGoals.length === 0 && (
+                    <div className="text-center py-6 text-slate-400">
+                      <div className="w-12 h-12 mx-auto mb-3 bg-slate-100 rounded-xl flex items-center justify-center">
+                        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                      </div>
+                      <p className="text-sm mb-2">No goals added yet</p>
                       <Button
                         type="button"
                         variant="outline"
                         onClick={(e) => {
                           e.preventDefault()
                           e.stopPropagation()
-                          removeArrayItem(['targetAudience', 'primaryDesiresGoals'], index)
+                          addArrayItem(['targetAudience', 'primaryDesiresGoals'])
                         }}
-                        className="h-7 w-7 p-0 text-center text-red-600 border-red-300 hover:bg-red-50"
+                        className="h-8 px-4 text-xs bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white border-0 rounded-lg shadow-sm transition-all duration-200"
                       >
-                        <Trash2 className="w-3 h-3" />
+                        <Plus className="w-3 h-3 mr-1" />
+                        Add First Goal
                       </Button>
                     </div>
-                  ))}
-                  <div className="flex justify-center">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={(e) => {
-                        e.preventDefault()
-                        e.stopPropagation()
-                        addArrayItem(['targetAudience', 'primaryDesiresGoals'])
-                      }}
-                      className="h-7 px-3 text-xs text-center bg-gradient-to-r from-yellow-400 to-yellow-600 hover:from-yellow-500 hover:to-yellow-700 text-black border-yellow-500 shadow-sm"
-                    >
-                        <Plus className="w-3 h-3 mr-1" />
-                      Add Goal
-                    </Button>
-                  </div>
+                  )}
                 </div>
 
               </CardContent>
@@ -1635,69 +1723,110 @@ export function BrandFormClean({ onSuccess }: BrandFormProps) {
               </CardHeader>
               <CardContent className="space-y-4">
                 {/* Multiple Products Section */}
-                <div className="space-y-4">
-                  <label className="text-sm font-medium">Your Products & Services</label>
-                  {formData.offers.map((offer, index) => (
-                    <div key={index} className="border rounded-lg p-4 bg-muted/50">
-                      <div className="flex items-center justify-between mb-4">
-                        <h4 className="text-sm font-medium">Product/Service #{index + 1}</h4>
-                        {formData.offers.length > 1 && (
+                <div className="bg-white border border-slate-200 rounded-xl p-5 hover:shadow-sm transition-shadow duration-200">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-3">
+                      <div>
+                        <div className="flex items-center gap-2 mb-1">
+                          <label className="text-sm font-semibold text-slate-800">Your Products & Services</label>
                           <Button
                             type="button"
-                            variant="outline"
-                            onClick={() => removeOffer(index)}
-                            className="h-7 w-7 p-0 text-center text-destructive hover:text-destructive"
+                            variant="ghost"
+                            size="sm"
+                            onClick={addOffer}
+                            className="h-6 w-6 p-0 hover:bg-green-100 hover:text-green-600 rounded-full transition-colors duration-150"
+                            title="Add product or service"
                           >
-                            <Trash2 className="w-3 h-3" />
+                            <Plus className="w-4 h-4" />
                           </Button>
-                        )}
-                      </div>
-                      
-                      <div className="space-y-3">
-                        <div className="space-y-2">
-                          <label className="text-sm font-medium">Name</label>
-                          <Input
-                            type="text"
-                            value={offer.name}
-                            onChange={(e) => updateOfferField(index, 'name', e.target.value)}
-                            placeholder="e.g., Premium Business Consulting"
-                          />
                         </div>
-
-                        <div className="space-y-2">
-                          <label className="text-sm font-medium">Price</label>
-                          <Input
-                            type="text"
-                            value={offer.price}
-                            onChange={(e) => updateOfferField(index, 'price', e.target.value)}
-                            placeholder="e.g., $2,999, Starting at $99/month"
-                          />
-                        </div>
-
-                        <div className="space-y-2">
-                          <label className="text-sm font-medium">Description</label>
-                          <Textarea
-                            value={offer.description}
-                            onChange={(e) => updateOfferField(index, 'description', e.target.value)}
-                            rows={3}
-                            placeholder="Describe what this product/service includes and its key benefits..."
-                          />
-                        </div>
+                        <p className="text-xs text-slate-500">List all your products and services with pricing</p>
                       </div>
                     </div>
-                  ))}
-                  
-                  <div className="flex justify-center">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={addOffer}
-                      className="h-7 px-3 text-xs text-center bg-gradient-to-r from-yellow-400 to-yellow-600 hover:from-yellow-500 hover:to-yellow-700 text-black border-yellow-500 shadow-sm"
-                    >
-                        <Plus className="w-3 h-3 mr-1" />
-                      Add Product
-                    </Button>
+                    <div className="flex items-center gap-1">
+                      <span className="text-xs text-slate-400">{formData.offers.length}</span>
+                      <span className="text-xs text-slate-400">offers</span>
+                    </div>
                   </div>
+                  
+                  <div className="space-y-4">
+                    {formData.offers.map((offer, index) => (
+                      <div key={index} className="group relative bg-slate-50 rounded-lg border border-slate-100 hover:border-slate-200 transition-colors duration-150">
+                        <div className="p-4">
+                          <div className="flex items-center justify-between mb-3">
+                            <h4 className="text-sm font-medium text-slate-800">Offer #{index + 1}</h4>
+                            {formData.offers.length > 1 && (
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => removeOffer(index)}
+                                className="h-6 w-6 p-0 hover:bg-red-100 hover:text-red-600 rounded-full transition-colors duration-150 opacity-0 group-hover:opacity-100"
+                                title="Remove this offer"
+                              >
+                                <Trash2 className="w-3 h-3" />
+                              </Button>
+                            )}
+                          </div>
+                          
+                          <div className="space-y-3">
+                            <div>
+                              <label className="text-xs font-medium text-slate-600 mb-1 block">Name</label>
+                              <Input
+                                type="text"
+                                value={offer.name}
+                                onChange={(e) => updateOfferField(index, 'name', e.target.value)}
+                                placeholder="e.g., Premium Business Consulting"
+                                className="h-8 text-sm"
+                              />
+                            </div>
+
+                            <div>
+                              <label className="text-xs font-medium text-slate-600 mb-1 block">Price</label>
+                              <Input
+                                type="text"
+                                value={offer.price}
+                                onChange={(e) => updateOfferField(index, 'price', e.target.value)}
+                                placeholder="e.g., $2,999, Starting at $99/month"
+                                className="h-8 text-sm"
+                              />
+                            </div>
+
+                            <div>
+                              <label className="text-xs font-medium text-slate-600 mb-1 block">Description</label>
+                              <Textarea
+                                value={offer.description}
+                                onChange={(e) => updateOfferField(index, 'description', e.target.value)}
+                                rows={3}
+                                placeholder="Describe what this product/service includes and its key benefits..."
+                                className="text-sm"
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  
+                  {formData.offers.length === 0 && (
+                    <div className="text-center py-6 text-slate-400">
+                      <div className="w-12 h-12 mx-auto mb-3 bg-slate-100 rounded-xl flex items-center justify-center">
+                        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M20 7l-8-4-8 4m16 0l-8 4-8-4m16 0v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                        </svg>
+                      </div>
+                      <p className="text-sm mb-2">No offers added yet</p>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={addOffer}
+                        className="h-8 px-4 text-xs bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white border-0 rounded-lg shadow-sm transition-all duration-200"
+                      >
+                        <Plus className="w-3 h-3 mr-1" />
+                        Add First Offer
+                      </Button>
+                    </div>
+                  )}
                 </div>
 
                 {/* Legacy single product fields (hidden but kept for compatibility) */}
@@ -1836,47 +1965,91 @@ export function BrandFormClean({ onSuccess }: BrandFormProps) {
               </CardHeader>
               <CardContent className="space-y-6 p-6">
                 
-                {/* Testimonials & Case Studies */}
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-3">Testimonials & Case Studies</label>
-                  {formData.clientAssets.testimonialsCaseStudies.map((testimonial, index) => (
-                    <div key={index} className="flex gap-2 mb-3">
-                      <Textarea
-                        value={testimonial}
-                        onChange={(e) => updateArrayField(['clientAssets', 'testimonialsCaseStudies'], index, e.target.value)}
-                        rows={3}
-                        placeholder="Share testimonials and case studies from your customers..."
-                        className="flex-1 focus:ring-yellow-500 focus:border-yellow-500 border-slate-200 rounded-lg"
-                      />
+                <div className="bg-white border border-slate-200 rounded-xl p-5 hover:shadow-sm transition-shadow duration-200">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-3">
+                      <div>
+                        <div className="flex items-center gap-2 mb-1">
+                          <label className="text-sm font-semibold text-slate-800">Testimonials & Case Studies</label>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={(e) => {
+                              e.preventDefault()
+                              e.stopPropagation()
+                              addArrayItem(['clientAssets', 'testimonialsCaseStudies'])
+                            }}
+                            className="h-6 w-6 p-0 hover:bg-green-100 hover:text-green-600 rounded-full transition-colors duration-150"
+                            title="Add testimonial or case study"
+                          >
+                            <Plus className="w-4 h-4" />
+                          </Button>
+                        </div>
+                        <p className="text-xs text-slate-500">Customer feedback and success stories</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <span className="text-xs text-slate-400">{formData.clientAssets.testimonialsCaseStudies.length}</span>
+                      <span className="text-xs text-slate-400">testimonials</span>
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-3">
+                    {formData.clientAssets.testimonialsCaseStudies.map((testimonial, index) => (
+                      <div key={index} className="group relative bg-slate-50 rounded-lg border border-slate-100 hover:border-slate-200 transition-colors duration-150">
+                        <div className="p-3">
+                          <Textarea
+                            value={testimonial}
+                            onChange={(e) => updateArrayField(['clientAssets', 'testimonialsCaseStudies'], index, e.target.value)}
+                            rows={3}
+                            placeholder="Share testimonials and case studies from your customers..."
+                            className="border-0 bg-transparent focus:ring-0 text-sm placeholder:text-slate-400 font-medium text-slate-700 resize-none"
+                          />
+                          <div className="flex justify-end mt-2">
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              onClick={(e) => {
+                                e.preventDefault()
+                                e.stopPropagation()
+                                removeArrayItem(['clientAssets', 'testimonialsCaseStudies'], index)
+                              }}
+                              className="h-6 w-6 p-0 hover:bg-red-100 hover:text-red-600 rounded-full transition-colors duration-150 opacity-0 group-hover:opacity-100"
+                              title="Remove this testimonial"
+                            >
+                              <Trash2 className="w-3 h-3" />
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  
+                  {formData.clientAssets.testimonialsCaseStudies.length === 0 && (
+                    <div className="text-center py-6 text-slate-400">
+                      <div className="w-12 h-12 mx-auto mb-3 bg-slate-100 rounded-xl flex items-center justify-center">
+                        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                        </svg>
+                      </div>
+                      <p className="text-sm mb-2">No testimonials added yet</p>
                       <Button
                         type="button"
                         variant="outline"
                         onClick={(e) => {
                           e.preventDefault()
                           e.stopPropagation()
-                          removeArrayItem(['clientAssets', 'testimonialsCaseStudies'], index)
+                          addArrayItem(['clientAssets', 'testimonialsCaseStudies'])
                         }}
-                        className="text-red-600 border-red-300 hover:bg-red-50 self-start mt-2"
+                        className="h-8 px-4 text-xs bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white border-0 rounded-lg shadow-sm transition-all duration-200"
                       >
-                        <Trash2 className="w-3 h-3" />
+                        <Plus className="w-3 h-3 mr-1" />
+                        Add First Testimonial
                       </Button>
                     </div>
-                  ))}
-                  <div className="flex justify-center">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={(e) => {
-                        e.preventDefault()
-                        e.stopPropagation()
-                        addArrayItem(['clientAssets', 'testimonialsCaseStudies'])
-                      }}
-                      className="h-7 px-3 text-xs text-center bg-gradient-to-r from-yellow-400 to-yellow-600 hover:from-yellow-500 hover:to-yellow-700 text-black border-yellow-500 shadow-sm"
-                    >
-                        <Plus className="w-3 h-3 mr-1" />
-                      Add +
-                    </Button>
-                  </div>
+                  )}
                 </div>
 
                 {/* Legacy single testimonial field (hidden but kept for compatibility) */}
