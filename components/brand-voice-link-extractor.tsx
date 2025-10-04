@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { ExternalLink, Loader2, Sparkles, AlertCircle } from "lucide-react"
+import { ExternalLink, Loader2, Sparkles, AlertCircle, Play } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -13,6 +13,7 @@ interface BrandVoicePattern {
   style: string
   confidence: number
   source: string
+  examples: string[]
 }
 
 interface BrandVoiceLinkExtractorProps {
@@ -27,8 +28,13 @@ export function BrandVoiceLinkExtractor({
   const [url, setUrl] = React.useState("")
   const [isExtracting, setIsExtracting] = React.useState(false)
   const [extractedPatterns, setExtractedPatterns] = React.useState<BrandVoicePattern[]>([])
-  const [error, setError] = React.useState("")
-  const [selectedPatterns, setSelectedPatterns] = React.useState<string[]>([])
+  const [error, setError] = React.useState<string>("")
+  
+  // Check if the current URL is a YouTube URL
+  const isYouTubeUrl = React.useMemo(() => {
+    const youtubeRegex = /^((?:https?:)?\/\/)?(?:www\.)?(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)?\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/
+    return youtubeRegex.test(url)
+  }, [url])
 
   const getAccessToken = () => {
     const token = authService.getAuthToken()
@@ -48,7 +54,6 @@ export function BrandVoiceLinkExtractor({
     setIsExtracting(true)
     setError("")
     setExtractedPatterns([])
-    setSelectedPatterns([])
 
     try {
       console.log('🚀 Starting brand voice pattern extraction...')
@@ -88,7 +93,12 @@ export function BrandVoiceLinkExtractor({
       const patterns: BrandVoicePattern[] = extractionResult.data.patterns || []
       setExtractedPatterns(patterns)
       onPatternsExtracted(patterns)
-      onShowToast(`Found ${patterns.length} communication patterns`, 'success')
+      
+      if (isYouTubeUrl) {
+        onShowToast(`Found ${patterns.length} tone patterns from YouTube video`, 'success')
+      } else {
+        onShowToast(`Found ${patterns.length} communication patterns`, 'success')
+      }
 
       console.log('✅ Brand voice pattern extraction completed successfully')
 
@@ -100,25 +110,6 @@ export function BrandVoiceLinkExtractor({
     }
   }
 
-  const handlePatternSelect = (pattern: BrandVoicePattern) => {
-    const patternKey = pattern.style
-    if (selectedPatterns.includes(patternKey)) {
-      setSelectedPatterns(prev => prev.filter(p => p !== patternKey))
-    } else {
-      setSelectedPatterns(prev => [...prev, patternKey])
-    }
-  }
-
-  const handleApplySelected = () => {
-    const newStyles = selectedPatterns.map(patternKey => 
-      extractedPatterns.find(p => p.style === patternKey)?.style || patternKey
-    )
-    onPatternsExtracted(
-      extractedPatterns.filter(p => selectedPatterns.includes(p.style))
-    )
-    onShowToast(`Applied ${selectedPatterns.length} patterns to communication style`, 'success')
-    setSelectedPatterns([])
-  }
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !isExtracting && url.trim()) {
@@ -131,12 +122,19 @@ export function BrandVoiceLinkExtractor({
       <CardHeader className="pb-4">
         <CardTitle className="flex items-center text-slate-800 text-base font-semibold">
           <div className="w-8 h-8 bg-slate-100 rounded-lg flex items-center justify-center mr-3">
-            <Sparkles className="h-4 w-4 text-blue-600" />
+            {isYouTubeUrl ? (
+              <Play className="h-4 w-4 text-red-600" />
+            ) : (
+              <Sparkles className="h-4 w-4 text-blue-600" />
+            )}
           </div>
-          Extract Communication Patterns
+          {isYouTubeUrl ? 'Extract Communication Patterns from YouTube Video' : 'Extract Communication Patterns'}
         </CardTitle>
         <CardDescription className="text-slate-600 text-sm">
-          Insert links to extract communication patterns and tone of voice from content
+          {isYouTubeUrl 
+            ? 'Analyze YouTube video subtitles to extract communication tone and voice patterns'
+            : 'Insert links to extract communication patterns and tone of voice from content'
+          }
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -146,7 +144,7 @@ export function BrandVoiceLinkExtractor({
             value={url}
             onChange={(e) => setUrl(e.target.value)}
             onKeyPress={handleKeyPress}
-            placeholder="https://example.com/about, https://blog.example.com/posts..."
+            placeholder={isYouTubeUrl ? "https://youtube.com/watch?v=..." : "https://example.com/about, https://blog.example.com/posts..."}
             className="flex-1"
             disabled={isExtracting}
           />
@@ -154,17 +152,25 @@ export function BrandVoiceLinkExtractor({
             onClick={handleExtract}
             disabled={isExtracting || !url.trim()}
             size="sm"
-            className="h-7 text-xs text-center bg-blue-600 hover:bg-blue-700"
+            className={`h-7 text-xs text-center ${
+              isYouTubeUrl 
+                ? 'bg-red-600 hover:bg-red-700' 
+                : 'bg-blue-600 hover:bg-blue-700'
+            }`}
           >
             {isExtracting ? (
               <>
                 <Loader2 className="h-3 w-3 mr-1 animate-spin" />
-                Extracting...
+                {isYouTubeUrl ? 'Analyzing Video...' : 'Extracting...'}
               </>
             ) : (
               <>
-                <ExternalLink className="h-3 w-3 mr-1" />
-                Extract
+                {isYouTubeUrl ? (
+                  <Play className="h-3 w-3 mr-1" />
+                ) : (
+                  <ExternalLink className="h-3 w-3 mr-1" />
+                )}
+                {isYouTubeUrl ? 'Analyze Video' : 'Extract'}
               </>
             )}
           </Button>
@@ -177,67 +183,13 @@ export function BrandVoiceLinkExtractor({
           </Alert>
         )}
         
-        {extractedPatterns.length > 0 && (
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <h4 className="text-sm font-medium text-slate-800">
-                  Detected Communication Patterns
-                </h4>
-                {selectedPatterns.length > 0 && (
-                  <Button
-                    onClick={handleApplySelected}
-                    size="sm"
-                    className="h-6 text-xs bg-blue-600 hover:bg-blue-700"
-                  >
-                    Apply Selected ({selectedPatterns.length})
-                  </Button>
-                )}
-              </div>
-            
-            <div className="grid gap-2">
-              {extractedPatterns.map((pattern, index) => (
-                <div
-                  key={index}
-                  className={`
-                    p-3 rounded-lg border cursor-pointer transition-all
-                    ${selectedPatterns.includes(pattern.style)
-                      ? 'border-blue-500 bg-blue-50 shadow-sm'
-                      : 'border-slate-200 hover:border-blue-300 bg-white'
-                    }
-                  `}
-                  onClick={() => handlePatternSelect(pattern)}
-                >
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <p className="text-sm font-medium text-slate-900">
-                        {pattern.style}
-                      </p>
-                      <div className="flex items-center gap-2 mt-1">
-                        <Badge variant="secondary" className="text-xs">
-                          {Math.round(pattern.confidence * 100)}% confidence
-                        </Badge>
-                        <span className="text-xs text-slate-600">
-                          Source: {pattern.source}
-                        </span>
-                      </div>
-                    </div>
-                    <div className="ml-2">
-                      {selectedPatterns.includes(pattern.style) && (
-                        <div className="w-5 h-5 bg-blue-600 rounded-full flex items-center justify-center">
-                          <span className="text-white text-xs">✓</span>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
         
         {extractedPatterns.length > 0 && (
           <div className="text-green-600 text-sm bg-green-50 p-2 rounded border border-slate-200">
-            ✅ Successfully extracted {extractedPatterns.length} patterns from {url}
+            ✅ {isYouTubeUrl 
+              ? `Successfully analyzed ${extractedPatterns.length} tone patterns from YouTube video`
+              : `Successfully extracted ${extractedPatterns.length} patterns from ${url}`
+            }
           </div>
         )}
       </CardContent>

@@ -1,6 +1,8 @@
 // Brand Pattern Extraction Service
 // Handles extraction of communication patterns and brand voice from web content
 
+import { API_ENDPOINTS } from '@/lib/api-config'
+
 export interface BrandPatternExtractionRequest {
   url: string
   accessToken: string
@@ -15,6 +17,7 @@ export interface BrandPatternExtractionResponse {
       source_url: string
       extracted_at: string
       content_length: number
+      type?: string
     }
   }
   message?: string
@@ -43,6 +46,30 @@ export class BrandPatternExtractionService {
       const timeoutId = setTimeout(() => controller.abort(), this.TIMEOUT)
 
       try {
+        // Check if this is a YouTube URL
+        const isYouTubeUrl = this.isYouTubeUrl(request.url)
+        
+        if (isYouTubeUrl) {
+          console.log('📺 Detected YouTube URL, extracting subtitles for tone analysis')
+          // Extract subtitles for YouTube videos using the subtitle webhook
+          const patterns = await this.extractYouTubeTonePatterns(request.url, request.accessToken)
+          
+          return {
+            success: true,
+            data: {
+              patterns: patterns,
+              content: `YouTube video subtitle analysis`,
+              metadata: {
+                source_url: request.url,
+                extracted_at: new Date().toISOString(),
+                content_length: 0,
+                type: 'youtube_subtitle'
+              }
+            },
+            message: `Successfully extracted ${patterns.length} tone patterns from YouTube video`
+          }
+        }
+
         // First, we need to scrape the content from the URL
         // Note: Authentication should be handled by the calling API route
         const scrapeResponse = await fetch('/api/scrape-url', {
@@ -102,7 +129,7 @@ export class BrandPatternExtractionService {
               success: false,
               error: {
                 code: "TIMEOUT_ERROR",
-                message: "Request timed out while extracting patterns"
+                message: "Request timed. out while extracting patterns"
               }
             }
           }
@@ -267,5 +294,282 @@ export class BrandPatternExtractionService {
     }
     
     return String(content).substring(0, 500) + '...'
+  }
+
+  // YouTube URL detection helper
+  private static isYouTubeUrl(url: string): boolean {
+    // Enhanced YouTube regex to handle all YouTube URL formats
+    const patterns = [
+      /^https?:\/\/(?:www\.)?youtube\.com\/shorts\/[^\/\?&]+/,  // shorts URLs
+      /^https?:\/\/(?:www\.)?youtube\.com\/watch\?v=[^&]+/,     // watch URLs
+      /^https?:\/\/(?:www\.)?youtube\.com\/embed\/[^\/\?&]+/,   // embed URLs
+      /^https?:\/\/(?:www\.)?youtube\.com\/v\/[^\/\?&]+/,       // direct v URLs
+      /^https?:\/\/youtu\.be\/[^\/\?&]+/,                      // youtu.be URLs
+      /^https?:\/\/(?:www\.)?youtube\.com\/\w+\/.*?\/[^\/\?&]+/, // playlist/channel URLs
+    ]
+    
+    const isYouTube = patterns.some(pattern => pattern.test(url))
+    console.log('🔍 YouTube URL check:', { url, isYouTube })
+    return isYouTube
+  }
+
+  // Extract YouTube subtitle patterns for tone analysis
+  private static async extractYouTubeTonePatterns(url: string, accessToken: string): Promise<BrandVoicePattern[]> {
+    try {
+      console.log('🔍 Calling YouTube subtitle webhook for:', url)
+      console.log('🔑 Access token length:', accessToken?.length || 'undefined')
+      console.log('🔑 Access token preview:', accessToken ? `${accessToken.substring(0, 20)}...` : 'undefined')
+      console.log('🌐 Webhook URL:', API_ENDPOINTS.N8N_WEBHOOKS.YOUTUBE_SUBTITLE)
+      
+      const controller = new AbortController()
+      setTimeout(() => controller.abort(), 30000)
+      
+      // Try POST first (standard approach)
+      const requestBody = {
+        url: url,
+        access_token: accessToken
+      }
+      console.log('📤 POST Request body:', requestBody)
+      
+      let response = await fetch(API_ENDPOINTS.N8N_WEBHOOKS.YOUTUBE_SUBTITLE, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${accessToken}`
+        },
+        body: JSON.stringify(requestBody),
+        signal: controller.signal
+      })
+      
+      let responseMethod = 'POST'
+      
+      // If POST fails with 404, try GET with query parameters
+      if (!response.ok && response.status === 404) {
+        console.log('🔄 POST failed with 404, trying GET method...')
+        const getUrl = new URL(API_ENDPOINTS.N8N_WEBHOOKS.YOUTUBE_SUBTITLE)
+        getUrl.searchParams.set('url', url)
+        getUrl.searchParams.set('access_token', accessToken)
+        console.log('📤 GET Request URL:', getUrl.toString())
+        
+        response = await fetch(getUrl.toString(), {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${accessToken}`
+          },
+          signal: controller.signal
+        })
+        responseMethod = 'GET'
+      }
+
+      console.log(`📊 Webhook response status: ${response.status} (method: ${responseMethod})`)
+      console.log('📊 Webhook response headers:', Object.fromEntries(response.headers.entries()))
+      
+      if (!response.ok) {
+        console.error('❌ YouTube subtitle webhook failed:', response.status)
+        try {
+          const errorText = await response.text()
+          console.error('❌ Error response body:', errorText)
+        } catch (e) {
+          console.error('❌ Could not read error response body')
+        }
+        // Fall back to basic patterns
+        return this.getDefaultYouTubeTonePatterns()
+      }
+
+      const subtitleData = await response.json()
+      console.log('✅ YouTube subtitle data received:', subtitleData)
+      
+      // Parse the actual response structure from your n8n webhook
+      if (Array.isArray(subtitleData) && subtitleData.length > 0) {
+        const responseItem = subtitleData[0]
+        if (responseItem.transcript && responseItem.tone) {
+          console.log('🎭 Processing transcript and tone analysis...')
+          
+          // Return the tone analysis text directly as a single pattern
+          return [{
+            style: responseItem.tone,
+            confidence: 0.95,
+            source: 'YouTube Video Analysis',
+            examples: ['tone analysis from video']
+          }]
+        }
+      }
+      
+      // Alternative parsing for different response structure
+      if (subtitleData.success && subtitleData.data?.subtitles) {
+        const patterns = this.analyzeSubtitleTone(subtitleData.data.subtitles)
+        return patterns.length > 0 ? patterns : this.getDefaultYouTubeTonePatterns()
+      }
+      
+      return this.getDefaultYouTubeTonePatterns()
+      
+    } catch (error) {
+      console.error('❌ Error extracting YouTube tone patterns:', error)
+      return this.getDefaultYouTubeTonePatterns()
+    }
+  }
+
+  // Analyze subtitle content for tone patterns
+  private static analyzeSubtitleTone(subtitles: string): BrandVoicePattern[] {
+    const patterns: BrandVoicePattern[] = []
+    const normalizedText = subtitles.toLowerCase()
+
+    // Enhanced tone detection patterns specifically for video content
+    const youtubeToneRules = [
+      {
+        keywords: ['exciting', 'amazing', 'incredible', 'fantastic', 'awesome'],
+        style: 'Enthusiastic and Exciting',
+        examples: ['guys!', 'amazing', 'incredible', 'mind-blowing']
+      },
+      {
+        keywords: ['tutorial', 'step', 'how to', 'guide', 'learn'],
+        style: 'Educational and Helpful',
+        examples: ['tutorial', 'step-by-step', 'how-to', 'guide']
+      },
+      {
+        keywords: ['fun', 'entertaining', 'hilarious', 'comedy', 'joke'],
+        style: 'Fun and Entertaining',
+        examples: ['fun', 'hilarious', 'comedy', 'jokes']
+      },
+      {
+        keywords: ['professional', 'business', 'corporate', 'expert'],
+        style: 'Professional and Authoritative',
+        examples: ['professional', 'expert', 'business', 'corporate']
+      },
+      {
+        keywords: ['personal', 'story', 'experience', 'honest'],
+        style: 'Personal and Authentic',
+        examples: ['my story', 'personal', 'experience', 'honestly']
+      },
+      {
+        keywords: ['informative', 'knowledge', 'insight', 'analysis'],
+        style: 'Informative and Analytical',
+        examples: ['insight', 'analysis', 'knowledge', 'informative']
+      }
+    ]
+
+    // Analyze subtitles for tone patterns
+    youtubeToneRules.forEach(rule => {
+      let confidence = 0
+      const matchedKeywords = rule.keywords.filter(keyword => 
+        normalizedText.includes(keyword.toLowerCase())
+      )
+      
+      if (matchedKeywords.length > 0) {
+        confidence = Math.min(matchedKeywords.length / rule.keywords.length, 1)
+        
+        // Look for example phrases
+        const matchedExamples = rule.examples.filter(example =>
+          normalizedText.includes(example.toLowerCase())
+        )
+        
+        // Increase confidence if examples are found
+        if (matchedExamples.length > 0) {
+          confidence += 0.2
+          confidence = Math.min(confidence, 1)
+        }
+
+        patterns.push({
+          style: rule.style,
+          confidence: confidence,
+          source: 'YouTube Video',
+          examples: [...matchedKeywords, ...matchedExamples]
+        })
+      }
+    })
+
+    // Sort by confidence and return top patterns
+    return patterns
+      .sort((a, b) => b.confidence - a.confidence)
+      .filter(pattern => pattern.confidence > 0.3)
+      .slice(0, 4) // Top 4 patterns for YouTube
+  }
+
+  // Extract patterns from the AI-generated tone analysis text
+  private static extractPatternsFromToneAnalysis(toneText: string): BrandVoicePattern[] {
+    const patterns: BrandVoicePattern[] = []
+    const normalizedText = toneText.toLowerCase()
+
+    // Map tone analysis keywords to communication style types
+    const tonePatternMapping = [
+      {
+        keywords: ['high energy', 'elevated', 'performance-driven', 'enthusiastic', 'vibrant'],
+        style: 'High Energy and Enthusiastic',
+        confidence: 0.9
+      },
+      {
+        keywords: ['confident', 'authority', 'commands', 'composure', 'authoritative'],
+        style: 'Confident and Authoritative',
+        confidence: 0.9
+      },
+      {
+        keywords: ['theatrical', 'mystical', 'wonder', 'showmanship', 'spectacle'],
+        style: 'Theatrical and Entertaining',
+        confidence: 0.9
+      },
+      {
+        keywords: ['conversational', 'intimate', 'direct communication', 'personal connections'],
+        style: 'Conversational and Approachable',
+        confidence: 0.8
+      },
+      {
+        keywords: ['deliberate', 'strategic', 'varied pace', 'orchestrates'],
+        style: 'Strategic and Deliberate',
+        confidence: 0.8
+      },
+      {
+        keywords: ['dramatic', 'suspense', 'anticipation', 'performance'],
+        style: 'Dramatic and Engaging',
+        confidence: 0.8
+      }
+    ]
+
+    // Check for tone pattern matches
+    tonePatternMapping.forEach(mapping => {
+      const matchedKeywords = mapping.keywords.filter(keyword => 
+        normalizedText.includes(keyword.toLowerCase())
+      )
+      
+      if (matchedKeywords.length > 0) {
+        patterns.push({
+          style: mapping.style,
+          confidence: mapping.confidence,
+          source: 'AI Tone Analysis',
+          examples: matchedKeywords
+        })
+      }
+    })
+
+    return patterns
+  }
+
+  // Remove duplicate patterns based on style
+  private static removeDuplicatePatterns(patterns: BrandVoicePattern[]): BrandVoicePattern[] {
+    const seen = new Set<string>()
+    return patterns.filter(pattern => {
+      if (seen.has(pattern.style)) {
+        return false
+      }
+      seen.add(pattern.style)
+      return true
+    })
+  }
+
+  // Default patterns to return when YouTube analysis fails
+  private static getDefaultYouTubeTonePatterns(): BrandVoicePattern[] {
+    return [
+      {
+        style: 'Engaging Content Creator',
+        confidence: 0.8,
+        source: 'YouTube Default Analysis',
+        examples: ['video content', 'content creator', 'engagement']
+      },
+      {
+        style: 'Informative Presenter',
+        confidence: 0.6,
+        source: 'YouTube Default Analysis', 
+        examples: ['information sharing', 'educational', 'presentation']
+      }
+    ]
   }
 }

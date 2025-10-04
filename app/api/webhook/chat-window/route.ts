@@ -29,7 +29,8 @@ export async function POST(request: NextRequest) {
 
     console.log('💬 Proxying chat window request to n8n...')
     console.log('Target URL:', API_ENDPOINTS.N8N_WEBHOOKS.CHAT_WINDOW)
-    console.log('Session ID:', session_id)
+    console.log('Session ID (original):', session_id)
+    console.log('Session ID (type):', typeof session_id)
     console.log('User Prompt:', user_prompt)
     console.log('Agent ID:', agent_id || 'Not provided')
     console.log('Access Token:', accessToken ? '***' + accessToken.slice(-4) : 'Not provided')
@@ -60,6 +61,32 @@ export async function POST(request: NextRequest) {
       console.log('📚 No knowledge base in this request')
     }
 
+    // Convert session_id to number for n8n compatibility
+    let numericSessionId = session_id
+    if (typeof session_id === 'string') {
+      // If it's a fallback string like "fallback_1234567890", extract the timestamp
+      if (session_id.startsWith('fallback_')) {
+        const timestamp = session_id.replace('fallback_', '')
+        numericSessionId = parseInt(timestamp)
+      } else {
+        numericSessionId = parseInt(session_id)
+      }
+    }
+
+    // Prepare the request payload
+    const requestPayload = {
+      session_id: numericSessionId,
+      user_prompt,
+      agent_id,
+      scraped_content: scraped_content || undefined,
+      knowledge_base: knowledge_base || undefined
+    }
+
+    console.log('🔄 Session ID converted:', numericSessionId, '(type:', typeof numericSessionId, ')')
+    
+    console.log('📤 Sending request to n8n with payload size:', JSON.stringify(requestPayload).length)
+    console.log('📤 Request payload preview:', JSON.stringify(requestPayload, null, 2))
+    
     // Forward the request to n8n webhook
     const response = await fetch(API_ENDPOINTS.N8N_WEBHOOKS.CHAT_WINDOW, {
       method: 'POST',
@@ -67,13 +94,7 @@ export async function POST(request: NextRequest) {
         'Authorization': authHeader,
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({
-        session_id,
-        user_prompt,
-        agent_id,
-        scraped_content: scraped_content || undefined,
-        knowledge_base: knowledge_base || undefined
-      }),
+      body: JSON.stringify(requestPayload),
       signal: AbortSignal.timeout(90000), // 90 second timeout for long AI responses
     })
 
@@ -122,19 +143,31 @@ export async function POST(request: NextRequest) {
 • The AI agent "${agent_id || 'Unknown'}" might not be properly configured
 • The n8n workflow might not be active or have errors
 • There might be an issue with the AI service
+• The agent might not be processing the knowledge base correctly
 
 Please try:
 1. Refreshing the page
 2. Starting a new conversation
-3. Contacting support if the issue persists
+3. Checking if the agent is active in the admin panel
+4. Contacting support if the issue persists
 
-Error details: Empty response from n8n webhook`,
+Error details: Empty response from n8n webhook at ${API_ENDPOINTS.N8N_WEBHOOKS.CHAT_WINDOW}`,
         empty_response: true,
+        error_type: 'N8N_EMPTY_RESPONSE',
         debug_info: {
           agent_id: agent_id || 'Not provided',
           session_id: session_id,
           response_status: response.status,
-          response_headers: Object.fromEntries(response.headers.entries())
+          response_headers: Object.fromEntries(response.headers.entries()),
+          n8n_endpoint: API_ENDPOINTS.N8N_WEBHOOKS.CHAT_WINDOW,
+          request_payload_size: JSON.stringify({
+            session_id,
+            user_prompt,
+            agent_id,
+            scraped_content: scraped_content || undefined,
+            knowledge_base: knowledge_base || undefined
+          }).length,
+          knowledge_base_count: knowledge_base ? knowledge_base.length : 0
         }
       }
     }

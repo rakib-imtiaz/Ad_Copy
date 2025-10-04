@@ -16,6 +16,7 @@ import { URLScrapingSection } from "@/components/url-scraping-section"
 import { PopulateDataButton } from "@/components/populate-data-button"
 import { KnowledgeBaseSidebarNav } from "@/components/knowledge-base-sidebar-nav"
 import { BrandVoiceLinkExtractor } from "@/components/brand-voice-link-extractor"
+import { MarkdownRenderer } from "@/components/ui/markdown-renderer"
 
 interface BrandFormData {
   brandIdentity: {
@@ -1173,27 +1174,41 @@ export function BrandFormClean({ onSuccess }: BrandFormProps) {
                 <div className="space-y-3">
                   <label className="text-sm font-medium">Communication Style</label>
                   {formData.brandIdentity.tonePersonality.style.map((style, index) => (
-                    <div key={index} className="flex gap-2">
-                      <Input
-                        type="text"
-                        value={style}
-                        onChange={(e) => updateArrayField(['brandIdentity', 'tonePersonality', 'style'], index, e.target.value)}
-                        placeholder="e.g., Professional yet friendly, authoritative..."
-                        className="flex-1"
-                      />
-                      <Button
-                        type="button"
-                        variant="outline"
-                        onClick={(e) => {
-                          e.preventDefault()
-                          e.stopPropagation()
-                          console.log('Remove button clicked for style', index)
-                          removeArrayItem(['brandIdentity', 'tonePersonality', 'style'], index)
-                        }}
-                        className="h-7 w-7 p-0 text-center text-destructive hover:text-destructive"
-                      >
-                        <Trash2 className="w-3 h-3" />
-                      </Button>
+                    <div key={index} className="space-y-2">
+                      {/* Show Markdown preview for YouTube tone analysis */}
+                      {style.includes('##') || style.includes('**') ? (
+                        <div className="border rounded-lg p-4 bg-slate-50">
+                          <MarkdownRenderer 
+                            content={style}
+                            className="text-sm"
+                          />
+                        </div>
+                      ) : (
+                        <Input
+                          type="text"
+                          value={style}
+                          onChange={(e) => updateArrayField(['brandIdentity', 'tonePersonality', 'style'], index, e.target.value)}
+                          placeholder="e.g., Professional yet friendly, authoritative..."
+                          className="flex-1"
+                        />
+                      )}
+                      
+                      {/* Remove button */}
+                      <div className="flex justify-end">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={(e) => {
+                            e.preventDefault()
+                            e.stopPropagation()
+                            console.log('Remove button clicked for style', index)
+                            removeArrayItem(['brandIdentity', 'tonePersonality', 'style'], index)
+                          }}
+                          className="h-7 w-7 p-0 text-center text-destructive hover:text-destructive"
+                        >
+                          <Trash2 className="w-3 h-3" />
+                        </Button>
+                      </div>
                     </div>
                   ))}
                 </div>

@@ -106,6 +106,7 @@ export const API_ENDPOINTS = {
       SET_TOKEN_PRICE: 'https://n8n.srv934833.hstgr.cloud/webhook/set-token-price',
       GET_TOKEN_PRICE: 'https://n8n.srv934833.hstgr.cloud/webhook/show-token-price',
       YOUTUBE_TRANSCRIBE: 'https://n8n.srv934833.hstgr.cloud/webhook/youtube-video-transcribe',
+      YOUTUBE_SUBTITLE: 'https://n8n.srv934833.hstgr.cloud/webhook/youtube-video-subtitle',
       EXTRA_RESOURCES_CONTENT_EXTRACT: 'https://n8n.srv934833.hstgr.cloud/webhook/extra-resources-content-extract',
       SEE_USER_PASSWORD: 'https://n8n.srv934833.hstgr.cloud/webhook/see-user-password',
       GET_KNOWLEDGE_BASE_IN_FIELD: 'https://n8n.srv934833.hstgr.cloud/webhook/get-knowledge-base-in-field',

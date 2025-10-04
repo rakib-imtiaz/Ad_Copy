@@ -1523,8 +1523,8 @@ export default function Dashboard() {
         // If webhook is not registered (404), create a fallback session ID
         if (response.status === 404) {
           console.log('⚠️ Webhook not registered, creating fallback session ID')
-          const fallbackSessionId = `fallback_${Date.now()}`
-          setSessionId(fallbackSessionId)
+          const fallbackSessionId = Math.floor(Date.now() / 1000) // Use numeric timestamp
+          setSessionId(fallbackSessionId.toString())
           console.log('🎯 FALLBACK SESSION ID STORED:', fallbackSessionId)
           return true
         }
@@ -1550,13 +1550,13 @@ export default function Dashboard() {
         console.warn('⚠️ No session_id in webhook response')
         console.log('📋 Full webhook response:', data)
         // Create a fallback session ID
-        const fallbackSessionId = `fallback_${Date.now()}`
-        setSessionId(fallbackSessionId)
+        const fallbackSessionId = Math.floor(Date.now() / 1000) // Use numeric timestamp
+        setSessionId(fallbackSessionId.toString())
         if (typeof window !== 'undefined') {
-          localStorage.setItem('chat_session_id', fallbackSessionId)
+          localStorage.setItem('chat_session_id', fallbackSessionId.toString())
         }
         console.log('🎯 FALLBACK SESSION ID STORED:', fallbackSessionId)
-        finalSessionId = fallbackSessionId
+        finalSessionId = fallbackSessionId.toString()
       }
       
       // Fetch chat history when new chat is initiated
