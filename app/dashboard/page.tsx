@@ -2014,11 +2014,17 @@ export default function Dashboard() {
       }
       console.log('📄 ===== END SCRAPED CONTENT ANALYSIS =====')
 
-      // 🚀 OPTIMIZATION: Use cached knowledge base instead of fetching every time
+      // 🚀 OPTIMIZATION: Smart knowledge base sending - only when needed
       let knowledgeBaseForMessage: ScrapedContentItem[] = []
-      console.log('📚 ===== USING CACHED KNOWLEDGE BASE =====')
+      console.log('📚 ===== SMART KNOWLEDGE BASE SENDING =====')
       
-      if (cachedKnowledgeBase) {
+      // Only include knowledge base for complex queries, not simple greetings or basic questions
+      const isSimpleGreeting = /^(hi|hello|hey|good morning|good afternoon|good evening|thanks?|thank you)$/i.test(userPrompt.trim())
+      const isBasicQuestion = /^(what|who|when|where|why|how)\s+\w+/i.test(userPrompt.trim()) && userPrompt.length < 50
+      const needsKnowledgeBase = !isSimpleGreeting && !isBasicQuestion && cachedKnowledgeBase
+      
+      if (needsKnowledgeBase) {
+        console.log('📦 Knowledge base needed for this query:', userPrompt.trim())
         console.log('📦 Using cached knowledge base:', cachedKnowledgeBase.length, 'characters')
         
         // Transform cached KB into the expected format
@@ -2032,6 +2038,10 @@ export default function Dashboard() {
         }]
         
         console.log('📦 Cached knowledge base formatted for message')
+      } else if (isSimpleGreeting) {
+        console.log('📦 Simple greeting detected - skipping knowledge base for faster response')
+      } else if (isBasicQuestion) {
+        console.log('📦 Basic question detected - skipping knowledge base for faster response')
       } else {
         console.log('📦 No cached knowledge base available yet')
       }
@@ -2040,7 +2050,7 @@ export default function Dashboard() {
         console.warn('📚 Knowledge base cache error:', kbError.message)
       }
       
-      console.log('📚 ===== END KNOWLEDGE BASE FOR MESSAGE =====')
+      console.log('📚 ===== END SMART KNOWLEDGE BASE SENDING =====')
 
       // Enhance user prompt with scraped content context if available
       let enhancedUserPrompt = userPrompt
@@ -2163,7 +2173,7 @@ export default function Dashboard() {
 
   // Knowledge base warning modal handlers
 
-  // Handle sending messages
+  // Handle sending messages with instant frontend updates
   const handleSendMessage = async (content: string) => {
     if (!content.trim() || !currentUser) return
 
@@ -2200,31 +2210,7 @@ export default function Dashboard() {
       })
     }
 
-    // Mark chat as started on first message
-    let currentSessionId = sessionId
-    if (!chatStarted) {
-      console.log('🎯 FIRST MESSAGE - Initializing chat session...')
-      setChatStarted(true)
-      // Save chat state to localStorage
-      if (typeof window !== 'undefined') {
-        localStorage.setItem('chat_started', 'true')
-      }
-      
-      // Call webhook to get session ID only when user actually starts chatting
-      if (!sessionId) {
-        console.log('🎯 User started first conversation - calling new chat webhook...')
-        const newSessionId = await initiateNewChat()
-        if (newSessionId && typeof newSessionId === 'string') {
-          currentSessionId = newSessionId
-          console.log('🎯 New session ID obtained:', newSessionId)
-        } else {
-          console.warn('New chat webhook failed, but continuing with conversation')
-        }
-      } else {
-        console.log('🎯 Using existing session ID for new conversation:', sessionId)
-      }
-    }
-
+    // 🚀 INSTANT UPDATE: Create and add user message IMMEDIATELY (before any async operations)
     const userMessage = {
       id: Date.now().toString(),
       role: 'user' as const,
@@ -2233,7 +2219,7 @@ export default function Dashboard() {
       animated: false
     }
 
-    // Add user message to chat
+    // 🚀 INSTANT UPDATE: Add user message to chat IMMEDIATELY
     setMessages(prev => {
       const newMessages = [...prev, userMessage]
       // Save messages to localStorage
@@ -2243,9 +2229,112 @@ export default function Dashboard() {
       }
       return newMessages
     })
+
+    // 🚀 INSTANT UPDATE: Show loading state for AI response
     setIsLoading(true)
 
+    // 🚀 BACKGROUND PROCESSING: Handle session initialization and AI response asynchronously
+    // Don't await this - let it run in the background
+    processAIResponseWithSession(content.trim()).catch(error => {
+      console.error('Error in background AI processing:', error)
+      
+      // Add error message to chat
+      const errorMessage = {
+        id: (Date.now() + 1).toString(),
+        role: 'assistant' as const,
+        content: 'I\'m sorry, there was an error processing your request. Please try again.',
+        timestamp: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true }),
+        animated: false,
+        isError: true,
+        showRetryButton: true,
+        originalMessage: content.trim()
+      }
+
+      setMessages(prev => {
+        const newMessages = [...prev, errorMessage]
+        // Save messages to localStorage
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('chat_messages', JSON.stringify(newMessages))
+          console.log('💾 Saved error message to localStorage:', errorMessage.role, errorMessage.content.substring(0, 50))
+        }
+        return newMessages
+      })
+    })
+
+    console.log('🚀 ===== CHAT MESSAGE FLOW END (INSTANT) =====')
+  }
+
+  // 🚀 NEW: Background AI response processing function with session handling
+  const processAIResponseWithSession = async (content: string) => {
     try {
+      console.log('🤖 ===== BACKGROUND AI PROCESSING WITH SESSION START =====')
+      console.log('💬 Processing AI response for content:', content.trim())
+      
+      // Handle session initialization in background
+      let currentSessionId = sessionId
+      if (!chatStarted) {
+        console.log('🎯 FIRST MESSAGE - Initializing chat session in background...')
+        setChatStarted(true)
+        // Save chat state to localStorage
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('chat_started', 'true')
+        }
+        
+        // Call webhook to get session ID only when user actually starts chatting
+        if (!sessionId) {
+          console.log('🎯 User started first conversation - calling new chat webhook...')
+          const newSessionId = await initiateNewChat()
+          if (newSessionId && typeof newSessionId === 'string') {
+            currentSessionId = newSessionId
+            console.log('🎯 New session ID obtained:', newSessionId)
+          } else {
+            console.warn('New chat webhook failed, but continuing with conversation')
+          }
+        } else {
+          console.log('🎯 Using existing session ID for new conversation:', sessionId)
+        }
+      }
+      
+      // Now process the AI response
+      await processAIResponse(content.trim(), currentSessionId)
+      
+    } catch (error) {
+      console.error('Error in processAIResponseWithSession:', error)
+      
+      // Add error message to chat
+      const errorMessage = {
+        id: (Date.now() + 1).toString(),
+        role: 'assistant' as const,
+        content: 'I\'m sorry, there was an error processing your request. Please try again.',
+        timestamp: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true }),
+        animated: false,
+        isError: true,
+        showRetryButton: true,
+        originalMessage: content.trim()
+      }
+
+      setMessages(prev => {
+        const newMessages = [...prev, errorMessage]
+        // Save messages to localStorage
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('chat_messages', JSON.stringify(newMessages))
+          console.log('💾 Saved error message to localStorage:', errorMessage.role, errorMessage.content.substring(0, 50))
+        }
+        return newMessages
+      })
+    } finally {
+      // 🚀 INSTANT UPDATE: Hide loading state when AI response is ready
+      setIsLoading(false)
+      console.log('🤖 ===== BACKGROUND AI PROCESSING WITH SESSION END =====')
+    }
+  }
+
+  // 🚀 NEW: Background AI response processing function
+  const processAIResponse = async (content: string, currentSessionId: string) => {
+    try {
+      console.log('🤖 ===== BACKGROUND AI PROCESSING START =====')
+      console.log('💬 Processing AI response for content:', content.trim())
+      
       // Send message to chat window webhook
       console.log('💬 Sending message with Session ID:', currentSessionId || 'new-session')
       console.log('📤 About to call sendMessageToChatWindow with content:', content.trim())
@@ -2255,61 +2344,61 @@ export default function Dashboard() {
 
       if (response) {
         // Add AI response to chat
-        let content = 'I received your message but couldn\'t generate a response.';
+        let aiContent = 'I received your message but couldn\'t generate a response.';
         
         // Handle different response formats from chat window webhook
         if (response.fallback) {
-          content = response.response;
+          aiContent = response.response;
         } else if (response.empty_response) {
-          content = response.response;
+          aiContent = response.response;
         } else if (response.raw_response) {
-          content = response.response;
+          aiContent = response.response;
         } else if (response.response) {
-          content = response.response;
+          aiContent = response.response;
         } else if (response.content) {
-          content = response.content;
+          aiContent = response.content;
         } else if (response.message) {
-          content = response.message;
+          aiContent = response.message;
         } else if (response.ai_response) {
-          content = response.ai_response;
+          aiContent = response.ai_response;
         } else if (response.pageContent) {
           // Handle n8n response with pageContent field (direct response)
           const pageContent = response.pageContent;
           // Extract AI response from the conversation format
           if (pageContent.includes('ai :')) {
             const aiResponse = pageContent.split('ai :')[1]?.trim();
-            content = aiResponse || pageContent;
+            aiContent = aiResponse || pageContent;
           } else {
-            content = pageContent;
+            aiContent = pageContent;
           }
         } else if (response.data?.response) {
-          content = response.data.response;
+          aiContent = response.data.response;
         } else if (response.data?.content) {
-          content = response.data.content;
+          aiContent = response.data.content;
         } else if (response.data?.pageContent) {
           // Handle n8n response with pageContent field (nested in data)
           const pageContent = response.data.pageContent;
           // Extract AI response from the conversation format
           if (pageContent.includes('ai :')) {
             const aiResponse = pageContent.split('ai :')[1]?.trim();
-            content = aiResponse || pageContent;
+            aiContent = aiResponse || pageContent;
           } else {
-            content = pageContent;
+            aiContent = pageContent;
           }
         }
         
         const aiMessage = {
           id: (Date.now() + 1).toString(),
           role: 'assistant' as const,
-          content: content,
+          content: aiContent,
           timestamp: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true }),
           animated: false
         }
         
         console.log('🤖 AI Response processed:')
         console.log('  - Message ID:', aiMessage.id)
-        console.log('  - Content length:', content.length)
-        console.log('  - Content preview:', content.substring(0, 200) + (content.length > 200 ? '...' : ''))
+        console.log('  - Content length:', aiContent.length)
+        console.log('  - Content preview:', aiContent.substring(0, 200) + (aiContent.length > 200 ? '...' : ''))
         
         setMessages(prev => {
           const newMessages = [...prev, aiMessage]
@@ -2342,25 +2431,30 @@ export default function Dashboard() {
           })
         }
       } else {
-        // Add error message
+        // Handle case where no response was received
         const errorMessage = {
           id: (Date.now() + 1).toString(),
           role: 'assistant' as const,
-          content: `Error: Failed to send message to chat window`,
+          content: 'I\'m sorry, I couldn\'t process your request. Please try again.',
           timestamp: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true }),
-          animated: false
+          animated: false,
+          isError: true,
+          showRetryButton: true,
+          originalMessage: content.trim()
         }
+
         setMessages(prev => {
           const newMessages = [...prev, errorMessage]
           // Save messages to localStorage
           if (typeof window !== 'undefined') {
             localStorage.setItem('chat_messages', JSON.stringify(newMessages))
+            console.log('💾 Saved error message to localStorage:', errorMessage.role, errorMessage.content.substring(0, 50))
           }
           return newMessages
         })
       }
     } catch (error) {
-      console.error('Chat error:', error)
+      console.error('Error in processAIResponse:', error)
       
       // Determine the type of error and show appropriate message
       let errorContent = 'Sorry, I encountered an error. Please try again.'
@@ -2386,6 +2480,7 @@ export default function Dashboard() {
         }
       }
       
+      // Add error message to chat
       const errorMessage = {
         id: (Date.now() + 1).toString(),
         role: 'assistant' as const,
@@ -2433,8 +2528,7 @@ export default function Dashboard() {
         }
       }
       
-      setIsLoading(false)
-      console.log('🏁 ===== CHAT MESSAGE FLOW END =====')
+      console.log('🤖 ===== BACKGROUND AI PROCESSING END =====')
     }
   }
 
