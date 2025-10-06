@@ -134,6 +134,7 @@ export function AppSidebar() {
   const [isAgentModalOpen, setIsAgentModalOpen] = React.useState(false)
   const [isStartingChat, setIsStartingChat] = React.useState(false)
   const [showKnowledgeBaseWarning, setShowKnowledgeBaseWarning] = React.useState(false)
+  const [urlChatId, setUrlChatId] = React.useState<string | null>(null)
   const { user, logout } = useAuth()
   const { state } = useSidebar()
   
@@ -227,6 +228,28 @@ export function AppSidebar() {
       day: 'numeric'
     }).format(date)
   }
+
+  // Track URL changes to force re-render
+  React.useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const updateUrlChatId = () => {
+        const urlParams = new URLSearchParams(window.location.search)
+        const chatId = urlParams.get('chatid')
+        setUrlChatId(chatId)
+        console.log('🔄 URL chatid changed:', chatId)
+      }
+      
+      // Initial load
+      updateUrlChatId()
+      
+      // Listen for URL changes (back/forward buttons, programmatic navigation)
+      window.addEventListener('popstate', updateUrlChatId)
+      
+      return () => {
+        window.removeEventListener('popstate', updateUrlChatId)
+      }
+    }
+  }, [])
 
 
   return (
@@ -324,10 +347,13 @@ export function AppSidebar() {
                         </div>
                       ) : chatHistory.length > 0 ? (
                         chatHistory.map((chat: any) => {
-                          // Get chat ID from URL parameter and match with session_id
-                          const urlParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null
-                          const chatIdFromUrl = urlParams?.get('chatid')
-                          const isActive = chatIdFromUrl === chat.session_id.toString()
+                          // Match URL chatid with session_id (ensure both are strings)
+                          const isActive = String(urlChatId) === String(chat.session_id)
+                          
+                          // Debug the comparison
+                          if (urlChatId) {
+                            console.log(`🔍 Chat "${chat.title}" (ID: ${chat.session_id}): urlChatId="${urlChatId}" sessionId="${chat.session_id}" isActive=${isActive}`)
+                          }
                           
                           const chatDate = new Date(chat.created_at)
                           const timeAgo = formatTimeAgo(chatDate)
@@ -418,10 +444,13 @@ export function AppSidebar() {
                 <SidebarMenu className="space-y-1">
                   {/* Recent Chat History Icons - Show top 3 */}
                   {chatHistory.slice(0, 3).map((chat: any) => {
-                    // Get chat ID from URL parameter and match with session_id
-                    const urlParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null
-                    const chatIdFromUrl = urlParams?.get('chatid')
-                    const isActive = chatIdFromUrl === chat.session_id.toString()
+                    // Match URL chatid with session_id (ensure both are strings)
+                    const isActive = String(urlChatId) === String(chat.session_id)
+                    
+                    // Debug the comparison (collapsed sidebar)
+                    if (urlChatId) {
+                      console.log(`🔍 Collapsed Chat "${chat.title}" (ID: ${chat.session_id}): urlChatId="${urlChatId}" sessionId="${chat.session_id}" isActive=${isActive}`)
+                    }
                     
                     const chatDate = new Date(chat.created_at)
                     const timeAgo = formatTimeAgo(chatDate)

@@ -909,6 +909,17 @@ export default function Dashboard() {
         // No agent_id found in conversation, keeping current agent
       }
       
+      // Update URL with the new chat ID
+      if (typeof window !== 'undefined') {
+        const url = new URL(window.location.href)
+        url.searchParams.set('chatid', sessionId)
+        window.history.pushState({}, document.title, url.toString())
+        console.log('🔄 URL updated to:', url.toString())
+        
+        // Manually trigger sidebar URL update since pushState doesn't fire popstate
+        window.dispatchEvent(new PopStateEvent('popstate'))
+      }
+      
       // Save to localStorage
       if (typeof window !== 'undefined') {
         localStorage.setItem('chat_session_id', sessionId)
