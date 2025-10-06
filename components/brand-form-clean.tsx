@@ -298,11 +298,9 @@ export function BrandFormClean({ onSuccess }: BrandFormProps) {
         const response = await fetch(API_ENDPOINTS.N8N_WEBHOOKS.GET_KNOWLEDGE_BASE_IN_FIELD, {
           method: 'GET',
           headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            access_token: accessToken
-          })
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${accessToken}`
+          }
         })
 
         if (response.ok) {
@@ -1037,6 +1035,11 @@ export function BrandFormClean({ onSuccess }: BrandFormProps) {
         completedSteps={completedSteps}
         onStepClick={goToStep}
         onAutoFillClick={() => setShowAutoFill(true)}
+        onPopulateKnowledgeBase={(data) => {
+          console.log('🔄 Populating form with knowledge base data:', data)
+          setFormData(data)
+          showToastMessage("Knowledge base data loaded successfully!", 'success')
+        }}
       />
       
       {/* Main Content Area */}

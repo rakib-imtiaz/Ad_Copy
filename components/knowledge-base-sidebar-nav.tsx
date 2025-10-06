@@ -2,7 +2,9 @@
 
 import * as React from "react"
 import { Button } from "@/components/ui/button"
-import { ChevronRight, Check, Building2, Target, Eye, Users, Package, Link, Star, User, Award, FileText, BookOpen, Zap, Share2 } from "lucide-react"
+import { ChevronRight, Check, Building2, Target, Eye, Users, Package, Link, Star, User, Award, FileText, BookOpen, Zap, Share2, TestTube, Globe } from "lucide-react"
+import { useKnowledgeBasePopulation } from "@/hooks/use-knowledge-base-population"
+import { ParsedKnowledgeBaseData } from "@/lib/services/knowledge-base-webhook-parser"
 
 interface KnowledgeBaseSidebarNavProps {
   currentStep: number
@@ -10,6 +12,7 @@ interface KnowledgeBaseSidebarNavProps {
   completedSteps: number[]
   onStepClick: (step: number) => void
   onAutoFillClick?: () => void
+  onPopulateKnowledgeBase?: (data: ParsedKnowledgeBaseData) => void
 }
 
 const stepLabels = [
@@ -47,8 +50,24 @@ export function KnowledgeBaseSidebarNav({
   totalSteps, 
   completedSteps, 
   onStepClick,
-  onAutoFillClick 
+  onAutoFillClick,
+  onPopulateKnowledgeBase
 }: KnowledgeBaseSidebarNavProps) {
+  
+  const {
+    isLoading,
+    loadKnowledgeBase,
+    error
+  } = useKnowledgeBasePopulation(onPopulateKnowledgeBase)
+
+  const handleLoadKnowledgeBase = async () => {
+    try {
+      await loadKnowledgeBase()
+    } catch (err: any) {
+      alert(`❌ Error loading knowledge base:\n\n${err.message}`)
+    }
+  }
+
   
   return (
     <div className="w-56 bg-white border-r border-gray-100 h-full flex flex-col shadow-sm">
@@ -105,10 +124,30 @@ export function KnowledgeBaseSidebarNav({
         <div className="text-center space-y-4">
           <p className="text-xs font-medium text-gray-600">Need a head start?</p>
           <Button 
-            className="max-w-xs bg-black hover:bg-gray-800 text-white text-xs py-1 px-4 h-8"
+            className="w-full max-w-xs bg-black hover:bg-gray-800 text-white text-xs py-1 px-4 h-8 flex items-center justify-center relative overflow-hidden"
             onClick={onAutoFillClick}
           >
-            Extract Information from Web
+            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full animate-[shimmer_2s_infinite]"></div>
+            <Globe className="w-3 h-3 mr-1 flex-shrink-0 relative z-10" />
+            <span className="relative z-10">Fill Data from Web</span>
+          </Button>
+          
+          <Button 
+            className="w-full max-w-xs bg-blue-600 hover:bg-blue-700 text-white text-xs py-1 px-4 h-8 flex items-center justify-center"
+            onClick={handleLoadKnowledgeBase}
+            disabled={isLoading}
+          >
+            {isLoading ? (
+              <>
+                <TestTube className="w-3 h-3 mr-1 animate-pulse flex-shrink-0" />
+                Loading...
+              </>
+            ) : (
+              <>
+                <TestTube className="w-3 h-3 mr-1 flex-shrink-0" />
+                Load Data
+              </>
+            )}
           </Button>
         </div>
       </div>
