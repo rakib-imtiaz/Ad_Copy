@@ -23,7 +23,8 @@ export const API_CONFIG = {
   
   // Timeout settings
   TIMEOUTS: {
-    REQUEST: 30000, // 30 seconds
+    REQUEST: 180000, // 3 minutes for AI responses
+    CHAT_REQUEST: 180000, // 3 minutes for chat requests
     UPLOAD: 300000, // 5 minutes
   },
 }

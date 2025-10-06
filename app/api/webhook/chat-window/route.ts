@@ -95,7 +95,7 @@ export async function POST(request: NextRequest) {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(requestPayload),
-      signal: AbortSignal.timeout(90000), // 90 second timeout for long AI responses
+      signal: AbortSignal.timeout(180000), // 3 minutes timeout for long AI responses
     })
 
     console.log('n8n response status:', response.status)

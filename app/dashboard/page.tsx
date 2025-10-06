@@ -863,6 +863,13 @@ export default function Dashboard() {
       isLoadingChat
     })
 
+    // Prevent switching chats while AI is processing
+    if (isLoading) {
+      console.log('⚠️ Cannot switch chats while AI is processing a message')
+      toast.info('Please wait for the current message to finish processing before switching chats')
+      return
+    }
+
     // Prevent multiple clicks
     if (isLoadingChat) {
       console.log('⚠️ Already loading chat, skipping...')
@@ -1506,7 +1513,7 @@ export default function Dashboard() {
           agent_id: agentId,
           knowledge_base: knowledgeBaseData.length > 0 ? knowledgeBaseData : undefined
         }),
-        signal: AbortSignal.timeout(60000), // 60 second timeout for reliable connection
+        signal: AbortSignal.timeout(180000), // 3 minutes timeout for reliable connection
       })
 
       console.log('New chat webhook response:', {
@@ -2072,7 +2079,7 @@ export default function Dashboard() {
         method: 'POST',
         headers: getAuthHeaders(accessToken),
         body: JSON.stringify(requestPayload),
-        signal: AbortSignal.timeout(60000), // 60 second timeout for chat to handle longer AI responses
+        signal: AbortSignal.timeout(180000), // 3 minutes timeout for chat to handle longer AI responses
       })
 
       console.log('Chat window webhook response:', {
@@ -2328,7 +2335,7 @@ export default function Dashboard() {
       
       if (error instanceof Error) {
         if (error.name === 'TimeoutError' || error.message.includes('timeout')) {
-          errorContent = '⏱️ The request is taking longer than expected. This might be due to high server load or complex processing. Would you like to try again?'
+          errorContent = '⏱️ The AI is taking longer than usual to respond. This is normal for complex requests that require detailed analysis. Please wait a moment longer or try again if needed.'
           showRetryButton = true
         } else if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
           errorContent = '🌐 Connection issue detected. Please check your internet connection and try again.'
@@ -3506,12 +3513,15 @@ export default function Dashboard() {
                     <Bot className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-yellow-400" />
                 </div>
                   <div className="bg-gray-100 rounded-2xl px-3 sm:px-4 py-2.5 sm:py-3">
-                    <div className="flex gap-1">
-                      <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
-                      <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-                      <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
-              </div>
-            </div>
+                    <div className="flex items-center gap-2">
+                      <div className="flex gap-1">
+                        <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
+                        <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+                        <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                      </div>
+                      <span className="text-sm text-gray-600 font-medium">AI is thinking...</span>
+                    </div>
+                  </div>
           </div>
               </div>
             )}
@@ -3909,6 +3919,7 @@ function LeftSidebar({
   chatHistory,
   isLoadingChatHistory,
   currentChatSession,
+  isLoading,
   onLoadChatSession,
   onRefreshChatHistory,
   onDeleteChatSession
@@ -4056,12 +4067,12 @@ function LeftSidebar({
                       isSelected
                         ? 'bg-white border-gray-300 shadow-lg'
                         : 'bg-black border-gray-700 hover:border-gray-600'
-                    }`}
+                    } ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
               >
                 <div className="flex items-center justify-between">
                       <div 
-                        className="flex-1 min-w-0 cursor-pointer"
-                        onClick={() => onLoadChatSession(chat.session_id)}
+                        className={`flex-1 min-w-0 ${isLoading ? 'cursor-not-allowed' : 'cursor-pointer'}`}
+                        onClick={() => !isLoading && onLoadChatSession(chat.session_id)}
                       >
                         <div className="flex items-center space-x-2">
                           <h4 className={`font-medium text-sm truncate ${isSelected ? 'text-black' : 'text-white'}`}>
@@ -4136,7 +4147,7 @@ function LeftSidebar({
 }
 
 // Mobile Sidebar Component
-function MobileSidebar({ agents, conversations, chatHistory, isLoadingChatHistory, currentChatSession, onLoadChatSession, onRefreshChatHistory, onDeleteChatSession }: any) {
+function MobileSidebar({ agents, conversations, chatHistory, isLoadingChatHistory, currentChatSession, isLoading, onLoadChatSession, onRefreshChatHistory, onDeleteChatSession }: any) {
   return (
     <div className="h-full relative flex flex-col bg-white">
       <div className="p-3 border-b border-[#EEEEEE]">
@@ -4172,6 +4183,7 @@ function MobileSidebar({ agents, conversations, chatHistory, isLoadingChatHistor
           chatHistory={chatHistory}
           isLoadingChatHistory={isLoadingChatHistory}
           currentChatSession={currentChatSession}
+          isLoading={isLoading}
         onLoadChatSession={onLoadChatSession}
         onRefreshChatHistory={onRefreshChatHistory}
         onDeleteChatSession={onDeleteChatSession}
