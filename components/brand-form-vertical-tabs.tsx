@@ -521,6 +521,7 @@ export function BrandFormVerticalTabs({ onSuccess }: BrandFormProps) {
       {/* Toast */}
       {showToast && (
         <Toast
+          isVisible={showToast}
           message={toastMessage}
           type={toastType}
           onClose={() => setShowToast(false)}

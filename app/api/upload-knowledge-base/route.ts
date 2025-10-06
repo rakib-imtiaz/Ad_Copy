@@ -110,21 +110,20 @@ function transformKnowledgeBaseData(oldData: any): any {
     // Testimonials & Case Studies
     if (assetsData['Testimonials & Case Studies']) {
       const testimonialsData = assetsData['Testimonials & Case Studies']
-      // Handle both old categorized format and new single array format
+      // Keep categorized format for n8n compatibility
       if (Array.isArray(testimonialsData)) {
-        transformed.clientAssets.testimonialsCaseStudies = testimonialsData.filter(t => t.trim() !== '')
+        // Convert simple array to categorized format
+        transformed.clientAssets.testimonialsCaseStudies = {
+          "Ecommerce": testimonialsData.filter(t => t.trim() !== ''),
+          "Financial Services": [],
+          "Entertainment": [],
+          "Coaches / Consultants": [],
+          "Brick & Mortar": [],
+          "Others": testimonialsData.filter(t => t.trim() !== '')
+        }
       } else {
-        // Combine all testimonials from different categories into one array
-        const allTestimonials = [
-          ...(testimonialsData['Ecommerce'] || []),
-          ...(testimonialsData['Financial Services'] || []),
-          ...(testimonialsData['Entertainment'] || []),
-          ...(testimonialsData['Coaches / Consultants'] || []),
-          ...(testimonialsData['Brick & Mortar'] || []),
-          ...(testimonialsData['Others'] || [])
-        ].filter(t => t.trim() !== '')
-        
-        transformed.clientAssets.testimonialsCaseStudies = allTestimonials.length > 0 ? allTestimonials : ['']
+        // Already in categorized format, keep as is
+        transformed.clientAssets.testimonialsCaseStudies = testimonialsData
       }
     }
   }

@@ -17,6 +17,13 @@ import { PopulateDataButton } from "@/components/populate-data-button"
 import { KnowledgeBaseSidebarNav } from "@/components/knowledge-base-sidebar-nav"
 import { BrandVoiceLinkExtractor } from "@/components/brand-voice-link-extractor"
 import { MarkdownRenderer } from "@/components/ui/markdown-renderer"
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+} from "@/components/ui/carousel"
 
 interface BrandFormData {
   brandIdentity: {
@@ -138,6 +145,103 @@ export function BrandFormClean({ onSuccess }: BrandFormProps) {
   const [isSaving, setIsSaving] = React.useState(false)
   const [isLoading, setIsLoading] = React.useState(true)
   const [showAutoFill, setShowAutoFill] = React.useState(false)
+  const [testimonialCarouselApi, setTestimonialCarouselApi] = React.useState<any>()
+  const [currentTestimonialIndex, setCurrentTestimonialIndex] = React.useState(0)
+  
+  // Carousel state for other sections
+  const [audienceCarouselApi, setAudienceCarouselApi] = React.useState<any>()
+  const [currentAudienceIndex, setCurrentAudienceIndex] = React.useState(0)
+  
+  const [painPointsCarouselApi, setPainPointsCarouselApi] = React.useState<any>()
+  const [currentPainPointsIndex, setCurrentPainPointsIndex] = React.useState(0)
+  
+  const [customerGoalsCarouselApi, setCustomerGoalsCarouselApi] = React.useState<any>()
+  const [currentCustomerGoalsIndex, setCurrentCustomerGoalsIndex] = React.useState(0)
+  
+  const [productsCarouselApi, setProductsCarouselApi] = React.useState<any>()
+  const [currentProductsIndex, setCurrentProductsIndex] = React.useState(0)
+  
+  const [audienceVocabularyCarouselApi, setAudienceVocabularyCarouselApi] = React.useState<any>()
+  const [currentAudienceVocabularyIndex, setCurrentAudienceVocabularyIndex] = React.useState(0)
+  
+  const [commonObjectionsCarouselApi, setCommonObjectionsCarouselApi] = React.useState<any>()
+  const [currentCommonObjectionsIndex, setCurrentCommonObjectionsIndex] = React.useState(0)
+  
+  React.useEffect(() => {
+    if (!testimonialCarouselApi) return
+
+    setCurrentTestimonialIndex(testimonialCarouselApi.selectedScrollSnap())
+
+    testimonialCarouselApi.on("select", () => {
+      setCurrentTestimonialIndex(testimonialCarouselApi.selectedScrollSnap())
+    })
+  }, [testimonialCarouselApi])
+
+  // Audience carousel effect
+  React.useEffect(() => {
+    if (!audienceCarouselApi) return
+
+    setCurrentAudienceIndex(audienceCarouselApi.selectedScrollSnap())
+
+    audienceCarouselApi.on("select", () => {
+      setCurrentAudienceIndex(audienceCarouselApi.selectedScrollSnap())
+    })
+  }, [audienceCarouselApi])
+
+  // Pain Points carousel effect
+  React.useEffect(() => {
+    if (!painPointsCarouselApi) return
+
+    setCurrentPainPointsIndex(painPointsCarouselApi.selectedScrollSnap())
+
+    painPointsCarouselApi.on("select", () => {
+      setCurrentPainPointsIndex(painPointsCarouselApi.selectedScrollSnap())
+    })
+  }, [painPointsCarouselApi])
+
+  // Customer Goals carousel effect
+  React.useEffect(() => {
+    if (!customerGoalsCarouselApi) return
+
+    setCurrentCustomerGoalsIndex(customerGoalsCarouselApi.selectedScrollSnap())
+
+    customerGoalsCarouselApi.on("select", () => {
+      setCurrentCustomerGoalsIndex(customerGoalsCarouselApi.selectedScrollSnap())
+    })
+  }, [customerGoalsCarouselApi])
+
+  // Products carousel effect
+  React.useEffect(() => {
+    if (!productsCarouselApi) return
+
+    setCurrentProductsIndex(productsCarouselApi.selectedScrollSnap())
+
+    productsCarouselApi.on("select", () => {
+      setCurrentProductsIndex(productsCarouselApi.selectedScrollSnap())
+    })
+  }, [productsCarouselApi])
+
+  // Audience Vocabulary carousel effect
+  React.useEffect(() => {
+    if (!audienceVocabularyCarouselApi) return
+
+    setCurrentAudienceVocabularyIndex(audienceVocabularyCarouselApi.selectedScrollSnap())
+
+    audienceVocabularyCarouselApi.on("select", () => {
+      setCurrentAudienceVocabularyIndex(audienceVocabularyCarouselApi.selectedScrollSnap())
+    })
+  }, [audienceVocabularyCarouselApi])
+
+  // Common Objections carousel effect
+  React.useEffect(() => {
+    if (!commonObjectionsCarouselApi) return
+
+    setCurrentCommonObjectionsIndex(commonObjectionsCarouselApi.selectedScrollSnap())
+
+    commonObjectionsCarouselApi.on("select", () => {
+      setCurrentCommonObjectionsIndex(commonObjectionsCarouselApi.selectedScrollSnap())
+    })
+  }, [commonObjectionsCarouselApi])
 
   const totalSteps = 12
 
@@ -453,6 +557,10 @@ export function BrandFormClean({ onSuccess }: BrandFormProps) {
       ...prev,
       offers: [...prev.offers, { name: "", price: "", description: "" }]
     }))
+    // Scroll to the newly added offer
+    setTimeout(() => {
+      productsCarouselApi?.scrollTo(formData.offers.length)
+    }, 100)
   }
 
   // Remove offer
@@ -547,7 +655,14 @@ export function BrandFormClean({ onSuccess }: BrandFormProps) {
               "Facebook": data.clientAssets?.socialMediaProfiles?.facebook || null,
               "TikTok": data.clientAssets?.socialMediaProfiles?.tiktok || null
             },
-            "Testimonials & Case Studies": data.clientAssets?.testimonialsCaseStudies?.filter((t: string) => t.trim() !== '') || []
+            "Testimonials & Case Studies": {
+              "Ecommerce": data.clientAssets?.testimonialsCaseStudies?.filter((t: string) => t.trim() !== '') || [],
+              "Financial Services": [],
+              "Entertainment": [],
+              "Coaches / Consultants": [],
+              "Brick & Mortar": [],
+              "Others": data.clientAssets?.testimonialsCaseStudies?.filter((t: string) => t.trim() !== '') || []
+            }
           },
           "6. Other Information": data.otherInformation && data.otherInformation.trim() !== '' ? data.otherInformation : null
         }
@@ -676,7 +791,14 @@ export function BrandFormClean({ onSuccess }: BrandFormProps) {
               "Facebook": data.clientAssets?.socialMediaProfiles?.facebook || null,
               "TikTok": data.clientAssets?.socialMediaProfiles?.tiktok || null
             },
-            "Testimonials & Case Studies": data.clientAssets?.testimonialsCaseStudies?.filter((t: string) => t.trim() !== '') || []
+            "Testimonials & Case Studies": {
+              "Ecommerce": data.clientAssets?.testimonialsCaseStudies?.filter((t: string) => t.trim() !== '') || [],
+              "Financial Services": [],
+              "Entertainment": [],
+              "Coaches / Consultants": [],
+              "Brick & Mortar": [],
+              "Others": data.clientAssets?.testimonialsCaseStudies?.filter((t: string) => t.trim() !== '') || []
+            }
           },
           "6. Other Information": data.otherInformation && data.otherInformation.trim() !== '' ? data.otherInformation : null
         }
@@ -1228,6 +1350,10 @@ export function BrandFormClean({ onSuccess }: BrandFormProps) {
                               e.preventDefault()
                               e.stopPropagation()
                               addArrayItem(['targetAudience', 'idealCustomerProfile', 'description'])
+                              // Scroll to the newly added item
+                              setTimeout(() => {
+                                audienceCarouselApi?.scrollTo(formData.targetAudience.idealCustomerProfile.description.length - 1)
+                              }, 100)
                             }}
                             className="h-6 w-6 p-0 hover:bg-green-100 hover:text-green-600 rounded-full transition-colors duration-150"
                             title="Add customer type"
@@ -1244,39 +1370,90 @@ export function BrandFormClean({ onSuccess }: BrandFormProps) {
                     </div>
                   </div>
                   
-                  <div className="space-y-3">
-                    {formData.targetAudience.idealCustomerProfile.description.map((desc, index) => (
-                      <div key={index} className="group relative bg-slate-50 rounded-lg border border-slate-100 hover:border-slate-200 transition-colors duration-150">
-                        <div className="p-3">
-                          <Textarea
-                            value={desc}
-                            onChange={(e) => updateArrayField(['targetAudience', 'idealCustomerProfile', 'description'], index, e.target.value)}
-                            rows={3}
-                            placeholder="Describe one type of ideal customer: demographics, job roles, company size, etc..."
-                            className="border-0 bg-transparent focus:ring-0 text-sm placeholder:text-slate-400 font-medium text-slate-700 resize-none"
-                          />
-                          <div className="flex justify-end mt-2">
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="sm"
+                  {formData.targetAudience.idealCustomerProfile.description.length > 0 ? (
+                    <div className="relative">
+                      {/* Carousel Container */}
+                      <Carousel
+                        setApi={setAudienceCarouselApi}
+                        className="w-full"
+                        opts={{
+                          align: "start",
+                          loop: false,
+                        }}
+                      >
+                        <div className="relative">
+                          <CarouselContent className="-ml-2 md:-ml-4">
+                            {formData.targetAudience.idealCustomerProfile.description.map((desc, index) => (
+                              <CarouselItem key={index} className="pl-2 md:pl-4">
+                                <div className="relative bg-slate-50 rounded-lg border border-slate-100 p-4">
+                                  <div className="flex items-center justify-between mb-3">
+                                    <div className="flex items-center gap-2">
+                                      <span className="text-sm font-medium text-slate-800">Customer Type {index + 1}</span>
+                                    </div>
+                                    <Button
+                                      type="button"
+                                      variant="ghost"
+                                      size="sm"
+                                      onClick={(e) => {
+                                        e.preventDefault()
+                                        e.stopPropagation()
+                                        removeArrayItem(['targetAudience', 'idealCustomerProfile', 'description'], index)
+                                        // Adjust carousel position if needed
+                                        if (currentAudienceIndex >= index && audienceCarouselApi) {
+                                          audienceCarouselApi.scrollTo(Math.max(0, index - 1))
+                                        }
+                                      }}
+                                      className="h-6 w-6 p-0 hover:bg-red-100 hover:text-red-600 rounded-full transition-colors duration-150"
+                                      title="Remove this customer type"
+                                    >
+                                      <Trash2 className="w-3 h-3" />
+                                    </Button>
+                                  </div>
+                                  <Textarea
+                                    value={desc}
+                                    onChange={(e) => updateArrayField(['targetAudience', 'idealCustomerProfile', 'description'], index, e.target.value)}
+                                    rows={3}
+                                    placeholder="Describe one type of ideal customer: demographics, job roles, company size, etc..."
+                                    className="border-0 bg-transparent focus:ring-0 text-sm placeholder:text-slate-400 font-medium text-slate-700 resize-none"
+                                  />
+                                </div>
+                              </CarouselItem>
+                            ))}
+                          </CarouselContent>
+                          
+                          {/* Navigation Arrows - Only show if more than 1 item */}
+                          {formData.targetAudience.idealCustomerProfile.description.length > 1 && (
+                            <>
+                              <CarouselPrevious />
+                              <CarouselNext />
+                            </>
+                          )}
+                        </div>
+                      </Carousel>
+                      
+                      {/* Dots Navigation */}
+                      {formData.targetAudience.idealCustomerProfile.description.length > 1 && (
+                        <div className="flex justify-center items-center gap-2 mt-4">
+                          {formData.targetAudience.idealCustomerProfile.description.map((_, index) => (
+                            <button
+                              key={index}
+                              className={`w-2 h-2 rounded-full transition-all duration-200 ${
+                                currentAudienceIndex === index
+                                  ? 'bg-blue-500 scale-125'
+                                  : 'bg-slate-300 hover:bg-slate-400'
+                              }`}
                               onClick={(e) => {
                                 e.preventDefault()
                                 e.stopPropagation()
-                                removeArrayItem(['targetAudience', 'idealCustomerProfile', 'description'], index)
+                                audienceCarouselApi?.scrollTo(index)
                               }}
-                              className="h-6 w-6 p-0 hover:bg-red-100 hover:text-red-600 rounded-full transition-colors duration-150 opacity-0 group-hover:opacity-100"
-                              title="Remove this customer type"
-                            >
-                              <Trash2 className="w-3 h-3" />
-                            </Button>
-                          </div>
+                              aria-label={`Go to customer type ${index + 1}`}
+                            />
+                          ))}
                         </div>
-                      </div>
-                    ))}
-                  </div>
-                  
-                  {formData.targetAudience.idealCustomerProfile.description.length === 0 && (
+                      )}
+                    </div>
+                  ) : (
                     <div className="text-center py-6 text-slate-400">
                       <div className="w-12 h-12 mx-auto mb-3 bg-slate-100 rounded-xl flex items-center justify-center">
                         <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1315,6 +1492,10 @@ export function BrandFormClean({ onSuccess }: BrandFormProps) {
                               e.preventDefault()
                               e.stopPropagation()
                               addArrayItem(['targetAudience', 'audienceVocabulary'])
+                              // Scroll to the newly added item
+                              setTimeout(() => {
+                                audienceVocabularyCarouselApi?.scrollTo(formData.targetAudience.audienceVocabulary.length - 1)
+                              }, 100)
                             }}
                             className="h-6 w-6 p-0 hover:bg-green-100 hover:text-green-600 rounded-full transition-colors duration-150"
                             title="Add vocabulary word"
@@ -1331,39 +1512,90 @@ export function BrandFormClean({ onSuccess }: BrandFormProps) {
                     </div>
                   </div>
                   
-                  <div className="space-y-3">
-                    {formData.targetAudience.audienceVocabulary.map((word, index) => (
-                      <div key={index} className="group relative bg-slate-50 rounded-lg border border-slate-100 hover:border-slate-200 transition-colors duration-150">
-                        <div className="flex items-center p-3">
-                          <div className="flex-1 mr-3">
-                            <Input
-                              type="text"
-                              value={word}
-                              onChange={(e) => updateArrayField(['targetAudience', 'audienceVocabulary'], index, e.target.value)}
-                              placeholder="e.g., ROI, scalability, efficiency, KPIs"
-                              className="border-0 bg-transparent focus:ring-0 text-sm placeholder:text-slate-400 font-medium text-slate-700"
-                            />
-                          </div>
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="sm"
-                            onClick={(e) => {
-                              e.preventDefault()
-                              e.stopPropagation()
-                              removeArrayItem(['targetAudience', 'audienceVocabulary'], index)
-                            }}
-                            className="h-8 w-8 p-0 hover:bg-red-100 hover:text-red-600 rounded-full transition-colors duration-150 opacity-0 group-hover:opacity-100"
-                            title="Remove this word"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </Button>
+                  {formData.targetAudience.audienceVocabulary.length > 0 ? (
+                    <div className="relative">
+                      {/* Carousel Container */}
+                      <Carousel
+                        setApi={setAudienceVocabularyCarouselApi}
+                        className="w-full"
+                        opts={{
+                          align: "start",
+                          loop: false,
+                        }}
+                      >
+                        <div className="relative">
+                          <CarouselContent className="-ml-2 md:-ml-4">
+                            {formData.targetAudience.audienceVocabulary.map((word, index) => (
+                              <CarouselItem key={index} className="pl-2 md:pl-4">
+                                <div className="relative bg-slate-50 rounded-lg border border-slate-100 p-4">
+                                  <div className="flex items-center justify-between mb-3">
+                                    <div className="flex items-center gap-2">
+                                      <span className="text-sm font-medium text-slate-800">Word {index + 1}</span>
+                                    </div>
+                                    <Button
+                                      type="button"
+                                      variant="ghost"
+                                      size="sm"
+                                      onClick={(e) => {
+                                        e.preventDefault()
+                                        e.stopPropagation()
+                                        removeArrayItem(['targetAudience', 'audienceVocabulary'], index)
+                                        // Adjust carousel position if needed
+                                        if (currentAudienceVocabularyIndex >= index && audienceVocabularyCarouselApi) {
+                                          audienceVocabularyCarouselApi.scrollTo(Math.max(0, index - 1))
+                                        }
+                                      }}
+                                      className="h-6 w-6 p-0 hover:bg-red-100 hover:text-red-600 rounded-full transition-colors duration-150"
+                                      title="Remove this word"
+                                    >
+                                      <Trash2 className="w-3 h-3" />
+                                    </Button>
+                                  </div>
+                                  <Input
+                                    type="text"
+                                    value={word}
+                                    onChange={(e) => updateArrayField(['targetAudience', 'audienceVocabulary'], index, e.target.value)}
+                                    placeholder="e.g., ROI, scalability, efficiency, KPIs"
+                                    className="border-0 bg-transparent focus:ring-0 text-sm placeholder:text-slate-400 font-medium text-slate-700"
+                                  />
+                                </div>
+                              </CarouselItem>
+                            ))}
+                          </CarouselContent>
+                          
+                          {/* Navigation Arrows - Only show if more than 1 item */}
+                          {formData.targetAudience.audienceVocabulary.length > 1 && (
+                            <>
+                              <CarouselPrevious />
+                              <CarouselNext />
+                            </>
+                          )}
                         </div>
-                      </div>
-                    ))}
-                  </div>
-                  
-                  {formData.targetAudience.audienceVocabulary.length === 0 && (
+                      </Carousel>
+                      
+                      {/* Dots Navigation */}
+                      {formData.targetAudience.audienceVocabulary.length > 1 && (
+                        <div className="flex justify-center items-center gap-2 mt-4">
+                          {formData.targetAudience.audienceVocabulary.map((_, index) => (
+                            <button
+                              key={index}
+                              className={`w-2 h-2 rounded-full transition-all duration-200 ${
+                                currentAudienceVocabularyIndex === index
+                                  ? 'bg-blue-500 scale-125'
+                                  : 'bg-slate-300 hover:bg-slate-400'
+                              }`}
+                              onClick={(e) => {
+                                e.preventDefault()
+                                e.stopPropagation()
+                                audienceVocabularyCarouselApi?.scrollTo(index)
+                              }}
+                              aria-label={`Go to word ${index + 1}`}
+                            />
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  ) : (
                     <div className="text-center py-6 text-slate-400">
                       <div className="w-12 h-12 mx-auto mb-3 bg-slate-100 rounded-xl flex items-center justify-center">
                         <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1382,7 +1614,7 @@ export function BrandFormClean({ onSuccess }: BrandFormProps) {
                         className="h-8 px-4 text-xs bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white border-0 rounded-lg shadow-sm transition-all duration-200"
                       >
                         <Plus className="w-3 h-3 mr-1" />
-                        Add First Vocabulary Word
+                        Add First Word
                       </Button>
                     </div>
                   )}
@@ -1427,6 +1659,10 @@ export function BrandFormClean({ onSuccess }: BrandFormProps) {
                               e.preventDefault()
                               e.stopPropagation()
                               addArrayItem(['targetAudience', 'primaryPainPoints'])
+                              // Scroll to the newly added item
+                              setTimeout(() => {
+                                painPointsCarouselApi?.scrollTo(formData.targetAudience.primaryPainPoints.length - 1)
+                              }, 100)
                             }}
                             className="h-6 w-6 p-0 hover:bg-green-100 hover:text-green-600 rounded-full transition-colors duration-150"
                             title="Add pain point"
@@ -1443,39 +1679,90 @@ export function BrandFormClean({ onSuccess }: BrandFormProps) {
                     </div>
                   </div>
                   
-                  <div className="space-y-3">
-                    {formData.targetAudience.primaryPainPoints.map((pain, index) => (
-                      <div key={index} className="group relative bg-slate-50 rounded-lg border border-slate-100 hover:border-slate-200 transition-colors duration-150">
-                        <div className="flex items-center p-3">
-                          <div className="flex-1 mr-3">
-                            <Input
-                              type="text"
-                              value={pain}
-                              onChange={(e) => updateArrayField(['targetAudience', 'primaryPainPoints'], index, e.target.value)}
-                              placeholder="e.g., Wasting time on manual processes, struggling with scalability"
-                              className="border-0 bg-transparent focus:ring-0 text-sm placeholder:text-slate-400 font-medium text-slate-700"
-                            />
-                          </div>
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="sm"
-                            onClick={(e) => {
-                              e.preventDefault()
-                              e.stopPropagation()
-                              removeArrayItem(['targetAudience', 'primaryPainPoints'], index)
-                            }}
-                            className="h-8 w-8 p-0 hover:bg-red-100 hover:text-red-600 rounded-full transition-colors duration-150 opacity-0 group-hover:opacity-100"
-                            title="Remove this pain point"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </Button>
+                  {formData.targetAudience.primaryPainPoints.length > 0 ? (
+                    <div className="relative">
+                      {/* Carousel Container */}
+                      <Carousel
+                        setApi={setPainPointsCarouselApi}
+                        className="w-full"
+                        opts={{
+                          align: "start",
+                          loop: false,
+                        }}
+                      >
+                        <div className="relative">
+                          <CarouselContent className="-ml-2 md:-ml-4">
+                            {formData.targetAudience.primaryPainPoints.map((pain, index) => (
+                              <CarouselItem key={index} className="pl-2 md:pl-4">
+                                <div className="relative bg-slate-50 rounded-lg border border-slate-100 p-4">
+                                  <div className="flex items-center justify-between mb-3">
+                                    <div className="flex items-center gap-2">
+                                      <span className="text-sm font-medium text-slate-800">Pain Point {index + 1}</span>
+                                    </div>
+                                    <Button
+                                      type="button"
+                                      variant="ghost"
+                                      size="sm"
+                                      onClick={(e) => {
+                                        e.preventDefault()
+                                        e.stopPropagation()
+                                        removeArrayItem(['targetAudience', 'primaryPainPoints'], index)
+                                        // Adjust carousel position if needed
+                                        if (currentPainPointsIndex >= index && painPointsCarouselApi) {
+                                          painPointsCarouselApi.scrollTo(Math.max(0, index - 1))
+                                        }
+                                      }}
+                                      className="h-6 w-6 p-0 hover:bg-red-100 hover:text-red-600 rounded-full transition-colors duration-150"
+                                      title="Remove this pain point"
+                                    >
+                                      <Trash2 className="w-3 h-3" />
+                                    </Button>
+                                  </div>
+                                  <Input
+                                    type="text"
+                                    value={pain}
+                                    onChange={(e) => updateArrayField(['targetAudience', 'primaryPainPoints'], index, e.target.value)}
+                                    placeholder="e.g., Wasting time on manual processes, struggling with scalability"
+                                    className="border-0 bg-transparent focus:ring-0 text-sm placeholder:text-slate-400 font-medium text-slate-700"
+                                  />
+                                </div>
+                              </CarouselItem>
+                            ))}
+                          </CarouselContent>
+                          
+                          {/* Navigation Arrows - Only show if more than 1 item */}
+                          {formData.targetAudience.primaryPainPoints.length > 1 && (
+                            <>
+                              <CarouselPrevious />
+                              <CarouselNext />
+                            </>
+                          )}
                         </div>
-                      </div>
-                    ))}
-                  </div>
-                  
-                  {formData.targetAudience.primaryPainPoints.length === 0 && (
+                      </Carousel>
+                      
+                      {/* Dots Navigation */}
+                      {formData.targetAudience.primaryPainPoints.length > 1 && (
+                        <div className="flex justify-center items-center gap-2 mt-4">
+                          {formData.targetAudience.primaryPainPoints.map((_, index) => (
+                            <button
+                              key={index}
+                              className={`w-2 h-2 rounded-full transition-all duration-200 ${
+                                currentPainPointsIndex === index
+                                  ? 'bg-blue-500 scale-125'
+                                  : 'bg-slate-300 hover:bg-slate-400'
+                              }`}
+                              onClick={(e) => {
+                                e.preventDefault()
+                                e.stopPropagation()
+                                painPointsCarouselApi?.scrollTo(index)
+                              }}
+                              aria-label={`Go to pain point ${index + 1}`}
+                            />
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  ) : (
                     <div className="text-center py-6 text-slate-400">
                       <div className="w-12 h-12 mx-auto mb-3 bg-slate-100 rounded-xl flex items-center justify-center">
                         <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1515,6 +1802,10 @@ export function BrandFormClean({ onSuccess }: BrandFormProps) {
                               e.preventDefault()
                               e.stopPropagation()
                               addArrayItem(['targetAudience', 'commonObjections'])
+                              // Scroll to the newly added item
+                              setTimeout(() => {
+                                commonObjectionsCarouselApi?.scrollTo(formData.targetAudience.commonObjections.length - 1)
+                              }, 100)
                             }}
                             className="h-6 w-6 p-0 hover:bg-green-100 hover:text-green-600 rounded-full transition-colors duration-150"
                             title="Add objection"
@@ -1531,39 +1822,90 @@ export function BrandFormClean({ onSuccess }: BrandFormProps) {
                     </div>
                   </div>
                   
-                  <div className="space-y-3">
-                    {formData.targetAudience.commonObjections.map((objection, index) => (
-                      <div key={index} className="group relative bg-slate-50 rounded-lg border border-slate-100 hover:border-slate-200 transition-colors duration-150">
-                        <div className="flex items-center p-3">
-                          <div className="flex-1 mr-3">
-                            <Input
-                              type="text"
-                              value={objection}
-                              onChange={(e) => updateArrayField(['targetAudience', 'commonObjections'], index, e.target.value)}
-                              placeholder="e.g., It's too expensive, We don't have time to implement"
-                              className="border-0 bg-transparent focus:ring-0 text-sm placeholder:text-slate-400 font-medium text-slate-700"
-                            />
-                          </div>
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="sm"
-                            onClick={(e) => {
-                              e.preventDefault()
-                              e.stopPropagation()
-                              removeArrayItem(['targetAudience', 'commonObjections'], index)
-                            }}
-                            className="h-8 w-8 p-0 hover:bg-red-100 hover:text-red-600 rounded-full transition-colors duration-150 opacity-0 group-hover:opacity-100"
-                            title="Remove this objection"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </Button>
+                  {formData.targetAudience.commonObjections.length > 0 ? (
+                    <div className="relative">
+                      {/* Carousel Container */}
+                      <Carousel
+                        setApi={setCommonObjectionsCarouselApi}
+                        className="w-full"
+                        opts={{
+                          align: "start",
+                          loop: false,
+                        }}
+                      >
+                        <div className="relative">
+                          <CarouselContent className="-ml-2 md:-ml-4">
+                            {formData.targetAudience.commonObjections.map((objection, index) => (
+                              <CarouselItem key={index} className="pl-2 md:pl-4">
+                                <div className="relative bg-slate-50 rounded-lg border border-slate-100 p-4">
+                                  <div className="flex items-center justify-between mb-3">
+                                    <div className="flex items-center gap-2">
+                                      <span className="text-sm font-medium text-slate-800">Objection {index + 1}</span>
+                                    </div>
+                                    <Button
+                                      type="button"
+                                      variant="ghost"
+                                      size="sm"
+                                      onClick={(e) => {
+                                        e.preventDefault()
+                                        e.stopPropagation()
+                                        removeArrayItem(['targetAudience', 'commonObjections'], index)
+                                        // Adjust carousel position if needed
+                                        if (currentCommonObjectionsIndex >= index && commonObjectionsCarouselApi) {
+                                          commonObjectionsCarouselApi.scrollTo(Math.max(0, index - 1))
+                                        }
+                                      }}
+                                      className="h-6 w-6 p-0 hover:bg-red-100 hover:text-red-600 rounded-full transition-colors duration-150"
+                                      title="Remove this objection"
+                                    >
+                                      <Trash2 className="w-3 h-3" />
+                                    </Button>
+                                  </div>
+                                  <Input
+                                    type="text"
+                                    value={objection}
+                                    onChange={(e) => updateArrayField(['targetAudience', 'commonObjections'], index, e.target.value)}
+                                    placeholder="e.g., It's too expensive, We don't have time to implement"
+                                    className="border-0 bg-transparent focus:ring-0 text-sm placeholder:text-slate-400 font-medium text-slate-700"
+                                  />
+                                </div>
+                              </CarouselItem>
+                            ))}
+                          </CarouselContent>
+                          
+                          {/* Navigation Arrows - Only show if more than 1 item */}
+                          {formData.targetAudience.commonObjections.length > 1 && (
+                            <>
+                              <CarouselPrevious />
+                              <CarouselNext />
+                            </>
+                          )}
                         </div>
-                      </div>
-                    ))}
-                  </div>
-                  
-                  {formData.targetAudience.commonObjections.length === 0 && (
+                      </Carousel>
+                      
+                      {/* Dots Navigation */}
+                      {formData.targetAudience.commonObjections.length > 1 && (
+                        <div className="flex justify-center items-center gap-2 mt-4">
+                          {formData.targetAudience.commonObjections.map((_, index) => (
+                            <button
+                              key={index}
+                              className={`w-2 h-2 rounded-full transition-all duration-200 ${
+                                currentCommonObjectionsIndex === index
+                                  ? 'bg-blue-500 scale-125'
+                                  : 'bg-slate-300 hover:bg-slate-400'
+                              }`}
+                              onClick={(e) => {
+                                e.preventDefault()
+                                e.stopPropagation()
+                                commonObjectionsCarouselApi?.scrollTo(index)
+                              }}
+                              aria-label={`Go to objection ${index + 1}`}
+                            />
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  ) : (
                     <div className="text-center py-6 text-slate-400">
                       <div className="w-12 h-12 mx-auto mb-3 bg-slate-100 rounded-xl flex items-center justify-center">
                         <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1626,6 +1968,10 @@ export function BrandFormClean({ onSuccess }: BrandFormProps) {
                               e.preventDefault()
                               e.stopPropagation()
                               addArrayItem(['targetAudience', 'primaryDesiresGoals'])
+                              // Scroll to the newly added item
+                              setTimeout(() => {
+                                customerGoalsCarouselApi?.scrollTo(formData.targetAudience.primaryDesiresGoals.length - 1)
+                              }, 100)
                             }}
                             className="h-6 w-6 p-0 hover:bg-green-100 hover:text-green-600 rounded-full transition-colors duration-150"
                             title="Add goal or desire"
@@ -1642,39 +1988,90 @@ export function BrandFormClean({ onSuccess }: BrandFormProps) {
                     </div>
                   </div>
                   
-                  <div className="space-y-3">
-                    {formData.targetAudience.primaryDesiresGoals.map((goal, index) => (
-                      <div key={index} className="group relative bg-slate-50 rounded-lg border border-slate-100 hover:border-slate-200 transition-colors duration-150">
-                        <div className="flex items-center p-3">
-                          <div className="flex-1 mr-3">
-                            <Input
-                              type="text"
-                              value={goal}
-                              onChange={(e) => updateArrayField(['targetAudience', 'primaryDesiresGoals'], index, e.target.value)}
-                              placeholder="e.g., Increase revenue by 50%, Scale to 100+ employees, Reduce operational costs"
-                              className="border-0 bg-transparent focus:ring-0 text-sm placeholder:text-slate-400 font-medium text-slate-700"
-                            />
-                          </div>
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="sm"
-                            onClick={(e) => {
-                              e.preventDefault()
-                              e.stopPropagation()
-                              removeArrayItem(['targetAudience', 'primaryDesiresGoals'], index)
-                            }}
-                            className="h-8 w-8 p-0 hover:bg-red-100 hover:text-red-600 rounded-full transition-colors duration-150 opacity-0 group-hover:opacity-100"
-                            title="Remove this goal"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </Button>
+                  {formData.targetAudience.primaryDesiresGoals.length > 0 ? (
+                    <div className="relative">
+                      {/* Carousel Container */}
+                      <Carousel
+                        setApi={setCustomerGoalsCarouselApi}
+                        className="w-full"
+                        opts={{
+                          align: "start",
+                          loop: false,
+                        }}
+                      >
+                        <div className="relative">
+                          <CarouselContent className="-ml-2 md:-ml-4">
+                            {formData.targetAudience.primaryDesiresGoals.map((goal, index) => (
+                              <CarouselItem key={index} className="pl-2 md:pl-4">
+                                <div className="relative bg-slate-50 rounded-lg border border-slate-100 p-4">
+                                  <div className="flex items-center justify-between mb-3">
+                                    <div className="flex items-center gap-2">
+                                      <span className="text-sm font-medium text-slate-800">Goal {index + 1}</span>
+                                    </div>
+                                    <Button
+                                      type="button"
+                                      variant="ghost"
+                                      size="sm"
+                                      onClick={(e) => {
+                                        e.preventDefault()
+                                        e.stopPropagation()
+                                        removeArrayItem(['targetAudience', 'primaryDesiresGoals'], index)
+                                        // Adjust carousel position if needed
+                                        if (currentCustomerGoalsIndex >= index && customerGoalsCarouselApi) {
+                                          customerGoalsCarouselApi.scrollTo(Math.max(0, index - 1))
+                                        }
+                                      }}
+                                      className="h-6 w-6 p-0 hover:bg-red-100 hover:text-red-600 rounded-full transition-colors duration-150"
+                                      title="Remove this goal"
+                                    >
+                                      <Trash2 className="w-3 h-3" />
+                                    </Button>
+                                  </div>
+                                  <Input
+                                    type="text"
+                                    value={goal}
+                                    onChange={(e) => updateArrayField(['targetAudience', 'primaryDesiresGoals'], index, e.target.value)}
+                                    placeholder="e.g., Increase revenue by 50%, Scale to 100+ employees, Reduce operational costs"
+                                    className="border-0 bg-transparent focus:ring-0 text-sm placeholder:text-slate-400 font-medium text-slate-700"
+                                  />
+                                </div>
+                              </CarouselItem>
+                            ))}
+                          </CarouselContent>
+                          
+                          {/* Navigation Arrows - Only show if more than 1 item */}
+                          {formData.targetAudience.primaryDesiresGoals.length > 1 && (
+                            <>
+                              <CarouselPrevious />
+                              <CarouselNext />
+                            </>
+                          )}
                         </div>
-                      </div>
-                    ))}
-                  </div>
-                  
-                  {formData.targetAudience.primaryDesiresGoals.length === 0 && (
+                      </Carousel>
+                      
+                      {/* Dots Navigation */}
+                      {formData.targetAudience.primaryDesiresGoals.length > 1 && (
+                        <div className="flex justify-center items-center gap-2 mt-4">
+                          {formData.targetAudience.primaryDesiresGoals.map((_, index) => (
+                            <button
+                              key={index}
+                              className={`w-2 h-2 rounded-full transition-all duration-200 ${
+                                currentCustomerGoalsIndex === index
+                                  ? 'bg-blue-500 scale-125'
+                                  : 'bg-slate-300 hover:bg-slate-400'
+                              }`}
+                              onClick={(e) => {
+                                e.preventDefault()
+                                e.stopPropagation()
+                                customerGoalsCarouselApi?.scrollTo(index)
+                              }}
+                              aria-label={`Go to goal ${index + 1}`}
+                            />
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  ) : (
                     <div className="text-center py-6 text-slate-400">
                       <div className="w-12 h-12 mx-auto mb-3 bg-slate-100 rounded-xl flex items-center justify-center">
                         <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1749,66 +2146,118 @@ export function BrandFormClean({ onSuccess }: BrandFormProps) {
                     </div>
                   </div>
                   
-                  <div className="space-y-4">
-                    {formData.offers.map((offer, index) => (
-                      <div key={index} className="group relative bg-slate-50 rounded-lg border border-slate-100 hover:border-slate-200 transition-colors duration-150">
-                        <div className="p-4">
-                          <div className="flex items-center justify-between mb-3">
-                            <h4 className="text-sm font-medium text-slate-800">Offer #{index + 1}</h4>
-                            {formData.offers.length > 1 && (
-                              <Button
-                                type="button"
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => removeOffer(index)}
-                                className="h-6 w-6 p-0 hover:bg-red-100 hover:text-red-600 rounded-full transition-colors duration-150 opacity-0 group-hover:opacity-100"
-                                title="Remove this offer"
-                              >
-                                <Trash2 className="w-3 h-3" />
-                              </Button>
-                            )}
-                          </div>
+                  {formData.offers.length > 0 ? (
+                    <div className="relative">
+                      {/* Carousel Container */}
+                      <Carousel
+                        setApi={setProductsCarouselApi}
+                        className="w-full"
+                        opts={{
+                          align: "start",
+                          loop: false,
+                        }}
+                      >
+                        <div className="relative">
+                          <CarouselContent className="-ml-2 md:-ml-4">
+                            {formData.offers.map((offer, index) => (
+                              <CarouselItem key={index} className="pl-2 md:pl-4">
+                                <div className="relative bg-slate-50 rounded-lg border border-slate-100 p-4">
+                                  <div className="flex items-center justify-between mb-3">
+                                    <div className="flex items-center gap-2">
+                                      <span className="text-sm font-medium text-slate-800">Offer #{index + 1}</span>
+                                    </div>
+                                    <Button
+                                      type="button"
+                                      variant="ghost"
+                                      size="sm"
+                                      onClick={(e) => {
+                                        e.preventDefault()
+                                        e.stopPropagation()
+                                        removeOffer(index)
+                                        // Adjust carousel position if needed
+                                        if (currentProductsIndex >= index && productsCarouselApi) {
+                                          productsCarouselApi.scrollTo(Math.max(0, index - 1))
+                                        }
+                                      }}
+                                      className="h-6 w-6 p-0 hover:bg-red-100 hover:text-red-600 rounded-full transition-colors duration-150"
+                                      title="Remove this offer"
+                                    >
+                                      <Trash2 className="w-3 h-3" />
+                                    </Button>
+                                  </div>
+                                  
+                                  <div className="space-y-3">
+                                    <div>
+                                      <label className="text-xs font-medium text-slate-600 mb-1 block">Name</label>
+                                      <Input
+                                        type="text"
+                                        value={offer.name}
+                                        onChange={(e) => updateOfferField(index, 'name', e.target.value)}
+                                        placeholder="e.g., Premium Business Consulting"
+                                        className="h-8 text-sm"
+                                      />
+                                    </div>
+
+                                    <div>
+                                      <label className="text-xs font-medium text-slate-600 mb-1 block">Price</label>
+                                      <Input
+                                        type="text"
+                                        value={offer.price}
+                                        onChange={(e) => updateOfferField(index, 'price', e.target.value)}
+                                        placeholder="e.g., $2,999, Starting at $99/month"
+                                        className="h-8 text-sm"
+                                      />
+                                    </div>
+
+                                    <div>
+                                      <label className="text-xs font-medium text-slate-600 mb-1 block">Description</label>
+                                      <Textarea
+                                        value={offer.description}
+                                        onChange={(e) => updateOfferField(index, 'description', e.target.value)}
+                                        rows={3}
+                                        placeholder="Describe what this product/service includes and its key benefits..."
+                                        className="text-sm"
+                                      />
+                                    </div>
+                                  </div>
+                                </div>
+                              </CarouselItem>
+                            ))}
+                          </CarouselContent>
                           
-                          <div className="space-y-3">
-                            <div>
-                              <label className="text-xs font-medium text-slate-600 mb-1 block">Name</label>
-                              <Input
-                                type="text"
-                                value={offer.name}
-                                onChange={(e) => updateOfferField(index, 'name', e.target.value)}
-                                placeholder="e.g., Premium Business Consulting"
-                                className="h-8 text-sm"
-                              />
-                            </div>
-
-                            <div>
-                              <label className="text-xs font-medium text-slate-600 mb-1 block">Price</label>
-                              <Input
-                                type="text"
-                                value={offer.price}
-                                onChange={(e) => updateOfferField(index, 'price', e.target.value)}
-                                placeholder="e.g., $2,999, Starting at $99/month"
-                                className="h-8 text-sm"
-                              />
-                            </div>
-
-                            <div>
-                              <label className="text-xs font-medium text-slate-600 mb-1 block">Description</label>
-                              <Textarea
-                                value={offer.description}
-                                onChange={(e) => updateOfferField(index, 'description', e.target.value)}
-                                rows={3}
-                                placeholder="Describe what this product/service includes and its key benefits..."
-                                className="text-sm"
-                              />
-                            </div>
-                          </div>
+                          {/* Navigation Arrows - Only show if more than 1 item */}
+                          {formData.offers.length > 1 && (
+                            <>
+                              <CarouselPrevious />
+                              <CarouselNext />
+                            </>
+                          )}
                         </div>
-                      </div>
-                    ))}
-                  </div>
-                  
-                  {formData.offers.length === 0 && (
+                      </Carousel>
+                      
+                      {/* Dots Navigation */}
+                      {formData.offers.length > 1 && (
+                        <div className="flex justify-center items-center gap-2 mt-4">
+                          {formData.offers.map((_, index) => (
+                            <button
+                              key={index}
+                              className={`w-2 h-2 rounded-full transition-all duration-200 ${
+                                currentProductsIndex === index
+                                  ? 'bg-blue-500 scale-125'
+                                  : 'bg-slate-300 hover:bg-slate-400'
+                              }`}
+                              onClick={(e) => {
+                                e.preventDefault()
+                                e.stopPropagation()
+                                productsCarouselApi?.scrollTo(index)
+                              }}
+                              aria-label={`Go to offer ${index + 1}`}
+                            />
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  ) : (
                     <div className="text-center py-6 text-slate-400">
                       <div className="w-12 h-12 mx-auto mb-3 bg-slate-100 rounded-xl flex items-center justify-center">
                         <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1979,6 +2428,10 @@ export function BrandFormClean({ onSuccess }: BrandFormProps) {
                               e.preventDefault()
                               e.stopPropagation()
                               addArrayItem(['clientAssets', 'testimonialsCaseStudies'])
+                              // Scroll to the newly added testimonial
+                              setTimeout(() => {
+                                testimonialCarouselApi?.scrollTo(formData.clientAssets.testimonialsCaseStudies.length - 1)
+                              }, 100)
                             }}
                             className="h-6 w-6 p-0 hover:bg-green-100 hover:text-green-600 rounded-full transition-colors duration-150"
                             title="Add testimonial or case study"
@@ -1995,39 +2448,90 @@ export function BrandFormClean({ onSuccess }: BrandFormProps) {
                     </div>
                   </div>
                   
-                  <div className="space-y-3">
-                    {formData.clientAssets.testimonialsCaseStudies.map((testimonial, index) => (
-                      <div key={index} className="group relative bg-slate-50 rounded-lg border border-slate-100 hover:border-slate-200 transition-colors duration-150">
-                        <div className="p-3">
-                          <Textarea
-                            value={testimonial}
-                            onChange={(e) => updateArrayField(['clientAssets', 'testimonialsCaseStudies'], index, e.target.value)}
-                            rows={3}
-                            placeholder="Share testimonials and case studies from your customers..."
-                            className="border-0 bg-transparent focus:ring-0 text-sm placeholder:text-slate-400 font-medium text-slate-700 resize-none"
-                          />
-                          <div className="flex justify-end mt-2">
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="sm"
+                  {formData.clientAssets.testimonialsCaseStudies.length > 0 ? (
+                    <div className="relative">
+                      {/* Carousel Container */}
+                      <Carousel
+                        setApi={setTestimonialCarouselApi}
+                        className="w-full"
+                        opts={{
+                          align: "start",
+                          loop: false,
+                        }}
+                      >
+                        <div className="relative">
+                          <CarouselContent className="-ml-2 md:-ml-4">
+                            {formData.clientAssets.testimonialsCaseStudies.map((testimonial, index) => (
+                              <CarouselItem key={index} className="pl-2 md:pl-4">
+                                <div className="relative bg-slate-50 rounded-lg border border-slate-100 p-4">
+                                  <div className="flex items-center justify-between mb-3">
+                                    <div className="flex items-center gap-2">
+                                      <span className="text-sm font-medium text-slate-800">Testimonial {index + 1}</span>
+                                    </div>
+                                    <Button
+                                      type="button"
+                                      variant="ghost"
+                                      size="sm"
+                                      onClick={(e) => {
+                                        e.preventDefault()
+                                        e.stopPropagation()
+                                        removeArrayItem(['clientAssets', 'testimonialsCaseStudies'], index)
+                                        // Adjust carousel position if needed
+                                        if (currentTestimonialIndex >= index && testimonialCarouselApi) {
+                                          testimonialCarouselApi.scrollTo(Math.max(0, index - 1))
+                                        }
+                                      }}
+                                      className="h-6 w-6 p-0 hover:bg-red-100 hover:text-red-600 rounded-full transition-colors duration-150"
+                                      title="Remove this testimonial"
+                                    >
+                                      <Trash2 className="w-3 h-3" />
+                                    </Button>
+                                  </div>
+                                  <Textarea
+                                    value={testimonial}
+                                    onChange={(e) => updateArrayField(['clientAssets', 'testimonialsCaseStudies'], index, e.target.value)}
+                                    rows={4}
+                                    placeholder="Share testimonials and case studies from your customers..."
+                                    className="border-0 bg-transparent focus:ring-0 text-sm placeholder:text-slate-400 font-medium text-slate-700 resize-none"
+                                  />
+                                </div>
+                              </CarouselItem>
+                            ))}
+                          </CarouselContent>
+                          
+                          {/* Navigation Arrows - Only show if more than 1 testimonial */}
+                          {formData.clientAssets.testimonialsCaseStudies.length > 1 && (
+                            <>
+                              <CarouselPrevious />
+                              <CarouselNext />
+                            </>
+                          )}
+                        </div>
+                      </Carousel>
+                      
+                      {/* Dots Navigation */}
+                      {formData.clientAssets.testimonialsCaseStudies.length > 1 && (
+                        <div className="flex justify-center items-center gap-2 mt-4">
+                          {formData.clientAssets.testimonialsCaseStudies.map((_, index) => (
+                            <button
+                              key={index}
+                              className={`w-2 h-2 rounded-full transition-all duration-200 ${
+                                currentTestimonialIndex === index
+                                  ? 'bg-blue-500 scale-125'
+                                  : 'bg-slate-300 hover:bg-slate-400'
+                              }`}
                               onClick={(e) => {
                                 e.preventDefault()
                                 e.stopPropagation()
-                                removeArrayItem(['clientAssets', 'testimonialsCaseStudies'], index)
+                                testimonialCarouselApi?.scrollTo(index)
                               }}
-                              className="h-6 w-6 p-0 hover:bg-red-100 hover:text-red-600 rounded-full transition-colors duration-150 opacity-0 group-hover:opacity-100"
-                              title="Remove this testimonial"
-                            >
-                              <Trash2 className="w-3 h-3" />
-                            </Button>
-                          </div>
+                              aria-label={`Go to testimonial ${index + 1}`}
+                            />
+                          ))}
                         </div>
-                      </div>
-                    ))}
-                  </div>
-                  
-                  {formData.clientAssets.testimonialsCaseStudies.length === 0 && (
+                      )}
+                    </div>
+                  ) : (
                     <div className="text-center py-6 text-slate-400">
                       <div className="w-12 h-12 mx-auto mb-3 bg-slate-100 rounded-xl flex items-center justify-center">
                         <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
