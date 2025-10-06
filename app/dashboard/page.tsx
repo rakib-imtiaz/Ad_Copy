@@ -1273,7 +1273,11 @@ export default function Dashboard() {
           if (typeof window !== 'undefined') {
             const url = new URL(window.location.href)
             url.searchParams.set('chatid', sessionId)
-            window.history.replaceState({}, document.title, url.toString())
+            window.history.pushState({}, document.title, url.toString())
+            console.log('🔄 URL updated to:', url.toString())
+            
+            // Manually trigger sidebar URL update since pushState doesn't fire popstate
+            window.dispatchEvent(new PopStateEvent('popstate'))
           }
         }
         
@@ -1554,6 +1558,17 @@ export default function Dashboard() {
         console.log('🎯 SESSION ID STORED:', data.session_id)
         console.log('📋 Full webhook response:', data)
         finalSessionId = data.session_id
+        
+        // Update URL with the new chat ID
+        if (typeof window !== 'undefined') {
+          const url = new URL(window.location.href)
+          url.searchParams.set('chatid', data.session_id)
+          window.history.pushState({}, document.title, url.toString())
+          console.log('🔄 URL updated to:', url.toString())
+          
+          // Manually trigger sidebar URL update since pushState doesn't fire popstate
+          window.dispatchEvent(new PopStateEvent('popstate'))
+        }
       } else {
         console.warn('⚠️ No session_id in webhook response')
         console.log('📋 Full webhook response:', data)
