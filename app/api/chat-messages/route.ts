@@ -61,7 +61,7 @@ export async function GET(request: NextRequest) {
         access_token: accessToken,
         session_id: sessionId
       }),
-      signal: AbortSignal.timeout(30000), // 30 second timeout
+      signal: AbortSignal.timeout(120000), // 2 minutes timeout for AI responses
     })
 
     console.log('📊 Response received:')

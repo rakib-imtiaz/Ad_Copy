@@ -339,6 +339,7 @@ export default function Dashboard() {
     animated?: boolean
   }>>([])
   const [isLoading, setIsLoading] = React.useState(false)
+  const [abortController, setAbortController] = React.useState<AbortController | null>(null)
   const [sessionId, setSessionId] = React.useState<string>('')
   const [showCreditPopup, setShowCreditPopup] = React.useState(false)
   const [showKnowledgeBaseWarning, setShowKnowledgeBaseWarning] = React.useState(false)
@@ -866,7 +867,7 @@ export default function Dashboard() {
     // Prevent switching chats while AI is processing
     if (isLoading) {
       console.log('⚠️ Cannot switch chats while AI is processing a message')
-      toast.info('Please wait for the current message to finish processing before switching chats')
+      toast.info('⏳ Please wait for the current message to finish processing before switching chats')
       return
     }
 
@@ -1880,6 +1881,17 @@ export default function Dashboard() {
     }
   }, [sessionId, chatStarted, updateCurrentChatSession])
 
+  // Stop current AI processing
+  const stopAIProcessing = () => {
+    if (abortController) {
+      console.log('🛑 Stopping AI processing...')
+      abortController.abort()
+      setAbortController(null)
+      setIsLoading(false)
+      toast.info('AI processing stopped')
+    }
+  }
+
   // Send message to chat window webhook
   const sendMessageToChatWindow = async (userPrompt: string, isFirstMessage: boolean = false, sessionIdParam?: string) => {
     try {
@@ -2075,11 +2087,15 @@ export default function Dashboard() {
       }
       console.log('📤 ===== END REQUEST PAYLOAD =====')
 
+      // Create AbortController for this request
+      const controller = new AbortController()
+      setAbortController(controller)
+      
       const response = await fetch('/api/webhook/chat-window', {
         method: 'POST',
         headers: getAuthHeaders(accessToken),
         body: JSON.stringify(requestPayload),
-        signal: AbortSignal.timeout(180000), // 3 minutes timeout for chat to handle longer AI responses
+        signal: controller.signal, // Use our AbortController instead of timeout
       })
 
       console.log('Chat window webhook response:', {
@@ -2108,10 +2124,23 @@ export default function Dashboard() {
       const data = await response.json()
       console.log('✅ Chat window webhook success:', data)
       console.log('🌐 ===== SEND MESSAGE TO CHAT WINDOW END =====')
+      
+      // Clean up AbortController on successful completion
+      setAbortController(null)
+      
       return data
     } catch (error) {
       console.error('Error sending message to chat window:', error)
       console.log('🌐 ===== SEND MESSAGE TO CHAT WINDOW END (ERROR) =====')
+      
+      // Clean up AbortController on error
+      setAbortController(null)
+      
+      // Handle AbortError specifically
+      if (error instanceof Error && error.name === 'AbortError') {
+        console.log('🛑 Request was aborted by user')
+        throw new Error('Request was cancelled')
+      }
       
       // Re-throw the error with more context for better error handling
       if (error instanceof Error) {
@@ -2334,7 +2363,10 @@ export default function Dashboard() {
       let showRetryButton = false
       
       if (error instanceof Error) {
-        if (error.name === 'TimeoutError' || error.message.includes('timeout')) {
+        if (error.message.includes('Request was cancelled')) {
+          errorContent = '🛑 AI processing was stopped by user.'
+          showRetryButton = false
+        } else if (error.name === 'TimeoutError' || error.message.includes('timeout')) {
           errorContent = '⏱️ The AI is taking longer than usual to respond. This is normal for complex requests that require detailed analysis. Please wait a moment longer or try again if needed.'
           showRetryButton = true
         } else if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
@@ -3580,10 +3612,14 @@ export default function Dashboard() {
                   />
       </div>
 
-                {/* Send Button */}
+                {/* Send/Stop Button */}
                 <button
                   onClick={() => {
-                    if (messageInput.trim() && selectedAgent && !isLoading && !isValidatingKB) {
+                    if (isLoading) {
+                      // Stop AI processing
+                      stopAIProcessing()
+                    } else if (messageInput.trim() && selectedAgent && !isValidatingKB) {
+                      // Send message
                       handleSendMessage(messageInput.trim())
                       setMessageInput('')
                       if (textareaRef.current) {
@@ -3591,14 +3627,18 @@ export default function Dashboard() {
                       }
                     }
                   }}
-                  disabled={!messageInput.trim() || !selectedAgent || isLoading || isValidatingKB}
+                  disabled={!isLoading && (!messageInput.trim() || !selectedAgent || isValidatingKB)}
                   className={`flex-shrink-0 px-4 py-2 h-9 sm:h-10 rounded-xl flex items-center justify-center gap-2 transition-colors duration-200 ${
-                    messageInput.trim() && selectedAgent && !isLoading && !isValidatingKB
+                    isLoading
+                      ? 'bg-red-500 hover:bg-red-600 text-white shadow-md font-semibold'
+                      : messageInput.trim() && selectedAgent && !isValidatingKB
                       ? 'bg-gradient-to-r from-yellow-300 via-yellow-400 to-yellow-500 hover:from-yellow-400 hover:via-yellow-500 hover:to-yellow-600 text-black shadow-md font-semibold'
                       : 'bg-white text-gray-400 opacity-60 cursor-not-allowed shadow-md border border-gray-200'
                   }`}
                   title={
-                    isKnowledgeBaseEmpty 
+                    isLoading
+                      ? "Stop AI processing"
+                      : isKnowledgeBaseEmpty 
                       ? "Knowledge base is empty - upload content first"
                       : isValidatingKB 
                       ? "Validating knowledge base..."
@@ -3606,7 +3646,12 @@ export default function Dashboard() {
                   }
                 >
                   {isLoading ? (
-                    <div className="animate-spin rounded-full h-4 w-4 border-2 border-black border-t-transparent" />
+                    <>
+                      <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 6h12v12H6z" />
+                      </svg>
+                      <span className="text-sm font-bold">Stop</span>
+                    </>
                   ) : (
                     <>
                       <Send className="h-4 w-4" />
@@ -3968,7 +4013,15 @@ function LeftSidebar({
       <div className="flex-1 flex flex-col min-h-0">
         <div className="p-4 pb-3 border-b border-gray-200 flex-shrink-0">
           <div className="flex items-center justify-between">
-            <h3 className="text-sm font-semibold text-gray-900">Chat History</h3>
+            <div className="flex items-center space-x-2">
+              <h3 className="text-sm font-semibold text-gray-900">Chat History</h3>
+              {isLoading && (
+                <div className="flex items-center space-x-1">
+                  <div className="w-1.5 h-1.5 bg-orange-400 rounded-full animate-pulse"></div>
+                  <span className="text-xs text-orange-600 font-medium">Processing...</span>
+                </div>
+              )}
+            </div>
             <div className="flex items-center space-x-2">
               <TooltipProvider>
                 <Tooltip>
@@ -4067,12 +4120,18 @@ function LeftSidebar({
                       isSelected
                         ? 'bg-white border-gray-300 shadow-lg'
                         : 'bg-black border-gray-700 hover:border-gray-600'
-                    } ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
+                    } ${isLoading ? 'opacity-50 cursor-not-allowed pointer-events-none' : ''}`}
               >
                 <div className="flex items-center justify-between">
                       <div 
                         className={`flex-1 min-w-0 ${isLoading ? 'cursor-not-allowed' : 'cursor-pointer'}`}
-                        onClick={() => !isLoading && onLoadChatSession(chat.session_id)}
+                        onClick={() => {
+                          if (isLoading) {
+                            toast.info('Please wait for the current message to finish processing before switching chats')
+                            return
+                          }
+                          onLoadChatSession(chat.session_id)
+                        }}
                       >
                         <div className="flex items-center space-x-2">
                           <h4 className={`font-medium text-sm truncate ${isSelected ? 'text-black' : 'text-white'}`}>

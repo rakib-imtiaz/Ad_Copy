@@ -105,7 +105,7 @@ export async function authenticatedFetch(
 export async function robustFetch(
   url: string,
   options: RequestInit = {},
-  timeoutMs: number = 10000,
+  timeoutMs: number = 30000, // Increased default timeout to 30 seconds
   retries: number = 2
 ): Promise<Response> {
   for (let attempt = 0; attempt <= retries; attempt++) {
@@ -164,7 +164,7 @@ export async function robustFetch(
 export async function authenticatedRequest<T>(
   url: string,
   options: RequestInit = {},
-  timeoutMs: number = 10000,
+  timeoutMs: number = 30000, // Increased default timeout to 30 seconds
   retries: number = 2
 ): Promise<T> {
   const response = await robustFetch(url, options, timeoutMs, retries);
