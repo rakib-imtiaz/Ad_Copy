@@ -112,7 +112,11 @@ export function KnowledgeBaseSidebarNav({
                     isCurrent ? 'text-white' : 'text-black'
                   }`}>{label}</span>
                 </div>
-                {isCurrent && <ChevronRight className="w-3 h-3" />}
+                {isCurrent && (
+                  <div className="flex-shrink-0 pointer-events-none">
+                    <ChevronRight className="w-3 h-3" />
+                  </div>
+                )}
               </button>
             )
           })}

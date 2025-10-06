@@ -33,6 +33,38 @@ export interface ParsedKnowledgeBaseData {
 
 export class KnowledgeBaseWebhookParser {
   /**
+   * Clean and parse string data that might contain JSON
+   */
+  private static cleanStringData(data: any): string {
+    if (typeof data !== 'string') return data || ''
+    
+    // If the string looks like JSON, try to parse it
+    if (data.trim().startsWith('{') || data.trim().startsWith('[')) {
+      try {
+        const parsed = JSON.parse(data)
+        // If it's an object, extract meaningful text
+        if (typeof parsed === 'object') {
+          // Try to find text content in common fields
+          const textFields = ['text', 'content', 'description', 'message', 'value']
+          for (const field of textFields) {
+            if (parsed[field] && typeof parsed[field] === 'string') {
+              return parsed[field]
+            }
+          }
+          // If no text field found, stringify and clean
+          return JSON.stringify(parsed).replace(/[{}[\]"]/g, '').trim()
+        }
+        return parsed
+      } catch {
+        // If parsing fails, return the original string
+        return data
+      }
+    }
+    
+    return data
+  }
+
+  /**
    * Parse webhook response data into form-compatible format
    */
   static parseWebhookData(webhookData: any): ParsedKnowledgeBaseData {
@@ -41,19 +73,19 @@ export class KnowledgeBaseWebhookParser {
     const parsedData: ParsedKnowledgeBaseData = {
       brandIdentity: {
         businessNameTagline: { 
-          name: webhookData.business_name || "", 
-          tagline: webhookData.business_tagline || "" 
+          name: this.cleanStringData(webhookData.business_name), 
+          tagline: this.cleanStringData(webhookData.business_tagline) 
         },
         founderNameBackstory: { 
-          founders: webhookData.founder_name || "", 
-          backstory: webhookData.founder_backstory || "" 
+          founders: this.cleanStringData(webhookData.founder_name), 
+          backstory: this.cleanStringData(webhookData.founder_backstory) 
         },
         missionStatement: { 
-          whyWeExist: webhookData.mission_statement_why || "", 
-          principles: webhookData.mission_statement_principles || "" 
+          whyWeExist: this.cleanStringData(webhookData.mission_statement_why), 
+          principles: this.cleanStringData(webhookData.mission_statement_principles) 
         },
-        businessModelType: webhookData.business_model_type || "",
-        uniqueSellingProposition: webhookData.unique_selling_proposition || "",
+        businessModelType: this.cleanStringData(webhookData.business_model_type),
+        uniqueSellingProposition: this.cleanStringData(webhookData.unique_selling_proposition),
         tonePersonality: { 
           style: webhookData.tone_personality_style ? 
             webhookData.tone_personality_style.split(',').map((s: string) => s.trim()) : [] 
@@ -62,7 +94,7 @@ export class KnowledgeBaseWebhookParser {
       targetAudience: {
         idealCustomerProfile: { 
           description: webhookData.ideal_customer_description ? 
-            [webhookData.ideal_customer_description] : [] 
+            [this.cleanStringData(webhookData.ideal_customer_description)] : [] 
         },
         primaryPainPoints: webhookData.primary_pain_points ? 
           webhookData.primary_pain_points.split(',').map((p: string) => p.trim()) : [],
@@ -84,7 +116,7 @@ export class KnowledgeBaseWebhookParser {
       socialInstagram: this.extractSocialLink(webhookData.social_media_profiles, 'instagram'),
       socialLinkedIn: "",
       testimonial: this.extractFirstTestimonial(webhookData.testimonials_case_studies),
-      otherInformation: webhookData.extra_info || ""
+      otherInformation: this.cleanStringData(webhookData.extra_info)
     }
     
     console.log('✅ Parsed knowledge base data:', parsedData)

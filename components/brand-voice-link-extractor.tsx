@@ -18,16 +18,29 @@ interface BrandVoicePattern {
 }
 
 interface BrandVoiceLinkExtractorProps {
+  isExtracting?: boolean
+  setIsExtracting?: (extracting: boolean) => void
+  extractionError?: string | null
+  setExtractionError?: (error: string | null) => void
   onPatternsExtracted: (patterns: BrandVoicePattern[]) => void
 }
 
 export function BrandVoiceLinkExtractor({ 
+  isExtracting = false,
+  setIsExtracting,
+  extractionError = null,
+  setExtractionError,
   onPatternsExtracted
 }: BrandVoiceLinkExtractorProps) {
   const [url, setUrl] = React.useState("")
-  const [isExtracting, setIsExtracting] = React.useState(false)
   const [extractedPatterns, setExtractedPatterns] = React.useState<BrandVoicePattern[]>([])
-  const [error, setError] = React.useState<string>("")
+  
+  // Use props for extraction state if provided, otherwise use local state
+  const isCurrentlyExtracting = setIsExtracting ? isExtracting : false
+  const currentError = setExtractionError ? extractionError : null
+  
+  const setCurrentlyExtracting = setIsExtracting || (() => {})
+  const setCurrentError = setExtractionError || (() => {})
   
   // Check if the current URL is a YouTube URL
   const isYouTubeUrl = React.useMemo(() => {
@@ -38,7 +51,7 @@ export function BrandVoiceLinkExtractor({
   const getAccessToken = () => {
     const token = authService.getAuthToken()
     if (!token) {
-      setError("Authentication required")
+      setCurrentError("Authentication required")
       return null
     }
     return token
@@ -46,12 +59,12 @@ export function BrandVoiceLinkExtractor({
 
   const handleExtract = async () => {
     if (!url.trim()) {
-      setError("Please enter a valid URL")
+      setCurrentError("Please enter a valid URL")
       return
     }
 
-    setIsExtracting(true)
-    setError("")
+    setCurrentlyExtracting(true)
+    setCurrentError("")
     setExtractedPatterns([])
 
     try {
@@ -74,7 +87,7 @@ export function BrandVoiceLinkExtractor({
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}))
         console.log('❌ API error:', errorData)
-        setError(errorData.error?.message || `Failed to extract patterns (${response.status})`)
+        setCurrentError(errorData.error?.message || `Failed to extract patterns (${response.status})`)
         return
       }
 
@@ -83,7 +96,7 @@ export function BrandVoiceLinkExtractor({
 
       if (!extractionResult.success) {
         console.log('❌ Pattern extraction failed:', extractionResult.error)
-        setError(extractionResult.error?.message || "Failed to extract brand voice patterns")
+        setCurrentError(extractionResult.error?.message || "Failed to extract brand voice patterns")
         return
       }
 
@@ -103,15 +116,15 @@ export function BrandVoiceLinkExtractor({
 
     } catch (err) {
       console.error('❌ Error in pattern extraction process:', err)
-      setError("Network error occurred while extracting patterns")
+      setCurrentError("Network error occurred while extracting patterns")
     } finally {
-      setIsExtracting(false)
+      setCurrentlyExtracting(false)
     }
   }
 
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && !isExtracting && url.trim()) {
+    if (e.key === 'Enter' && !isCurrentlyExtracting && url.trim()) {
       handleExtract()
     }
   }
@@ -145,11 +158,11 @@ export function BrandVoiceLinkExtractor({
             onKeyPress={handleKeyPress}
             placeholder={isYouTubeUrl ? "https://youtube.com/watch?v=..." : "https://example.com/about, https://blog.example.com/posts..."}
             className="flex-1"
-            disabled={isExtracting}
+            disabled={isCurrentlyExtracting}
           />
           <Button
             onClick={handleExtract}
-            disabled={isExtracting || !url.trim()}
+            disabled={isCurrentlyExtracting || !url.trim()}
             size="sm"
             className={`h-7 text-xs text-center ${
               isYouTubeUrl 
@@ -157,7 +170,7 @@ export function BrandVoiceLinkExtractor({
                 : 'bg-blue-600 hover:bg-blue-700'
             }`}
           >
-            {isExtracting ? (
+            {isCurrentlyExtracting ? (
               <>
                 <Loader2 className="h-3 w-3 mr-1 animate-spin" />
                 {isYouTubeUrl ? 'Analyzing Video...' : 'Extracting...'}
@@ -175,10 +188,10 @@ export function BrandVoiceLinkExtractor({
           </Button>
         </div>
         
-        {error && (
+        {currentError && (
           <Alert variant="destructive">
             <AlertCircle className="h-4 w-4" />
-            <AlertDescription>{error}</AlertDescription>
+            <AlertDescription>{currentError}</AlertDescription>
           </Alert>
         )}
         
