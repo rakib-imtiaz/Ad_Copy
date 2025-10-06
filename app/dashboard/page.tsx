@@ -882,31 +882,31 @@ export default function Dashboard() {
     try {
       // Find the conversation in chat history to get agent_id
       const conversation = chatHistory.find(chat => chat.session_id === sessionId)
-      console.log('🔍 Found conversation:', conversation)
       
       // Set the session ID and current chat session immediately
-      console.log('✅ Setting sessionId and currentChatSession to:', sessionId)
       setSessionId(sessionId)
       setCurrentChatSession(sessionId)
       
       // Also update the sidebar context state
-      console.log('🔄 Syncing sidebar context currentChatSession to:', sessionId)
       updateCurrentChatSession(sessionId)
+      
+      // Ensure sidebar context has the latest chat history (use setTimeout to avoid batching issues)
+      setTimeout(() => {
+        updateChatHistory(chatHistory)
+        // Force a re-render by updating currentChatSession again
+        updateCurrentChatSession(sessionId)
+      }, 0)
       
       // Set the agent if conversation has agent_id
       if (conversation && conversation.agent_id) {
-        console.log('🤖 Setting agent from conversation:', conversation.agent_id)
         // Find agent by ID and set by name
         const agent = agents.find((agent: any) => agent.id === conversation.agent_id)
         if (agent) {
-          console.log('✅ Found agent, setting selectedAgent to:', agent.name)
           setSelectedAgent(agent.name)
           updateSelectedAgent(agent.name)
-        } else {
-          console.log('⚠️ Agent not found for ID:', conversation.agent_id)
         }
       } else {
-        console.log('ℹ️ No agent_id found in conversation, keeping current agent')
+        // No agent_id found in conversation, keeping current agent
       }
       
       // Save to localStorage
@@ -1374,19 +1374,8 @@ export default function Dashboard() {
     }
   }, [currentChatSession])
 
-  // Load chat session from URL on page load
-  React.useEffect(() => {
-    if (typeof window !== 'undefined' && !currentChatSession && !isStartingChat) {
-      const urlParams = new URLSearchParams(window.location.search)
-      const chatId = urlParams.get('chatid')
-      if (chatId && chatHistory.length > 0) {
-        const sessionExists = chatHistory.find(chat => chat.session_id === chatId)
-        if (sessionExists) {
-          loadChatSession(chatId)
-        }
-      }
-    }
-  }, [chatHistory, currentChatSession, isStartingChat])
+  // Note: URL parameter loading is now handled in fetchChatHistory function
+  // to avoid race conditions between chat history loading and URL parameter processing
 
   // Role-based routing check
   React.useEffect(() => {
@@ -1721,40 +1710,29 @@ export default function Dashboard() {
           const latestSession = chatHistoryData[0] // Assuming newest first
           setCurrentChatSession(latestSession.session_id)
           updateCurrentChatSession(latestSession.session_id)
-          console.log('🎯 Set current chat session to latest:', latestSession.session_id)
         } else {
-          console.log('🎯 URL has chatid parameter, not auto-selecting latest session')
+          // Load the specific chat session from URL
+          const sessionExists = chatHistoryData.find(chat => chat.session_id === chatIdFromUrl)
+          if (sessionExists) {
+            loadChatSession(chatIdFromUrl)
+          }
         }
       }
       
-      console.log('=== FETCH CHAT HISTORY CLIENT END (SUCCESS) ===')
       return data
     } catch (error) {
-      console.error('❌ Error fetching chat history:')
-      console.error('  - Error:', error)
-      console.error('  - Error message:', error instanceof Error ? error.message : 'Unknown error')
-      console.error('  - Error stack:', error instanceof Error ? error.stack : 'No stack trace')
+      console.error('Error fetching chat history:', error)
       
       // Handle specific error types and retry logic
       if (error instanceof Error) {
         if (error.name === 'AbortError') {
-          console.error('❌ Request timed out after 10 seconds')
           if (retryCount < 2) {
-            console.log(`🔄 Retrying chat history fetch (attempt ${retryCount + 1}/2)...`)
             setTimeout(() => fetchChatHistory(retryCount + 1), 2000) // Retry after 2 seconds
             return null
           }
           toast.error('Chat history request timed out. Please try again.')
         } else if (error.message.includes('Failed to fetch')) {
-          console.error('❌ Network error - unable to reach the server')
-          console.error('❌ This could be due to:')
-          console.error('  - Network connectivity issues')
-          console.error('  - n8n webhook server being down')
-          console.error('  - CORS issues')
-          console.error('  - Firewall blocking the request')
-          
           if (retryCount < 2) {
-            console.log(`🔄 Retrying chat history fetch (attempt ${retryCount + 1}/2)...`)
             setTimeout(() => fetchChatHistory(retryCount + 1), 2000) // Retry after 2 seconds
             return null
           }

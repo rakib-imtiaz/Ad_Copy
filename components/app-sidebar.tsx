@@ -228,10 +228,6 @@ export function AppSidebar() {
     }).format(date)
   }
 
-  // Debug: Watch for currentChatSession changes
-  React.useEffect(() => {
-    console.log('🎯 Sidebar currentChatSession changed:', currentChatSession)
-  }, [currentChatSession])
 
   return (
     <>
@@ -328,18 +324,15 @@ export function AppSidebar() {
                         </div>
                       ) : chatHistory.length > 0 ? (
                         chatHistory.map((chat: any) => {
-                          const isActive = currentChatSession === chat.session_id
+                          // Get chat ID from URL parameter and match with session_id
+                          const urlParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null
+                          const chatIdFromUrl = urlParams?.get('chatid')
+                          const isActive = chatIdFromUrl === chat.session_id.toString()
+                          
                           const chatDate = new Date(chat.created_at)
                           const timeAgo = formatTimeAgo(chatDate)
                           const isDeleting = deletingChatId === chat.session_id
 
-                          // Debug logs for sidebar
-                          console.log('Sidebar Chat item:', {
-                            session_id: chat.session_id,
-                            title: chat.title,
-                            currentChatSession,
-                            isActive
-                          })
                           
                           return (
                             <div
@@ -425,7 +418,11 @@ export function AppSidebar() {
                 <SidebarMenu className="space-y-1">
                   {/* Recent Chat History Icons - Show top 3 */}
                   {chatHistory.slice(0, 3).map((chat: any) => {
-                    const isActive = currentChatSession === chat.session_id
+                    // Get chat ID from URL parameter and match with session_id
+                    const urlParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null
+                    const chatIdFromUrl = urlParams?.get('chatid')
+                    const isActive = chatIdFromUrl === chat.session_id.toString()
+                    
                     const chatDate = new Date(chat.created_at)
                     const timeAgo = formatTimeAgo(chatDate)
                     
