@@ -4433,7 +4433,7 @@ function MediaDrawer({ activeTab, onTabChange, mediaItems, setMediaItems, onRefr
         {activeTab === 'files' && <FilesTab mediaItems={mediaItems} onUpload={onUpload} onDelete={handleDeleteItem} isDeleting={isDeleting} deletingItemId={deletingItemId} isLoadingTabContent={isLoadingTabContent} />}
         {activeTab === 'links' && <LinksTab mediaItems={mediaItems} onDelete={handleDeleteItem} onRefresh={onRefresh} setMediaItems={setMediaItems} isDeleting={isDeleting} deletingItemId={deletingItemId} isLoadingTabContent={isLoadingTabContent} />}
         {activeTab === 'youtube' && <YouTubeTab mediaItems={mediaItems} onDelete={handleDeleteItem} onRefresh={onRefresh} setMediaItems={setMediaItems} isDeleting={isDeleting} deletingItemId={deletingItemId} isLoadingTabContent={isLoadingTabContent} />}
-        {activeTab === 'image-analyzer' && <ImageAnalyzerTab mediaItems={mediaItems} onUpload={onUpload} onDelete={handleDeleteItem} isDeleting={isDeleting} deletingItemId={deletingItemId} isLoadingTabContent={isLoadingTabContent} />}
+        {activeTab === 'image-analyzer' && <ImageAnalyzerTab mediaItems={mediaItems} onUpload={onUpload} onDelete={handleDeleteItem} isDeleting={isDeleting} deletingItemId={deletingItemId} isLoadingTabContent={isLoadingTabContent} setMediaItems={setMediaItems} />}
         {activeTab === 'transcripts' && <TranscriptsTab mediaItems={mediaItems} onDelete={handleDeleteItem} isDeleting={isDeleting} deletingItemId={deletingItemId} isLoadingTabContent={isLoadingTabContent} />}
       </div>
     </div>
@@ -5220,7 +5220,7 @@ function YouTubeTab({ mediaItems, onDelete, onRefresh, setMediaItems, isDeleting
   )
 }
 
-function ImageAnalyzerTab({ mediaItems, onUpload, onDelete, isDeleting, deletingItemId, isLoadingTabContent }: any) {
+function ImageAnalyzerTab({ mediaItems, onUpload, onDelete, isDeleting, deletingItemId, isLoadingTabContent, setMediaItems }: any) {
   const [dragActive, setDragActive] = React.useState(false)
   const [isUploading, setIsUploading] = React.useState(false)
   const [isAnalyzing, setIsAnalyzing] = React.useState(false)
@@ -5387,6 +5387,23 @@ function ImageAnalyzerTab({ mediaItems, onUpload, onDelete, isDeleting, deleting
           }
         }
       }))
+      
+      // Update the media items to include the analysis content
+      if (setMediaItems) {
+        setMediaItems((prevItems: any[]) => {
+          return prevItems.map((item: any) => {
+            if (item.id === imageId) {
+              return {
+                ...item,
+                content: analysisText,
+                analyzedAt: new Date().toISOString(),
+                analysisStatus: 'completed'
+              }
+            }
+            return item
+          })
+        })
+      }
       
       toast.success('Image analysis completed!')
     } catch (error) {

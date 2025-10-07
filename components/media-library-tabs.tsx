@@ -36,7 +36,7 @@ import remarkGfm from 'remark-gfm'
 import rehypeHighlight from 'rehype-highlight'
 import rehypeSanitize from 'rehype-sanitize'
 import rehypeRaw from 'rehype-raw'
-import { Toast } from "@/components/ui/toast"
+import { toast } from "sonner"
 import { authService } from "@/lib/auth-service"
 import {
   AlertDialog,
@@ -400,15 +400,6 @@ export function LinksTab({ mediaItems, onDelete, onRefresh, setMediaItems, isDel
       (item.url && item.url.toLowerCase().includes(searchQuery.toLowerCase()))
     return isWebpageType && matchesSearch
   })
-  const [toast, setToast] = React.useState<{
-    message: string
-    type: 'success' | 'error' | 'info'
-    isVisible: boolean
-  }>({
-    message: '',
-    type: 'info',
-    isVisible: false
-  })
   
   const [viewerContent, setViewerContent] = React.useState<{
     title: string
@@ -494,17 +485,6 @@ export function LinksTab({ mediaItems, onDelete, onRefresh, setMediaItems, isDel
     fetchScrapedContents()
   }, [])
   
-  const showToast = (message: string, type: 'success' | 'error' | 'info') => {
-    setToast({
-      message,
-      type,
-      isVisible: true
-    })
-  }
-  
-  const hideToast = () => {
-    setToast(prev => ({ ...prev, isVisible: false }))
-  }
 
   const handleViewContent = (item: any) => {
     // Check if this is scraped content with actual content
@@ -790,13 +770,6 @@ export function LinksTab({ mediaItems, onDelete, onRefresh, setMediaItems, isDel
         )}
       </div>
       
-      {/* Toast Notification */}
-      <Toast
-        message={toast.message}
-        type={toast.type}
-        isVisible={toast.isVisible}
-        onClose={hideToast}
-      />
       
       {/* Content Viewer */}
       {viewerContent && (
@@ -1054,7 +1027,7 @@ function CompactMarkdownRenderer({ content }: { content: string }) {
 }
 
 // Image Analyzer Tab Component
-export function ImageAnalyzerTab({ mediaItems, onUpload, onDelete, isDeleting, deletingItemId, isLoadingTabContent }: any) {
+export function ImageAnalyzerTab({ mediaItems, onUpload, onDelete, isDeleting, deletingItemId, isLoadingTabContent, setMediaItems }: any) {
   const [dragActive, setDragActive] = React.useState(false)
   const [isUploading, setIsUploading] = React.useState(false)
   const [isAnalyzing, setIsAnalyzing] = React.useState(false)
@@ -1062,24 +1035,21 @@ export function ImageAnalyzerTab({ mediaItems, onUpload, onDelete, isDeleting, d
   const [analysisResults, setAnalysisResults] = React.useState<{[key: string]: any}>({})
   const [selectedImageAnalysis, setSelectedImageAnalysis] = React.useState<any>(null)
   const [showAnalysisPopup, setShowAnalysisPopup] = React.useState<any>(null)
-  const [toast, setToast] = React.useState<{ message: string; type: 'success' | 'error' | 'info'; isVisible: boolean }>({
-    message: '',
-    type: 'info',
-    isVisible: false
-  })
   const [searchQuery, setSearchQuery] = React.useState("")
   const fileInputRef = React.useRef<HTMLInputElement>(null)
   
-  const imageItems = mediaItems.filter((item: any) => {
-    if (!item) return false
-    const isImageType = item.type === 'image' || 
-      (item.type && ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp'].includes(item.type.toLowerCase()))
-    const matchesSearch = !searchQuery || 
-      (item.title && item.title.toLowerCase().includes(searchQuery.toLowerCase())) ||
-      (item.name && item.name.toLowerCase().includes(searchQuery.toLowerCase())) ||
-      (item.filename && item.filename.toLowerCase().includes(searchQuery.toLowerCase()))
-    return isImageType && matchesSearch
-  })
+  const imageItems = React.useMemo(() => {
+    return mediaItems.filter((item: any) => {
+      if (!item) return false
+      const isImageType = item.type === 'image' || 
+        (item.type && ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp'].includes(item.type.toLowerCase()))
+      const matchesSearch = !searchQuery || 
+        (item.title && item.title.toLowerCase().includes(searchQuery.toLowerCase())) ||
+        (item.name && item.name.toLowerCase().includes(searchQuery.toLowerCase())) ||
+        (item.filename && item.filename.toLowerCase().includes(searchQuery.toLowerCase()))
+      return isImageType && matchesSearch
+    })
+  }, [mediaItems, searchQuery])
 
   const handleDrag = (e: React.DragEvent) => {
     e.preventDefault()
@@ -1131,7 +1101,7 @@ export function ImageAnalyzerTab({ mediaItems, onUpload, onDelete, isDeleting, d
     if (Object.keys(existingResults).length > 0) {
       setAnalysisResults(existingResults)
     }
-  }, [imageItems])
+  }, [mediaItems])
 
   const handleAnalyzeImage = async (imageId: string, imageItem: any) => {
     setIsAnalyzing(true)
@@ -1191,19 +1161,28 @@ export function ImageAnalyzerTab({ mediaItems, onUpload, onDelete, isDeleting, d
         [imageId]: analysisResult
       }))
 
-      setToast({
-        message: 'Image analysis completed successfully!',
-        type: 'success',
-        isVisible: true
-      })
+      // Update the media items to include the analysis content
+      if (setMediaItems) {
+        setMediaItems((prevItems: any[]) => {
+          return prevItems.map((item: any) => {
+            if (item.id === imageId) {
+              return {
+                ...item,
+                content: analysisText,
+                analyzedAt: new Date().toISOString(),
+                analysisStatus: 'completed'
+              }
+            }
+            return item
+          })
+        })
+      }
+
+      toast.success('Image analysis completed successfully!')
 
     } catch (error: any) {
       console.error('❌ Error analyzing image:', error)
-      setToast({
-        message: `Analysis failed: ${error.message}`,
-        type: 'error',
-        isVisible: true
-      })
+      toast.error(`Analysis failed: ${error.message}`)
     } finally {
       setIsAnalyzing(false)
       setAnalyzingImageId(null)
@@ -1322,8 +1301,9 @@ export function ImageAnalyzerTab({ mediaItems, onUpload, onDelete, isDeleting, d
           imageItems.slice(0, 8).map((item: any, index: number) => {
             const isDeletingItem = deletingItemId === item.id
 
-            const hasAnalysis = analysisResults[item.id] || (item.content && item.content.trim())
-            const isAnalyzed = hasAnalysis && (analysisResults[item.id]?.status === 'completed' || item.content)
+            // Check if image has been analyzed - prioritize content from mediaItems over local analysisResults
+            const hasAnalysis = (item.content && item.content.trim()) || analysisResults[item.id]
+            const isAnalyzed = hasAnalysis && (item.analysisStatus === 'completed' || analysisResults[item.id]?.status === 'completed' || item.content)
 
             return (
               <div
@@ -1366,7 +1346,10 @@ export function ImageAnalyzerTab({ mediaItems, onUpload, onDelete, isDeleting, d
                             variant="outline"
                             size="sm"
                             className="h-5 px-1.5 text-xs border-blue-200 text-blue-600 hover:bg-blue-50"
-                            onClick={() => setShowAnalysisPopup(analysisResults[item.id] || { id: item.id, analysis: item.content })}
+                            onClick={() => setShowAnalysisPopup({ 
+                              id: item.id, 
+                              analysis: item.content || analysisResults[item.id]?.analysis || '' 
+                            })}
                           >
                             <span className="text-blue-600">View</span>
                           </Button>
@@ -1445,13 +1428,6 @@ export function ImageAnalyzerTab({ mediaItems, onUpload, onDelete, isDeleting, d
       </div>
 
 
-      {/* Toast Notification */}
-      <Toast
-        message={toast.message}
-        type={toast.type}
-        isVisible={toast.isVisible}
-        onClose={() => setToast(prev => ({ ...prev, isVisible: false }))}
-      />
 
       {/* Analysis Popup */}
       {showAnalysisPopup && (

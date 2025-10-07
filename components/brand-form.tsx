@@ -3,7 +3,7 @@
 import * as React from "react"
 import { motion } from "framer-motion"
 import { authService } from "@/lib/auth-service"
-import { Toast } from "@/components/ui/toast"
+import { toast } from "sonner"
 import { API_ENDPOINTS } from "@/lib/api-config"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -114,9 +114,6 @@ interface BrandFormProps {
 export function BrandForm({ onSuccess }: BrandFormProps) {
   const [formData, setFormData] = React.useState<BrandFormData>(defaultFormData)
   const [isSubmitting, setIsSubmitting] = React.useState(false)
-  const [showToast, setShowToast] = React.useState(false)
-  const [toastMessage, setToastMessage] = React.useState("")
-  const [toastType, setToastType] = React.useState<'success' | 'error' | 'info'>('success')
   const [currentStep, setCurrentStep] = React.useState(1)
   const [completedSteps, setCompletedSteps] = React.useState<number[]>([])
 
@@ -270,9 +267,7 @@ export function BrandForm({ onSuccess }: BrandFormProps) {
     try {
       const accessToken = authService.getAuthToken()
       if (!accessToken) {
-        setToastMessage("Authentication required. Please log in again.")
-        setToastType('error')
-        setShowToast(true)
+        toast.error("Authentication required. Please log in again.")
         return
       }
 
@@ -322,27 +317,21 @@ export function BrandForm({ onSuccess }: BrandFormProps) {
         try {
           const result = JSON.parse(responseText)
           console.log('✅ Success response:', result)
-          setToastMessage("Brand information updated successfully!")
-          setToastType('success')
-          setShowToast(true)
+          toast.success("Brand information updated successfully!")
           onSuccess?.()
         } catch (jsonError) {
           console.log('✅ Response received (not JSON):', responseText)
-          setToastMessage("Brand information updated successfully!")
-          setToastType('success')
-          setShowToast(true)
+          toast.success("Brand information updated successfully!")
           onSuccess?.()
         }
       } else {
         console.error('❌ Submission failed:', responseText)
         try {
           const errorData = JSON.parse(responseText)
-          setToastMessage(`Failed to update brand information: ${errorData.message || 'Unknown error'}`)
+          toast.error(`Failed to update brand information: ${errorData.message || 'Unknown error'}`)
         } catch {
-          setToastMessage(`Failed to update brand information: ${response.status} - ${responseText}`)
+          toast.error(`Failed to update brand information: ${response.status} - ${responseText}`)
         }
-        setToastType('error')
-        setShowToast(true)
       }
     } catch (error: any) {
       console.error('❌ Network error:', error)
@@ -357,9 +346,7 @@ export function BrandForm({ onSuccess }: BrandFormProps) {
         errorMessage = `Network error: ${error.message}`
       }
       
-      setToastMessage(errorMessage)
-      setToastType('error')
-      setShowToast(true)
+      toast.error(errorMessage)
     } finally {
       setIsSubmitting(false)
     }
@@ -1035,13 +1022,6 @@ export function BrandForm({ onSuccess }: BrandFormProps) {
         </motion.div>
       </form>
 
-      {/* Toast Notification */}
-      <Toast
-        message={toastMessage}
-        type={toastType}
-        isVisible={showToast}
-        onClose={() => setShowToast(false)}
-      />
     </motion.div>
   )
 }

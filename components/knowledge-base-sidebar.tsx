@@ -295,7 +295,8 @@ export function KnowledgeBaseSidebar({
                             onDelete={onDelete} 
                             isDeleting={isDeleting} 
                             deletingItemId={deletingItemId} 
-                            isLoadingTabContent={isLoadingTabContent} 
+                            isLoadingTabContent={isLoadingTabContent}
+                            setMediaItems={setMediaItems}
                           />
                         )}
                         {activeTab === 'transcripts' && (

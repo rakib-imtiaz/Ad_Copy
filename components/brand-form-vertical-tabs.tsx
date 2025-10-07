@@ -3,7 +3,7 @@
 import * as React from "react"
 import { motion } from "framer-motion"
 import { authService } from "@/lib/auth-service"
-import { Toast } from "@/components/ui/toast"
+import { toast } from "sonner"
 import { API_ENDPOINTS } from "@/lib/api-config"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -149,9 +149,6 @@ const stepData = [
 export function BrandFormVerticalTabs({ onSuccess }: BrandFormProps) {
   const [formData, setFormData] = React.useState<BrandFormData>(defaultFormData)
   const [isSubmitting, setIsSubmitting] = React.useState(false)
-  const [showToast, setShowToast] = React.useState(false)
-  const [toastMessage, setToastMessage] = React.useState("")
-  const [toastType, setToastType] = React.useState<'success' | 'error' | 'info'>('success')
   const [currentStep, setCurrentStep] = React.useState(1)
   const [completedSteps, setCompletedSteps] = React.useState<number[]>([])
   const [isSaving, setIsSaving] = React.useState(false)
@@ -518,15 +515,6 @@ export function BrandFormVerticalTabs({ onSuccess }: BrandFormProps) {
         </div>
       </Tabs>
 
-      {/* Toast */}
-      {showToast && (
-        <Toast
-          isVisible={showToast}
-          message={toastMessage}
-          type={toastType}
-          onClose={() => setShowToast(false)}
-        />
-      )}
     </div>
   )
 }
