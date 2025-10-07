@@ -129,11 +129,15 @@ export class KnowledgeBaseWebhookParser {
   private static parseOffers(offersData: string): Array<{ name: string; price: string; description: string }> {
     if (!offersData) return []
     
-    // For now, create a single offer from the offers text
+    // Parse the offers text format: "Offer Name: ...\nPrice: ...\nDescription: ..."
+    const offerNameMatch = offersData.match(/Offer Name:\s*(.+?)(?:\n|$)/i)
+    const priceMatch = offersData.match(/Price:\s*(.+?)(?:\n|$)/i)
+    const descriptionMatch = offersData.match(/Description:\s*(.+?)$/i)
+    
     return [{
-      name: "Coaching Services",
-      price: "Contact for pricing",
-      description: offersData
+      name: offerNameMatch?.[1]?.trim() || '',
+      price: priceMatch?.[1]?.trim() || '',
+      description: descriptionMatch?.[1]?.trim() || ''
     }]
   }
 

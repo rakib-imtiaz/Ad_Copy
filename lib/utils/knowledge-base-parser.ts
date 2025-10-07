@@ -211,23 +211,44 @@ export class KnowledgeBaseParser {
   }
 
   private static extractOffersInfo(content: string, data: ParsedKnowledgeBaseData): void {
-    // Extract Offers section - simplified without multiline
-    const offerSectionRegex = /3\. Offers(.+?)(?:\n4\. Client Assets|$)/
-    const offerSectionMatch = content.match(offerSectionRegex)
-    if (offerSectionMatch) {
-      const offersText = offerSectionMatch[1]
-      // Split by offers to find individual offers
-      const offerStrings = offersText.split(/Offer Name:/).filter(s => s.trim())
+    // Extract offers from JSON format: "Offer Name: ...\nPrice: ...\nDescription: ..."
+    const offersRegex = /"offers":"([^"]+)"/i
+    const offersMatch = content.match(offersRegex)
+    
+    if (offersMatch) {
+      const offersText = offersMatch[1].replace(/\\n/g, '\n').replace(/\\"/g, '"')
       
-      if (offerStrings.length > 0) {
-        data.offers = offerStrings.slice(1).map(offerText => {
-          const lines = offerText.split('\n').map(l => l.trim()).filter(l => l)
-          return {
-            name: lines[0]?.trim() || '',
-            price: lines[1]?.replace(/Price:\s*/, '') || '',
-            description: lines.slice(2).join('\n') || ''
-          }
-        })
+      // Parse the offers text
+      const offerNameMatch = offersText.match(/Offer Name:\s*(.+?)(?:\n|$)/i)
+      const priceMatch = offersText.match(/Price:\s*(.+?)(?:\n|$)/i)
+      const descriptionMatch = offersText.match(/Description:\s*(.+?)$/i)
+      
+      if (offerNameMatch || priceMatch || descriptionMatch) {
+        data.offers = [{
+          name: offerNameMatch?.[1]?.trim() || '',
+          price: priceMatch?.[1]?.trim() || '',
+          description: descriptionMatch?.[1]?.trim() || ''
+        }]
+      }
+    } else {
+      // Fallback to original parsing for other formats
+      const offerSectionRegex = /3\. Offers(.+?)(?:\n4\. Client Assets|$)/
+      const offerSectionMatch = content.match(offerSectionRegex)
+      if (offerSectionMatch) {
+        const offersText = offerSectionMatch[1]
+        // Split by offers to find individual offers
+        const offerStrings = offersText.split(/Offer Name:/).filter(s => s.trim())
+        
+        if (offerStrings.length > 0) {
+          data.offers = offerStrings.slice(1).map(offerText => {
+            const lines = offerText.split('\n').map(l => l.trim()).filter(l => l)
+            return {
+              name: lines[0]?.trim() || '',
+              price: lines[1]?.replace(/Price:\s*/, '') || '',
+              description: lines.slice(2).join('\n') || ''
+            }
+          })
+        }
       }
     }
   }
