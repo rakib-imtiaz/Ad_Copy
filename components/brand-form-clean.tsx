@@ -1325,8 +1325,8 @@ export function BrandFormClean({ onSuccess }: BrandFormProps) {
                   extractionError={brandVoiceExtractionError}
                   setExtractionError={setBrandVoiceExtractionError}
                   onPatternsExtracted={(patterns: any[]) => {
-                    const styles = patterns.map((p: any) => p.style)
-                    updateArrayField(['brandIdentity', 'tonePersonality', 'style'], 0, styles.join(', '))
+                    const styles = patterns.map((p: any) => p.tone || p.style)
+                    updateNestedField(['brandIdentity', 'tonePersonality', 'style'], styles)
                     showToastMessage(`Applied ${patterns.length} communication patterns`, 'success')
                   }}
                 />
@@ -1334,44 +1334,18 @@ export function BrandFormClean({ onSuccess }: BrandFormProps) {
                 {/* Tone & Personality Style */}
                 <div className="space-y-3">
                   <label className="text-sm font-medium">Communication Style</label>
-                  {formData.brandIdentity.tonePersonality.style.map((style, index) => (
-                    <div key={index} className="space-y-2">
-                      {/* Show Markdown preview for YouTube tone analysis */}
-                      {style.includes('##') || style.includes('**') ? (
-                        <div className="border rounded-lg p-4 bg-slate-50 max-h-48 overflow-y-auto overflow-x-hidden">
-                          <MarkdownRenderer 
-                            content={style}
-                            className="text-sm"
-                          />
-                        </div>
-                      ) : (
-                        <Input
-                          type="text"
-                          value={style}
-                          onChange={(e) => updateArrayField(['brandIdentity', 'tonePersonality', 'style'], index, e.target.value)}
-                          placeholder="e.g., Professional yet friendly, authoritative..."
-                          className="flex-1"
-                        />
-                      )}
-                      
-                      {/* Remove button */}
-                      <div className="flex justify-end">
-                        <Button
-                          type="button"
-                          variant="outline"
-                          onClick={(e) => {
-                            e.preventDefault()
-                            e.stopPropagation()
-                            console.log('Remove button clicked for style', index)
-                            removeArrayItem(['brandIdentity', 'tonePersonality', 'style'], index)
-                          }}
-                          className="h-7 w-7 p-0 text-center text-destructive hover:text-destructive"
-                        >
-                          <Trash2 className="w-3 h-3" />
-                        </Button>
-                      </div>
-                    </div>
-                  ))}
+                  <Textarea
+                    value={formData.brandIdentity.tonePersonality.style.join('\n')}
+                    onChange={(e) => {
+                      const value = e.target.value
+                      // Split by newlines and filter out empty strings
+                      const styles = value.split('\n').filter(s => s.trim() !== '')
+                      updateNestedField(['brandIdentity', 'tonePersonality', 'style'], styles)
+                    }}
+                    placeholder="e.g., Professional yet friendly, authoritative..."
+                    className="flex-1 resize-none"
+                    style={{ height: '120px' }}
+                  />
                 </div>
 
               </CardContent>

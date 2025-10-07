@@ -130,14 +130,12 @@ export class KnowledgeBaseParser {
       data.brandIdentity.uniqueSellingProposition = uspMatch[1].trim()
     }
 
-    // Extract Tone & Personality
-    const toneRegex = /Tone & Personality:\s*(.+?)(?:\n.*:|$)/
+    // Extract Tone & Personality - raw content without parsing
+    const toneRegex = /"tone_personality_style":"([^"]+)"/i
     const toneMatch = content.match(toneRegex)
     if (toneMatch) {
-      const toneText = toneMatch[1].trim()
-      data.brandIdentity.tonePersonality.style = toneText.split(/[,;]/)
-        .map(s => s.trim())
-        .filter(s => s)
+      const toneText = toneMatch[1].replace(/\\n/g, '\n').replace(/\\"/g, '"')
+      data.brandIdentity.tonePersonality.style = [toneText] // Keep as single item array
     }
   }
 
