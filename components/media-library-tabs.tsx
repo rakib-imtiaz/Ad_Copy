@@ -807,12 +807,63 @@ export function YouTubeTab({ mediaItems, onDelete, onRefresh, setMediaItems, isD
 
     setIsSubmitting(true)
     try {
-      // Simulate YouTube URL submission - replace with actual API call
-      console.log('Submitting YouTube URL:', urlInput)
-      // Add your YouTube transcription logic here
-      setUrlInput("")
+      console.log('🎥 Submitting YouTube URL for transcription:', urlInput)
+      
+      // Basic URL validation
+      try {
+        new URL(urlInput.trim())
+      } catch {
+        toast.error('Please enter a valid YouTube URL')
+        return
+      }
+
+      const accessToken = authService.getAuthToken()
+      
+      if (!accessToken) {
+        console.error("❌ No access token available")
+        toast.error('Authentication required. Please sign in again.')
+        return
+      }
+
+      console.log('✅ Access token found, making API request...')
+      
+      const apiUrl = `/api/youtube-transcribe?url=${encodeURIComponent(urlInput.trim())}`
+      console.log('🔍 Making request to:', apiUrl)
+      
+      const response = await fetch(apiUrl, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+          'Content-Type': 'application/json',
+        },
+      })
+
+      console.log('📡 YouTube transcription response status:', response.status)
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}))
+        console.error('❌ YouTube transcription failed:', response.status, errorData)
+        toast.error(`Transcription failed: ${errorData.error?.message || response.statusText}`)
+        return
+      }
+
+      const result = await response.json()
+      console.log('✅ YouTube transcription result:', result)
+      
+      if (result.success) {
+        toast.success('YouTube transcript scraped successfully! Content will be available shortly.')
+        setUrlInput("")
+        
+        // Refresh media items to show the new transcript
+        setTimeout(() => {
+          onRefresh()
+        }, 2000)
+      } else {
+        toast.error(`Transcription failed: ${result.error?.message || 'Unknown error'}`)
+      }
     } catch (error) {
-      console.error('Error submitting YouTube URL:', error)
+      console.error('❌ Error submitting YouTube URL:', error)
+      toast.error('Network error occurred while transcribing video')
     } finally {
       setIsSubmitting(false)
     }
@@ -820,20 +871,10 @@ export function YouTubeTab({ mediaItems, onDelete, onRefresh, setMediaItems, isD
 
   return (
     <div className="space-y-2">
-      {/* Search Input */}
-      <div className="space-y-1">
-        <Input
-          placeholder="Search YouTube videos..."
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          className="w-full h-6 text-xs"
-        />
-      </div>
-
       {/* YouTube URL Input Form */}
       <form onSubmit={handleSubmitUrl} className="space-y-2">
         <div className="space-y-1">
-          <label className="text-xs font-medium text-gray-700">Add YouTube Video</label>
+          <label className="text-xs font-medium text-gray-700">Scrape youtube transcript</label>
           <div className="flex space-x-1">
             <Input
               value={urlInput}
