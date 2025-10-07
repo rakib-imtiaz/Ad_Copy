@@ -537,7 +537,7 @@ export function LinksTab({ mediaItems, onDelete, onRefresh, setMediaItems, isDel
     
     if (!urlInput.trim()) {
       console.log('❌ URL input is empty, returning early')
-      showToast('Please enter a URL to scrape', 'error')
+      toast.error('Please enter a URL to scrape')
       return
     }
     
@@ -545,7 +545,7 @@ export function LinksTab({ mediaItems, onDelete, onRefresh, setMediaItems, isDel
     try {
       new URL(urlInput.trim())
     } catch {
-      showToast('Please enter a valid URL', 'error')
+      toast.error('Please enter a valid URL')
       return
     }
     
@@ -556,7 +556,7 @@ export function LinksTab({ mediaItems, onDelete, onRefresh, setMediaItems, isDel
       
       if (!accessToken) {
         console.error("❌ No access token available")
-        showToast('Authentication required. Please sign in again.', 'error')
+        toast.error('Authentication required. Please sign in again.')
         return
       }
 
@@ -579,7 +579,7 @@ export function LinksTab({ mediaItems, onDelete, onRefresh, setMediaItems, isDel
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}))
         console.error('❌ Webpage scraping failed:', response.status, errorData)
-        showToast(`Failed to scrape webpage: ${errorData.error || response.statusText}`, 'error')
+        toast.error(`Failed to scrape webpage: ${errorData.error || response.statusText}`)
         return
       }
 
@@ -587,7 +587,7 @@ export function LinksTab({ mediaItems, onDelete, onRefresh, setMediaItems, isDel
       console.log('✅ Webpage scraping result:', result)
       
       if (result.success) {
-        showToast('Webpage scraped successfully! Content will be available shortly.', 'success')
+        toast.success('Webpage scraped successfully! Content will be available shortly.')
         setUrlInput("")
         
         // Refresh media items to show the new scraped content
@@ -595,11 +595,11 @@ export function LinksTab({ mediaItems, onDelete, onRefresh, setMediaItems, isDel
           onRefresh()
         }, 2000)
       } else {
-        showToast(`Scraping failed: ${result.error || 'Unknown error'}`, 'error')
+        toast.error(`Scraping failed: ${result.error || 'Unknown error'}`)
       }
     } catch (error) {
       console.error('❌ Error scraping webpage:', error)
-      showToast('Network error occurred while scraping', 'error')
+      toast.error('Network error occurred while scraping')
     } finally {
       setIsScraping(false)
     }
