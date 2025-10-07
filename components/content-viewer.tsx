@@ -7,6 +7,12 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Textarea } from "@/components/ui/textarea"
 import { authService } from "@/lib/auth-service"
 import { API_ENDPOINTS } from "@/lib/api-config"
+import ReactMarkdown from 'react-markdown'
+import remarkGfm from 'remark-gfm'
+import rehypeHighlight from 'rehype-highlight'
+import rehypeSanitize from 'rehype-sanitize'
+import rehypeRaw from 'rehype-raw'
+import 'highlight.js/styles/github.css'
 
 interface ContentViewerProps {
   isOpen: boolean
@@ -45,17 +51,67 @@ export function ContentViewer({ isOpen, onClose, content, onContentUpdate }: Con
     return new Date(dateString).toLocaleString()
   }
 
-  const formatContent = (content: string) => {
-    // Convert markdown-like content to HTML
-    return content
-      .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-      .replace(/\*(.*?)\*/g, '<em>$1</em>')
-      .replace(/^### (.*$)/gim, '<h3 class="text-xl font-semibold mt-6 mb-3 text-gray-800">$1</h3>')
-      .replace(/^## (.*$)/gim, '<h2 class="text-2xl font-bold mt-8 mb-4 text-gray-900">$1</h2>')
-      .replace(/^# (.*$)/gim, '<h1 class="text-3xl font-bold mt-8 mb-6 text-gray-900">$1</h1>')
-      .replace(/\n\n/g, '</p><p class="mb-4 leading-relaxed">')
-      .replace(/^/g, '<p class="mb-4 leading-relaxed">')
-      .replace(/$/g, '</p>')
+  // Custom components for ReactMarkdown
+  const markdownComponents = {
+    h1: ({ children }: any) => (
+      <h1 className="text-lg font-bold mt-4 mb-3 text-gray-900">{children}</h1>
+    ),
+    h2: ({ children }: any) => (
+      <h2 className="text-base font-bold mt-4 mb-2 text-gray-900">{children}</h2>
+    ),
+    h3: ({ children }: any) => (
+      <h3 className="text-sm font-semibold mt-3 mb-2 text-gray-800">{children}</h3>
+    ),
+    h4: ({ children }: any) => (
+      <h4 className="text-sm font-semibold mt-3 mb-2 text-gray-800">{children}</h4>
+    ),
+    h5: ({ children }: any) => (
+      <h5 className="text-sm font-semibold mt-3 mb-2 text-gray-800">{children}</h5>
+    ),
+    h6: ({ children }: any) => (
+      <h6 className="text-sm font-semibold mt-3 mb-2 text-gray-800">{children}</h6>
+    ),
+    p: ({ children }: any) => (
+      <p className="text-xs leading-relaxed mb-2 text-gray-700">{children}</p>
+    ),
+    ul: ({ children }: any) => (
+      <ul className="text-xs mb-3 ml-4 list-disc">{children}</ul>
+    ),
+    ol: ({ children }: any) => (
+      <ol className="text-xs mb-3 ml-4 list-decimal">{children}</ol>
+    ),
+    li: ({ children }: any) => (
+      <li className="text-xs mb-1">{children}</li>
+    ),
+    strong: ({ children }: any) => (
+      <strong className="font-semibold text-gray-900">{children}</strong>
+    ),
+    em: ({ children }: any) => (
+      <em className="italic text-gray-800">{children}</em>
+    ),
+    code: ({ children }: any) => (
+      <code className="bg-gray-100 px-1 py-0.5 rounded text-xs font-mono text-gray-800">{children}</code>
+    ),
+    pre: ({ children }: any) => (
+      <pre className="bg-gray-100 p-3 rounded-lg overflow-x-auto text-xs font-mono mb-3">{children}</pre>
+    ),
+    blockquote: ({ children }: any) => (
+      <blockquote className="border-l-4 border-gray-300 pl-4 italic text-gray-600 mb-3">{children}</blockquote>
+    ),
+    hr: () => (
+      <hr className="border-gray-300 my-4" />
+    ),
+    table: ({ children }: any) => (
+      <div className="overflow-x-auto mb-3">
+        <table className="min-w-full text-xs border-collapse border border-gray-300">{children}</table>
+      </div>
+    ),
+    th: ({ children }: any) => (
+      <th className="border border-gray-300 px-2 py-1 bg-gray-100 font-semibold text-left">{children}</th>
+    ),
+    td: ({ children }: any) => (
+      <td className="border border-gray-300 px-2 py-1">{children}</td>
+    ),
   }
 
   const handleEdit = () => {
@@ -263,12 +319,15 @@ export function ContentViewer({ isOpen, onClose, content, onContentUpdate }: Con
                 }}
               />
             ) : (
-              <div 
-                className="prose prose-lg max-w-none"
-                dangerouslySetInnerHTML={{ 
-                  __html: formatContent(content.content) 
-                }}
-              />
+              <div className="max-w-none text-xs">
+                <ReactMarkdown
+                  remarkPlugins={[remarkGfm]}
+                  rehypePlugins={[rehypeHighlight, rehypeSanitize, rehypeRaw]}
+                  components={markdownComponents}
+                >
+                  {content.content}
+                </ReactMarkdown>
+              </div>
             )}
           </div>
         </div>

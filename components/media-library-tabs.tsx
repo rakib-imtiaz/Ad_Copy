@@ -31,6 +31,11 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { AnimatedText, FadeInText, SlideInText } from "@/components/ui/animated-text"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { ContentViewer } from "@/components/content-viewer"
+import ReactMarkdown from 'react-markdown'
+import remarkGfm from 'remark-gfm'
+import rehypeHighlight from 'rehype-highlight'
+import rehypeSanitize from 'rehype-sanitize'
+import rehypeRaw from 'rehype-raw'
 import { Toast } from "@/components/ui/toast"
 import { authService } from "@/lib/auth-service"
 import {
@@ -971,6 +976,83 @@ export function YouTubeTab({ mediaItems, onDelete, onRefresh, setMediaItems, isD
   )
 }
 
+// Compact Markdown Renderer for Image Analysis
+function CompactMarkdownRenderer({ content }: { content: string }) {
+  const markdownComponents = {
+    h1: ({ children }: any) => (
+      <h1 className="text-sm font-bold mt-3 mb-2 text-gray-900">{children}</h1>
+    ),
+    h2: ({ children }: any) => (
+      <h2 className="text-xs font-bold mt-3 mb-2 text-gray-900">{children}</h2>
+    ),
+    h3: ({ children }: any) => (
+      <h3 className="text-xs font-semibold mt-2 mb-1 text-gray-800">{children}</h3>
+    ),
+    h4: ({ children }: any) => (
+      <h4 className="text-xs font-semibold mt-2 mb-1 text-gray-800">{children}</h4>
+    ),
+    h5: ({ children }: any) => (
+      <h5 className="text-xs font-semibold mt-2 mb-1 text-gray-800">{children}</h5>
+    ),
+    h6: ({ children }: any) => (
+      <h6 className="text-xs font-semibold mt-2 mb-1 text-gray-800">{children}</h6>
+    ),
+    p: ({ children }: any) => (
+      <p className="text-xs leading-relaxed mb-2 text-gray-700">{children}</p>
+    ),
+    ul: ({ children }: any) => (
+      <ul className="text-xs mb-2 ml-3 list-disc">{children}</ul>
+    ),
+    ol: ({ children }: any) => (
+      <ol className="text-xs mb-2 ml-3 list-decimal">{children}</ol>
+    ),
+    li: ({ children }: any) => (
+      <li className="text-xs mb-1">{children}</li>
+    ),
+    strong: ({ children }: any) => (
+      <strong className="font-semibold text-gray-900">{children}</strong>
+    ),
+    em: ({ children }: any) => (
+      <em className="italic text-gray-800">{children}</em>
+    ),
+    code: ({ children }: any) => (
+      <code className="bg-gray-100 px-1 py-0.5 rounded text-xs font-mono text-gray-800">{children}</code>
+    ),
+    pre: ({ children }: any) => (
+      <pre className="bg-gray-100 p-2 rounded text-xs font-mono mb-2 overflow-x-auto">{children}</pre>
+    ),
+    blockquote: ({ children }: any) => (
+      <blockquote className="border-l-2 border-gray-300 pl-3 italic text-gray-600 mb-2">{children}</blockquote>
+    ),
+    hr: () => (
+      <hr className="border-gray-300 my-2" />
+    ),
+    table: ({ children }: any) => (
+      <div className="overflow-x-auto mb-2">
+        <table className="min-w-full text-xs border-collapse border border-gray-300">{children}</table>
+      </div>
+    ),
+    th: ({ children }: any) => (
+      <th className="border border-gray-300 px-1 py-1 bg-gray-100 font-semibold text-left">{children}</th>
+    ),
+    td: ({ children }: any) => (
+      <td className="border border-gray-300 px-1 py-1">{children}</td>
+    ),
+  }
+
+  return (
+    <div className="max-w-none text-xs">
+      <ReactMarkdown
+        remarkPlugins={[remarkGfm]}
+        rehypePlugins={[rehypeHighlight, rehypeSanitize, rehypeRaw]}
+        components={markdownComponents}
+      >
+        {content}
+      </ReactMarkdown>
+    </div>
+  )
+}
+
 // Image Analyzer Tab Component
 export function ImageAnalyzerTab({ mediaItems, onUpload, onDelete, isDeleting, deletingItemId, isLoadingTabContent }: any) {
   const [dragActive, setDragActive] = React.useState(false)
@@ -1389,9 +1471,7 @@ export function ImageAnalyzerTab({ mediaItems, onUpload, onDelete, isDeleting, d
               </div>
             </div>
             <div className="p-4 overflow-y-auto max-h-[60vh] bg-white">
-              <pre className="whitespace-pre-wrap text-sm text-black font-mono leading-relaxed bg-white p-4 rounded border">
-                {showAnalysisPopup.analysis}
-              </pre>
+              <CompactMarkdownRenderer content={showAnalysisPopup.analysis} />
             </div>
           </div>
         </div>
