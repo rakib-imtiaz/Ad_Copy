@@ -572,6 +572,7 @@ export function LinksTab({ mediaItems, onDelete, onRefresh, setMediaItems, isDel
           'Authorization': `Bearer ${accessToken}`,
           'Content-Type': 'application/json',
         },
+        signal: AbortSignal.timeout(30000), // 30 second timeout
       })
 
       console.log('📡 Webpage scraping response status:', response.status)
@@ -599,7 +600,17 @@ export function LinksTab({ mediaItems, onDelete, onRefresh, setMediaItems, isDel
       }
     } catch (error) {
       console.error('❌ Error scraping webpage:', error)
-      toast.error('Network error occurred while scraping')
+      
+      // Provide more specific error messages based on the error type
+      if (error instanceof TypeError && error.message === 'Failed to fetch') {
+        toast.error('Unable to connect to scraping service. Please check your internet connection and try again.')
+      } else if (error instanceof Error && error.name === 'TimeoutError') {
+        toast.error('Scraping request timed out. The service may be busy. Please try again.')
+      } else if (error instanceof Error) {
+        toast.error(`Scraping error: ${error.message}`)
+      } else {
+        toast.error('Network error occurred while scraping')
+      }
     } finally {
       setIsScraping(false)
     }
@@ -836,6 +847,7 @@ export function YouTubeTab({ mediaItems, onDelete, onRefresh, setMediaItems, isD
           'Authorization': `Bearer ${accessToken}`,
           'Content-Type': 'application/json',
         },
+        signal: AbortSignal.timeout(30000), // 30 second timeout
       })
 
       console.log('📡 YouTube transcription response status:', response.status)
@@ -863,7 +875,17 @@ export function YouTubeTab({ mediaItems, onDelete, onRefresh, setMediaItems, isD
       }
     } catch (error) {
       console.error('❌ Error submitting YouTube URL:', error)
-      toast.error('Network error occurred while transcribing video')
+      
+      // Provide more specific error messages based on the error type
+      if (error instanceof TypeError && error.message === 'Failed to fetch') {
+        toast.error('Unable to connect to transcription service. Please check your internet connection and try again.')
+      } else if (error instanceof Error && error.name === 'TimeoutError') {
+        toast.error('Transcription request timed out. The service may be busy. Please try again.')
+      } else if (error instanceof Error) {
+        toast.error(`Transcription error: ${error.message}`)
+      } else {
+        toast.error('Network error occurred while transcribing video')
+      }
     } finally {
       setIsSubmitting(false)
     }
