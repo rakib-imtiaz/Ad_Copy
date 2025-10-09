@@ -37,6 +37,18 @@ export function ContentViewer({ isOpen, onClose, content, onContentUpdate }: Con
   const [isSaving, setIsSaving] = React.useState(false)
   const [saveMessage, setSaveMessage] = React.useState<{ type: 'success' | 'error', text: string } | null>(null)
 
+  // Clean the content by removing prefixes and brackets
+  const cleanContent = (rawContent: string) => {
+    let cleaned = rawContent || ''
+    // Remove the "Use this information as resources:" prefix
+    cleaned = cleaned.replace(/^Use this information as resources:\s*/, '')
+    // Remove square brackets if they wrap the entire content (multiline)
+    if (cleaned.startsWith('[') && cleaned.endsWith(']')) {
+      cleaned = cleaned.slice(1, -1)
+    }
+    return cleaned
+  }
+
   // Reset editing state when content changes
   React.useEffect(() => {
     setEditedContent(content.content)
@@ -306,10 +318,10 @@ export function ContentViewer({ isOpen, onClose, content, onContentUpdate }: Con
                 </iframe>
               </div>
             ) : content.fileType === 'image' ? (
-              <div 
+              <div
                 className="text-center"
                 dangerouslySetInnerHTML={{ 
-                  __html: content.content 
+                  __html: cleanContent(content.content)
                 }}
               />
             ) : (
@@ -319,7 +331,7 @@ export function ContentViewer({ isOpen, onClose, content, onContentUpdate }: Con
                   rehypePlugins={[rehypeHighlight, rehypeSanitize, rehypeRaw]}
                   components={markdownComponents}
                 >
-                  {content.content}
+                  {cleanContent(content.content)}
                 </ReactMarkdown>
               </div>
             )}

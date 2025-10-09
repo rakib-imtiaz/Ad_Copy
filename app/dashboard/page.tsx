@@ -2662,9 +2662,10 @@ export default function Dashboard() {
       // Transform the API response to match our MediaItem interface
       console.log('🔄 Transforming media items...')
       const transformedItems = data.map((item: any) => {
-        // Find matching scraped content by filename
+        // Find matching scraped content by filename AND type
         const matchingScraped = scrapedItems.find(scraped => 
-          scraped.resource_name === (item.file_name || item.filename || item.name)
+          scraped.resource_name === (item.file_name || item.filename || item.name) &&
+          scraped.type === 'image'
         )
         
         console.log(`🔄 Processing item: ${item.file_name || item.filename || item.name}`)
@@ -2673,6 +2674,10 @@ export default function Dashboard() {
         console.log(`  - Has matching scraped content: ${!!matchingScraped}`)
         if (matchingScraped) {
           console.log(`  - Scraped content length: ${matchingScraped.content ? matchingScraped.content.length : 0}`)
+          console.log(`  - Scraped resource_id: ${matchingScraped.resource_id}`)
+          console.log(`  - Scraped resource_name: ${matchingScraped.resource_name}`)
+        } else {
+          console.log(`  - Available scraped items:`, scrapedItems.map(s => ({ name: s.resource_name, id: s.resource_id })))
         }
         
         return {
@@ -2736,12 +2741,13 @@ export default function Dashboard() {
         const mergedItems = [...serverItems]
         localItems.forEach(localItem => {
           // Check if local item exists in server items by filename (more reliable than ID)
-          const existsInServer = serverItems.find(serverItem => 
+          const serverItemIndex = serverItems.findIndex(serverItem => 
             serverItem.filename === localItem.filename && 
             serverItem.type === localItem.type
           )
           
-          if (!existsInServer) {
+          if (serverItemIndex === -1) {
+            // Item doesn't exist in server, add it
             console.log('➕ Adding local item to merged list:', {
               id: localItem.id,
               type: localItem.type,
@@ -2749,10 +2755,25 @@ export default function Dashboard() {
             })
             mergedItems.push(localItem)
           } else {
-            console.log('⚠️ Local item already exists in server items (deduplicated by filename):', {
-              id: localItem.id,
-              type: localItem.type,
-              filename: localItem.filename
+            // Item exists in server, merge the content (prioritize local analysis content)
+            const serverItem = serverItems[serverItemIndex]
+            const mergedItem = {
+              ...serverItem, // Use server data as base
+              ...localItem,  // Override with local data (including analysis content)
+              // Ensure we keep the server ID but local content
+              id: serverItem.id,
+              content: localItem.content || serverItem.content, // Prioritize local analysis
+              analysisStatus: localItem.content ? 'completed' : (serverItem as any).analysisStatus
+            }
+            
+            // Replace the server item with the merged item
+            mergedItems[serverItemIndex] = mergedItem
+            
+            console.log('🔄 Merged local analysis with server item:', {
+              id: mergedItem.id,
+              type: mergedItem.type,
+              filename: mergedItem.filename,
+              hasContent: !!mergedItem.content
             })
           }
         })
@@ -4358,7 +4379,6 @@ function MediaDrawer({ activeTab, onTabChange, mediaItems, setMediaItems, onRefr
     { id: 'links' as const, label: 'Links', icon: Link2 },
     { id: 'youtube' as const, label: 'YouTube', icon: Mic },
     { id: 'image-analyzer' as const, label: 'Images', icon: Image },
-    { id: 'transcripts' as const, label: 'Transcripts', icon: Mic },
   ]
 
   return (
@@ -4436,7 +4456,6 @@ function MediaDrawer({ activeTab, onTabChange, mediaItems, setMediaItems, onRefr
         {activeTab === 'links' && <LinksTab mediaItems={mediaItems} onDelete={handleDeleteItem} onRefresh={onRefresh} setMediaItems={setMediaItems} isDeleting={isDeleting} deletingItemId={deletingItemId} isLoadingTabContent={isLoadingTabContent} isScraping={isScraping} setIsScraping={setIsScraping} />}
         {activeTab === 'youtube' && <YouTubeTab mediaItems={mediaItems} onDelete={handleDeleteItem} onRefresh={onRefresh} setMediaItems={setMediaItems} isDeleting={isDeleting} deletingItemId={deletingItemId} isLoadingTabContent={isLoadingTabContent} isScraping={isScraping} setIsScraping={setIsScraping} />}
         {activeTab === 'image-analyzer' && <ImageAnalyzerTab mediaItems={mediaItems} onUpload={onUpload} onDelete={handleDeleteItem} isDeleting={isDeleting} deletingItemId={deletingItemId} isLoadingTabContent={isLoadingTabContent} setMediaItems={setMediaItems} />}
-        {activeTab === 'transcripts' && <TranscriptsTab mediaItems={mediaItems} onDelete={handleDeleteItem} isDeleting={isDeleting} deletingItemId={deletingItemId} isLoadingTabContent={isLoadingTabContent} />}
       </div>
     </div>
   )

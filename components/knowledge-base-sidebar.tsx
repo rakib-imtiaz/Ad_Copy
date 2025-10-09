@@ -57,7 +57,7 @@ import {
 } from "@/components/ui/alert-dialog"
 import { Separator } from "@/components/ui/separator"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { FilesTab, LinksTab, YouTubeTab, ImageAnalyzerTab, TranscriptsTab } from "@/components/media-library-tabs"
+import { FilesTab, LinksTab, YouTubeTab, ImageAnalyzerTab } from "@/components/media-library-tabs"
 
 interface KnowledgeBaseSidebarProps {
   mediaItems: any[]
@@ -130,7 +130,6 @@ export function KnowledgeBaseSidebar({
     { id: 'links' as const, label: 'Links', icon: Link2 },
     { id: 'youtube' as const, label: 'YouTube', icon: Mic },
     { id: 'image-analyzer' as const, label: 'Images', icon: Image },
-    { id: 'transcripts' as const, label: 'Transcripts', icon: Mic },
   ]
 
   return (
@@ -305,15 +304,6 @@ export function KnowledgeBaseSidebar({
                             deletingItemId={deletingItemId} 
                             isLoadingTabContent={isLoadingTabContent}
                             setMediaItems={setMediaItems}
-                          />
-                        )}
-                        {activeTab === 'transcripts' && (
-                          <TranscriptsTab 
-                            mediaItems={mediaItems} 
-                            onDelete={onDelete} 
-                            isDeleting={isDeleting} 
-                            deletingItemId={deletingItemId} 
-                            isLoadingTabContent={isLoadingTabContent} 
                           />
                         )}
                         </div>

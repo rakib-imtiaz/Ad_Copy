@@ -170,21 +170,53 @@ export default function KnowledgeBasePage() {
       }
 
       // Merge both data sources and ensure all items have proper IDs
-      const mergedItems = [...mediaData, ...scrapedData].map((item: any, index: number) => ({
+      const mergedItems = [...mediaData]
+      
+      // Add scraped items, but avoid duplicates with media items
+      scrapedData.forEach(scrapedItem => {
+        // Check if this scraped item matches an existing media item by filename AND is an image analysis
+        const existingMediaIndex = mergedItems.findIndex(mediaItem => 
+          mediaItem.filename === scrapedItem.filename && 
+          mediaItem.type === 'image' && // Only check for image duplicates
+          scrapedItem.type === 'image'  // Only merge image analysis scraped content
+        )
+        
+        if (existingMediaIndex !== -1) {
+          // Merge scraped content with existing media item
+          const existingItem = mergedItems[existingMediaIndex]
+          mergedItems[existingMediaIndex] = {
+            ...existingItem,
+            ...scrapedItem,
+            // Keep the original media ID but use scraped content
+            id: existingItem.id,
+            content: scrapedItem.content || existingItem.content,
+            analysisStatus: scrapedItem.content ? 'completed' : existingItem.analysisStatus
+          }
+          console.log('🔄 Merged scraped analysis with media item:', {
+            filename: scrapedItem.filename,
+            hasContent: !!scrapedItem.content
+          })
+        } else {
+          // Add as new item if no duplicate found
+          mergedItems.push(scrapedItem)
+        }
+      })
+      
+      // Ensure all items have proper IDs
+      const finalItems = mergedItems.map((item: any, index: number) => ({
         ...item,
-        id: item.id || `item-${index}-${Date.now()}`, // Ensure every item has an ID
+        id: item.id || `item-${index}-${Date.now()}`,
         filename: item.filename || item.name || item.title || 'Unknown',
-        // Don't override the properly detected type
         type: item.type || 'unknown'
       }))
       
-      console.log('📊 Merged items count:', mergedItems.length)
+      console.log('📊 Final merged items count:', finalItems.length)
       console.log('📊 Media items:', mediaData.length)
       console.log('📊 Scraped items:', scrapedData.length)
       
       // Debug: Log file types being processed
-      console.log('🔍 File types in merged items:')
-      mergedItems.forEach((item, index) => {
+      console.log('🔍 File types in final items:')
+      finalItems.forEach((item, index) => {
         console.log(`  ${index + 1}. ${item.filename} - Type: ${item.type} - Original data:`, {
           file_name: item.file_name,
           filename: item.filename,
@@ -194,7 +226,7 @@ export default function KnowledgeBasePage() {
         })
       })
       
-      setMediaItems(mergedItems)
+      setMediaItems(finalItems)
       console.log('✅ Media library fetch completed successfully')
       
     } catch (error) {

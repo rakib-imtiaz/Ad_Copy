@@ -1502,9 +1502,9 @@ export function ImageAnalyzerTab({ mediaItems, onUpload, onDelete, isDeleting, d
           imageItems.slice(0, 8).map((item: any, index: number) => {
             const isDeletingItem = deletingItemId === item.id
 
-            // Check if image has been analyzed - prioritize content from mediaItems over local analysisResults
-            const hasAnalysis = (item.content && item.content.trim()) || analysisResults[item.id]
-            const isAnalyzed = hasAnalysis && (item.analysisStatus === 'completed' || analysisResults[item.id]?.status === 'completed' || item.content)
+            // Check if image has been analyzed - use simple backup approach
+            const hasAnalysis = analysisResults[item.id] || (item.content && item.content.trim())
+            const isAnalyzed = hasAnalysis && (analysisResults[item.id]?.status === 'completed' || item.content)
 
             return (
               <div
@@ -1549,6 +1549,7 @@ export function ImageAnalyzerTab({ mediaItems, onUpload, onDelete, isDeleting, d
                             className="h-5 px-1.5 text-xs border-blue-200 text-blue-600 hover:bg-blue-50"
                             onClick={() => setShowAnalysisPopup({ 
                               id: item.id, 
+                              filename: item.filename || item.name || 'Unknown Image',
                               analysis: item.content || analysisResults[item.id]?.analysis || '' 
                             })}
                           >
@@ -1636,7 +1637,9 @@ export function ImageAnalyzerTab({ mediaItems, onUpload, onDelete, isDeleting, d
           <div className="bg-white rounded-lg max-w-2xl w-full max-h-[80vh] overflow-hidden shadow-xl">
             <div className="p-4 border-b border-gray-200 bg-white">
               <div className="flex items-center justify-between">
-                <h3 className="text-lg font-semibold text-gray-900">Image Analysis</h3>
+                <h3 className="text-lg font-semibold text-gray-900">
+                  Image Analysis - {showAnalysisPopup.filename || 'Unknown Image'}
+                </h3>
                 <Button
                   variant="ghost"
                   size="sm"
@@ -1648,7 +1651,18 @@ export function ImageAnalyzerTab({ mediaItems, onUpload, onDelete, isDeleting, d
               </div>
             </div>
             <div className="p-4 overflow-y-auto max-h-[60vh] bg-white">
-              <CompactMarkdownRenderer content={showAnalysisPopup.analysis} />
+              <div className="whitespace-pre-wrap text-sm text-gray-800 leading-relaxed">
+                {(() => {
+                  let content = showAnalysisPopup.analysis || ''
+                  // Remove the "Use this information as resources:" prefix
+                  content = content.replace(/^Use this information as resources:\s*/, '')
+                  // Remove square brackets if they wrap the entire content (multiline)
+                  if (content.startsWith('[') && content.endsWith(']')) {
+                    content = content.slice(1, -1)
+                  }
+                  return content
+                })()}
+              </div>
             </div>
           </div>
         </div>
@@ -1657,124 +1671,3 @@ export function ImageAnalyzerTab({ mediaItems, onUpload, onDelete, isDeleting, d
   )
 }
 
-// Transcripts Tab Component
-export function TranscriptsTab({ mediaItems, onDelete, isDeleting, deletingItemId, isLoadingTabContent }: any) {
-  const [searchQuery, setSearchQuery] = React.useState("")
-  
-  const transcriptItems = mediaItems.filter((item: any) => {
-    if (!item) return false
-    const isTranscriptType = item.type === 'transcript' || item.type === 'audio'
-    const matchesSearch = !searchQuery || 
-      (item.title && item.title.toLowerCase().includes(searchQuery.toLowerCase())) ||
-      (item.name && item.name.toLowerCase().includes(searchQuery.toLowerCase())) ||
-      (item.filename && item.filename.toLowerCase().includes(searchQuery.toLowerCase()))
-    return isTranscriptType && matchesSearch
-  })
-
-  return (
-    <div className="space-y-2">
-      {/* Search Input */}
-      <div className="space-y-1">
-        <Input
-          placeholder="Search transcripts..."
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          className="w-full h-6 text-xs"
-        />
-      </div>
-
-      {/* Transcripts count and list */}
-      <div className="space-y-1">
-        {transcriptItems.length > 0 && (
-          <div className="text-xs text-gray-500 mb-1">
-            {transcriptItems.length} transcript{transcriptItems.length !== 1 ? 's' : ''} found
-            {searchQuery && ` matching "${searchQuery}"`}
-          </div>
-        )}
-        {isLoadingTabContent ? (
-          <div className="space-y-2">
-            {[...Array(3)].map((_, i) => (
-              <Skeleton key={i} className="h-8 w-full" />
-            ))}
-          </div>
-        ) : transcriptItems.length > 0 ? (
-          transcriptItems.slice(0, 8).map((item: any, index: number) => {
-            const isDeletingItem = deletingItemId === item.id
-
-            return (
-              <div
-                key={item.id}
-                className={`group relative p-2 rounded-md transition-all duration-200 cursor-pointer ${
-                  'bg-white hover:bg-gray-50 hover:shadow-sm border border-gray-200'
-                } ${isDeletingItem ? 'opacity-50 pointer-events-none' : ''}`}
-              >
-                <div className="flex items-start justify-between gap-2">
-                  <div className="flex items-center space-x-2 flex-1 min-w-0">
-                    <Mic className="h-4 w-4 text-purple-500" />
-                    <div className="flex-1 min-w-0">
-                      <h4 className="font-medium text-sm truncate text-gray-900">
-                        {item.title || item.name || `Transcript ${index + 1}`}
-                      </h4>
-                      <p className="text-xs text-gray-500 truncate">
-                        TRANSCRIPT • {item.duration || 'Unknown duration'}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex items-center space-x-1">
-                    <TooltipProvider>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="h-6 w-6 p-0 text-gray-500 hover:text-purple-600 hover:bg-purple-50"
-                            onClick={(e) => {
-                              e.stopPropagation()
-                              // Add transcript view logic here
-                            }}
-                          >
-                            <Eye className="h-3 w-3" />
-                          </Button>
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          <p>View transcript</p>
-                        </TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
-                    {!isDeletingItem && (
-                      <ThreeDotsMenu 
-                        onDelete={() => onDelete(item.id)}
-                      />
-                    )}
-                    {isDeletingItem && (
-                      <div className="h-6 w-6 flex items-center justify-center">
-                        <Loader2 className="h-3 w-3 animate-spin text-gray-300" />
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
-            )
-          })
-        ) : (
-          <div className="text-center py-4">
-            <div className="w-8 h-8 mx-auto mb-2 bg-gray-100 rounded-full flex items-center justify-center">
-              <Mic className="h-4 w-4 text-gray-400" />
-            </div>
-            {searchQuery ? (
-              <>
-                <p className="text-xs text-gray-500 mb-1">No transcripts found</p>
-                <p className="text-xs text-gray-400">Try adjusting your search terms</p>
-              </>
-            ) : (
-              <>
-                <p className="text-xs text-gray-500 mb-1">No transcripts available</p>
-                <p className="text-xs text-gray-400">Transcripts will appear here after processing</p>
-              </>
-            )}
-          </div>
-        )}
-      </div>
-    </div>
-  )
-}
