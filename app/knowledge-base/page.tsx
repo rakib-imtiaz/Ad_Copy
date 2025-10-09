@@ -173,7 +173,7 @@ export default function KnowledgeBasePage() {
       const mergedItems = [...mediaData]
       
       // Add scraped items, but avoid duplicates with media items
-      scrapedData.forEach(scrapedItem => {
+      scrapedData.forEach((scrapedItem: any) => {
         // Check if this scraped item matches an existing media item by filename AND is an image analysis
         const existingMediaIndex = mergedItems.findIndex(mediaItem => 
           mediaItem.filename === scrapedItem.filename && 
