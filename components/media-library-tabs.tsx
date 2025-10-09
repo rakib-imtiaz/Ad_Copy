@@ -242,7 +242,7 @@ export function FilesTab({ mediaItems, onUpload, onDelete, isDeleting, deletingI
               ? 'bg-gradient-to-br from-[#1ABC9C] to-[#16A085] shadow-md' 
               : 'bg-gradient-to-br from-gray-100 to-gray-200'
           }`}>
-            <Upload className={`h-4 w-4 transition-all duration-200 ${isUploading ? 'animate-bounce' : ''} ${
+            <Upload className={`h-4 w-4 transition-all duration-200 ${isUploading ? 'animate-pulse' : ''} ${
               dragActive ? 'text-white' : 'text-gray-700'
             }`} />
           </div>
@@ -1456,7 +1456,7 @@ export function ImageAnalyzerTab({ mediaItems, onUpload, onDelete, isDeleting, d
               ? 'bg-gradient-to-br from-[#1ABC9C] to-[#16A085] shadow-md' 
               : 'bg-gradient-to-br from-gray-100 to-gray-200'
           }`}>
-            <Image className={`h-4 w-4 transition-all duration-200 ${isUploading ? 'animate-bounce' : ''} ${
+            <Image className={`h-4 w-4 transition-all duration-200 ${isUploading ? 'animate-pulse' : ''} ${
               dragActive ? 'text-white' : 'text-gray-700'
             }`} />
           </div>
