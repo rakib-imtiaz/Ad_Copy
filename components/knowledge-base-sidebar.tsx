@@ -69,6 +69,8 @@ interface KnowledgeBaseSidebarProps {
   isLoadingTabContent: boolean
   isDeleting: boolean
   deletingItemId: string | null
+  isScraping: boolean
+  setIsScraping: (scraping: boolean) => void
   onViewKnowledgeBase?: () => void
 }
 
@@ -82,6 +84,8 @@ export function KnowledgeBaseSidebar({
   isLoadingTabContent,
   isDeleting,
   deletingItemId,
+  isScraping,
+  setIsScraping,
   onViewKnowledgeBase
 }: KnowledgeBaseSidebarProps) {
   const [activeTab, setActiveTab] = React.useState<'files' | 'links' | 'youtube' | 'image-analyzer' | 'transcripts'>('files')
@@ -274,7 +278,9 @@ export function KnowledgeBaseSidebar({
                             setMediaItems={setMediaItems} 
                             isDeleting={isDeleting} 
                             deletingItemId={deletingItemId} 
-                            isLoadingTabContent={isLoadingTabContent} 
+                            isLoadingTabContent={isLoadingTabContent}
+                            isScraping={isScraping}
+                            setIsScraping={setIsScraping}
                           />
                         )}
                         {activeTab === 'youtube' && (

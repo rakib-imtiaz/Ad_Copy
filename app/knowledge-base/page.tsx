@@ -23,6 +23,7 @@ export default function KnowledgeBasePage() {
   const [isLoadingTabContent, setIsLoadingTabContent] = React.useState(false)
   const [isDeleting, setIsDeleting] = React.useState(false)
   const [deletingItemId, setDeletingItemId] = React.useState<string | null>(null)
+  const [isScraping, setIsScraping] = React.useState(false)
 
   const handleFormSuccess = () => {
     setIsFormCompleted(true)
@@ -383,6 +384,8 @@ export default function KnowledgeBasePage() {
           isLoadingTabContent={isLoadingTabContent}
           isDeleting={isDeleting}
           deletingItemId={deletingItemId}
+          isScraping={isScraping}
+          setIsScraping={setIsScraping}
           onViewKnowledgeBase={() => {
             console.log('=== VIEW KNOWLEDGE BASE BUTTON CLICKED ===')
             console.log('🔘 Button clicked - opening knowledge base viewer modal')

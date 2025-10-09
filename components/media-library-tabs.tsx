@@ -384,9 +384,8 @@ export function FilesTab({ mediaItems, onUpload, onDelete, isDeleting, deletingI
 }
 
 // Links Tab Component
-export function LinksTab({ mediaItems, onDelete, onRefresh, setMediaItems, isDeleting, deletingItemId, isLoadingTabContent }: any) {
+export function LinksTab({ mediaItems, onDelete, onRefresh, setMediaItems, isDeleting, deletingItemId, isLoadingTabContent, isScraping, setIsScraping }: any) {
   const [urlInput, setUrlInput] = React.useState("")
-  const [isScraping, setIsScraping] = React.useState(false)
   const [isLoadingContents, setIsLoadingContents] = React.useState(false)
   const [searchQuery, setSearchQuery] = React.useState("")
   
@@ -714,6 +713,14 @@ export function LinksTab({ mediaItems, onDelete, onRefresh, setMediaItems, isDel
             </Button>
           </div>
         </div>
+        
+        {/* Loading indicator for scraping */}
+        {isScraping && (
+          <div className="flex items-center space-x-2 text-xs text-gray-600 bg-blue-50 p-2 rounded border">
+            <Loader2 className="h-3 w-3 animate-spin text-blue-500" />
+            <span>Scraping webpage content...</span>
+          </div>
+        )}
       </form>
 
       {/* Links count and list */}

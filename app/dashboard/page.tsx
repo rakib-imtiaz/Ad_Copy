@@ -8,7 +8,8 @@ import {
   PanelLeftClose, Send, Paperclip,
   ChevronRight, MoreHorizontal, Star, Clock, Zap, RefreshCw, Image, Activity,
   Sparkles, ArrowRight, ChevronDown, Check, Power, Headphones, Video,
-  Library, X, PanelRight, PanelRightOpen, Archive, Shield, Cpu, Brain, Edit
+  Library, X, PanelRight, PanelRightOpen, Archive, Shield, Cpu, Brain, Edit,
+  Loader2
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -349,6 +350,7 @@ export default function Dashboard() {
   const [isLoadingTabContent, setIsLoadingTabContent] = React.useState(false)
   const [isDeleting, setIsDeleting] = React.useState(false)
   const [deletingItemId, setDeletingItemId] = React.useState<string | null>(null)
+  const [isScraping, setIsScraping] = React.useState(false)
   const [isAgentSelectorOpen, setIsAgentSelectorOpen] = React.useState(false)
   const [isMediaSelectorOpen, setIsMediaSelectorOpen] = React.useState(false)
   const [selectedMediaItems, setSelectedMediaItems] = React.useState<Set<string>>(new Set())
@@ -4350,7 +4352,7 @@ function MobileSidebar({ agents, conversations, chatHistory, isLoadingChatHistor
 }
 
 // Media Drawer Component  
-function MediaDrawer({ activeTab, onTabChange, mediaItems, setMediaItems, onRefresh, onUpload, onDelete, handleDeleteItem, isRefreshing, isLoadingTabContent, isDeleting, deletingItemId, onClose, onToggle }: any) {
+function MediaDrawer({ activeTab, onTabChange, mediaItems, setMediaItems, onRefresh, onUpload, onDelete, handleDeleteItem, isRefreshing, isLoadingTabContent, isDeleting, deletingItemId, isScraping, setIsScraping, onClose, onToggle }: any) {
   const tabs = [
     { id: 'files' as const, label: 'Files', icon: FileText },
     { id: 'links' as const, label: 'Links', icon: Link2 },
@@ -4431,7 +4433,7 @@ function MediaDrawer({ activeTab, onTabChange, mediaItems, setMediaItems, onRefr
       {/* Content */}
       <div className="flex-1 overflow-y-auto p-4 scrollbar-hide max-h-[60vh]">
         {activeTab === 'files' && <FilesTab mediaItems={mediaItems} onUpload={onUpload} onDelete={handleDeleteItem} isDeleting={isDeleting} deletingItemId={deletingItemId} isLoadingTabContent={isLoadingTabContent} />}
-        {activeTab === 'links' && <LinksTab mediaItems={mediaItems} onDelete={handleDeleteItem} onRefresh={onRefresh} setMediaItems={setMediaItems} isDeleting={isDeleting} deletingItemId={deletingItemId} isLoadingTabContent={isLoadingTabContent} />}
+        {activeTab === 'links' && <LinksTab mediaItems={mediaItems} onDelete={handleDeleteItem} onRefresh={onRefresh} setMediaItems={setMediaItems} isDeleting={isDeleting} deletingItemId={deletingItemId} isLoadingTabContent={isLoadingTabContent} isScraping={isScraping} setIsScraping={setIsScraping} />}
         {activeTab === 'youtube' && <YouTubeTab mediaItems={mediaItems} onDelete={handleDeleteItem} onRefresh={onRefresh} setMediaItems={setMediaItems} isDeleting={isDeleting} deletingItemId={deletingItemId} isLoadingTabContent={isLoadingTabContent} />}
         {activeTab === 'image-analyzer' && <ImageAnalyzerTab mediaItems={mediaItems} onUpload={onUpload} onDelete={handleDeleteItem} isDeleting={isDeleting} deletingItemId={deletingItemId} isLoadingTabContent={isLoadingTabContent} setMediaItems={setMediaItems} />}
         {activeTab === 'transcripts' && <TranscriptsTab mediaItems={mediaItems} onDelete={handleDeleteItem} isDeleting={isDeleting} deletingItemId={deletingItemId} isLoadingTabContent={isLoadingTabContent} />}
@@ -4636,11 +4638,10 @@ function FilesTab({ mediaItems, onUpload, onDelete, isDeleting, deletingItemId, 
   )
 }
 
-function LinksTab({ mediaItems, onDelete, onRefresh, setMediaItems, isDeleting, deletingItemId, isLoadingTabContent }: any) {
+function LinksTab({ mediaItems, onDelete, onRefresh, setMediaItems, isDeleting, deletingItemId, isLoadingTabContent, isScraping, setIsScraping }: any) {
   // Filter to show only webpage type items
   const webpageItems = mediaItems.filter((item: any) => item.type === 'webpage')
   const [urlInput, setUrlInput] = React.useState("")
-  const [isScraping, setIsScraping] = React.useState(false)
   const [isLoadingContents, setIsLoadingContents] = React.useState(false)
   
   const [viewerContent, setViewerContent] = React.useState<{
@@ -4911,6 +4912,14 @@ function LinksTab({ mediaItems, onDelete, onRefresh, setMediaItems, isDeleting, 
         >
           {isScraping ? 'Scraping...' : 'Add'}
         </Button>
+
+        {/* Loading indicator for scraping */}
+        {isScraping && (
+          <div className="flex items-center space-x-2 text-sm text-gray-600 bg-blue-50 p-3 rounded border mt-2">
+            <RefreshCw className="h-4 w-4 animate-spin text-blue-500" />
+            <span>Scraping webpage content...</span>
+          </div>
+        )}
 
             </div>
       
