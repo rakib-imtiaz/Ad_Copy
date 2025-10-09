@@ -4781,8 +4781,9 @@ function LinksTab({ mediaItems, onDelete, onRefresh, setMediaItems, isDeleting, 
       console.log('✅ Access token found:', accessToken ? 'Present' : 'Missing')
       console.log('🔍 Scraping URL:', urlInput)
       
+      // Use API route to avoid CORS issues (API route calls the webhook server-side)
       const apiUrl = `/api/webpage-scrape?url=${encodeURIComponent(urlInput.trim())}`
-      console.log('🔍 Making request to:', apiUrl)
+      console.log('🔍 Making request to API route:', apiUrl)
       
       const response = await fetch(apiUrl, {
         method: 'GET',
@@ -4807,7 +4808,16 @@ function LinksTab({ mediaItems, onDelete, onRefresh, setMediaItems, isDeleting, 
         } else if (response.status === 400) {
           toast.error('Invalid URL. Please check the URL and try again.')
         } else {
-          toast.error(`Failed to scrape webpage. Error: ${response.status} ${response.statusText}`)
+          // Handle error data properly
+          let errorMessage = `${response.status} ${response.statusText}`
+          if (errorData.error) {
+            if (typeof errorData.error === 'string') {
+              errorMessage = errorData.error
+            } else if (typeof errorData.error === 'object') {
+              errorMessage = errorData.error.message || errorData.error.details || JSON.stringify(errorData.error)
+            }
+          }
+          toast.error(`Failed to scrape webpage. Error: ${errorMessage}`)
         }
         return
       }

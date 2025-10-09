@@ -38,6 +38,7 @@ import rehypeSanitize from 'rehype-sanitize'
 import rehypeRaw from 'rehype-raw'
 import { toast } from "sonner"
 import { authService } from "@/lib/auth-service"
+import { API_ENDPOINTS } from "@/lib/api-config"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -533,7 +534,6 @@ export function LinksTab({ mediaItems, onDelete, onRefresh, setMediaItems, isDel
   }
   
   const handleScrapeUrl = async () => {
-    console.log('🔍 handleScrapeUrl called with URL:', urlInput)
     
     if (!urlInput.trim()) {
       console.log('❌ URL input is empty, returning early')
@@ -563,8 +563,11 @@ export function LinksTab({ mediaItems, onDelete, onRefresh, setMediaItems, isDel
       console.log('✅ Access token found:', accessToken ? 'Present' : 'Missing')
       console.log('🔍 Scraping URL:', urlInput)
       
+      // Use API route to avoid CORS issues (API route calls the webhook server-side)
       const apiUrl = `/api/webpage-scrape?url=${encodeURIComponent(urlInput.trim())}`
-      console.log('🔍 Making request to:', apiUrl)
+      console.log('🔍 Making request to API route:', apiUrl)
+      console.log('🔍 URL parameter:', urlInput.trim())
+      console.log('🔍 Access token length:', accessToken.length)
       
       const response = await fetch(apiUrl, {
         method: 'GET',
@@ -576,16 +579,45 @@ export function LinksTab({ mediaItems, onDelete, onRefresh, setMediaItems, isDel
       })
 
       console.log('📡 Webpage scraping response status:', response.status)
+      console.log('📡 Response headers:', Object.fromEntries(response.headers.entries()))
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}))
         console.error('❌ Webpage scraping failed:', response.status, errorData)
-        toast.error(`Failed to scrape webpage: ${errorData.error || response.statusText}`)
+        console.error('❌ Response status text:', response.statusText)
+        console.error('❌ Response URL:', response.url)
+        
+        // Handle specific error cases
+        if (response.status === 0) {
+          console.error('❌ Network error or CORS issue - request blocked')
+          toast.error('Network error: Unable to reach the webhook. This might be a CORS issue.')
+        } else if (response.status === 404) {
+          console.error('❌ Webhook not found')
+          toast.error('Webhook endpoint not found. Please check the configuration.')
+        } else if (response.status === 401) {
+          console.error('❌ Authentication failed')
+          toast.error('Authentication failed. Please sign in again.')
+        } else {
+          // Handle error data properly
+          let errorMessage = response.statusText
+          if (errorData.error) {
+            if (typeof errorData.error === 'string') {
+              errorMessage = errorData.error
+            } else if (typeof errorData.error === 'object') {
+              errorMessage = errorData.error.message || errorData.error.details || JSON.stringify(errorData.error)
+            }
+          }
+          toast.error(`Failed to scrape webpage: ${errorMessage}`)
+        }
         return
       }
 
       const result = await response.json()
       console.log('✅ Webpage scraping result:', result)
+      console.log('📊 Result type:', typeof result)
+      console.log('📊 Result keys:', Object.keys(result))
+      console.log('📊 Result success field:', result.success)
+      console.log('📊 Result error field:', result.error)
       
       if (result.success) {
         toast.success('Webpage scraped successfully! Content will be available shortly.')
@@ -595,20 +627,53 @@ export function LinksTab({ mediaItems, onDelete, onRefresh, setMediaItems, isDel
         setTimeout(() => {
           onRefresh()
         }, 2000)
+      } else if (result.success === false) {
+        // Handle explicit failure response
+        let errorMessage = 'Unknown error'
+        if (result.error) {
+          if (typeof result.error === 'string') {
+            errorMessage = result.error
+          } else if (typeof result.error === 'object') {
+            errorMessage = result.error.message || result.error.details || JSON.stringify(result.error)
+          }
+        }
+        console.error('❌ Scraping failed with result:', result)
+        toast.error(`Scraping failed: ${errorMessage}`)
       } else {
-        toast.error(`Scraping failed: ${result.error || 'Unknown error'}`)
+        // Handle empty or unexpected response format
+        console.error('❌ Unexpected response format:', result)
+        console.error('❌ Response was empty object or missing success field')
+        
+        // Check if the response might be successful despite missing success field
+        if (Object.keys(result).length === 0) {
+          toast.error('Scraping failed: Empty response from server. Please try again.')
+        } else {
+          // Try to extract any meaningful information from the response
+          const responseText = JSON.stringify(result)
+          toast.error(`Scraping failed: Unexpected response format. Response: ${responseText}`)
+        }
       }
     } catch (error) {
       console.error('❌ Error scraping webpage:', error)
+      console.error('❌ Error type:', error instanceof Error ? error.constructor.name : typeof error)
+      console.error('❌ Error message:', error instanceof Error ? error.message : 'Unknown error')
+      console.error('❌ Error stack:', error instanceof Error ? error.stack : 'No stack trace')
       
       // Provide more specific error messages based on the error type
       if (error instanceof TypeError && error.message === 'Failed to fetch') {
-        toast.error('Unable to connect to scraping service. Please check your internet connection and try again.')
+        console.error('❌ Network fetch error - likely CORS or connectivity issue')
+        toast.error('Unable to connect to scraping service. This might be a CORS issue. Please check your internet connection and try again.')
       } else if (error instanceof Error && error.name === 'TimeoutError') {
+        console.error('❌ Request timeout')
         toast.error('Scraping request timed out. The service may be busy. Please try again.')
+      } else if (error instanceof Error && error.name === 'AbortError') {
+        console.error('❌ Request aborted')
+        toast.error('Request was aborted. Please try again.')
       } else if (error instanceof Error) {
+        console.error('❌ General error:', error.message)
         toast.error(`Scraping error: ${error.message}`)
       } else {
+        console.error('❌ Unknown error type')
         toast.error('Network error occurred while scraping')
       }
     } finally {
