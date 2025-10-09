@@ -387,18 +387,11 @@ export function FilesTab({ mediaItems, onUpload, onDelete, isDeleting, deletingI
 export function LinksTab({ mediaItems, onDelete, onRefresh, setMediaItems, isDeleting, deletingItemId, isLoadingTabContent, isScraping, setIsScraping }: any) {
   const [urlInput, setUrlInput] = React.useState("")
   const [isLoadingContents, setIsLoadingContents] = React.useState(false)
-  const [searchQuery, setSearchQuery] = React.useState("")
   
-  // Filter to show only webpage/url/scraped type items with search
+  // Filter to show only webpage/url/scraped type items
   const webpageItems = mediaItems.filter((item: any) => {
     if (!item) return false
-    const isWebpageType = item.type === 'webpage' || item.type === 'url' || item.type === 'scraped' || item.type === 'link'
-    const matchesSearch = !searchQuery || 
-      (item.title && item.title.toLowerCase().includes(searchQuery.toLowerCase())) ||
-      (item.name && item.name.toLowerCase().includes(searchQuery.toLowerCase())) ||
-      (item.filename && item.filename.toLowerCase().includes(searchQuery.toLowerCase())) ||
-      (item.url && item.url.toLowerCase().includes(searchQuery.toLowerCase()))
-    return isWebpageType && matchesSearch
+    return item.type === 'webpage' || item.type === 'url' || item.type === 'scraped' || item.type === 'link'
   })
   
   const [viewerContent, setViewerContent] = React.useState<{
@@ -683,16 +676,6 @@ export function LinksTab({ mediaItems, onDelete, onRefresh, setMediaItems, isDel
 
   return (
     <div className="space-y-2">
-      {/* Search Input */}
-      <div className="space-y-1">
-        <Input
-          placeholder="Search links..."
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          className="w-full h-6 text-xs"
-        />
-      </div>
-
       {/* URL Input Form */}
       <form onSubmit={(e) => { e.preventDefault(); handleScrapeUrl(); }} className="space-y-2">
         <div className="space-y-1">
@@ -729,7 +712,6 @@ export function LinksTab({ mediaItems, onDelete, onRefresh, setMediaItems, isDel
         {webpageItems.length > 0 && (
           <div className="text-xs text-gray-500 mb-1">
             {webpageItems.length} link{webpageItems.length !== 1 ? 's' : ''} found
-            {searchQuery && ` matching "${searchQuery}"`}
           </div>
         )}
         {isLoadingTabContent ? (
@@ -839,17 +821,10 @@ export function LinksTab({ mediaItems, onDelete, onRefresh, setMediaItems, isDel
             <div className="w-8 h-8 mx-auto mb-2 bg-gray-100 rounded-full flex items-center justify-center">
               <Link2 className="h-4 w-4 text-gray-400" />
             </div>
-            {searchQuery ? (
-              <>
-                <p className="text-xs text-gray-500 mb-1">No links found</p>
-                <p className="text-xs text-gray-400">Try adjusting your search terms</p>
-              </>
-            ) : (
-              <>
-                <p className="text-xs text-gray-500 mb-1">No links added yet</p>
-                <p className="text-xs text-gray-400">Add web links to scrape content</p>
-              </>
-            )}
+            <>
+              <p className="text-xs text-gray-500 mb-1">No links added yet</p>
+              <p className="text-xs text-gray-400">Add web links to scrape content</p>
+            </>
           </div>
         )}
       </div>
