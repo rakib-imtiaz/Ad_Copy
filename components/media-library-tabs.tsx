@@ -844,10 +844,45 @@ export function LinksTab({ mediaItems, onDelete, onRefresh, setMediaItems, isDel
 }
 
 // YouTube Tab Component
-export function YouTubeTab({ mediaItems, onDelete, onRefresh, setMediaItems, isDeleting, deletingItemId, isLoadingTabContent }: any) {
+export function YouTubeTab({ mediaItems, onDelete, onRefresh, setMediaItems, isDeleting, deletingItemId, isLoadingTabContent, isScraping, setIsScraping }: any) {
   const [urlInput, setUrlInput] = React.useState("")
-  const [isSubmitting, setIsSubmitting] = React.useState(false)
   const [searchQuery, setSearchQuery] = React.useState("")
+  
+  const [viewerContent, setViewerContent] = React.useState<{
+    title: string
+    content: string
+    sourceUrl?: string
+    scrapedAt?: string
+    filename?: string
+    resourceId?: string
+  } | null>(null)
+  
+  const [isViewerOpen, setIsViewerOpen] = React.useState(false)
+  
+  const handleViewContent = (item: any) => {
+    // Check if this is YouTube content with actual content
+    if (item.content || item.transcript) {
+      setViewerContent({
+        title: item.title || item.name || 'YouTube Transcript',
+        content: item.content || item.transcript || 'Content not available...',
+        sourceUrl: item.url,
+        scrapedAt: item.uploadedAt?.toISOString(),
+        filename: item.filename,
+        resourceId: item.resourceId || item.id
+      })
+    } else {
+      // Fallback for items without content
+      setViewerContent({
+        title: item.title || item.name || 'YouTube Transcript',
+        content: 'Transcript not available yet...',
+        sourceUrl: item.url,
+        scrapedAt: item.uploadedAt?.toISOString(),
+        filename: item.filename,
+        resourceId: item.resourceId || item.id
+      })
+    }
+    setIsViewerOpen(true)
+  }
   
   const youtubeItems = mediaItems.filter((item: any) => {
     if (!item) return false
@@ -862,9 +897,9 @@ export function YouTubeTab({ mediaItems, onDelete, onRefresh, setMediaItems, isD
 
   const handleSubmitUrl = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!urlInput.trim() || isSubmitting) return
+    if (!urlInput.trim() || isScraping) return
 
-    setIsSubmitting(true)
+    setIsScraping(true)
     try {
       console.log('🎥 Submitting YouTube URL for transcription:', urlInput)
       
@@ -935,7 +970,7 @@ export function YouTubeTab({ mediaItems, onDelete, onRefresh, setMediaItems, isD
         toast.error('Network error occurred while transcribing video')
       }
     } finally {
-      setIsSubmitting(false)
+      setIsScraping(false)
     }
   }
 
@@ -951,17 +986,25 @@ export function YouTubeTab({ mediaItems, onDelete, onRefresh, setMediaItems, isD
               onChange={(e) => setUrlInput(e.target.value)}
               placeholder="https://youtube.com/watch?v=..."
               className="flex-1 h-6 text-xs"
-              disabled={isSubmitting}
+              disabled={isScraping}
             />
             <Button 
               type="submit" 
-              disabled={!urlInput.trim() || isSubmitting}
+              disabled={!urlInput.trim() || isScraping}
               className="bg-red-600 hover:bg-red-700 text-white h-6 px-2"
             >
-              {isSubmitting ? <Loader2 className="h-3 w-3 animate-spin" /> : <Mic className="h-3 w-3" />}
+              {isScraping ? <Loader2 className="h-3 w-3 animate-spin" /> : <Mic className="h-3 w-3" />}
             </Button>
           </div>
         </div>
+        
+        {/* Loading indicator for transcription */}
+        {isScraping && (
+          <div className="flex items-center space-x-2 text-xs text-gray-600 bg-red-50 p-2 rounded border">
+            <Loader2 className="h-3 w-3 animate-spin text-red-500" />
+            <span>Transcribing YouTube video...</span>
+          </div>
+        )}
       </form>
 
       {/* YouTube videos count and list */}
@@ -1008,13 +1051,33 @@ export function YouTubeTab({ mediaItems, onDelete, onRefresh, setMediaItems, isD
                           <Button
                             variant="ghost"
                             size="sm"
+                            className="h-5 w-5 p-0 text-gray-500 hover:text-blue-600 hover:bg-blue-50"
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              handleViewContent(item)
+                            }}
+                          >
+                            <Eye className="h-2.5 w-2.5" />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>View transcript</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="sm"
                             className="h-5 w-5 p-0 text-gray-500 hover:text-red-600 hover:bg-red-50"
                             onClick={(e) => {
                               e.stopPropagation()
                               window.open(item.url || item.link, '_blank')
                             }}
                           >
-                            <ExternalLink className="h-3 w-3" />
+                            <ExternalLink className="h-2.5 w-2.5" />
                           </Button>
                         </TooltipTrigger>
                         <TooltipContent>
@@ -1023,9 +1086,26 @@ export function YouTubeTab({ mediaItems, onDelete, onRefresh, setMediaItems, isD
                       </Tooltip>
                     </TooltipProvider>
                     {!isDeletingItem && (
-                      <ThreeDotsMenu 
-                        onDelete={() => onDelete(item.id)}
-                      />
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-5 w-5 p-0 text-gray-500 hover:text-red-600 hover:bg-red-50"
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                onDelete(item.id, item.title || item.name)
+                              }}
+                            >
+                              <Trash2 className="h-2.5 w-2.5" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>Delete video</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
                     )}
                     {isDeletingItem && (
                       <div className="h-6 w-6 flex items-center justify-center">
@@ -1056,6 +1136,16 @@ export function YouTubeTab({ mediaItems, onDelete, onRefresh, setMediaItems, isD
           </div>
         )}
       </div>
+      
+      {/* Content Viewer */}
+      {viewerContent && (
+        <ContentViewer
+          isOpen={isViewerOpen}
+          onClose={() => setIsViewerOpen(false)}
+          content={viewerContent}
+          onContentUpdate={() => {}} // YouTube transcripts are read-only
+        />
+      )}
     </div>
   )
 }

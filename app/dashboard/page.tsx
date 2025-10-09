@@ -4434,7 +4434,7 @@ function MediaDrawer({ activeTab, onTabChange, mediaItems, setMediaItems, onRefr
       <div className="flex-1 overflow-y-auto p-4 scrollbar-hide max-h-[60vh]">
         {activeTab === 'files' && <FilesTab mediaItems={mediaItems} onUpload={onUpload} onDelete={handleDeleteItem} isDeleting={isDeleting} deletingItemId={deletingItemId} isLoadingTabContent={isLoadingTabContent} />}
         {activeTab === 'links' && <LinksTab mediaItems={mediaItems} onDelete={handleDeleteItem} onRefresh={onRefresh} setMediaItems={setMediaItems} isDeleting={isDeleting} deletingItemId={deletingItemId} isLoadingTabContent={isLoadingTabContent} isScraping={isScraping} setIsScraping={setIsScraping} />}
-        {activeTab === 'youtube' && <YouTubeTab mediaItems={mediaItems} onDelete={handleDeleteItem} onRefresh={onRefresh} setMediaItems={setMediaItems} isDeleting={isDeleting} deletingItemId={deletingItemId} isLoadingTabContent={isLoadingTabContent} />}
+        {activeTab === 'youtube' && <YouTubeTab mediaItems={mediaItems} onDelete={handleDeleteItem} onRefresh={onRefresh} setMediaItems={setMediaItems} isDeleting={isDeleting} deletingItemId={deletingItemId} isLoadingTabContent={isLoadingTabContent} isScraping={isScraping} setIsScraping={setIsScraping} />}
         {activeTab === 'image-analyzer' && <ImageAnalyzerTab mediaItems={mediaItems} onUpload={onUpload} onDelete={handleDeleteItem} isDeleting={isDeleting} deletingItemId={deletingItemId} isLoadingTabContent={isLoadingTabContent} setMediaItems={setMediaItems} />}
         {activeTab === 'transcripts' && <TranscriptsTab mediaItems={mediaItems} onDelete={handleDeleteItem} isDeleting={isDeleting} deletingItemId={deletingItemId} isLoadingTabContent={isLoadingTabContent} />}
       </div>
@@ -4989,10 +4989,9 @@ function LinksTab({ mediaItems, onDelete, onRefresh, setMediaItems, isDeleting, 
 }
 
 // YouTube Transcription Tab Component
-function YouTubeTab({ mediaItems, onDelete, onRefresh, setMediaItems, isDeleting, deletingItemId, isLoadingTabContent }: any) {
+function YouTubeTab({ mediaItems, onDelete, onRefresh, setMediaItems, isDeleting, deletingItemId, isLoadingTabContent, isScraping, setIsScraping }: any) {
   const youtubeItems = mediaItems.filter((item: any) => item.type === 'youtube')
   const [urlInput, setUrlInput] = React.useState("")
-  const [isTranscribing, setIsTranscribing] = React.useState(false)
   
   const [viewerContent, setViewerContent] = React.useState<{
     title: string
@@ -5043,7 +5042,7 @@ function YouTubeTab({ mediaItems, onDelete, onRefresh, setMediaItems, isDeleting
     }
     
     try {
-      setIsTranscribing(true)
+      setIsScraping(true)
       console.log('🎥 Getting access token...')
       const accessToken = authService.getAuthToken()
       
@@ -5130,7 +5129,7 @@ function YouTubeTab({ mediaItems, onDelete, onRefresh, setMediaItems, isDeleting
       console.error('❌ Error transcribing YouTube video:', error)
       toast.error('An error occurred while transcribing the video')
     } finally {
-      setIsTranscribing(false)
+      setIsScraping(false)
     }
   }
   
@@ -5156,10 +5155,10 @@ function YouTubeTab({ mediaItems, onDelete, onRefresh, setMediaItems, isDeleting
         <Button 
           size="sm" 
           onClick={handleTranscribeYouTube}
-          disabled={isTranscribing || !urlInput.trim()}
+          disabled={isScraping || !urlInput.trim()}
           className="bg-blue-600 hover:bg-blue-700 text-white disabled:opacity-50"
         >
-          {isTranscribing ? 'Transcribing...' : 'Transcribe'}
+          {isScraping ? 'Transcribing...' : 'Transcribe'}
         </Button>
       </div>
       

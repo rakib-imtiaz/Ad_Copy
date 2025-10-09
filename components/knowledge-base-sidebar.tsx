@@ -291,7 +291,9 @@ export function KnowledgeBaseSidebar({
                             setMediaItems={setMediaItems} 
                             isDeleting={isDeleting} 
                             deletingItemId={deletingItemId} 
-                            isLoadingTabContent={isLoadingTabContent} 
+                            isLoadingTabContent={isLoadingTabContent}
+                            isScraping={isScraping}
+                            setIsScraping={setIsScraping}
                           />
                         )}
                         {activeTab === 'image-analyzer' && (
