@@ -40,13 +40,80 @@ export function ContentViewer({ isOpen, onClose, content, onContentUpdate }: Con
   // Clean the content by removing prefixes and brackets
   const cleanContent = (rawContent: string) => {
     let cleaned = rawContent || ''
+    
     // Remove the "Use this information as resources:" prefix
     cleaned = cleaned.replace(/^Use this information as resources:\s*/, '')
     // Remove square brackets if they wrap the entire content (multiline)
     if (cleaned.startsWith('[') && cleaned.endsWith(']')) {
       cleaned = cleaned.slice(1, -1)
     }
+    
+    // More aggressive HTML entity decoding for YouTube transcripts
+    cleaned = cleaned
+      // Handle common HTML entities
+      .replace(/&gt;&gt;/g, '>>')
+      .replace(/&lt;&lt;/g, '<<')
+      .replace(/&gt;/g, '>')
+      .replace(/&lt;/g, '<')
+      .replace(/&amp;/g, '&')
+      .replace(/&quot;/g, '"')
+      .replace(/&#39;/g, "'")
+      .replace(/&nbsp;/g, ' ')
+      .replace(/&#x27;/g, "'")
+      .replace(/&#x2F;/g, '/')
+      .replace(/&#x60;/g, '`')
+      .replace(/&#x3D;/g, '=')
+      // Handle numeric HTML entities
+      .replace(/&#(\d+);/g, (match, dec) => String.fromCharCode(dec))
+      // Handle hex HTML entities
+      .replace(/&#x([0-9A-Fa-f]+);/g, (match, hex) => String.fromCharCode(parseInt(hex, 16)))
+    
     return cleaned
+  }
+
+  // Convert YouTube transcript to markdown format for better rendering
+  const convertToMarkdown = (content: string) => {
+    let formatted = cleanContent(content)
+    
+    // Convert to markdown format
+    let markdown = formatted
+      // Convert speaker indicators to markdown headers
+      .replace(/>>\s*/g, '## Speaker\n\n')
+      // Add proper line breaks after sentences
+      .replace(/([.!?])\s*([A-Z])/g, '$1\n\n$2')
+      // Clean up multiple line breaks
+      .replace(/\n\s*\n\s*\n/g, '\n\n')
+      .trim()
+    
+    // If it doesn't start with a header, add one
+    if (!markdown.startsWith('#')) {
+      markdown = '## Transcript\n\n' + markdown
+    }
+    
+    return markdown
+  }
+
+  // Custom markdown components for YouTube transcripts
+  const youtubeMarkdownComponents = {
+    h2: ({ children }: any) => (
+      <div className="mb-4">
+        <div className="text-sm font-semibold text-blue-700 mb-2 flex items-center">
+          <div className="w-2 h-2 bg-blue-500 rounded-full mr-2"></div>
+          {children}
+        </div>
+      </div>
+    ),
+    p: ({ children }: any) => (
+      <div className="text-sm text-gray-800 leading-relaxed mb-3 pl-6 bg-blue-50 p-3 rounded-lg border-l-4 border-blue-200">
+        {children}
+      </div>
+    ),
+    // Handle regular paragraphs (non-speaker content)
+    div: ({ children }: any) => (
+      <div className="text-sm text-gray-700 leading-relaxed mb-2">
+        {children}
+      </div>
+    )
   }
 
   // Reset editing state when content changes
@@ -324,6 +391,18 @@ export function ContentViewer({ isOpen, onClose, content, onContentUpdate }: Con
                   __html: cleanContent(content.content)
                 }}
               />
+            ) : content.sourceUrl?.includes('youtube.com') || content.title?.toLowerCase().includes('youtube') ? (
+              <div className="max-w-none">
+                <div className="bg-gray-50 p-6 rounded-lg border">
+                  <ReactMarkdown
+                    remarkPlugins={[remarkGfm]}
+                    rehypePlugins={[rehypeHighlight, rehypeSanitize, rehypeRaw]}
+                    components={youtubeMarkdownComponents}
+                  >
+                    {convertToMarkdown(content.content)}
+                  </ReactMarkdown>
+                </div>
+              </div>
             ) : (
               <div className="max-w-none text-xs">
                 <ReactMarkdown
