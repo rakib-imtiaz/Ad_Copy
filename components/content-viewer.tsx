@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { X, ExternalLink, Calendar, Globe, Edit3, Save, RotateCcw, CheckCircle } from "lucide-react"
+import { X, ExternalLink, Calendar, Globe, Edit3, Save, RotateCcw } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Textarea } from "@/components/ui/textarea"
@@ -36,7 +36,6 @@ export function ContentViewer({ isOpen, onClose, content, onContentUpdate }: Con
   const [editedContent, setEditedContent] = React.useState(content.content)
   const [isSaving, setIsSaving] = React.useState(false)
   const [saveMessage, setSaveMessage] = React.useState<{ type: 'success' | 'error', text: string } | null>(null)
-  const [showSuccessPopup, setShowSuccessPopup] = React.useState(false)
 
   // Reset editing state when content changes
   React.useEffect(() => {
@@ -160,13 +159,8 @@ export function ContentViewer({ isOpen, onClose, content, onContentUpdate }: Con
           onContentUpdate(editedContent)
         }
         
-        // Show animated success popup
-        setShowSuccessPopup(true)
-        
-        // Close the modal after popup animation
-        setTimeout(() => {
-          onClose()
-        }, 2500)
+        // Close the modal immediately
+        onClose()
       } else {
         const errorData = await response.json().catch(() => ({}))
         setSaveMessage({ 
@@ -332,38 +326,6 @@ export function ContentViewer({ isOpen, onClose, content, onContentUpdate }: Con
           </div>
         </div>
       </div>
-      
-      {/* Animated Success Popup */}
-      {showSuccessPopup && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[10000]">
-          <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-md mx-4 transform transition-all duration-500 ease-out animate-in zoom-in-95 fade-in-0">
-            <div className="text-center">
-              {/* Success Icon with Animation */}
-              <div className="mx-auto mb-6 w-16 h-16 bg-green-100 rounded-full flex items-center justify-center animate-in zoom-in-95 duration-700">
-                <CheckCircle className="w-8 h-8 text-green-600 animate-in zoom-in-95 duration-500 delay-200" />
-              </div>
-              
-              {/* Success Message */}
-              <h3 className="text-xl font-semibold text-gray-900 mb-2 animate-in slide-in-from-bottom-4 duration-500 delay-300">
-                Content Updated
-              </h3>
-              <p className="text-gray-600 mb-6 animate-in slide-in-from-bottom-4 duration-500 delay-400">
-                Your changes have been saved successfully
-              </p>
-              
-              {/* Progress Bar */}
-              <div className="w-full bg-gray-200 rounded-full h-2 mb-4">
-                <div className="bg-green-500 h-2 rounded-full animate-in slide-in-from-left-4 duration-1000 delay-500" style={{ width: '100%' }}></div>
-              </div>
-              
-              {/* Auto-close indicator */}
-              <p className="text-sm text-gray-500 animate-in fade-in-0 duration-500 delay-600">
-                Closing automatically...
-              </p>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   )
 }

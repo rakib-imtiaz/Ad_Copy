@@ -3,19 +3,37 @@ import { API_ENDPOINTS } from '@/lib/api-config'
 
 export async function DELETE(request: NextRequest) {
   try {
+    console.log('🗑️ DELETE /api/scraped-contents - Starting delete request')
+    
     const accessToken = request.headers.get('authorization')?.replace('Bearer ', '')
     const body = await request.json()
-    const { file_name } = body
+    const { file_name, resource_id } = body
     
+    console.log('📋 Delete request body:', { file_name, resource_id })
+    console.log('🔑 Access token present:', !!accessToken)
+    console.log('🔍 Resource ID type:', typeof resource_id)
+    console.log('🔍 Resource ID value:', resource_id)
 
     if (!accessToken) {
+      console.error('❌ No access token provided')
       return NextResponse.json({ error: 'Access token required' }, { status: 401 })
     }
 
-    if (!file_name) {
-      return NextResponse.json({ error: 'File name is required' }, { status: 400 })
+    if (!file_name && !resource_id) {
+      console.error('❌ Neither file_name nor resource_id provided')
+      return NextResponse.json({ error: 'File name or resource ID is required' }, { status: 400 })
     }
 
+    // Use resource_id if available, otherwise fall back to file_name
+    const deletePayload = resource_id ? { 
+      access_token: accessToken,
+      resource_id: resource_id 
+    } : { 
+      access_token: accessToken,
+      file_name: file_name 
+    }
+    console.log('📤 Delete payload:', deletePayload)
+    console.log('🔗 Webhook URL:', API_ENDPOINTS.N8N_WEBHOOKS.DELETE_SCRAPED_CONTENT)
 
     const response = await fetch(API_ENDPOINTS.N8N_WEBHOOKS.DELETE_SCRAPED_CONTENT, {
       method: 'POST',
@@ -23,14 +41,17 @@ export async function DELETE(request: NextRequest) {
         'Authorization': `Bearer ${accessToken}`,
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({
-        file_name: file_name
-      }),
+      body: JSON.stringify(deletePayload),
     })
+
+    console.log('📡 Webhook response status:', response.status)
+    console.log('📡 Webhook response headers:', Object.fromEntries(response.headers.entries()))
 
 
     if (!response.ok) {
       const errorText = await response.text().catch(() => 'Unable to read error response')
+      console.error('❌ Webhook delete failed:', response.status, response.statusText)
+      console.error('❌ Error response text:', errorText)
       
       return NextResponse.json(
         { 
@@ -42,6 +63,7 @@ export async function DELETE(request: NextRequest) {
     }
 
     const data = await response.json()
+    console.log('✅ Webhook delete successful, response data:', data)
     
     return NextResponse.json({
       success: true,
@@ -136,6 +158,12 @@ export async function GET(request: NextRequest) {
       // Fallback: try to use the data directly if it's an array
       scrapedItems = data
     }
+    
+    // Debug: Log available resource_ids
+    console.log('📊 Available scraped items with resource_ids:')
+    scrapedItems.forEach((item: any, index: number) => {
+      console.log(`  ${index + 1}. resource_id: ${item.resource_id}, resource_name: ${item.resource_name}`)
+    })
     return NextResponse.json({
       success: true,
       data: scrapedItems

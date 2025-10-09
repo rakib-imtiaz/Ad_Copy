@@ -531,6 +531,7 @@ export function LinksTab({ mediaItems, onDelete, onRefresh, setMediaItems, isDel
       onRefresh()
     }, 2000)
   }
+
   
   const handleScrapeUrl = async () => {
     
@@ -811,7 +812,7 @@ export function LinksTab({ mediaItems, onDelete, onRefresh, setMediaItems, isDel
                               className="h-5 w-5 p-0 text-gray-500 hover:text-red-600 hover:bg-red-50"
                               onClick={(e) => {
                                 e.stopPropagation()
-                                onDelete(item.id)
+                                onDelete(item.id, item.resourceName || item.filename || item.title)
                               }}
                             >
                               <Trash2 className="h-2.5 w-2.5" />
