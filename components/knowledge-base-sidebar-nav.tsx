@@ -136,23 +136,6 @@ export function KnowledgeBaseSidebarNav({
             <span className="relative z-10">Fill Data from Web</span>
           </Button>
           
-          <Button 
-            className="w-full max-w-xs bg-blue-600 hover:bg-blue-700 text-white text-xs py-1 px-4 h-8 flex items-center justify-center"
-            onClick={handleLoadKnowledgeBase}
-            disabled={isLoading}
-          >
-            {isLoading ? (
-              <>
-                <TestTube className="w-3 h-3 mr-1 animate-pulse flex-shrink-0" />
-                Loading...
-              </>
-            ) : (
-              <>
-                <TestTube className="w-3 h-3 mr-1 flex-shrink-0" />
-                Load Data
-              </>
-            )}
-          </Button>
         </div>
       </div>
     </div>

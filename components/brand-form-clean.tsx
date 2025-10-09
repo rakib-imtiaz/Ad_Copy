@@ -1046,8 +1046,8 @@ export function BrandFormClean({ onSuccess }: BrandFormProps) {
         </div>
       </div>
       
-      {/* Populate Data Button */}
-      <div className="bg-gradient-to-r from-yellow-50 to-orange-50 rounded-xl border border-yellow-200 p-4 mb-6 w-[919px] max-w-[919px] mx-auto">
+      {/* Populate Data Button - Hidden since auto-population is enabled */}
+      <div className="hidden bg-gradient-to-r from-yellow-50 to-orange-50 rounded-xl border border-yellow-200 p-4 mb-6 w-[919px] max-w-[919px] mx-auto">
         <div className="text-center">
           <h3 className="text-sm font-semibold text-slate-700 mb-2">Quick Setup</h3>
           <p className="text-xs text-slate-600 mb-3">Load your existing brand information to speed up the process</p>

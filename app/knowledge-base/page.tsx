@@ -11,6 +11,7 @@ import { ArrowLeft, Sparkles, Eye, CheckCircle } from "lucide-react"
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar"
 import { authService } from "@/lib/auth-service"
 import { API_ENDPOINTS } from "@/lib/api-config"
+import { toast } from "sonner"
 
 export default function KnowledgeBasePage() {
   const [isSaving, setIsSaving] = React.useState(false)
@@ -28,6 +29,17 @@ export default function KnowledgeBasePage() {
   const handleFormSuccess = () => {
     setIsFormCompleted(true)
     setIsKnowledgeViewerOpen(true)
+  }
+
+  // Show toast helper
+  const showToastMessage = (message: string, type: 'success' | 'error' | 'info') => {
+    if (type === 'success') {
+      toast.success(message)
+    } else if (type === 'error') {
+      toast.error(message)
+    } else {
+      toast(message)
+    }
   }
 
 
@@ -377,10 +389,39 @@ export default function KnowledgeBasePage() {
     }
   }
 
-  // Fetch media library on component mount
+  // Auto-populate knowledge base data on component mount
+  const autoPopulateKnowledgeBase = React.useCallback(async () => {
+    try {
+      console.log('🔄 Auto-populating knowledge base data...')
+      
+      // Import the service dynamically to avoid circular dependencies
+      const { KnowledgeBaseService } = await import('@/lib/services/knowledge-base-service')
+      
+      const success = await KnowledgeBaseService.populateFormWithKnowledgeBase()
+      
+      if (success) {
+        console.log('✅ Knowledge base data auto-populated successfully')
+        // Show success message
+        showToastMessage("Knowledge base data loaded !", 'success')
+      } else {
+        console.log('ℹ️ No existing knowledge base data found to populate')
+        // Don't show error for empty data, just log it
+      }
+      
+    } catch (error: any) {
+      console.error('❌ Error auto-populating knowledge base data:', error)
+      // Don't show error to user for auto-population failures
+    }
+  }, [])
+
+  // Fetch media library and auto-populate knowledge base on component mount
   React.useEffect(() => {
     fetchMediaLibrary()
-  }, [])
+    // Auto-populate knowledge base data after a short delay to ensure form is ready
+    setTimeout(() => {
+      autoPopulateKnowledgeBase()
+    }, 1000)
+  }, [autoPopulateKnowledgeBase])
 
   const containerVariants = {
     hidden: { opacity: 0, y: 20 },
