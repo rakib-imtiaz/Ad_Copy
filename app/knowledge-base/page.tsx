@@ -25,6 +25,7 @@ export default function KnowledgeBasePage() {
   const [isDeleting, setIsDeleting] = React.useState(false)
   const [deletingItemId, setDeletingItemId] = React.useState<string | null>(null)
   const [isScraping, setIsScraping] = React.useState(false)
+  const [isClearingKnowledgeBase, setIsClearingKnowledgeBase] = React.useState(false)
 
   const handleFormSuccess = () => {
     setIsFormCompleted(true)
@@ -389,6 +390,56 @@ export default function KnowledgeBasePage() {
     }
   }
 
+  const clearKnowledgeBase = async () => {
+    try {
+      console.log('🗑️ ===== CLEAR KNOWLEDGE BASE START =====')
+      setIsClearingKnowledgeBase(true)
+
+      const accessToken = authService.getAuthToken()
+      if (!accessToken) {
+        console.error("No access token available")
+        showToastMessage("Authentication required", 'error')
+        return
+      }
+
+      console.log('🗑️ Clearing knowledge base...')
+
+      const response = await fetch('/api/knowledge-base/clear', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${accessToken}`,
+        },
+        body: JSON.stringify({
+          accessToken
+        }),
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}))
+        console.error('Clear failed:', response.status, errorData)
+        showToastMessage(`Failed to clear knowledge base: ${errorData.error?.message || 'Unknown error'}`, 'error')
+        return
+      }
+
+      const result = await response.json()
+      console.log('✅ Knowledge base cleared successfully:', result)
+      showToastMessage("Knowledge base cleared successfully!", 'success')
+      
+      // Refresh media library to reflect changes
+      setTimeout(() => {
+        console.log('Refreshing media library after clearing knowledge base...')
+        fetchMediaLibrary()
+      }, 500)
+      
+    } catch (error) {
+      console.error('❌ Error clearing knowledge base:', error)
+      showToastMessage("Failed to clear knowledge base", 'error')
+    } finally {
+      setIsClearingKnowledgeBase(false)
+    }
+  }
+
   // Auto-populate knowledge base data on component mount
   const autoPopulateKnowledgeBase = React.useCallback(async () => {
     try {
@@ -465,6 +516,7 @@ export default function KnowledgeBasePage() {
             console.log('📅 Timestamp:', new Date().toISOString())
             setIsKnowledgeViewerOpen(true)
           }}
+          onClearKnowledgeBase={clearKnowledgeBase}
         />
         <SidebarInset className="overflow-y-auto">
           <main className="flex-1 overflow-y-auto">

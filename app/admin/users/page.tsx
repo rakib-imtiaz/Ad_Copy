@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { UserPlus, MoreHorizontal, Trash2, AlertTriangle, Filter, RefreshCw, Crown, Search, Eye, ChevronDown, User, Info } from 'lucide-react';
+import { UserPlus, MoreHorizontal, Trash2, AlertTriangle, Filter, RefreshCw, Crown, Search, Eye, ChevronDown, User, Info, Snowflake, Shield } from 'lucide-react';
 import { authService } from '@/lib/auth-service';
 import {
   Table,
@@ -48,6 +48,8 @@ interface User {
   created_at: string;
   role: 'Superking' | 'paid-user' | null;
   total_credit: string;
+  freeze_status?: boolean;
+  freeze_duration_days?: number;
 }
 
 const UserManagementPage = () => {
@@ -57,6 +59,9 @@ const UserManagementPage = () => {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState<number | null>(null);
   const [changingRoleUserId, setChangingRoleUserId] = useState<number | null>(null);
   const [showRoleChangeConfirm, setShowRoleChangeConfirm] = useState<number | null>(null);
+  const [freezingUserId, setFreezingUserId] = useState<number | null>(null);
+  const [showFreezeConfirm, setShowFreezeConfirm] = useState<number | null>(null);
+  const [freezeDuration, setFreezeDuration] = useState<number>(7);
   const [filterRole, setFilterRole] = useState<string>('all');
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [currentUser, setCurrentUser] = useState<{ id?: number; email?: string } | null>(null);
@@ -259,6 +264,56 @@ const UserManagementPage = () => {
     }
   };
 
+  const handleFreezeAccount = async (userId: number, freezeStatus: boolean) => {
+    try {
+      setFreezingUserId(userId);
+      const token = authService.getAuthToken();
+      
+      if (!token) {
+        alert('Authentication token not found');
+        return;
+      }
+
+      // Find the user to get their email
+      const userToFreeze = users.find(user => user.id === userId);
+      if (!userToFreeze) {
+        alert('User not found');
+        return;
+      }
+
+      console.log('❄️ Client - Freezing/unfreezing user ID:', userId, 'Email:', userToFreeze.email, 'Status:', freezeStatus);
+      console.log('🔑 Client - Token exists:', !!token);
+
+      const response = await fetch('/api/admin/freeze-account', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          accessToken: token,
+          freeze_email: userToFreeze.email,
+          freeze_status: freezeStatus,
+          freeze_duration: freezeStatus ? freezeDuration : 0,
+        }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to freeze/unfreeze account');
+      }
+
+      // Refresh the user list
+      await fetchUsers(filterRole);
+      setShowFreezeConfirm(null);
+      console.log('✅ Account freeze status updated successfully');
+    } catch (error) {
+      console.error('❌ Error freezing/unfreezing account:', error);
+      alert(`Failed to ${freezeStatus ? 'freeze' : 'unfreeze'} account: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    } finally {
+      setFreezingUserId(null);
+    }
+  };
+
   // Filter users based on search term and role
   const filteredUsers = users.filter(user => {
     const matchesSearch = user.email.toLowerCase().includes(searchTerm.toLowerCase());
@@ -401,6 +456,7 @@ const UserManagementPage = () => {
                   <TableRow>
                     <TableHead>User</TableHead>
                     <TableHead>Role</TableHead>
+                    <TableHead>Status</TableHead>
                     <TableHead className="text-right">Credits</TableHead>
                     <TableHead>Created</TableHead>
                     <TableHead className="w-[100px]">Actions</TableHead>
@@ -443,6 +499,24 @@ const UserManagementPage = () => {
                             {user.role === 'Superking' ? 'Admin' : user.role || 'No Role'}
                           </Badge>
                         </TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            {user.freeze_status ? (
+                              <Badge variant="destructive" className="gap-1">
+                                <Snowflake size={12} />
+                                Frozen
+                                {user.freeze_duration_days && (
+                                  <span className="text-xs">({user.freeze_duration_days}d)</span>
+                                )}
+                              </Badge>
+                            ) : (
+                              <Badge variant="secondary" className="gap-1">
+                                <Shield size={12} />
+                                Active
+                              </Badge>
+                            )}
+                          </div>
+                        </TableCell>
                         <TableCell className="text-right font-mono text-sm">
                           ${parseFloat(user.total_credit).toFixed(2)}
                         </TableCell>
@@ -480,6 +554,27 @@ const UserManagementPage = () => {
                               >
                                 <Crown size={14} />
                               </Button>
+                            )}
+                            {user.role !== 'Superking' && (
+                              <TooltipProvider>
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      onClick={() => setShowFreezeConfirm(user.id)}
+                                      disabled={freezingUserId === user.id}
+                                      className={`h-8 w-8 p-0 ${user.freeze_status ? 'hover:bg-green-100 hover:text-green-600' : 'hover:bg-orange-100 hover:text-orange-600'}`}
+                                      title={user.freeze_status ? "Unfreeze Account" : "Freeze Account"}
+                                    >
+                                      {user.freeze_status ? <Shield size={14} /> : <Snowflake size={14} />}
+                                    </Button>
+                                  </TooltipTrigger>
+                                  <TooltipContent>
+                                    <p>{user.freeze_status ? "Unfreeze this account" : "Freeze this account"}</p>
+                                  </TooltipContent>
+                                </Tooltip>
+                              </TooltipProvider>
                             )}
                             <Button
                               variant="ghost"
@@ -625,6 +720,106 @@ const UserManagementPage = () => {
                 <>
                   <Crown size={16} />
                   Make Admin
+                </>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Freeze Account Confirmation Dialog */}
+      <Dialog open={!!showFreezeConfirm} onOpenChange={() => setShowFreezeConfirm(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <div className="flex items-center space-x-3">
+              <div className={`w-10 h-10 rounded-full flex items-center justify-center ${users.find(u => u.id === showFreezeConfirm)?.freeze_status ? 'bg-green-100' : 'bg-orange-100'}`}>
+                {users.find(u => u.id === showFreezeConfirm)?.freeze_status ? (
+                  <Shield className="text-green-600 h-5 w-5" />
+                ) : (
+                  <Snowflake className="text-orange-600 h-5 w-5" />
+                )}
+              </div>
+              <div>
+                <DialogTitle>
+                  {showFreezeConfirm && users.find(u => u.id === showFreezeConfirm)?.freeze_status 
+                    ? 'Unfreeze Account' 
+                    : 'Freeze Account'
+                  }
+                </DialogTitle>
+                <DialogDescription>
+                  {showFreezeConfirm && users.find(u => u.id === showFreezeConfirm)?.freeze_status 
+                    ? 'This will restore access to the account'
+                    : 'This will temporarily restrict access to the account'
+                  }
+                </DialogDescription>
+              </div>
+            </div>
+          </DialogHeader>
+          
+          <div className="my-4">
+            <p className="text-sm text-muted-foreground mb-4">
+              {showFreezeConfirm && users.find(u => u.id === showFreezeConfirm)?.freeze_status 
+                ? 'Are you sure you want to unfreeze this account? The user will regain access to their account immediately.'
+                : 'Are you sure you want to freeze this account? The user will be unable to log in for the specified duration.'
+              }
+            </p>
+            {showFreezeConfirm && (
+              <div className="p-3 bg-muted rounded-lg">
+                <div className="text-sm">
+                  <span className="font-medium">User:</span> {users.find(u => u.id === showFreezeConfirm)?.email}
+                  {users.find(u => u.id === showFreezeConfirm)?.freeze_status && (
+                    <Badge variant="secondary" className="ml-2">Currently Frozen</Badge>
+                  )}
+                </div>
+              </div>
+            )}
+            {showFreezeConfirm && !users.find(u => u.id === showFreezeConfirm)?.freeze_status && (
+              <div className="mt-4">
+                <label className="text-sm font-medium">Freeze Duration (days):</label>
+                <Input
+                  type="number"
+                  min="1"
+                  max="365"
+                  value={freezeDuration}
+                  onChange={(e) => setFreezeDuration(parseInt(e.target.value) || 7)}
+                  className="mt-2"
+                />
+              </div>
+            )}
+          </div>
+          
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setShowFreezeConfirm(null)}
+              disabled={freezingUserId === showFreezeConfirm}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant={users.find(u => u.id === showFreezeConfirm)?.freeze_status ? "default" : "destructive"}
+              onClick={() => showFreezeConfirm && handleFreezeAccount(showFreezeConfirm, !users.find(u => u.id === showFreezeConfirm)?.freeze_status)}
+              disabled={freezingUserId === showFreezeConfirm}
+              className="gap-2"
+            >
+              {freezingUserId === showFreezeConfirm ? (
+                <>
+                  <div className="w-4 h-4 border-2 border-current border-t-transparent animate-spin rounded-full" />
+                  Processing...
+                </>
+              ) : (
+                <>
+                  {users.find(u => u.id === showFreezeConfirm)?.freeze_status ? (
+                    <>
+                      <Shield size={16} />
+                      Unfreeze Account
+                    </>
+                  ) : (
+                    <>
+                      <Snowflake size={16} />
+                      Freeze Account
+                    </>
+                  )}
                 </>
               )}
             </Button>

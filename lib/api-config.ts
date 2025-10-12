@@ -113,6 +113,7 @@ export const API_ENDPOINTS = {
       GET_KNOWLEDGE_BASE_IN_FIELD: 'https://n8n.srv934833.hstgr.cloud/webhook/get-knowledge-base-in-field',
       UPDATE_WEBPAGE_CONTENT: 'https://n8n.srv934833.hstgr.cloud/webhook/update-webpage-content',
       UPLOAD_KNOWLEDGE_BASE_BY_LINK: 'https://n8n.srv934833.hstgr.cloud/webhook/upload-knowledgebase-by-link',
+      ACCOUNT_FREEZE: 'https://n8n.srv934833.hstgr.cloud/webhook/account-freeze',
       },
   
   // User Management

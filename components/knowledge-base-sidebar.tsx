@@ -20,7 +20,8 @@ import {
   Mic,
   Image,
   Upload,
-  Eye
+  Eye,
+  Trash
 } from "lucide-react"
 
 import {
@@ -72,6 +73,7 @@ interface KnowledgeBaseSidebarProps {
   isScraping: boolean
   setIsScraping: (scraping: boolean) => void
   onViewKnowledgeBase?: () => void
+  onClearKnowledgeBase?: () => Promise<void>
 }
 
 export function KnowledgeBaseSidebar({
@@ -86,10 +88,12 @@ export function KnowledgeBaseSidebar({
   deletingItemId,
   isScraping,
   setIsScraping,
-  onViewKnowledgeBase
+  onViewKnowledgeBase,
+  onClearKnowledgeBase
 }: KnowledgeBaseSidebarProps) {
   const [activeTab, setActiveTab] = React.useState<'files' | 'links' | 'youtube' | 'image-analyzer' | 'transcripts'>('files')
   const [deletingChatId, setDeletingChatId] = React.useState<string | null>(null)
+  const [showClearConfirm, setShowClearConfirm] = React.useState(false)
   const { user, logout } = useAuth()
   const { state } = useSidebar()
 
@@ -108,6 +112,13 @@ export function KnowledgeBaseSidebar({
     } finally {
       setDeletingChatId(null)
     }
+  }
+
+  const handleClearKnowledgeBase = async () => {
+    if (onClearKnowledgeBase) {
+      await onClearKnowledgeBase()
+    }
+    setShowClearConfirm(false)
   }
 
   const formatTimeAgo = (date: Date): string => {
@@ -423,6 +434,50 @@ export function KnowledgeBaseSidebar({
                   {state === 'expanded' && <span className="font-medium text-xs truncate ml-1">View Knowledge Base</span>}
                 </Button>
               </SidebarMenuButton>
+            </SidebarMenuItem>
+          )}
+          
+          {/* Clear Knowledge Base Button */}
+          {onClearKnowledgeBase && (
+            <SidebarMenuItem>
+              <AlertDialog open={showClearConfirm} onOpenChange={setShowClearConfirm}>
+                <AlertDialogTrigger asChild>
+                  <SidebarMenuButton
+                    asChild
+                    tooltip="Clear Knowledge Base"
+                  >
+                    <Button
+                      variant="ghost"
+                      className={`w-full h-6 rounded-lg bg-red-50 text-red-700 hover:text-red-800 hover:bg-red-100 overflow-hidden ${
+                        state === 'expanded'
+                          ? 'justify-start px-2'
+                          : 'justify-center p-0'
+                      }`}
+                      size="sm"
+                    >
+                      <Trash className="h-2.5 w-2.5 flex-shrink-0" />
+                      {state === 'expanded' && <span className="font-medium text-xs truncate ml-1">Clear Knowledge Base</span>}
+                    </Button>
+                  </SidebarMenuButton>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Clear Knowledge Base</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      Are you sure you want to clear the entire knowledge base? This action cannot be undone and will remove all uploaded files, scraped content, and processed data.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction
+                      onClick={handleClearKnowledgeBase}
+                      className="bg-red-600 hover:bg-red-700"
+                    >
+                      Clear Knowledge Base
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
             </SidebarMenuItem>
           )}
           <SidebarMenuItem>
