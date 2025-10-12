@@ -65,7 +65,7 @@ interface KnowledgeBaseSidebarProps {
   setMediaItems: (items: any[]) => void
   onRefresh: () => void
   onUpload: (files: File[]) => Promise<void>
-  onDelete: (id: string) => Promise<void>
+  onDelete: (id: string, resourceName?: string) => Promise<void>
   isRefreshing: boolean
   isLoadingTabContent: boolean
   isDeleting: boolean

@@ -203,14 +203,24 @@ export default function KnowledgeBasePage() {
             // Keep the original media ID but use scraped content
             id: existingItem.id,
             content: scrapedItem.content || existingItem.content,
-            analysisStatus: scrapedItem.content ? 'completed' : existingItem.analysisStatus
+            analysisStatus: scrapedItem.content ? 'completed' : existingItem.analysisStatus,
+            // Preserve resourceId from scraped item
+            resourceId: scrapedItem.resourceId || existingItem.resourceId,
+            resourceName: scrapedItem.resourceName || existingItem.resourceName
           }
           console.log('🔄 Merged scraped analysis with media item:', {
             filename: scrapedItem.filename,
-            hasContent: !!scrapedItem.content
+            hasContent: !!scrapedItem.content,
+            resourceId: scrapedItem.resourceId,
+            resourceName: scrapedItem.resourceName
           })
         } else {
           // Add as new item if no duplicate found
+          console.log('➕ Adding new scraped item:', {
+            filename: scrapedItem.filename,
+            resourceId: scrapedItem.resourceId,
+            resourceName: scrapedItem.resourceName
+          })
           mergedItems.push(scrapedItem)
         }
       })
@@ -220,7 +230,10 @@ export default function KnowledgeBasePage() {
         ...item,
         id: item.id || `item-${index}-${Date.now()}`,
         filename: item.filename || item.name || item.title || 'Unknown',
-        type: item.type || 'unknown'
+        type: item.type || 'unknown',
+        // Ensure resourceId is preserved
+        resourceId: item.resourceId,
+        resourceName: item.resourceName
       }))
       
       console.log('📊 Final merged items count:', finalItems.length)
@@ -230,12 +243,14 @@ export default function KnowledgeBasePage() {
       // Debug: Log file types being processed
       console.log('🔍 File types in final items:')
       finalItems.forEach((item, index) => {
-        console.log(`  ${index + 1}. ${item.filename} - Type: ${item.type} - Original data:`, {
+        console.log(`  ${index + 1}. ${item.filename} - Type: ${item.type} - ResourceId: ${item.resourceId} - Original data:`, {
           file_name: item.file_name,
           filename: item.filename,
           name: item.name,
           title: item.title,
-          type: item.type
+          type: item.type,
+          resourceId: item.resourceId,
+          resourceName: item.resourceName
         })
       })
       
@@ -298,16 +313,26 @@ export default function KnowledgeBasePage() {
     }
   }
 
-  const deleteMediaFile = async (id: string) => {
+  const deleteMediaFile = async (id: string, resourceName?: string) => {
+    let loadingToast: any = null
+    
     try {
       console.log('🗑️ ===== DELETE MEDIA FILE START =====')
       console.log('🗑️ Deleting media file:', id)
+      console.log('🗑️ Resource name:', resourceName)
       setIsDeleting(true)
       setDeletingItemId(id)
+      
+      // Show loading toast
+      loadingToast = toast.loading("Deleting item...", {
+        description: "Please wait while we remove the item from your knowledge base."
+      })
 
       const accessToken = authService.getAuthToken()
       if (!accessToken) {
         console.error("No access token available")
+        toast.dismiss(loadingToast)
+        showToastMessage("Authentication required", 'error')
         return
       }
 
@@ -315,10 +340,20 @@ export default function KnowledgeBasePage() {
       const item = mediaItems.find(item => item.id === id)
       if (!item) {
         console.error('Item not found:', id)
+        toast.dismiss(loadingToast)
+        showToastMessage("Item not found", 'error')
         return
       }
 
-      const filename = item.filename || item.title || 'Unknown'
+      console.log('🗑️ Item found:', {
+        id: item.id,
+        filename: item.filename,
+        title: item.title,
+        resourceId: item.resourceId,
+        resourceName: item.resourceName
+      })
+
+      const filename = item.filename || item.title || resourceName || 'Unknown'
       console.log('🗑️ Deleting file:', filename)
 
       // Check if this is scraped content
@@ -334,7 +369,8 @@ export default function KnowledgeBasePage() {
             'Authorization': `Bearer ${accessToken}`,
           },
           body: JSON.stringify({
-            file_name: item.resourceName || filename
+            file_name: item.resourceName || filename,
+            resource_id: item.resourceId
           }),
         })
       } else {
@@ -355,11 +391,17 @@ export default function KnowledgeBasePage() {
         console.error('Delete failed for file:', filename, 'Status:', response.status)
         const errorData = await response.json().catch(() => ({}))
         console.error('Error details:', errorData)
+        toast.dismiss(loadingToast)
+        showToastMessage(`Failed to delete ${filename}`, 'error')
         return
       }
 
       const result = await response.json()
       console.log('✅ File deleted successfully:', filename, result)
+      
+      // Dismiss loading toast and show success
+      toast.dismiss(loadingToast)
+      showToastMessage(`${filename} deleted successfully!`, 'success')
       
       // Refresh media library after deletion
       setTimeout(() => {
@@ -369,6 +411,8 @@ export default function KnowledgeBasePage() {
       
     } catch (error) {
       console.error('❌ Error deleting file:', error)
+      toast.dismiss(loadingToast)
+      showToastMessage("Failed to delete item", 'error')
     } finally {
       setIsDeleting(false)
       setDeletingItemId(null)
