@@ -256,7 +256,7 @@ export function ChatInterface({
                       : 'bg-black text-white shadow-md'
                   } rounded-lg px-2 py-1`}>
                     <div className="break-words overflow-hidden">
-                      <div className={`text-xs leading-relaxed ${
+                      <div className={`text-sm leading-relaxed ${
                         isUser 
                           ? 'text-black' 
                           : 'text-white'
@@ -264,22 +264,22 @@ export function ChatInterface({
                       <ReactMarkdown
                         components={{
                           // Headings
-                          h1: ({ children }) => <h1 className={`text-sm font-bold mb-1 mt-2 first:mt-0 ${isUser ? 'text-black' : 'text-white'}`}>{children}</h1>,
-                          h2: ({ children }) => <h2 className={`text-xs font-semibold mb-1 mt-2 first:mt-0 ${isUser ? 'text-black' : 'text-white'}`}>{children}</h2>,
-                          h3: ({ children }) => <h3 className={`text-xs font-semibold mb-1 mt-1 first:mt-0 ${isUser ? 'text-black' : 'text-white'}`}>{children}</h3>,
-                          h4: ({ children }) => <h4 className={`text-xs font-medium mb-1 mt-1 first:mt-0 ${isUser ? 'text-black' : 'text-white'}`}>{children}</h4>,
+                          h1: ({ children }) => <h1 className={`text-base font-bold mb-1 mt-2 first:mt-0 ${isUser ? 'text-black' : 'text-white'}`}>{children}</h1>,
+                          h2: ({ children }) => <h2 className={`text-sm font-semibold mb-1 mt-2 first:mt-0 ${isUser ? 'text-black' : 'text-white'}`}>{children}</h2>,
+                          h3: ({ children }) => <h3 className={`text-sm font-semibold mb-1 mt-1 first:mt-0 ${isUser ? 'text-black' : 'text-white'}`}>{children}</h3>,
+                          h4: ({ children }) => <h4 className={`text-sm font-medium mb-1 mt-1 first:mt-0 ${isUser ? 'text-black' : 'text-white'}`}>{children}</h4>,
                           
                           // Paragraphs
-                          p: ({ children }) => <p className={`leading-relaxed mb-1 last:mb-0 text-xs ${isUser ? 'text-black' : 'text-white'}`}>{children}</p>,
+                          p: ({ children }) => <p className={`leading-relaxed mb-1 last:mb-0 text-sm ${isUser ? 'text-black' : 'text-white'}`}>{children}</p>,
                           
                           // Lists
-                          ul: ({ children }) => <ul className={`list-disc list-outside mb-2 space-y-0.5 pl-3 text-xs ${isUser ? 'text-black marker:text-black' : 'text-white marker:text-white'}`}>{children}</ul>,
-                          ol: ({ children }) => <ol className={`list-decimal list-outside mb-2 space-y-0.5 pl-3 text-xs ${isUser ? 'text-black marker:text-black' : 'text-white marker:text-white'}`}>{children}</ol>,
-                          li: ({ children }) => <li className={`leading-relaxed text-xs ${isUser ? 'text-black' : 'text-white'}`}>{children}</li>,
+                          ul: ({ children }) => <ul className={`list-disc list-outside mb-2 space-y-0.5 pl-3 text-sm ${isUser ? 'text-black marker:text-black' : 'text-white marker:text-white'}`}>{children}</ul>,
+                          ol: ({ children }) => <ol className={`list-decimal list-outside mb-2 space-y-0.5 pl-3 text-sm ${isUser ? 'text-black marker:text-black' : 'text-white marker:text-white'}`}>{children}</ol>,
+                          li: ({ children }) => <li className={`leading-relaxed text-sm ${isUser ? 'text-black' : 'text-white'}`}>{children}</li>,
                           
                           // Text formatting
-                          strong: ({ children }) => <strong className={`font-semibold text-xs ${isUser ? 'text-black' : 'text-white'}`}>{children}</strong>,
-                          em: ({ children }) => <em className={`italic text-xs ${isUser ? 'text-black' : 'text-white'}`}>{children}</em>,
+                          strong: ({ children }) => <strong className={`font-semibold text-sm ${isUser ? 'text-black' : 'text-white'}`}>{children}</strong>,
+                          em: ({ children }) => <em className={`italic text-sm ${isUser ? 'text-black' : 'text-white'}`}>{children}</em>,
                           
                           // Code
                           code: ({ children, className }) => {

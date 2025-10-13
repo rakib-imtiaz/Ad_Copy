@@ -283,13 +283,13 @@ export function AppSidebar() {
 
       <SidebarContent className={`flex flex-col bg-black h-full overflow-hidden ${state === 'expanded' ? 'px-3 py-4' : 'px-0 py-4'}`}>
         {/* New Chat Button - Top Section */}
-        <div className={`mb-3 px-1 flex justify-start`}>
+        <div className={`mb-3 px-1`}>
           <Button
             variant="ghost"
             onClick={handleNewChatClick}
             className={`bg-black text-white hover:bg-gray-800 hover:text-white transition-all duration-200 group ${
               state === 'expanded'
-                ? 'w-1/2 h-7 px-2 flex items-center gap-1'
+                ? 'w-full h-7 px-2 flex items-center gap-1'
                 : 'w-7 h-7 p-0'
             }`}
           >

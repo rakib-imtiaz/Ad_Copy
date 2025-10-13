@@ -454,6 +454,7 @@
     color: #000000; /* Pure black text */
     text-align: left;
     max-width: none;
+    font-size: 0.875rem; /* 14px */
   }
   
   .chat-message .prose h1,
@@ -688,7 +689,7 @@
   /* Mobile-specific adjustments */
   @media (max-width: 640px) {
     .chat-message .prose {
-      font-size: 0.875rem;
+      font-size: 0.875rem; /* 14px - same as desktop */
       line-height: 1.6;
     }
     
@@ -729,7 +730,7 @@
   /* Tablet-specific adjustments */
   @media (min-width: 641px) and (max-width: 1024px) {
     .chat-message .prose {
-      font-size: 0.9375rem;
+      font-size: 0.875rem; /* 14px - same as desktop */
       line-height: 1.65;
     }
     
