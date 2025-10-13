@@ -31,6 +31,12 @@ interface ContentViewerProps {
   onContentUpdate?: (updatedContent: string) => void
 }
 
+// Helper function to check if content is from YouTube
+const isYouTubeContent = (content: any) => {
+  if (!content.sourceUrl) return false
+  return content.sourceUrl.includes('youtube.com') || content.sourceUrl.includes('youtu.be')
+}
+
 export function ContentViewer({ isOpen, onClose, content, onContentUpdate }: ContentViewerProps) {
   const [isEditing, setIsEditing] = React.useState(false)
   const [editedContent, setEditedContent] = React.useState(content.content)
@@ -277,7 +283,7 @@ export function ContentViewer({ isOpen, onClose, content, onContentUpdate }: Con
                 <span>Open Source</span>
               </Button>
             )}
-            {content.resourceId && !isEditing && (
+            {content.resourceId && !isEditing && !isYouTubeContent(content) && (
               <Button
                 variant="outline"
                 size="sm"
