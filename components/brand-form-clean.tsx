@@ -51,7 +51,7 @@ interface BrandFormData {
     idealCustomerProfile: {
       description: string[]
     }
-    primaryPainPoints: string[]
+    primaryPainPoints: string
     primaryDesiresGoals: string[]
     commonObjections: string[]
     audienceVocabulary: string[]
@@ -104,7 +104,7 @@ const defaultFormData: BrandFormData = {
     idealCustomerProfile: {
       description: [""]
     },
-    primaryPainPoints: [""],
+    primaryPainPoints: "",
     primaryDesiresGoals: [""],
     commonObjections: [""],
     audienceVocabulary: [""]
@@ -443,7 +443,7 @@ export function BrandFormClean({ onSuccess }: BrandFormProps) {
         }
       }
       
-      transformed.targetAudience.primaryPainPoints = audienceData['Primary Pain Points'] || ['']
+      transformed.targetAudience.primaryPainPoints = audienceData['Primary Pain Points'] || ""
       transformed.targetAudience.primaryDesiresGoals = audienceData['Primary Desires & Goals'] || ['']
       transformed.targetAudience.commonObjections = audienceData['Common Objections'] || ['']
       transformed.targetAudience.audienceVocabulary = audienceData['Audience Vocabulary'] || ['']
@@ -1684,145 +1684,17 @@ export function BrandFormClean({ onSuccess }: BrandFormProps) {
                 
                 {/* Primary Pain Points */}
                 <div className="bg-white border border-slate-200 rounded-xl p-5 hover:shadow-sm transition-shadow duration-200 w-[919px] max-w-[919px] overflow-x-hidden mx-auto">
-                  <div className="flex items-center justify-between mb-4">
-                    <div className="flex items-center gap-3">
-                      <div>
-                        <div className="flex items-center gap-2 mb-1">
-                          <label className="text-sm font-semibold text-slate-800">Customer Pain Points</label>
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="sm"
-                            onClick={(e) => {
-                              e.preventDefault()
-                              e.stopPropagation()
-                              addArrayItem(['targetAudience', 'primaryPainPoints'])
-                              // Scroll to the newly added item
-                              setTimeout(() => {
-                                painPointsCarouselApi?.scrollTo(formData.targetAudience.primaryPainPoints.length - 1)
-                              }, 100)
-                            }}
-                            className="h-6 w-6 p-0 hover:bg-green-100 hover:text-green-600 rounded-full transition-colors duration-150"
-                            title="Add pain point"
-                          >
-                            <Plus className="w-4 h-4" />
-                          </Button>
-                        </div>
-                        <p className="text-xs text-slate-500">What challenges do your customers face?</p>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <span className="text-xs text-slate-400">{formData.targetAudience.primaryPainPoints.length}</span>
-                      <span className="text-xs text-slate-400">items</span>
-                    </div>
+                  <div className="mb-4">
+                    <label className="text-sm font-semibold text-slate-800 mb-2 block">Customer Pain Points</label>
+                    <p className="text-xs text-slate-500 mb-3">What challenges do your customers face?</p>
+                    <Textarea
+                      value={formData.targetAudience.primaryPainPoints}
+                      onChange={(e) => updateField(['targetAudience', 'primaryPainPoints'], e.target.value)}
+                      placeholder="e.g., Wasting time on manual processes, struggling with scalability, lack of automation tools, difficulty tracking performance..."
+                      className="min-h-[120px] resize-none border-slate-200 focus:border-blue-400 focus:ring-blue-400"
+                      rows={5}
+                    />
                   </div>
-                  
-                  {formData.targetAudience.primaryPainPoints.length > 0 ? (
-                    <div className="relative">
-                      {/* Carousel Container */}
-                      <Carousel
-                        setApi={setPainPointsCarouselApi}
-                        className="w-full"
-                        opts={{
-                          align: "start",
-                          loop: false,
-                        }}
-                      >
-                        <div className="relative">
-                          <CarouselContent className="-ml-2 md:-ml-4">
-                            {formData.targetAudience.primaryPainPoints.map((pain, index) => (
-                              <CarouselItem key={index} className="pl-2 md:pl-4">
-                                <div className="relative bg-slate-50 rounded-lg border border-slate-100 p-4">
-                                  <div className="flex items-center justify-between mb-3">
-                                    <div className="flex items-center gap-2">
-                                      <span className="text-sm font-medium text-slate-800">Pain Point {index + 1}</span>
-                                    </div>
-                                    <Button
-                                      type="button"
-                                      variant="ghost"
-                                      size="sm"
-                                      onClick={(e) => {
-                                        e.preventDefault()
-                                        e.stopPropagation()
-                                        removeArrayItem(['targetAudience', 'primaryPainPoints'], index)
-                                        // Adjust carousel position if needed
-                                        if (currentPainPointsIndex >= index && painPointsCarouselApi) {
-                                          painPointsCarouselApi.scrollTo(Math.max(0, index - 1))
-                                        }
-                                      }}
-                                      className="h-6 w-6 p-0 hover:bg-red-100 hover:text-red-600 rounded-full transition-colors duration-150"
-                                      title="Remove this pain point"
-                                    >
-                                      <Trash2 className="w-3 h-3" />
-                                    </Button>
-                                  </div>
-                                  <Input
-                                    type="text"
-                                    value={pain}
-                                    onChange={(e) => updateArrayField(['targetAudience', 'primaryPainPoints'], index, e.target.value)}
-                                    placeholder="e.g., Wasting time on manual processes, struggling with scalability"
-                                    className="border-0 bg-transparent focus:ring-0 text-sm placeholder:text-slate-400 font-medium text-slate-700"
-                                  />
-                                </div>
-                              </CarouselItem>
-                            ))}
-                          </CarouselContent>
-                          
-                          {/* Navigation Arrows - Only show if more than 1 item */}
-                          {formData.targetAudience.primaryPainPoints.length > 1 && (
-                            <>
-                              <CarouselPrevious />
-                              <CarouselNext />
-                            </>
-                          )}
-                        </div>
-                      </Carousel>
-                      
-                      {/* Dots Navigation */}
-                      {formData.targetAudience.primaryPainPoints.length > 1 && (
-                        <div className="flex justify-center items-center gap-2 mt-4">
-                          {formData.targetAudience.primaryPainPoints.map((_, index) => (
-                            <button
-                              key={index}
-                              className={`w-2 h-2 rounded-full transition-all duration-200 ${
-                                currentPainPointsIndex === index
-                                  ? 'bg-blue-500 scale-125'
-                                  : 'bg-slate-300 hover:bg-slate-400'
-                              }`}
-                              onClick={(e) => {
-                                e.preventDefault()
-                                e.stopPropagation()
-                                painPointsCarouselApi?.scrollTo(index)
-                              }}
-                              aria-label={`Go to pain point ${index + 1}`}
-                            />
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  ) : (
-                    <div className="text-center py-6 text-slate-400">
-                      <div className="w-12 h-12 mx-auto mb-3 bg-slate-100 rounded-xl flex items-center justify-center">
-                        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                      </div>
-                      <p className="text-sm mb-2">No pain points added yet</p>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        onClick={(e) => {
-                          e.preventDefault()
-                          e.stopPropagation()
-                          addArrayItem(['targetAudience', 'primaryPainPoints'])
-                        }}
-                        className="h-8 px-4 text-xs bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white border-0 rounded-lg shadow-sm transition-all duration-200"
-                      >
-                        <Plus className="w-3 h-3 mr-1" />
-                        Add First Pain Point
-                      </Button>
-                    </div>
-                  )}
                 </div>
 
                 {/* Common Objections */}

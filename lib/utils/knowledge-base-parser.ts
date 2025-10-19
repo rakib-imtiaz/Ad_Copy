@@ -25,7 +25,7 @@ export interface ParsedKnowledgeBaseData {
     idealCustomerProfile: { 
       description: string[]
     }
-    primaryPainPoints: string[]
+    primaryPainPoints: string
     primaryDesiresGoals: string[]
     commonObjections: string[]
     audienceVocabulary: string[]
@@ -58,7 +58,7 @@ const DEFAULT_DATA: ParsedKnowledgeBaseData = {
   },
   targetAudience: {
     idealCustomerProfile: { description: [""] },
-    primaryPainPoints: [""],
+    primaryPainPoints: "",
     primaryDesiresGoals: [""],
     commonObjections: [""],
     audienceVocabulary: [""]
@@ -181,8 +181,7 @@ export class KnowledgeBaseParser {
     const painPointsRegex = /Primary Pain Points:\s*(.+?)(?:\n.*:|$)/
     const painPointsMatch = content.match(painPointsRegex)
     if (painPointsMatch) {
-      const painText = painPointsMatch[1].trim()
-      data.targetAudience.primaryPainPoints = painText.split(',').map(p => p.trim()).filter(p => p)
+      data.targetAudience.primaryPainPoints = painPointsMatch[1].trim()
     }
 
     // Extract Desires & Goals

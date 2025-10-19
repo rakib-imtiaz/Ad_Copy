@@ -25,7 +25,7 @@ export interface ParsedBusinessData {
     description: string
   }>
   targetAudience?: string[]
-  painPoints?: string[]
+  painPoints?: string
   goals?: string[]
   otherInfo?: string
 }
@@ -166,10 +166,7 @@ export class DataParser {
     // Extract pain points
     const painPointsMatch = text.match(/Primary Pain Points:\s*{([^}]+)}/i)
     if (painPointsMatch) {
-      parsed.painPoints = painPointsMatch[1]
-        .split(',')
-        .map(item => item.trim().replace(/^["']|["']$/g, ''))
-        .filter(item => item.length > 0)
+      parsed.painPoints = painPointsMatch[1].trim()
     }
 
     // Extract goals

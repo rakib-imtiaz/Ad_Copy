@@ -12,7 +12,7 @@ export interface ParsedKnowledgeBaseData {
   }
   targetAudience: {
     idealCustomerProfile: { description: string[] }
-    primaryPainPoints: string[]
+    primaryPainPoints: string
     primaryDesiresGoals: string[]
     commonObjections: string[]
     audienceVocabulary: string[]
@@ -97,7 +97,7 @@ export class KnowledgeBaseWebhookParser {
             [this.cleanStringData(webhookData.ideal_customer_description)] : [] 
         },
         primaryPainPoints: webhookData.primary_pain_points ? 
-          webhookData.primary_pain_points.split(',').map((p: string) => p.trim()) : [],
+          this.cleanStringData(webhookData.primary_pain_points) : "",
         primaryDesiresGoals: webhookData.primary_desires_goals ? 
           webhookData.primary_desires_goals.split(',').map((g: string) => g.trim()) : [],
         commonObjections: webhookData.common_objections ? 
