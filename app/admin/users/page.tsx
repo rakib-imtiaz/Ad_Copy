@@ -34,6 +34,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
+import { toast } from 'sonner';
 import { UserSwitchDialog } from '@/components/admin/UserSwitchDialog';
 import {
   Tooltip,
@@ -117,7 +118,8 @@ const UserManagementPage = () => {
 
       if (!response.ok) {
         const error = await response.json();
-        throw new Error(error.error || 'Failed to fetch users');
+        const message = error?.error?.message || error?.message || (typeof error === 'string' ? error : '') || 'Failed to fetch users';
+        throw new Error(message);
       }
 
       const result = await response.json();
@@ -193,7 +195,8 @@ const UserManagementPage = () => {
 
       if (!response.ok) {
         const error = await response.json();
-        throw new Error(error.error || 'Failed to delete user');
+        const message = error?.error?.message || error?.message || (typeof error === 'string' ? error : '') || 'Failed to delete user';
+        throw new Error(message);
       }
 
       // This should never happen since current user is filtered out, but keep as safety
@@ -249,7 +252,8 @@ const UserManagementPage = () => {
 
       if (!response.ok) {
         const error = await response.json();
-        throw new Error(error.error || 'Failed to change user role');
+        const message = error?.error?.message || error?.message || (typeof error === 'string' ? error : '') || 'Failed to change user role';
+        throw new Error(message);
       }
 
       // Refresh the user list
@@ -299,12 +303,14 @@ const UserManagementPage = () => {
 
       if (!response.ok) {
         const error = await response.json();
-        throw new Error(error.error || 'Failed to freeze/unfreeze account');
+        const message = error?.error?.message || error?.message || (typeof error === 'string' ? error : '') || `Failed to ${freezeStatus ? 'freeze' : 'unfreeze'} account`;
+        throw new Error(message);
       }
 
       // Refresh the user list
       await fetchUsers(filterRole);
       setShowFreezeConfirm(null);
+      toast.success(`Account ${freezeStatus ? 'frozen' : 'unfrozen'} successfully`);
       console.log('✅ Account freeze status updated successfully');
     } catch (error) {
       console.error('❌ Error freezing/unfreezing account:', error);

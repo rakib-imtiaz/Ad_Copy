@@ -9,7 +9,9 @@ export async function POST(request: NextRequest) {
     console.log('Request body:', JSON.stringify(body, null, 2));
 
     // Validate required fields
-    if (!accessToken || !freeze_email || freeze_status === undefined || !freeze_duration) {
+    // Note: allow freeze_duration to be 0 for unfreeze operations
+    const isFreezeDurationMissing = freeze_duration === undefined || freeze_duration === null;
+    if (!accessToken || !freeze_email || freeze_status === undefined || isFreezeDurationMissing) {
       console.log('Validation failed: Missing required fields');
       return NextResponse.json(
         { 
@@ -18,6 +20,20 @@ export async function POST(request: NextRequest) {
             code: 'MISSING_FIELDS',
             message: 'accessToken, freeze_email, freeze_status, and freeze_duration are required' 
           } 
+        },
+        { status: 400 }
+      );
+    }
+
+    // Additional validation: freeze_duration must be a non-negative integer
+    if (typeof freeze_duration !== 'number' || !Number.isFinite(freeze_duration) || freeze_duration < 0) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: {
+            code: 'INVALID_DURATION',
+            message: 'freeze_duration must be a non-negative number',
+          }
         },
         { status: 400 }
       );
