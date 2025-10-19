@@ -200,8 +200,7 @@ export function BrandFormClean({ onSuccess }: BrandFormProps) {
   const [audienceCarouselApi, setAudienceCarouselApi] = React.useState<any>()
   const [currentAudienceIndex, setCurrentAudienceIndex] = React.useState(0)
   
-  const [painPointsCarouselApi, setPainPointsCarouselApi] = React.useState<any>()
-  const [currentPainPointsIndex, setCurrentPainPointsIndex] = React.useState(0)
+  // Pain points now a single textarea; carousel state removed
   
   const [customerGoalsCarouselApi, setCustomerGoalsCarouselApi] = React.useState<any>()
   const [currentCustomerGoalsIndex, setCurrentCustomerGoalsIndex] = React.useState(0)
@@ -241,15 +240,7 @@ export function BrandFormClean({ onSuccess }: BrandFormProps) {
   }, [audienceCarouselApi])
 
   // Pain Points carousel effect
-  React.useEffect(() => {
-    if (!painPointsCarouselApi) return
-
-    setCurrentPainPointsIndex(painPointsCarouselApi.selectedScrollSnap())
-
-    painPointsCarouselApi.on("select", () => {
-      setCurrentPainPointsIndex(painPointsCarouselApi.selectedScrollSnap())
-    })
-  }, [painPointsCarouselApi])
+  // Pain points carousel effect removed
 
   // Customer Goals carousel effect
   React.useEffect(() => {
@@ -668,7 +659,7 @@ export function BrandFormClean({ onSuccess }: BrandFormProps) {
             "Ideal Customer Profile(s)": {
               "Description": data.targetAudience?.idealCustomerProfile?.description?.filter((d: string) => d.trim() !== '') || []
             },
-            "Primary Pain Points": data.targetAudience?.primaryPainPoints?.filter((p: string) => p.trim() !== '') || [],
+            "Primary Pain Points": data.targetAudience?.primaryPainPoints || "",
             "Primary Desires & Goals": data.targetAudience?.primaryDesiresGoals?.filter((g: string) => g.trim() !== '') || [],
             "Common Objections": data.targetAudience?.commonObjections?.filter((o: string) => o.trim() !== '') || [],
             "Audience Vocabulary": data.targetAudience?.audienceVocabulary?.filter((v: string) => v.trim() !== '') || []
@@ -804,7 +795,7 @@ export function BrandFormClean({ onSuccess }: BrandFormProps) {
             "Ideal Customer Profile(s)": {
               "Description": data.targetAudience?.idealCustomerProfile?.description?.filter((d: string) => d.trim() !== '') || []
             },
-            "Primary Pain Points": data.targetAudience?.primaryPainPoints?.filter((p: string) => p.trim() !== '') || [],
+            "Primary Pain Points": data.targetAudience?.primaryPainPoints || "",
             "Primary Desires & Goals": data.targetAudience?.primaryDesiresGoals?.filter((g: string) => g.trim() !== '') || [],
             "Common Objections": data.targetAudience?.commonObjections?.filter((o: string) => o.trim() !== '') || [],
             "Audience Vocabulary": data.targetAudience?.audienceVocabulary?.filter((v: string) => v.trim() !== '') || []
@@ -1689,7 +1680,7 @@ export function BrandFormClean({ onSuccess }: BrandFormProps) {
                     <p className="text-xs text-slate-500 mb-3">What challenges do your customers face?</p>
                     <Textarea
                       value={formData.targetAudience.primaryPainPoints}
-                      onChange={(e) => updateField(['targetAudience', 'primaryPainPoints'], e.target.value)}
+                      onChange={(e) => updateNestedField(['targetAudience', 'primaryPainPoints'], e.target.value)}
                       placeholder="e.g., Wasting time on manual processes, struggling with scalability, lack of automation tools, difficulty tracking performance..."
                       className="min-h-[120px] resize-none border-slate-200 focus:border-blue-400 focus:ring-blue-400"
                       rows={5}

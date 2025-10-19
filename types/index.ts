@@ -29,7 +29,7 @@ export interface KnowledgeBaseResponse {
       idealCustomerProfile: {
         description: string[]
       }
-      primaryPainPoints: string[]
+      primaryPainPoints: string
       primaryDesiresGoals: string[]
       commonObjections: string[]
       audienceVocabulary: string[]
@@ -89,7 +89,7 @@ export interface KnowledgeBase {
     idealCustomerProfile: {
       description: string[]
     }
-    primaryPainPoints: string[]
+    primaryPainPoints: string
     primaryDesiresGoals: string[]
     commonObjections: string[]
     audienceVocabulary: string[]
@@ -324,7 +324,7 @@ export interface BrandFormData {
     idealCustomerProfile: {
       description: string[]
     }
-    primaryPainPoints: string[]
+    primaryPainPoints: string
     primaryDesiresGoals: string[]
     commonObjections: string[]
     audienceVocabulary: string[]
