@@ -4,6 +4,7 @@ import * as React from "react"
 import { motion } from "framer-motion"
 import { authService } from "@/lib/auth-service"
 import { toast } from "sonner"
+import { SuccessModal } from "@/components/ui/success-modal"
 import { API_ENDPOINTS } from "@/lib/api-config"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -192,6 +193,7 @@ export function BrandFormClean({ onSuccess }: BrandFormProps) {
   const [completedSteps, setCompletedSteps] = React.useState<number[]>([])
   const [isSaving, setIsSaving] = React.useState(false)
   const [isLoading, setIsLoading] = React.useState(true)
+  const [showSuccessModal, setShowSuccessModal] = React.useState(false)
   const [showAutoFill, setShowAutoFill] = React.useState(false)
   const [testimonialCarouselApi, setTestimonialCarouselApi] = React.useState<any>()
   const [currentTestimonialIndex, setCurrentTestimonialIndex] = React.useState(0)
@@ -735,7 +737,7 @@ export function BrandFormClean({ onSuccess }: BrandFormProps) {
       })
 
       if (response.ok) {
-        showToastMessage("Progress saved successfully!", 'success')
+        setShowSuccessModal(true)
       } else {
         showToastMessage("Failed to save progress", 'error')
       }
@@ -2636,6 +2638,15 @@ export function BrandFormClean({ onSuccess }: BrandFormProps) {
           </div>
         </div>
       </div>
+      
+      {/* Success Modal */}
+      <SuccessModal
+        isOpen={showSuccessModal}
+        onClose={() => setShowSuccessModal(false)}
+        title="Progress Saved!"
+        message="Your progress has been saved successfully. You can continue later from where you left off."
+        duration={3000}
+      />
     </div>
   )
 }
