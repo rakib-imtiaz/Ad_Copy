@@ -5565,16 +5565,17 @@ function ImageAnalyzerTab({ mediaItems, onUpload, onDelete, isDeleting, deleting
                           >
                             View Analysis
                           </Button>
-                        ) : null}
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleAnalyzeImage(item.id, item)}
-                          disabled={isAnalyzing}
-                          className="h-8 px-3 text-xs border-[#1ABC9C] text-[#1ABC9C] hover:bg-[#1ABC9C]/10 disabled:opacity-50"
-                        >
-                          {isCurrentlyAnalyzing ? 'Analyzing...' : hasAnalysis ? 'Re-analyze' : 'Analyze'}
-                        </Button>
+                        ) : (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleAnalyzeImage(item.id, item)}
+                            disabled={isAnalyzing}
+                            className="h-8 px-3 text-xs border-[#1ABC9C] text-[#1ABC9C] hover:bg-[#1ABC9C]/10 disabled:opacity-50"
+                          >
+                            {isCurrentlyAnalyzing ? 'Analyzing...' : 'Analyze'}
+                          </Button>
+                        )}
                         <Button
                           variant="ghost"
                           size="sm"

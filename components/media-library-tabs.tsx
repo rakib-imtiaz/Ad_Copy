@@ -1540,36 +1540,8 @@ export function ImageAnalyzerTab({ mediaItems, onUpload, onDelete, isDeleting, d
                     )}
                     
                     {/* Action Buttons */}
-                    <div className="flex items-center gap-1.5 mt-1.5">
-                      {isAnalyzed ? (
-                        <>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="h-5 px-1.5 text-xs border-blue-200 text-blue-600 hover:bg-blue-50"
-                            onClick={() => setShowAnalysisPopup({ 
-                              id: item.id, 
-                              filename: item.filename || item.name || 'Unknown Image',
-                              analysis: item.content || analysisResults[item.id]?.analysis || '' 
-                            })}
-                          >
-                            <span className="text-blue-600">View</span>
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="h-5 px-1.5 text-xs border-blue-200 text-blue-600 hover:bg-blue-50"
-                            onClick={() => handleAnalyzeImage(item.id, item)}
-                            disabled={isAnalyzing && analyzingImageId === item.id}
-                          >
-                            {isAnalyzing && analyzingImageId === item.id ? (
-                              <Loader2 className="h-2.5 w-2.5 animate-spin" />
-                            ) : (
-                              <span className="text-blue-600">Re-analyze</span>
-                            )}
-                          </Button>
-                        </>
-                      ) : (
+                    {!isAnalyzed && (
+                      <div className="flex items-center gap-1.5 mt-1.5">
                         <Button
                           variant="outline"
                           size="sm"
@@ -1583,12 +1555,27 @@ export function ImageAnalyzerTab({ mediaItems, onUpload, onDelete, isDeleting, d
                             <span className="text-blue-600">Analyze</span>
                           )}
                         </Button>
-                      )}
-                    </div>
+                      </div>
+                    )}
                   </div>
                   
-                  {/* Delete Button */}
-                  <div className="flex-shrink-0">
+                  {/* Action Buttons */}
+                  <div className="flex-shrink-0 flex items-center gap-1">
+                    {isAnalyzed && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-5 w-5 p-0 text-gray-400 hover:text-blue-600 hover:bg-blue-50"
+                        onClick={() => setShowAnalysisPopup({ 
+                          id: item.id, 
+                          filename: item.filename || item.name || 'Unknown Image',
+                          analysis: item.content || analysisResults[item.id]?.analysis || '' 
+                        })}
+                        title="View Analysis"
+                      >
+                        <Eye className="h-2.5 w-2.5" />
+                      </Button>
+                    )}
                     {!isDeletingItem ? (
                       <Button
                         variant="ghost"

@@ -266,11 +266,6 @@ export function ContentViewer({ isOpen, onClose, content, onContentUpdate }: Con
       <div className="bg-white rounded-lg shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden">
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-gray-200">
-          <div className="flex items-center space-x-3">
-            <div className="w-3 h-3 bg-red-500 rounded-full"></div>
-            <div className="w-3 h-3 bg-yellow-500 rounded-full"></div>
-            <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-          </div>
           <div className="flex items-center space-x-4">
             {content.sourceUrl && (
               <Button
@@ -318,15 +313,15 @@ export function ContentViewer({ isOpen, onClose, content, onContentUpdate }: Con
                 </Button>
               </>
             )}
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={onClose}
-              className="hover:bg-gray-100"
-            >
-              <X className="h-5 w-5" />
-            </Button>
           </div>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={onClose}
+            className="hover:bg-gray-100"
+          >
+            <X className="h-5 w-5" />
+          </Button>
         </div>
 
         {/* Content */}
