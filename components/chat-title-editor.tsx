@@ -40,17 +40,19 @@ export function ChatTitleEditor({
       return
     }
 
-    console.log('🔄 [ChatTitleEditor] Starting save process...')
-    setIsSaving(true)
+    console.log('🔄 [ChatTitleEditor] Starting optimistic update...')
+    // Close the editor immediately for instant feedback
+    onCancel()
+    
+    // Run the API call in the background
+    console.log('🔄 [ChatTitleEditor] Starting background save process...')
     try {
       await onSave(sessionId, title.trim())
-      console.log('✅ [ChatTitleEditor] Save completed successfully')
+      console.log('✅ [ChatTitleEditor] Background save completed successfully')
     } catch (error) {
-      console.error('❌ [ChatTitleEditor] Failed to save chat title:', error)
-      // Reset to original title on error
-      setTitle(initialTitle)
-    } finally {
-      setIsSaving(false)
+      console.error('❌ [ChatTitleEditor] Background save failed:', error)
+      // Note: We could show a toast notification here if the save fails
+      // For now, we'll just log the error since the UI already updated
     }
   }
 

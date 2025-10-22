@@ -164,7 +164,8 @@ export function AppSidebar() {
     onStartChatting,
     onSelectAgent,
     onRefreshAgents,
-    isLoadingAgents
+    isLoadingAgents,
+    updateChatHistory
   } = useSidebarState()
 
   const handleLogout = () => {
@@ -219,17 +220,31 @@ export function AppSidebar() {
 
   const handleRenameChat = async (sessionId: string, newTitle: string) => {
     try {
-      console.log('🔄 Starting chat rename process...')
+      console.log('🔄 Starting optimistic chat rename...')
       console.log('🔄 Session ID:', sessionId)
       console.log('🔄 New Title:', newTitle)
       
+      // Optimistic update: Update the chat history immediately
+      if (onRefreshChatHistory) {
+        console.log('🔄 Updating chat history optimistically...')
+        // Update the local chat history state immediately
+        const currentHistory = chatHistory || []
+        const updatedHistory = currentHistory.map((chat: any) => 
+          chat.session_id === sessionId 
+            ? { ...chat, title: newTitle }
+            : chat
+        )
+        updateChatHistory(updatedHistory)
+        console.log('✅ Chat history updated optimistically')
+      }
+      
+      // Run API call in background
+      console.log('🔄 Starting background API call...')
       const accessToken = authService.getAuthToken()
       
       if (!accessToken) {
         throw new Error('No access token available')
       }
-
-      console.log('🔄 Access token available, making API call...')
 
       const response = await fetch('/api/chat-rename', {
         method: 'POST',
@@ -243,30 +258,22 @@ export function AppSidebar() {
         })
       })
 
-      console.log('🔄 API response status:', response.status)
-      console.log('🔄 API response ok:', response.ok)
-
       if (!response.ok) {
         const errorText = await response.text()
-        console.error('❌ API error response:', errorText)
+        console.error('❌ Background API error response:', errorText)
+        // Revert optimistic update on error
+        console.log('🔄 Reverting optimistic update due to API error...')
+        await onRefreshChatHistory?.()
         throw new Error(`Failed to rename chat: ${response.status}`)
       }
 
       const result = await response.json()
-      console.log('✅ Rename API response:', result)
-
-      // Add a small delay to ensure the database has time to update
-      console.log('⏳ Waiting for database to update...')
-      await new Promise(resolve => setTimeout(resolve, 2000))
-
-      // Refresh chat history to show updated title
-      console.log('🔄 Refreshing chat history...')
-      await onRefreshChatHistory?.()
-      console.log('✅ Chat history refreshed')
+      console.log('✅ Background rename API response:', result)
       
     } catch (error) {
-      console.error('❌ Error renaming chat:', error)
-      throw error
+      console.error('❌ Error in background rename:', error)
+      // Don't throw error to prevent UI from showing error state
+      // The optimistic update already happened
     }
   }
 
