@@ -28,6 +28,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { ChatTitleEditor } from "@/components/chat-title-editor"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import ShinyText from "@/components/ui/ShinyText"
 import ReactMarkdown from 'react-markdown'
@@ -1628,8 +1629,8 @@ export default function Dashboard() {
 
       console.log('📡 Chat history response received:')
       console.log('  - Status:', response.status)
-      console.log('  - Status text:', response.statusText)
       console.log('  - OK:', response.ok)
+      console.log('  - Status text:', response.statusText)
       console.log('  - Headers:', Object.fromEntries(response.headers.entries()))
 
       if (!response.ok) {
@@ -1685,6 +1686,16 @@ export default function Dashboard() {
       console.log('📚 Processed chat history data:', chatHistoryData)
       console.log('📚 Chat history count:', chatHistoryData.length)
       
+      // Debug each chat item's title
+      chatHistoryData.forEach((chat: any, index: number) => {
+        console.log(`📚 Chat ${index}:`, {
+          session_id: chat.session_id,
+          title: chat.title,
+          created_at: chat.created_at,
+          agent_id: chat.agent_id
+        })
+      })
+      
       // Sort chat history by creation date (newest first)
       chatHistoryData.sort((a: any, b: any) => {
         const dateA = new Date(a.created_at).getTime()
@@ -1700,8 +1711,10 @@ export default function Dashboard() {
       console.log('✅ Current session exists in loaded data:', currentSessionExists)
 
       // Update chat history state
+      console.log('🔄 Updating chat history state with:', chatHistoryData)
       setChatHistory(chatHistoryData)
       updateChatHistory(chatHistoryData)
+      console.log('✅ Chat history state updated')
       
       // 🚀 FIX: Clear localStorage if API returns empty data but localStorage has stale data
       if (chatHistoryData.length === 0 && typeof window !== 'undefined') {
@@ -4088,9 +4101,72 @@ function LeftSidebar({
   isLoading,
   onLoadChatSession,
   onRefreshChatHistory,
-  onDeleteChatSession
+  onDeleteChatSession,
+  user
 }: any) {
   const [isAgentSelectorOpen, setIsAgentSelectorOpen] = React.useState(false)
+  const [editingChatId, setEditingChatId] = React.useState<string | null>(null)
+
+  const handleRenameChat = async (sessionId: string, newTitle: string) => {
+    try {
+      console.log('🔄 [Dashboard] Starting chat rename process...')
+      console.log('🔄 [Dashboard] Session ID:', sessionId)
+      console.log('🔄 [Dashboard] New Title:', newTitle)
+      
+      const accessToken = authService.getAuthToken()
+      
+      if (!accessToken) {
+        throw new Error('No access token available')
+      }
+
+      console.log('🔄 [Dashboard] Access token available, making API call...')
+
+      const response = await fetch('/api/chat-rename', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${accessToken}`,
+        },
+        body: JSON.stringify({
+          session_id: sessionId,
+          new_title: newTitle
+        })
+      })
+
+      console.log('🔄 [Dashboard] API response status:', response.status)
+      console.log('🔄 [Dashboard] API response ok:', response.ok)
+
+      if (!response.ok) {
+        const errorText = await response.text()
+        console.error('❌ [Dashboard] API error response:', errorText)
+        throw new Error(`Failed to rename chat: ${response.status}`)
+      }
+
+      const result = await response.json()
+      console.log('✅ [Dashboard] Rename API response:', result)
+
+      // Add a small delay to ensure the database has time to update
+      console.log('⏳ [Dashboard] Waiting for database to update...')
+      await new Promise(resolve => setTimeout(resolve, 2000))
+
+      // Refresh chat history to show updated title
+      console.log('🔄 [Dashboard] Refreshing chat history...')
+      await onRefreshChatHistory?.()
+      console.log('✅ [Dashboard] Chat history refreshed')
+      
+    } catch (error) {
+      console.error('❌ [Dashboard] Error renaming chat:', error)
+      throw error
+    }
+  }
+
+  const handleStartEdit = (chatId: string) => {
+    setEditingChatId(chatId)
+  }
+
+  const handleCancelEdit = () => {
+    setEditingChatId(null)
+  }
 
   return (
     <div className="h-full flex flex-col bg-white">
@@ -4255,9 +4331,19 @@ function LeftSidebar({
                         }}
                       >
                         <div className="flex items-center space-x-2">
-                          <h4 className={`font-medium text-sm truncate ${isSelected ? 'text-black' : 'text-white'}`}>
-                            {chat.title || `Chat ${chat.session_id}`}
-                          </h4>
+                          {editingChatId === chat.session_id ? (
+                            <ChatTitleEditor
+                              initialTitle={chat.title || `Chat ${chat.session_id}`}
+                              sessionId={chat.session_id}
+                              onSave={handleRenameChat}
+                              onCancel={handleCancelEdit}
+                              className="flex-1"
+                            />
+                          ) : (
+                            <h4 className={`font-medium text-sm truncate ${isSelected ? 'text-black' : 'text-white'}`}>
+                              {chat.title || `Chat ${chat.session_id}`}
+                            </h4>
+                          )}
                           {agentInfo && (
                             <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${isSelected ? 'bg-blue-100 text-blue-800' : 'bg-gray-700 text-gray-300'}`}>
                               <Bot className="h-3 w-3 mr-1" />
@@ -4282,8 +4368,7 @@ function LeftSidebar({
                             <DropdownMenuItem
                               onClick={(e) => {
                                 e.stopPropagation()
-                                // TODO: Implement rename functionality
-                                console.log('Rename chat:', chat.session_id)
+                                handleStartEdit(chat.session_id)
                               }}
                               className="text-gray-700 hover:text-gray-900 hover:bg-gray-100 focus:text-gray-900 focus:bg-gray-100 text-xs py-1.5 cursor-pointer transition-colors duration-150"
                             >

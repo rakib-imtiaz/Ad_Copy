@@ -42,6 +42,8 @@ import { useAuth } from "@/lib/auth-context"
 import { useSidebarState } from "@/lib/sidebar-state-context"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
+import { ChatTitleEditor } from "@/components/chat-title-editor"
+import { authService } from "@/lib/auth-service"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -135,6 +137,7 @@ export function AppSidebar() {
   const [isStartingChat, setIsStartingChat] = React.useState(false)
   const [showKnowledgeBaseWarning, setShowKnowledgeBaseWarning] = React.useState(false)
   const [urlChatId, setUrlChatId] = React.useState<string | null>(null)
+  const [editingChatId, setEditingChatId] = React.useState<string | null>(null)
   const { user, logout } = useAuth()
   const { state } = useSidebar()
   
@@ -212,6 +215,67 @@ export function AppSidebar() {
     } finally {
       setDeletingChatId(null)
     }
+  }
+
+  const handleRenameChat = async (sessionId: string, newTitle: string) => {
+    try {
+      console.log('🔄 Starting chat rename process...')
+      console.log('🔄 Session ID:', sessionId)
+      console.log('🔄 New Title:', newTitle)
+      
+      const accessToken = authService.getAuthToken()
+      
+      if (!accessToken) {
+        throw new Error('No access token available')
+      }
+
+      console.log('🔄 Access token available, making API call...')
+
+      const response = await fetch('/api/chat-rename', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${accessToken}`,
+        },
+        body: JSON.stringify({
+          session_id: sessionId,
+          new_title: newTitle
+        })
+      })
+
+      console.log('🔄 API response status:', response.status)
+      console.log('🔄 API response ok:', response.ok)
+
+      if (!response.ok) {
+        const errorText = await response.text()
+        console.error('❌ API error response:', errorText)
+        throw new Error(`Failed to rename chat: ${response.status}`)
+      }
+
+      const result = await response.json()
+      console.log('✅ Rename API response:', result)
+
+      // Add a small delay to ensure the database has time to update
+      console.log('⏳ Waiting for database to update...')
+      await new Promise(resolve => setTimeout(resolve, 2000))
+
+      // Refresh chat history to show updated title
+      console.log('🔄 Refreshing chat history...')
+      await onRefreshChatHistory?.()
+      console.log('✅ Chat history refreshed')
+      
+    } catch (error) {
+      console.error('❌ Error renaming chat:', error)
+      throw error
+    }
+  }
+
+  const handleStartEdit = (chatId: string) => {
+    setEditingChatId(chatId)
+  }
+
+  const handleCancelEdit = () => {
+    setEditingChatId(null)
   }
 
   const formatTimeAgo = (date: Date): string => {
@@ -372,11 +436,21 @@ export function AppSidebar() {
                             >
                               <div className="flex items-center justify-between gap-1">
                                 <div className="flex-1 min-w-0 overflow-hidden">
-                                  <h4 className={`chat-bubble-text font-normal text-xs truncate transition-colors duration-200 ${
-                                    isActive ? 'text-white' : 'text-white'
-                                  }`}>
-                                    {chat.title || `Chat ${chat.session_id}`}
-                                  </h4>
+                                  {editingChatId === chat.session_id ? (
+                                    <ChatTitleEditor
+                                      initialTitle={chat.title || `Chat ${chat.session_id}`}
+                                      sessionId={chat.session_id}
+                                      onSave={handleRenameChat}
+                                      onCancel={handleCancelEdit}
+                                      className="w-full"
+                                    />
+                                  ) : (
+                                    <h4 className={`chat-bubble-text font-normal text-xs truncate transition-colors duration-200 ${
+                                      isActive ? 'text-white' : 'text-white'
+                                    }`}>
+                                      {chat.title || `Chat ${chat.session_id}`}
+                                    </h4>
+                                  )}
                                 </div>
                                 {!isDeleting && (
                                   <DropdownMenu>
@@ -396,8 +470,7 @@ export function AppSidebar() {
                                       <DropdownMenuItem
                                         onClick={(e) => {
                                           e.stopPropagation()
-                                          // TODO: Implement rename functionality
-                                          console.log('Rename chat:', chat.session_id)
+                                          handleStartEdit(chat.session_id)
                                         }}
                                         className="text-gray-700 hover:text-gray-900 hover:bg-gray-100 focus:text-gray-900 focus:bg-gray-100 text-xs py-1.5 cursor-pointer transition-colors duration-150"
                                       >

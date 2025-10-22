@@ -98,6 +98,7 @@ export const API_ENDPOINTS = {
       GET_CHAT_HISTORY: 'https://n8n.srv934833.hstgr.cloud/webhook/user-chat-history',
       GET_CHAT_MESSAGES: 'https://n8n.srv934833.hstgr.cloud/webhook/show-specific-chat-history',
       DELETE_CHAT: 'https://n8n.srv934833.hstgr.cloud/webhook/delte-chat',
+      RENAME_CHAT: 'https://n8n.srv934833.hstgr.cloud/webhook/rename-chat-title',
       DELETE_USER: 'https://n8n.srv934833.hstgr.cloud/webhook/delete-a-user',
       GET_USER_INFO: 'https://n8n.srv934833.hstgr.cloud/webhook/see-user-info',
       CHANGE_USER_ROLE: 'https://n8n.srv934833.hstgr.cloud/webhook/create-new-admin',
