@@ -99,11 +99,11 @@ export class KnowledgeBaseWebhookParser {
         primaryPainPoints: webhookData.primary_pain_points ? 
           this.cleanStringData(webhookData.primary_pain_points) : "",
         primaryDesiresGoals: webhookData.primary_desires_goals ? 
-          webhookData.primary_desires_goals.split(',').map((g: string) => g.trim()) : [],
+          [this.cleanStringData(webhookData.primary_desires_goals)] : [],
         commonObjections: webhookData.common_objections ? 
-          webhookData.common_objections.split(',').map((o: string) => o.trim()) : [],
+          [this.cleanStringData(webhookData.common_objections)] : [],
         audienceVocabulary: webhookData.audience_vocabulary ? 
-          webhookData.audience_vocabulary.split(',').map((v: string) => v.trim()) : []
+          [this.cleanStringData(webhookData.audience_vocabulary)] : []
       },
       offers: this.parseOffers(webhookData.offers),
       clientAssets: {
@@ -174,13 +174,9 @@ export class KnowledgeBaseWebhookParser {
   private static parseTestimonials(testimonialsData: string): string[] {
     if (!testimonialsData) return []
     
-    // Split by common testimonial separators and clean up
-    const testimonials = testimonialsData
-      .split(/;\s*(?=[A-Z])/) // Split by semicolon followed by capital letter
-      .map(t => t.trim())
-      .filter(t => t.length > 20) // Only keep substantial testimonials
-    
-    return testimonials
+    // Return the raw string as a single testimonial entry
+    // This preserves the comma-separated format as requested
+    return [testimonialsData.trim()]
   }
 
   /**

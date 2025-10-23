@@ -220,6 +220,46 @@ export function BrandFormClean({ onSuccess }: BrandFormProps) {
   const [isBrandVoiceExtracting, setIsBrandVoiceExtracting] = React.useState(false)
   const [brandVoiceExtractionError, setBrandVoiceExtractionError] = React.useState<string | null>(null)
   
+  // Check for pending knowledge base data on component mount and periodically
+  React.useEffect(() => {
+    const checkForPendingData = () => {
+      const pendingData = (window as any).pendingKnowledgeBaseData
+      const timestamp = (window as any).pendingKnowledgeBaseDataTimestamp
+      
+      if (pendingData) {
+        console.log('🔄 Found pending knowledge base data, populating form...')
+        console.log('📊 Data timestamp:', timestamp)
+        console.log('📊 Testimonials in data:', pendingData.clientAssets?.testimonialsCaseStudies)
+        
+        const transformedData = transformParsedDataToFormData(pendingData)
+        setFormData(transformedData)
+        
+        // Clear the pending data
+        delete (window as any).pendingKnowledgeBaseData
+        delete (window as any).pendingKnowledgeBaseDataTimestamp
+        
+        console.log('✅ Form populated with knowledge base data')
+        return true // Data found and processed
+      }
+      return false // No data found
+    }
+
+    // Check immediately on mount
+    if (checkForPendingData()) {
+      return // Data was found and processed
+    }
+
+    // If no data found, set up polling to check periodically
+    const pollInterval = setInterval(() => {
+      if (checkForPendingData()) {
+        clearInterval(pollInterval) // Stop polling once data is found
+      }
+    }, 500) // Check every 500ms
+
+    // Cleanup interval on unmount
+    return () => clearInterval(pollInterval)
+  }, [])
+  
   React.useEffect(() => {
     if (!testimonialCarouselApi) return
 

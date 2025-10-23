@@ -489,19 +489,39 @@ export default function KnowledgeBasePage() {
     try {
       console.log('🔄 Auto-populating knowledge base data...')
       
-      // Import the service dynamically to avoid circular dependencies
-      const { KnowledgeBaseService } = await import('@/lib/services/knowledge-base-service')
+      // Use the webhook parser approach instead of the service
+      const { WebhookService } = await import('@/lib/services/webhook-service')
+      const { KnowledgeBaseWebhookParser } = await import('@/lib/services/knowledge-base-webhook-parser')
       
-      const success = await KnowledgeBaseService.populateFormWithKnowledgeBase()
-      
-      if (success) {
-        console.log('✅ Knowledge base data auto-populated successfully')
-        // Show success message
-        showToastMessage("Knowledge base data loaded !", 'success')
-      } else {
-        console.log('ℹ️ No existing knowledge base data found to populate')
-        // Don't show error for empty data, just log it
+      const accessToken = authService.getAuthToken()
+      if (!accessToken) {
+        console.log('No access token available')
+        return
       }
+
+      // Test webhook and get data
+      const webhookResponse = await WebhookService.testKnowledgeBaseWebhook(accessToken)
+      
+      if (!webhookResponse.success || !webhookResponse.data) {
+        console.log('No data received from webhook')
+        return
+      }
+
+      // Parse the data
+      console.log('📝 Parsing webhook data...')
+      const parsedData = KnowledgeBaseWebhookParser.parseWebhookData(webhookResponse.data)
+      
+      // Store the parsed data globally so the form can access it
+      // The form will check for this data and populate itself
+      ;(window as any).pendingKnowledgeBaseData = parsedData
+      
+      // Also store a timestamp to help with debugging
+      ;(window as any).pendingKnowledgeBaseDataTimestamp = Date.now()
+      
+      console.log('✅ Knowledge base data prepared for form population')
+      console.log('📊 Stored data keys:', Object.keys(parsedData))
+      console.log('📊 Testimonials data:', parsedData.clientAssets?.testimonialsCaseStudies)
+      showToastMessage("Knowledge base data loaded !", 'success')
       
     } catch (error: any) {
       console.error('❌ Error auto-populating knowledge base data:', error)
