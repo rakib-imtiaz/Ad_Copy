@@ -791,6 +791,10 @@ export function BrandFormClean({ onSuccess }: BrandFormProps) {
   // Submit form
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    console.log('🚀 FORM SUBMISSION TRIGGERED')
+    console.log('📊 Event type:', e.type)
+    console.log('📊 Current step:', currentStep)
+    console.log('📊 Total steps:', totalSteps)
     setIsSubmitting(true)
 
     try {
@@ -1413,24 +1417,6 @@ export function BrandFormClean({ onSuccess }: BrandFormProps) {
                       <div>
                         <div className="flex items-center gap-2 mb-1">
                           <label className="text-sm font-semibold text-slate-800">Ideal Customer Descriptions</label>
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="sm"
-                            onClick={(e) => {
-                              e.preventDefault()
-                              e.stopPropagation()
-                              addArrayItem(['targetAudience', 'idealCustomerProfile', 'description'])
-                              // Scroll to the newly added item
-                              setTimeout(() => {
-                                audienceCarouselApi?.scrollTo(formData.targetAudience.idealCustomerProfile.description.length - 1)
-                              }, 100)
-                            }}
-                            className="h-6 w-6 p-0 hover:bg-green-100 hover:text-green-600 rounded-full transition-colors duration-150"
-                            title="Add customer type"
-                          >
-                            <Plus className="w-4 h-4" />
-                          </Button>
                         </div>
                         <p className="text-xs text-slate-500">Describe different types of ideal customers</p>
                       </div>
@@ -1459,7 +1445,6 @@ export function BrandFormClean({ onSuccess }: BrandFormProps) {
                                 <div className="relative bg-slate-50 rounded-lg border border-slate-100 p-4">
                                   <div className="flex items-center justify-between mb-3">
                                     <div className="flex items-center gap-2">
-                                      <span className="text-sm font-medium text-slate-800">Customer Type {index + 1}</span>
                                     </div>
                                     <Button
                                       type="button"
@@ -1555,24 +1540,6 @@ export function BrandFormClean({ onSuccess }: BrandFormProps) {
                       <div>
                         <div className="flex items-center gap-2 mb-1">
                           <label className="text-sm font-semibold text-slate-800">Audience Vocabulary</label>
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="sm"
-                            onClick={(e) => {
-                              e.preventDefault()
-                              e.stopPropagation()
-                              addArrayItem(['targetAudience', 'audienceVocabulary'])
-                              // Scroll to the newly added item
-                              setTimeout(() => {
-                                audienceVocabularyCarouselApi?.scrollTo(formData.targetAudience.audienceVocabulary.length - 1)
-                              }, 100)
-                            }}
-                            className="h-6 w-6 p-0 hover:bg-green-100 hover:text-green-600 rounded-full transition-colors duration-150"
-                            title="Add vocabulary word"
-                          >
-                            <Plus className="w-4 h-4" />
-                          </Button>
                         </div>
                         <p className="text-xs text-slate-500">Industry terms and language your audience uses</p>
                       </div>
@@ -1601,7 +1568,6 @@ export function BrandFormClean({ onSuccess }: BrandFormProps) {
                                 <div className="relative bg-slate-50 rounded-lg border border-slate-100 p-4">
                                   <div className="flex items-center justify-between mb-3">
                                     <div className="flex items-center gap-2">
-                                      <span className="text-sm font-medium text-slate-800">Word {index + 1}</span>
                                     </div>
                                     <Button
                                       type="button"
@@ -1737,24 +1703,6 @@ export function BrandFormClean({ onSuccess }: BrandFormProps) {
                       <div>
                         <div className="flex items-center gap-2 mb-1">
                           <label className="text-sm font-semibold text-slate-800">Common Objections</label>
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="sm"
-                            onClick={(e) => {
-                              e.preventDefault()
-                              e.stopPropagation()
-                              addArrayItem(['targetAudience', 'commonObjections'])
-                              // Scroll to the newly added item
-                              setTimeout(() => {
-                                commonObjectionsCarouselApi?.scrollTo(formData.targetAudience.commonObjections.length - 1)
-                              }, 100)
-                            }}
-                            className="h-6 w-6 p-0 hover:bg-green-100 hover:text-green-600 rounded-full transition-colors duration-150"
-                            title="Add objection"
-                          >
-                            <Plus className="w-4 h-4" />
-                          </Button>
                         </div>
                         <p className="text-xs text-slate-500">What concerns do customers have about your solution?</p>
                       </div>
@@ -1783,7 +1731,6 @@ export function BrandFormClean({ onSuccess }: BrandFormProps) {
                                 <div className="relative bg-slate-50 rounded-lg border border-slate-100 p-4">
                                   <div className="flex items-center justify-between mb-3">
                                     <div className="flex items-center gap-2">
-                                      <span className="text-sm font-medium text-slate-800">Objection {index + 1}</span>
                                     </div>
                                     <Button
                                       type="button"
@@ -1903,140 +1850,30 @@ export function BrandFormClean({ onSuccess }: BrandFormProps) {
                       <div>
                         <div className="flex items-center gap-2 mb-1">
                           <label className="text-sm font-semibold text-slate-800">Customer Goals & Desires</label>
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="sm"
-                            onClick={(e) => {
-                              e.preventDefault()
-                              e.stopPropagation()
-                              addArrayItem(['targetAudience', 'primaryDesiresGoals'])
-                              // Scroll to the newly added item
-                              setTimeout(() => {
-                                customerGoalsCarouselApi?.scrollTo(formData.targetAudience.primaryDesiresGoals.length - 1)
-                              }, 100)
-                            }}
-                            className="h-6 w-6 p-0 hover:bg-green-100 hover:text-green-600 rounded-full transition-colors duration-150"
-                            title="Add goal or desire"
-                          >
-                            <Plus className="w-4 h-4" />
-                          </Button>
                         </div>
-                        <p className="text-xs text-slate-500">What do your customers want to achieve?</p>
+                        <p className="text-xs text-slate-500">What your customers want to achieve (raw data)</p>
                       </div>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <span className="text-xs text-slate-400">{formData.targetAudience.primaryDesiresGoals.length}</span>
-                      <span className="text-xs text-slate-400">goals</span>
                     </div>
                   </div>
                   
-                  {formData.targetAudience.primaryDesiresGoals.length > 0 ? (
-                    <div className="relative">
-                      {/* Carousel Container */}
-                      <Carousel
-                        setApi={setCustomerGoalsCarouselApi}
-                        className="w-full"
-                        opts={{
-                          align: "start",
-                          loop: false,
-                        }}
-                      >
-                        <div className="relative">
-                          <CarouselContent className="-ml-2 md:-ml-4">
-                            {formData.targetAudience.primaryDesiresGoals.map((goal, index) => (
-                              <CarouselItem key={index} className="pl-2 md:pl-4">
-                                <div className="relative bg-slate-50 rounded-lg border border-slate-100 p-4">
-                                  <div className="flex items-center justify-between mb-3">
-                                    <div className="flex items-center gap-2">
-                                      <span className="text-sm font-medium text-slate-800">Goal {index + 1}</span>
-                                    </div>
-                                    <Button
-                                      type="button"
-                                      variant="ghost"
-                                      size="sm"
-                                      onClick={(e) => {
-                                        e.preventDefault()
-                                        e.stopPropagation()
-                                        removeArrayItem(['targetAudience', 'primaryDesiresGoals'], index)
-                                        // Adjust carousel position if needed
-                                        if (currentCustomerGoalsIndex >= index && customerGoalsCarouselApi) {
-                                          customerGoalsCarouselApi.scrollTo(Math.max(0, index - 1))
-                                        }
-                                      }}
-                                      className="h-6 w-6 p-0 hover:bg-red-100 hover:text-red-600 rounded-full transition-colors duration-150"
-                                      title="Remove this goal"
-                                    >
-                                      <Trash2 className="w-3 h-3" />
-                                    </Button>
-                                  </div>
-                                  <Input
-                                    type="text"
-                                    value={goal}
-                                    onChange={(e) => updateArrayField(['targetAudience', 'primaryDesiresGoals'], index, e.target.value)}
-                                    placeholder="e.g., Increase revenue by 50%, Scale to 100+ employees, Reduce operational costs"
-                                    className="border-0 bg-transparent focus:ring-0 text-sm placeholder:text-slate-400 font-medium text-slate-700"
-                                  />
-                                </div>
-                              </CarouselItem>
-                            ))}
-                          </CarouselContent>
-                          
-                          {/* Navigation Arrows - Only show if more than 1 item */}
-                          {formData.targetAudience.primaryDesiresGoals.length > 1 && (
-                            <>
-                              <CarouselPrevious />
-                              <CarouselNext />
-                            </>
-                          )}
-                        </div>
-                      </Carousel>
-                      
-                      {/* Dots Navigation */}
-                      {formData.targetAudience.primaryDesiresGoals.length > 1 && (
-                        <div className="flex justify-center items-center gap-2 mt-4">
-                          {formData.targetAudience.primaryDesiresGoals.map((_, index) => (
-                            <button
-                              key={index}
-                              className={`w-2 h-2 rounded-full transition-all duration-200 ${
-                                currentCustomerGoalsIndex === index
-                                  ? 'bg-blue-500 scale-125'
-                                  : 'bg-slate-300 hover:bg-slate-400'
-                              }`}
-                              onClick={(e) => {
-                                e.preventDefault()
-                                e.stopPropagation()
-                                customerGoalsCarouselApi?.scrollTo(index)
-                              }}
-                              aria-label={`Go to goal ${index + 1}`}
-                            />
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  ) : (
-                    <div className="text-center py-6 text-slate-400">
-                      <div className="w-12 h-12 mx-auto mb-3 bg-slate-100 rounded-xl flex items-center justify-center">
-                        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                      </div>
-                      <p className="text-sm mb-2">No goals added yet</p>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        onClick={(e) => {
-                          e.preventDefault()
-                          e.stopPropagation()
-                          addArrayItem(['targetAudience', 'primaryDesiresGoals'])
-                        }}
-                        className="h-8 px-4 text-xs bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white border-0 rounded-lg shadow-sm transition-all duration-200"
-                      >
-                        <Plus className="w-3 h-3 mr-1" />
-                        Add First Goal
-                      </Button>
-                    </div>
-                  )}
+                  <div className="space-y-4">
+                    <Textarea
+                      value={formData.targetAudience.primaryDesiresGoals[0] || ''}
+                      onChange={(e) => {
+                        const newGoals = [...formData.targetAudience.primaryDesiresGoals]
+                        newGoals[0] = e.target.value
+                        setFormData(prev => ({
+                          ...prev,
+                          targetAudience: {
+                            ...prev.targetAudience,
+                            primaryDesiresGoals: newGoals
+                          }
+                        }))
+                      }}
+                      placeholder="Enter customer goals and desires as raw text..."
+                      className="min-h-[120px] resize-none border border-slate-200 rounded-lg p-3 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    />
+                  </div>
                 </div>
 
               </CardContent>
@@ -2363,24 +2200,6 @@ export function BrandFormClean({ onSuccess }: BrandFormProps) {
                       <div>
                         <div className="flex items-center gap-2 mb-1">
                           <label className="text-sm font-semibold text-slate-800">Testimonials & Case Studies</label>
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="sm"
-                            onClick={(e) => {
-                              e.preventDefault()
-                              e.stopPropagation()
-                              addArrayItem(['clientAssets', 'testimonialsCaseStudies'])
-                              // Scroll to the newly added testimonial
-                              setTimeout(() => {
-                                testimonialCarouselApi?.scrollTo(formData.clientAssets.testimonialsCaseStudies.length - 1)
-                              }, 100)
-                            }}
-                            className="h-6 w-6 p-0 hover:bg-green-100 hover:text-green-600 rounded-full transition-colors duration-150"
-                            title="Add testimonial or case study"
-                          >
-                            <Plus className="w-4 h-4" />
-                          </Button>
                         </div>
                         <p className="text-xs text-slate-500">Customer feedback and success stories</p>
                       </div>
@@ -2409,7 +2228,6 @@ export function BrandFormClean({ onSuccess }: BrandFormProps) {
                                 <div className="relative bg-slate-50 rounded-lg border border-slate-100 p-4">
                                   <div className="flex items-center justify-between mb-3">
                                     <div className="flex items-center gap-2">
-                                      <span className="text-sm font-medium text-slate-800">Testimonial {index + 1}</span>
                                     </div>
                                     <Button
                                       type="button"
@@ -2669,6 +2487,14 @@ export function BrandFormClean({ onSuccess }: BrandFormProps) {
               <Button
                 type="submit" 
                 disabled={isSubmitting}
+                onClick={(e) => {
+                  console.log('🔘 Complete Setup button clicked')
+                  console.log('📊 Current step:', currentStep)
+                  console.log('📊 Total steps:', totalSteps)
+                  console.log('📊 Is submitting:', isSubmitting)
+                  console.log('📊 Form data keys:', Object.keys(formData))
+                  // Let the form submission handle the rest
+                }}
                 className="px-4 py-1.5 bg-gradient-to-r from-amber-500 to-yellow-600 hover:from-amber-600 hover:to-yellow-700 text-white text-xs disabled:opacity-50 shadow-sm"
               >
                 <Save className="w-3 h-3 mr-1" />
