@@ -129,16 +129,42 @@ export class KnowledgeBaseWebhookParser {
   private static parseOffers(offersData: string): Array<{ name: string; price: string; description: string }> {
     if (!offersData) return []
     
-    // Parse the offers text format: "Offer Name: ...\nPrice: ...\nDescription: ..."
-    const offerNameMatch = offersData.match(/Offer Name:\s*(.+?)(?:\n|$)/i)
-    const priceMatch = offersData.match(/Price:\s*(.+?)(?:\n|$)/i)
-    const descriptionMatch = offersData.match(/Description:\s*(.+?)$/i)
+    const offers: Array<{ name: string; price: string; description: string }> = []
     
-    return [{
-      name: offerNameMatch?.[1]?.trim() || '',
-      price: priceMatch?.[1]?.trim() || '',
-      description: descriptionMatch?.[1]?.trim() || ''
-    }]
+    // Split by "Offer Name:" to get individual offers
+    const offerSections = offersData.split(/Offer Name:/i).filter(section => section.trim())
+    
+    offerSections.forEach(section => {
+      const lines = section.split('\n').map(line => line.trim()).filter(line => line)
+      
+      if (lines.length > 0) {
+        const name = lines[0].trim()
+        let price = ''
+        let description = ''
+        
+        // Find price line
+        const priceLine = lines.find(line => line.toLowerCase().startsWith('price:'))
+        if (priceLine) {
+          price = priceLine.replace(/^price:\s*/i, '').trim()
+        }
+        
+        // Find description line
+        const descLine = lines.find(line => line.toLowerCase().startsWith('description:'))
+        if (descLine) {
+          description = descLine.replace(/^description:\s*/i, '').trim()
+        }
+        
+        if (name) {
+          offers.push({
+            name,
+            price,
+            description
+          })
+        }
+      }
+    })
+    
+    return offers.length > 0 ? offers : []
   }
 
   /**
