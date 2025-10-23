@@ -2463,43 +2463,38 @@ export function BrandFormClean({ onSuccess }: BrandFormProps) {
               Back
             </Button>
             
-            <Button
-              type="button"
-              variant="outline"
-              onClick={saveProgress}
-              disabled={isSaving}
-              className="px-3 py-1.5 text-xs"
-            >
-              <Save className="w-3 h-3 mr-1" />
-              Save & Finish Later
-            </Button>
-
-            {currentStep < totalSteps ? (
+            {currentStep === totalSteps ? (
               <Button
-                type="button"
-                onClick={nextStep}
-                className="px-4 py-1.5 bg-gradient-to-r from-amber-500 to-yellow-600 hover:from-amber-600 hover:to-yellow-700 text-white text-xs shadow-sm transition-all duration-200"
-              >
-                Next Step
-                <ChevronRight className="w-3 h-3 ml-1" />
-              </Button>
-            ) : (
-              <Button
-                type="submit" 
-                disabled={isSubmitting}
-                onClick={(e) => {
-                  console.log('🔘 Complete Setup button clicked')
-                  console.log('📊 Current step:', currentStep)
-                  console.log('📊 Total steps:', totalSteps)
-                  console.log('📊 Is submitting:', isSubmitting)
-                  console.log('📊 Form data keys:', Object.keys(formData))
-                  // Let the form submission handle the rest
-                }}
-                className="px-4 py-1.5 bg-gradient-to-r from-amber-500 to-yellow-600 hover:from-amber-600 hover:to-yellow-700 text-white text-xs disabled:opacity-50 shadow-sm"
+                type="button" 
+                disabled={isSaving}
+                onClick={saveProgress}
+                className="px-4 py-1.5 bg-gradient-to-r from-yellow-400 to-yellow-600 hover:from-yellow-500 hover:to-yellow-700 text-black text-xs disabled:opacity-50 shadow-sm transition-all duration-200"
               >
                 <Save className="w-3 h-3 mr-1" />
                 Complete Setup
               </Button>
+            ) : (
+              <>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={saveProgress}
+                  disabled={isSaving}
+                  className="px-3 py-1.5 text-xs"
+                >
+                  <Save className="w-3 h-3 mr-1" />
+                  Save & Finish Later
+                </Button>
+
+                <Button
+                  type="button"
+                  onClick={nextStep}
+                  className="px-4 py-1.5 bg-gradient-to-r from-amber-500 to-yellow-600 hover:from-amber-600 hover:to-yellow-700 text-white text-xs shadow-sm transition-all duration-200"
+                >
+                  Next Step
+                  <ChevronRight className="w-3 h-3 ml-1" />
+                </Button>
+              </>
             )}
           </div>
         </div>

@@ -225,18 +225,16 @@ export function AppSidebar() {
       console.log('🔄 New Title:', newTitle)
       
       // Optimistic update: Update the chat history immediately
-      if (onRefreshChatHistory) {
-        console.log('🔄 Updating chat history optimistically...')
-        // Update the local chat history state immediately
-        const currentHistory = chatHistory || []
-        const updatedHistory = currentHistory.map((chat: any) => 
-          chat.session_id === sessionId 
-            ? { ...chat, title: newTitle }
-            : chat
-        )
-        updateChatHistory(updatedHistory)
-        console.log('✅ Chat history updated optimistically')
-      }
+      console.log('🔄 Updating chat history optimistically...')
+      // Update the local chat history state immediately
+      const currentHistory = chatHistory || []
+      const updatedHistory = currentHistory.map((chat: any) => 
+        chat.session_id === sessionId 
+          ? { ...chat, title: newTitle }
+          : chat
+      )
+      updateChatHistory(updatedHistory)
+      console.log('✅ Chat history updated optimistically')
       
       // Run API call in background
       console.log('🔄 Starting background API call...')
@@ -263,7 +261,7 @@ export function AppSidebar() {
         console.error('❌ Background API error response:', errorText)
         // Revert optimistic update on error
         console.log('🔄 Reverting optimistic update due to API error...')
-        await onRefreshChatHistory?.()
+        onRefreshChatHistory()
         throw new Error(`Failed to rename chat: ${response.status}`)
       }
 
@@ -380,26 +378,24 @@ export function AppSidebar() {
                     <MessageSquare className="h-3 w-3 text-white" />
                     Chat History
                   </SidebarGroupLabel>
-                  {onRefreshChatHistory && (
-                    <TooltipProvider>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={onRefreshChatHistory}
-                            disabled={isLoadingChatHistory}
-                            className="h-6 w-6 p-0 text-white hover:text-white hover:bg-gray-700 rounded-md"
-                          >
-                            <RefreshCw className={`h-3 w-3 ${isLoadingChatHistory ? 'animate-spin' : ''}`} />
-                          </Button>
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={onRefreshChatHistory}
+                          disabled={isLoadingChatHistory}
+                          className="h-6 w-6 p-0 text-white hover:text-white hover:bg-gray-700 rounded-md"
+                        >
+                          <RefreshCw className={`h-3 w-3 ${isLoadingChatHistory ? 'animate-spin' : ''}`} />
+                        </Button>
                         </TooltipTrigger>
                         <TooltipContent>
                           <p>Refresh chat history</p>
                         </TooltipContent>
                       </Tooltip>
                     </TooltipProvider>
-                  )}
                 </div>
                 <SidebarGroupContent className="flex-1 overflow-hidden">
                   <div className="px-1 w-full h-full overflow-hidden">
