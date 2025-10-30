@@ -170,13 +170,14 @@ export function FilesTab({ mediaItems, onUpload, onDelete, isDeleting, deletingI
   
   const fileItems = mediaItems.filter((item: any) => {
     if (!item || !item.type) return false
-    // Only allow document types in Files tab
-    const isFileType = ['pdf', 'doc', 'docx', 'txt'].includes(item.type)
+    // Only allow document types in Files tab - explicitly exclude images
+    const isFileType = ['pdf', 'doc', 'docx', 'txt'].includes(item.type.toLowerCase())
+    const isNotImage = !['image', 'jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp'].includes(item.type.toLowerCase())
     const matchesSearch = !searchQuery || 
       (item.name && item.name.toLowerCase().includes(searchQuery.toLowerCase())) ||
       (item.title && item.title.toLowerCase().includes(searchQuery.toLowerCase())) ||
       (item.filename && item.filename.toLowerCase().includes(searchQuery.toLowerCase()))
-    return isFileType && matchesSearch
+    return isFileType && isNotImage && matchesSearch
   })
 
   const handleDrag = (e: React.DragEvent) => {
