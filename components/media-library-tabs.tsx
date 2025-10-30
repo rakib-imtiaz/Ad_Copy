@@ -38,6 +38,7 @@ import rehypeSanitize from 'rehype-sanitize'
 import rehypeRaw from 'rehype-raw'
 import { toast } from "sonner"
 import { authService } from "@/lib/auth-service"
+import { useCreditValidation } from "@/hooks/use-credit-validation"
 import { API_ENDPOINTS } from "@/lib/api-config"
 import {
   AlertDialog,
@@ -868,6 +869,7 @@ export function LinksTab({ mediaItems, onDelete, onRefresh, setMediaItems, isDel
 export function YouTubeTab({ mediaItems, onDelete, onRefresh, setMediaItems, isDeleting, deletingItemId, isLoadingTabContent, isScraping, setIsScraping }: any) {
   const [urlInput, setUrlInput] = React.useState("")
   const [searchQuery, setSearchQuery] = React.useState("")
+  const { hasCredits, credits, isLoading: isCheckingCredits } = useCreditValidation()
   
   const [viewerContent, setViewerContent] = React.useState<{
     title: string
@@ -919,6 +921,12 @@ export function YouTubeTab({ mediaItems, onDelete, onRefresh, setMediaItems, isD
   const handleSubmitUrl = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!urlInput.trim() || isScraping) return
+
+    // Check if user has credits
+    if (!hasCredits) {
+      toast.error("You don't have enough credits to transcribe YouTube videos. Please add credits to continue.")
+      return
+    }
 
     setIsScraping(true)
     try {
@@ -1011,8 +1019,12 @@ export function YouTubeTab({ mediaItems, onDelete, onRefresh, setMediaItems, isD
             />
             <Button 
               type="submit" 
-              disabled={!urlInput.trim() || isScraping}
-              className="bg-red-600 hover:bg-red-700 text-white h-6 px-2"
+              disabled={!urlInput.trim() || isScraping || !hasCredits}
+              className={`h-6 px-2 ${
+                !hasCredits 
+                  ? 'bg-gray-400 cursor-not-allowed' 
+                  : 'bg-red-600 hover:bg-red-700'
+              } text-white`}
             >
               {isScraping ? <Loader2 className="h-3 w-3 animate-spin" /> : <Mic className="h-3 w-3" />}
             </Button>
@@ -1027,6 +1039,24 @@ export function YouTubeTab({ mediaItems, onDelete, onRefresh, setMediaItems, isD
           </div>
         )}
       </form>
+
+      {/* Credit Warning */}
+      {!hasCredits && !isCheckingCredits && (
+        <div className="bg-red-50 border border-red-200 rounded-lg p-3">
+          <div className="flex items-start gap-3">
+            <div className="w-5 h-5 bg-red-500 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+              <Mic className="h-3 w-3 text-white" />
+            </div>
+            <div className="text-xs text-red-800">
+              <p className="font-medium mb-1 flex items-center gap-2">
+                <span className="text-red-600 font-bold">No Credits</span>
+                <span>Available</span>
+              </p>
+              <p className="text-red-700">You need credits to transcribe YouTube videos. Please add credits to your account to continue.</p>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* YouTube videos count and list */}
       <div className="space-y-1">
@@ -1255,6 +1285,7 @@ export function ImageAnalyzerTab({ mediaItems, onUpload, onDelete, isDeleting, d
   const [isAnalyzing, setIsAnalyzing] = React.useState(false)
   const [analyzingImageId, setAnalyzingImageId] = React.useState<string | null>(null)
   const [analysisResults, setAnalysisResults] = React.useState<{[key: string]: any}>({})
+  const { hasCredits, credits, isLoading: isCheckingCredits } = useCreditValidation()
   const [selectedImageAnalysis, setSelectedImageAnalysis] = React.useState<any>(null)
   const [showAnalysisPopup, setShowAnalysisPopup] = React.useState<any>(null)
   const [searchQuery, setSearchQuery] = React.useState("")
@@ -1326,6 +1357,12 @@ export function ImageAnalyzerTab({ mediaItems, onUpload, onDelete, isDeleting, d
   }, [mediaItems])
 
   const handleAnalyzeImage = async (imageId: string, imageItem: any) => {
+    // Check if user has credits
+    if (!hasCredits) {
+      toast.error("You don't have enough credits to analyze images. Please add credits to continue.")
+      return
+    }
+
     setIsAnalyzing(true)
     setAnalyzingImageId(imageId)
     
@@ -1458,6 +1495,24 @@ export function ImageAnalyzerTab({ mediaItems, onUpload, onDelete, isDeleting, d
         />
       </div>
 
+      {/* Credit Warning */}
+      {!hasCredits && !isCheckingCredits && (
+        <div className="bg-red-50 border border-red-200 rounded-lg p-3">
+          <div className="flex items-start gap-3">
+            <div className="w-5 h-5 bg-red-500 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+              <Image className="h-3 w-3 text-white" />
+            </div>
+            <div className="text-xs text-red-800">
+              <p className="font-medium mb-1 flex items-center gap-2">
+                <span className="text-red-600 font-bold">No Credits</span>
+                <span>Available</span>
+              </p>
+              <p className="text-red-700">You need credits to analyze images. Please add credits to your account to continue.</p>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Image Dropzone */}
       <div 
         className={`border-2 border-dashed rounded-lg p-4 text-center transition-all duration-200 cursor-pointer ${
@@ -1566,9 +1621,13 @@ export function ImageAnalyzerTab({ mediaItems, onUpload, onDelete, isDeleting, d
                         <Button
                           variant="outline"
                           size="sm"
-                          className="h-5 px-1.5 text-xs border-blue-200 text-blue-600 hover:bg-blue-50"
+                          className={`h-5 px-1.5 text-xs ${
+                            !hasCredits 
+                              ? 'border-gray-200 text-gray-400 cursor-not-allowed' 
+                              : 'border-blue-200 text-blue-600 hover:bg-blue-50'
+                          }`}
                           onClick={() => handleAnalyzeImage(item.id, item)}
-                          disabled={isAnalyzing && analyzingImageId === item.id}
+                          disabled={isAnalyzing && analyzingImageId === item.id || !hasCredits}
                         >
                           {isAnalyzing && analyzingImageId === item.id ? (
                             <Loader2 className="h-2.5 w-2.5 animate-spin" />

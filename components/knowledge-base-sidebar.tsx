@@ -59,6 +59,7 @@ import {
 import { Separator } from "@/components/ui/separator"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { FilesTab, LinksTab, YouTubeTab, ImageAnalyzerTab } from "@/components/media-library-tabs"
+import { CreditDisplay } from "@/components/credit-display"
 
 interface KnowledgeBaseSidebarProps {
   mediaItems: any[]
@@ -177,6 +178,11 @@ export function KnowledgeBaseSidebar({
 
       <SidebarContent className={`flex flex-col justify-between bg-white h-full overflow-hidden ${state === 'expanded' ? 'px-2 py-2' : 'px-0 py-2'}`}>
         <div className="flex-1 flex flex-col min-h-0">
+          {/* Credit Display */}
+          <div className="mb-3 w-full">
+            <CreditDisplay compact={state === 'collapsed'} className="w-full" />
+          </div>
+          
           {/* Media Library Section */}
           <SidebarGroup className="flex-1 min-h-0">
             {state === 'expanded' ? (

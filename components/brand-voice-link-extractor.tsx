@@ -1,12 +1,13 @@
 "use client"
 
 import * as React from "react"
-import { ExternalLink, Loader2, Sparkles, AlertCircle, Play } from "lucide-react"
+import { ExternalLink, Loader2, Sparkles, AlertCircle, Play, Coins } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Alert, AlertDescription } from "@/components/ui/alert"
+import { useCreditValidation } from "@/hooks/use-credit-validation"
 import { authService } from "@/lib/auth-service"
 import { toast } from "sonner"
 
@@ -34,6 +35,7 @@ export function BrandVoiceLinkExtractor({
 }: BrandVoiceLinkExtractorProps) {
   const [url, setUrl] = React.useState("")
   const [extractedPatterns, setExtractedPatterns] = React.useState<BrandVoicePattern[]>([])
+  const { hasCredits, credits, isLoading: isCheckingCredits } = useCreditValidation()
   
   // Use props for extraction state if provided, otherwise use local state
   const isCurrentlyExtracting = setIsExtracting ? isExtracting : false
@@ -60,6 +62,12 @@ export function BrandVoiceLinkExtractor({
   const handleExtract = async () => {
     if (!url.trim()) {
       setCurrentError("Please enter a valid URL")
+      return
+    }
+
+    // Check if user has credits
+    if (!hasCredits) {
+      setCurrentError("You don't have enough credits to extract communication patterns. Please add credits to continue.")
       return
     }
 
@@ -174,18 +182,25 @@ export function BrandVoiceLinkExtractor({
           />
           <Button
             onClick={handleExtract}
-            disabled={isCurrentlyExtracting || !url.trim()}
+            disabled={isCurrentlyExtracting || !url.trim() || !hasCredits}
             size="sm"
             className={`h-7 text-xs text-center ${
-              isYouTubeUrl 
-                ? 'bg-red-600 hover:bg-red-700' 
-                : 'bg-blue-600 hover:bg-blue-700'
+              !hasCredits 
+                ? 'bg-gray-400 cursor-not-allowed' 
+                : isYouTubeUrl 
+                  ? 'bg-red-600 hover:bg-red-700' 
+                  : 'bg-blue-600 hover:bg-blue-700'
             }`}
           >
             {isCurrentlyExtracting ? (
               <>
                 <Loader2 className="h-3 w-3 mr-1 animate-spin" />
                 {isYouTubeUrl ? 'Analyzing Video...' : 'Extracting...'}
+              </>
+            ) : !hasCredits ? (
+              <>
+                <Coins className="h-3 w-3 mr-1" />
+                No Credits
               </>
             ) : (
               <>
@@ -218,6 +233,24 @@ export function BrandVoiceLinkExtractor({
             </div>
           </div>
         </div>
+        
+        {/* Credit Warning */}
+        {!hasCredits && !isCheckingCredits && (
+          <div className="bg-red-50 border border-red-200 rounded-lg p-3">
+            <div className="flex items-start gap-3">
+              <div className="w-6 h-6 bg-red-500 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                <Coins className="h-3 w-3 text-white" />
+              </div>
+              <div className="text-sm text-red-800">
+                <p className="font-medium mb-1 flex items-center gap-2">
+                  <span className="text-red-600 font-bold">No Credits</span>
+                  <span>Available</span>
+                </p>
+                <p className="text-red-700">You need credits to extract communication patterns. Please add credits to your account to continue.</p>
+              </div>
+            </div>
+          </div>
+        )}
         
         {currentError && (
           <Alert variant="destructive">
