@@ -170,8 +170,8 @@ export function FilesTab({ mediaItems, onUpload, onDelete, isDeleting, deletingI
   
   const fileItems = mediaItems.filter((item: any) => {
     if (!item || !item.type) return false
-    // Exclude images from files tab - they should only appear in Images tab
-    const isFileType = ['pdf', 'doc', 'docx', 'txt', 'audio', 'video', 'mp3', 'mp4', 'wav', 'm4a'].includes(item.type)
+    // Only allow document types in Files tab
+    const isFileType = ['pdf', 'doc', 'docx', 'txt'].includes(item.type)
     const matchesSearch = !searchQuery || 
       (item.name && item.name.toLowerCase().includes(searchQuery.toLowerCase())) ||
       (item.title && item.title.toLowerCase().includes(searchQuery.toLowerCase())) ||
@@ -194,7 +194,17 @@ export function FilesTab({ mediaItems, onUpload, onDelete, isDeleting, deletingI
     e.stopPropagation()
     setDragActive(false)
     
+    const allowedExt = ['pdf', 'doc', 'docx', 'txt']
     const files = Array.from(e.dataTransfer.files)
+      .filter(f => {
+        const name = f.name.toLowerCase()
+        const ext = name.split('.').pop() || ''
+        return allowedExt.includes(ext)
+      })
+    if (files.length === 0) {
+      toast.error('Only PDF, DOC/DOCX, and TXT files are allowed')
+      return
+    }
     if (files.length > 0 && onUpload) {
       setIsUploading(true)
       await onUpload(files)
@@ -203,7 +213,17 @@ export function FilesTab({ mediaItems, onUpload, onDelete, isDeleting, deletingI
   }
 
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const allowedExt = ['pdf', 'doc', 'docx', 'txt']
     const files = Array.from(e.target.files || [])
+      .filter(f => {
+        const name = f.name.toLowerCase()
+        const ext = name.split('.').pop() || ''
+        return allowedExt.includes(ext)
+      })
+    if ((e.target.files || []).length > 0 && files.length === 0) {
+      toast.error('Only PDF, DOC/DOCX, and TXT files are allowed')
+      return
+    }
     if (files.length > 0 && onUpload) {
       setIsUploading(true)
       await onUpload(files)
@@ -254,7 +274,7 @@ export function FilesTab({ mediaItems, onUpload, onDelete, isDeleting, deletingI
               }`} 
             />
             <FadeInText 
-              text={isUploading ? "Please wait..." : "Supports PDF, DOC, TXT, MP3, MP4, and more"} 
+              text={isUploading ? "Please wait..." : "Supports pdf, doc and text files only"} 
               className="text-xs text-gray-500 text-center" 
               delay={0.1} 
             />
@@ -264,7 +284,7 @@ export function FilesTab({ mediaItems, onUpload, onDelete, isDeleting, deletingI
           ref={fileInputRef}
           type="file"
           multiple
-          accept=".pdf,.doc,.docx,.txt,.mp3,.mp4,.wav,.m4a,.jpg,.jpeg,.png,.gif"
+          accept=".pdf,.doc,.docx,.txt"
           onChange={handleFileSelect}
           className="hidden"
         />
