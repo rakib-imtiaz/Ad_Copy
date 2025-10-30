@@ -1013,7 +1013,7 @@ export function BrandFormClean({ onSuccess }: BrandFormProps) {
 
   // All steps map function (removed StepIndicator component as we now use sidebar)
   const renderSteps = () => (
-    <div className="w-full mb-8 bg-white rounded-xl shadow-sm border border-slate-100 p-6 w-[919px] max-w-[919px] mx-auto">
+    <div className="w-full max-w-4xl mx-auto mb-8 bg-white rounded-xl shadow-sm border border-slate-100 p-6">
       {/* Progress bar */}
       <div className="mb-6">
         <div className="flex justify-between items-center mb-3">
@@ -1084,7 +1084,7 @@ export function BrandFormClean({ onSuccess }: BrandFormProps) {
       </div>
       
       {/* Populate Data Button - Hidden since auto-population is enabled */}
-      <div className="hidden bg-gradient-to-r from-yellow-50 to-orange-50 rounded-xl border border-yellow-200 p-4 mb-6 w-[919px] max-w-[919px] mx-auto">
+      <div className="hidden bg-gradient-to-r from-yellow-50 to-orange-50 rounded-xl border border-yellow-200 p-4 mb-6 w-full max-w-4xl mx-auto">
         <div className="text-center">
           <h3 className="text-sm font-semibold text-slate-700 mb-2">Quick Setup</h3>
           <p className="text-xs text-slate-600 mb-3">Load your existing brand information to speed up the process</p>
@@ -1290,7 +1290,7 @@ export function BrandFormClean({ onSuccess }: BrandFormProps) {
             exit={{ opacity: 0, x: -20 }}
             transition={{ duration: 0.3 }}
           >
-            <Card className="w-[919px] max-w-[919px] mx-auto">
+            <Card className="w-full max-w-4xl mx-auto">
               <CardHeader className="text-center pb-3">
                 <div className="w-8 h-8 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-full flex items-center justify-center mx-auto mb-2">
                   <span className="text-black text-sm font-semibold">2</span>
@@ -1345,7 +1345,7 @@ export function BrandFormClean({ onSuccess }: BrandFormProps) {
             exit={{ opacity: 0, x: -20 }}
             transition={{ duration: 0.3 }}
           >
-            <Card className="w-[919px] max-w-[919px] mx-auto">
+            <Card className="w-full max-w-4xl mx-auto">
               <CardHeader className="text-center pb-3">
                 <div className="w-8 h-8 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-full flex items-center justify-center mx-auto mb-2">
                   <span className="text-black text-sm font-semibold">3</span>
@@ -1400,7 +1400,7 @@ export function BrandFormClean({ onSuccess }: BrandFormProps) {
             transition={{ duration: 0.3 }}
             className="max-w-full"
           >
-            <Card className="border border-slate-200 shadow-sm bg-white rounded-xl overflow-hidden w-[919px] max-w-[919px] mx-auto max-w-full">
+            <Card className="border border-slate-200 shadow-sm bg-white rounded-xl overflow-hidden w-full max-w-4xl mx-auto">
               <CardHeader className="text-center pb-6 bg-gradient-to-b from-amber-50/30 to-white border-b border-amber-100 shadow-sm">
                 <div className="w-12 h-12 bg-gradient-to-br from-amber-400 to-yellow-600 rounded-full flex items-center justify-center mx-auto mb-4 shadow-md transition-transform duration-300 hover:scale-105">
                   <span className="text-black text-lg font-bold">4</span>
@@ -1411,7 +1411,7 @@ export function BrandFormClean({ onSuccess }: BrandFormProps) {
               <CardContent className="space-y-6 p-6 max-w-full overflow-x-hidden">
                 
                 {/* Ideal Customer Profile */}
-                <div className="bg-white border border-slate-200 rounded-xl p-5 hover:shadow-sm transition-shadow duration-200 w-[919px] max-w-[919px] overflow-x-hidden mx-auto">
+                <div className="bg-white border border-slate-200 rounded-xl p-5 hover:shadow-sm transition-shadow duration-200 w-full max-w-4xl mx-auto">
                   <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center gap-3">
                       <div>
@@ -1534,7 +1534,7 @@ export function BrandFormClean({ onSuccess }: BrandFormProps) {
                   )}
                 </div>
 
-                <div className="bg-white border border-slate-200 rounded-xl p-5 hover:shadow-sm transition-shadow duration-200 w-[919px] max-w-[919px] overflow-x-hidden mx-auto">
+                <div className="bg-white border border-slate-200 rounded-xl p-5 hover:shadow-sm transition-shadow duration-200 w-full max-w-4xl mx-auto">
                   <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center gap-3">
                       <div>
@@ -1588,12 +1588,12 @@ export function BrandFormClean({ onSuccess }: BrandFormProps) {
                                       <Trash2 className="w-3 h-3" />
                                     </Button>
                                   </div>
-                                  <Input
-                                    type="text"
+                                  <Textarea
                                     value={word}
                                     onChange={(e) => updateArrayField(['targetAudience', 'audienceVocabulary'], index, e.target.value)}
                                     placeholder="e.g., ROI, scalability, efficiency, KPIs"
-                                    className="border-0 bg-transparent focus:ring-0 text-sm placeholder:text-slate-400 font-medium text-slate-700"
+                                    className="border-0 bg-transparent focus:ring-0 text-sm placeholder:text-slate-400 font-medium text-slate-700 resize-y min-h-[100px] max-h-[200px] overflow-y-auto"
+                                    rows={4}
                                   />
                                 </div>
                               </CarouselItem>
@@ -1671,7 +1671,7 @@ export function BrandFormClean({ onSuccess }: BrandFormProps) {
             exit={{ opacity: 0, x: -20 }}
             transition={{ duration: 0.3 }}
           >
-            <Card className="border border-slate-200 shadow-sm bg-white rounded-xl overflow-hidden w-[919px] max-w-[919px] mx-auto">
+            <Card className="border border-slate-200 shadow-sm bg-white rounded-xl overflow-hidden w-full max-w-4xl mx-auto">
               <CardHeader className="text-center pb-6 bg-gradient-to-b from-amber-50/30 to-white border-b border-amber-100 shadow-sm">
                 <div className="w-12 h-12 bg-gradient-to-br from-amber-400 to-yellow-600 rounded-full flex items-center justify-center mx-auto mb-4 shadow-md transition-transform duration-300 hover:scale-105">
                   <span className="text-black text-lg font-bold">5</span>
@@ -1682,7 +1682,7 @@ export function BrandFormClean({ onSuccess }: BrandFormProps) {
               <CardContent className="space-y-6 p-6">
                 
                 {/* Primary Pain Points */}
-                <div className="bg-white border border-slate-200 rounded-xl p-5 hover:shadow-sm transition-shadow duration-200 w-[919px] max-w-[919px] overflow-x-hidden mx-auto">
+                <div className="bg-white border border-slate-200 rounded-xl p-5 hover:shadow-sm transition-shadow duration-200 w-full max-w-4xl mx-auto">
                   <div className="mb-4">
                     <label className="text-sm font-semibold text-slate-800 mb-2 block">Customer Pain Points</label>
                     <p className="text-xs text-slate-500 mb-3">What challenges do your customers face?</p>
@@ -1690,14 +1690,14 @@ export function BrandFormClean({ onSuccess }: BrandFormProps) {
                       value={formData.targetAudience.primaryPainPoints}
                       onChange={(e) => updateNestedField(['targetAudience', 'primaryPainPoints'], e.target.value)}
                       placeholder="e.g., Wasting time on manual processes, struggling with scalability, lack of automation tools, difficulty tracking performance..."
-                      className="min-h-[120px] resize-none border-slate-200 focus:border-blue-400 focus:ring-blue-400"
+                      className="min-h-[120px] resize-none border-slate-200 focus:border-blue-400 focus:ring-1 focus:ring-blue-400 focus:ring-offset-0"
                       rows={5}
                     />
                   </div>
                 </div>
 
                 {/* Common Objections */}
-                <div className="bg-white border border-slate-200 rounded-xl p-5 hover:shadow-sm transition-shadow duration-200 w-[919px] max-w-[919px] overflow-x-hidden mx-auto">
+                <div className="bg-white border border-slate-200 rounded-xl p-5 hover:shadow-sm transition-shadow duration-200 w-full max-w-4xl mx-auto">
                   <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center gap-3">
                       <div>
@@ -1751,12 +1751,12 @@ export function BrandFormClean({ onSuccess }: BrandFormProps) {
                                       <Trash2 className="w-3 h-3" />
                                     </Button>
                                   </div>
-                                  <Input
-                                    type="text"
+                                  <Textarea
                                     value={objection}
                                     onChange={(e) => updateArrayField(['targetAudience', 'commonObjections'], index, e.target.value)}
                                     placeholder="e.g., It's too expensive, We don't have time to implement"
-                                    className="border-0 bg-transparent focus:ring-0 text-sm placeholder:text-slate-400 font-medium text-slate-700"
+                                    className="border-0 bg-transparent focus:ring-0 text-sm placeholder:text-slate-400 font-medium text-slate-700 min-h-[120px] resize-none"
+                                    rows={5}
                                   />
                                 </div>
                               </CarouselItem>
@@ -1834,7 +1834,7 @@ export function BrandFormClean({ onSuccess }: BrandFormProps) {
             exit={{ opacity: 0, x: -20 }}
             transition={{ duration: 0.3 }}
           >
-            <Card className="border border-slate-200 shadow-sm bg-white rounded-xl overflow-hidden w-[919px] max-w-[919px] mx-auto">
+            <Card className="border border-slate-200 shadow-sm bg-white rounded-xl overflow-hidden w-full max-w-4xl mx-auto">
               <CardHeader className="text-center pb-6 bg-gradient-to-b from-amber-50/30 to-white border-b border-amber-100 shadow-sm">
                 <div className="w-12 h-12 bg-gradient-to-br from-amber-400 to-yellow-600 rounded-full flex items-center justify-center mx-auto mb-4 shadow-md transition-transform duration-300 hover:scale-105">
                   <span className="text-black text-lg font-bold">6</span>
@@ -1844,7 +1844,7 @@ export function BrandFormClean({ onSuccess }: BrandFormProps) {
               </CardHeader>
               <CardContent className="space-y-6 p-6">
                 
-                <div className="bg-white border border-slate-200 rounded-xl p-5 hover:shadow-sm transition-shadow duration-200 w-[919px] max-w-[919px] overflow-x-hidden mx-auto">
+                <div className="bg-white border border-slate-200 rounded-xl p-5 hover:shadow-sm transition-shadow duration-200 w-full max-w-4xl mx-auto">
                   <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center gap-3">
                       <div>
@@ -1900,7 +1900,7 @@ export function BrandFormClean({ onSuccess }: BrandFormProps) {
               </CardHeader>
               <CardContent className="space-y-4">
                 {/* Multiple Products Section */}
-                <div className="bg-white border border-slate-200 rounded-xl p-5 hover:shadow-sm transition-shadow duration-200 w-[919px] max-w-[919px] overflow-x-hidden mx-auto">
+                <div className="bg-white border border-slate-200 rounded-xl p-5 hover:shadow-sm transition-shadow duration-200 w-full max-w-4xl mx-auto">
                   <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center gap-3">
                       <div>
@@ -2159,7 +2159,7 @@ export function BrandFormClean({ onSuccess }: BrandFormProps) {
             exit={{ opacity: 0, x: -20 }}
             transition={{ duration: 0.3 }}
           >
-            <Card className="border border-slate-200 shadow-sm bg-white rounded-xl overflow-hidden w-[919px] max-w-[919px] mx-auto">
+            <Card className="border border-slate-200 shadow-sm bg-white rounded-xl overflow-hidden w-full max-w-4xl mx-auto">
               <CardHeader className="text-center pb-6 bg-gradient-to-b from-amber-50/30 to-white border-b border-amber-100 shadow-sm">
                 <div className="w-12 h-12 bg-gradient-to-br from-amber-400 to-yellow-600 rounded-full flex items-center justify-center mx-auto mb-4 shadow-md transition-transform duration-300 hover:scale-105">
                   <span className="text-black text-lg font-bold">8</span>
@@ -2236,7 +2236,7 @@ export function BrandFormClean({ onSuccess }: BrandFormProps) {
             exit={{ opacity: 0, x: -20 }}
             transition={{ duration: 0.3 }}
           >
-            <Card className="border border-slate-200 shadow-sm bg-white rounded-xl overflow-hidden w-[919px] max-w-[919px] mx-auto">
+            <Card className="border border-slate-200 shadow-sm bg-white rounded-xl overflow-hidden w-full max-w-4xl mx-auto">
               <CardHeader className="text-center pb-6 bg-gradient-to-b from-amber-50/30 to-white border-b border-amber-100 shadow-sm">
                 <div className="w-12 h-12 bg-gradient-to-br from-amber-400 to-yellow-600 rounded-full flex items-center justify-center mx-auto mb-4 shadow-md transition-transform duration-300 hover:scale-105">
                   <span className="text-black text-lg font-bold">9</span>
@@ -2246,7 +2246,7 @@ export function BrandFormClean({ onSuccess }: BrandFormProps) {
               </CardHeader>
               <CardContent className="space-y-6 p-6">
                 
-                <div className="bg-white border border-slate-200 rounded-xl p-5 hover:shadow-sm transition-shadow duration-200 w-[919px] max-w-[919px] overflow-x-hidden mx-auto">
+                <div className="bg-white border border-slate-200 rounded-xl p-5 hover:shadow-sm transition-shadow duration-200 w-full max-w-4xl mx-auto">
                   <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center gap-3">
                       <div>
@@ -2396,7 +2396,7 @@ export function BrandFormClean({ onSuccess }: BrandFormProps) {
             exit={{ opacity: 0, x: -20 }}
             transition={{ duration: 0.3 }}
           >
-            <Card className="border border-slate-200 shadow-sm bg-white rounded-xl overflow-hidden w-[919px] max-w-[919px] mx-auto">
+            <Card className="border border-slate-200 shadow-sm bg-white rounded-xl overflow-hidden w-full max-w-4xl mx-auto">
               <CardHeader className="text-center pb-6 bg-gradient-to-b from-amber-50/30 to-white border-b border-amber-100 shadow-sm">
                 <div className="w-12 h-12 bg-gradient-to-br from-amber-400 to-yellow-600 rounded-full flex items-center justify-center mx-auto mb-4 shadow-md transition-transform duration-300 hover:scale-105">
                   <span className="text-black text-lg font-bold">10</span>
@@ -2440,7 +2440,7 @@ export function BrandFormClean({ onSuccess }: BrandFormProps) {
             exit={{ opacity: 0, x: -20 }}
             transition={{ duration: 0.3 }}
           >
-            <Card className="border border-slate-200 shadow-sm bg-white rounded-xl overflow-hidden w-[919px] max-w-[919px] mx-auto">
+            <Card className="border border-slate-200 shadow-sm bg-white rounded-xl overflow-hidden w-full max-w-4xl mx-auto">
               <CardHeader className="text-center pb-6 bg-gradient-to-b from-amber-50/30 to-white border-b border-amber-100 shadow-sm">
                 <div className="w-12 h-12 bg-gradient-to-br from-amber-400 to-yellow-600 rounded-full flex items-center justify-center mx-auto mb-4 shadow-md transition-transform duration-300 hover:scale-105">
                   <span className="text-black text-lg font-bold">11</span>
@@ -2486,7 +2486,7 @@ export function BrandFormClean({ onSuccess }: BrandFormProps) {
                   <p className="text-muted-foreground mb-4">
                     You've provided comprehensive information about your brand. This will help our AI create more personalized and effective ad copy for your business.
                   </p>
-                  <div className="bg-green-50 border border-green-200 rounded-lg p-4 w-[919px] max-w-[919px] mx-auto">
+                  <div className="bg-green-50 border border-green-200 rounded-lg p-4 w-full max-w-4xl mx-auto">
                     <p className="text-green-800 text-sm">
                       <strong>Next:</strong> Click "Complete Setup" to save your brand information and start creating amazing ad copy!
                     </p>
