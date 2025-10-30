@@ -37,6 +37,7 @@ import rehypeHighlight from 'rehype-highlight'
 import 'highlight.js/styles/github-dark.css'
 
 import { authService } from "@/lib/auth-service"
+import { adminService } from "@/lib/admin-service"
 import { ChatInterface } from "@/components/chat-interface"
 import { useAuth } from "@/lib/auth-context"
 import { ProtectedRoute } from "@/components/protected-route"
@@ -1400,7 +1401,18 @@ export default function Dashboard() {
     if (!loading && isAuthenticated && user) {
       console.log('🔐 Role-based routing check - User role:', user.role)
       
-      // Redirect based on user role
+      // Check if this is an admin switch session (admin accessing user dashboard)
+      // This check must happen FIRST before role-based redirect
+      const adminContext = adminService.getAdminContext()
+      if (adminContext) {
+        console.log('👑 Admin switch session detected - allowing access to user dashboard')
+        console.log('👑 Admin context:', adminContext)
+        // Allow admin to access user dashboard when admin context exists
+        // Even if role is still 'Superking', allow access because admin context exists
+        return
+      }
+      
+      // Redirect based on user role (only if NOT an admin switch session)
       if (user.role === 'Superking') {
         console.log('👑 Admin user detected, redirecting to admin dashboard')
         window.location.href = '/admin'

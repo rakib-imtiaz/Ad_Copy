@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { Shield, LayoutDashboard, Bot, FileText, Users, BarChart2, LogOut } from 'lucide-react';
+import { Shield, LayoutDashboard, Bot, FileText, Users, BarChart2, LogOut, User } from 'lucide-react';
 import { useAuth } from '@/lib/auth-context';
 import {
   Sidebar,
@@ -23,6 +23,7 @@ import {
 } from '@/components/ui/sidebar';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { adminService } from '@/lib/admin-service';
 
 const navItems = [
   { href: '/admin/dashboard', label: 'Overview', icon: LayoutDashboard },
@@ -34,11 +35,39 @@ const navItems = [
 
 export const AdminSidebar = () => {
   const pathname = usePathname();
-  const { logout, user } = useAuth();
+  const { logout, user, temporarilyModifyUserRole } = useAuth();
   const { state } = useSidebar();
 
   const handleLogout = () => {
     logout();
+  };
+
+  const handleGotoUserDashboard = async () => {
+    try {
+      console.log('🔄 Admin - Switching to user dashboard...');
+      
+      // Store admin context BEFORE switching (this is the key!)
+      if (user) {
+        console.log('💾 Admin - Storing admin context:', user);
+        adminService.storeAdminContext(user);
+        
+        // Also temporarily modify the user's role to 'paid-user' for consistency
+        // (even though the role check now uses admin context first)
+        temporarilyModifyUserRole('paid-user');
+      } else {
+        console.warn('⚠️ Admin - No user found, cannot switch to user dashboard');
+        return;
+      }
+      
+      // Small delay to ensure admin context is stored before redirect
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
+      // Redirect to user dashboard
+      console.log('🚀 Admin - Redirecting to user dashboard...');
+      window.location.href = '/dashboard';
+    } catch (error) {
+      console.error('❌ Admin - Failed to switch to user dashboard:', error);
+    }
   };
 
   const sidebarVariants = {
@@ -114,6 +143,45 @@ export const AdminSidebar = () => {
                   </SidebarMenuItem>
                 </motion.div>
               ))}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+
+        {/* User Dashboard Access Section */}
+        <SidebarGroup>
+          <motion.div
+            animate={state}
+            variants={contentVariants}
+            transition={{ duration: 0.2 }}
+          >
+            <SidebarGroupLabel className="px-2">Quick Access</SidebarGroupLabel>
+          </motion.div>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.2, delay: 0.1 }}
+              >
+                <SidebarMenuItem>
+                  <SidebarMenuButton 
+                    asChild 
+                    tooltip="Goto User Dashboard"
+                    onClick={handleGotoUserDashboard}
+                    className="cursor-pointer"
+                  >
+                    <button className="w-full">
+                      <motion.div
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                      >
+                        <User />
+                      </motion.div>
+                      <span>Goto User Dashboard</span>
+                    </button>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              </motion.div>
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>

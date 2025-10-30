@@ -16,7 +16,8 @@ import {
   Database,
   BookOpen,
   MoreHorizontal,
-  Edit
+  Edit,
+  Shield
 } from "lucide-react"
 
 import {
@@ -39,6 +40,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { useAuth } from "@/lib/auth-context"
+import { adminService } from "@/lib/admin-service"
 import { useSidebarState } from "@/lib/sidebar-state-context"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
@@ -138,7 +140,8 @@ export function AppSidebar() {
   const [showKnowledgeBaseWarning, setShowKnowledgeBaseWarning] = React.useState(false)
   const [urlChatId, setUrlChatId] = React.useState<string | null>(null)
   const [editingChatId, setEditingChatId] = React.useState<string | null>(null)
-  const { user, logout } = useAuth()
+  const [isAdminSwitchSession, setIsAdminSwitchSession] = React.useState(false)
+  const { user, logout, restoreOriginalUserRole } = useAuth()
   const { state } = useSidebar()
   
   // Knowledge base safety check
@@ -170,6 +173,26 @@ export function AppSidebar() {
 
   const handleLogout = () => {
     logout()
+  }
+
+  const handleReturnToAdmin = async () => {
+    try {
+      console.log('🔄 User - Returning to admin dashboard...');
+      
+      // Check if there's an admin context stored
+      const adminContext = adminService.getAdminContext();
+      if (adminContext) {
+        // Restore original admin role
+        restoreOriginalUserRole();
+        
+        // Redirect to admin dashboard
+        window.location.href = '/admin';
+      } else {
+        console.log('❌ User - No admin context found, cannot return to admin');
+      }
+    } catch (error) {
+      console.error('❌ User - Failed to return to admin dashboard:', error);
+    }
   }
 
   const handleNavigation = (href: string) => {
@@ -297,6 +320,17 @@ export function AppSidebar() {
       day: 'numeric'
     }).format(date)
   }
+
+  // Check if this is an admin switch session
+  React.useEffect(() => {
+    const checkAdminSwitch = () => {
+      const adminContext = adminService.getAdminContext();
+      setIsAdminSwitchSession(!!adminContext);
+      console.log('🔍 User Dashboard - Admin switch session detected:', !!adminContext);
+    };
+    
+    checkAdminSwitch();
+  }, []);
 
   // Track URL changes to force re-render
   React.useEffect(() => {
@@ -711,6 +745,31 @@ export function AppSidebar() {
               </div>
             )}
           </SidebarMenuItem>
+          
+          {/* Return to Admin Button - Only show if this is an admin switch session */}
+          {isAdminSwitchSession && (
+            <SidebarMenuItem>
+              <SidebarMenuButton
+                asChild
+                tooltip="Return to Admin Dashboard"
+              >
+                <Button
+                  variant="ghost"
+                  className={`w-full h-8 rounded-lg text-yellow-400 hover:text-yellow-300 hover:bg-yellow-900/50 overflow-hidden ${
+                    state === 'expanded'
+                      ? 'justify-start px-2'
+                      : 'justify-center p-0'
+                  }`}
+                  size="sm"
+                  onClick={handleReturnToAdmin}
+                >
+                  <Shield className="h-3 w-3 flex-shrink-0" />
+                  {state === 'expanded' && <span className="font-normal text-xs truncate ml-2">Return to Admin</span>}
+                </Button>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          )}
+          
           <SidebarMenuItem>
             <SidebarMenuButton
               asChild

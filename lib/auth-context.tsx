@@ -10,6 +10,8 @@ interface AuthContextType {
   login: (email: string, password: string) => Promise<boolean>
   logout: () => void
   refreshUser: () => Promise<void>
+  temporarilyModifyUserRole: (newRole: string) => void
+  restoreOriginalUserRole: () => void
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
@@ -20,6 +22,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true)
   const [isCheckingAuth, setIsCheckingAuth] = useState(false)
   const [justLoggedIn, setJustLoggedIn] = useState(false)
+  const [originalUser, setOriginalUser] = useState<any | null>(null)
   
   console.log('🔥 AuthProvider rendered - isAuthenticated:', isAuthenticated, 'loading:', loading)
 
@@ -217,13 +220,33 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, [checkAuthStatus])
 
+  // Function to temporarily modify user role for admin dashboard access
+  const temporarilyModifyUserRole = useCallback((newRole: string) => {
+    if (user) {
+      console.log('🔄 Auth - Temporarily modifying user role from', user.role, 'to', newRole)
+      setOriginalUser(user) // Store original user
+      setUser({ ...user, role: newRole })
+    }
+  }, [user])
+
+  // Function to restore original user role
+  const restoreOriginalUserRole = useCallback(() => {
+    if (originalUser) {
+      console.log('🔄 Auth - Restoring original user role to', originalUser.role)
+      setUser(originalUser)
+      setOriginalUser(null)
+    }
+  }, [originalUser])
+
   const value: AuthContextType = {
     isAuthenticated,
     user,
     loading,
     login,
     logout,
-    refreshUser
+    refreshUser,
+    temporarilyModifyUserRole,
+    restoreOriginalUserRole
   }
 
   return (

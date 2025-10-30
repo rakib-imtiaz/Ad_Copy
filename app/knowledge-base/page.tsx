@@ -26,6 +26,7 @@ export default function KnowledgeBasePage() {
   const [deletingItemId, setDeletingItemId] = React.useState<string | null>(null)
   const [isScraping, setIsScraping] = React.useState(false)
   const [isClearingKnowledgeBase, setIsClearingKnowledgeBase] = React.useState(false)
+  const [formResetKey, setFormResetKey] = React.useState(0)
 
   const handleFormSuccess = () => {
     setIsFormCompleted(true)
@@ -470,6 +471,17 @@ export default function KnowledgeBasePage() {
       console.log('✅ Knowledge base cleared successfully:', result)
       showToastMessage("Knowledge base cleared successfully!", 'success')
       
+      // Clear pending knowledge base data from window
+      if (typeof window !== 'undefined') {
+        delete (window as any).pendingKnowledgeBaseData
+        delete (window as any).pendingKnowledgeBaseDataTimestamp
+        console.log('🧹 Cleared pending knowledge base data from window')
+      }
+      
+      // Reset form by changing the key to force remount
+      setFormResetKey(prev => prev + 1)
+      console.log('🔄 Form reset key updated to force form reset')
+      
       // Refresh media library to reflect changes
       setTimeout(() => {
         console.log('Refreshing media library after clearing knowledge base...')
@@ -482,6 +494,45 @@ export default function KnowledgeBasePage() {
     } finally {
       setIsClearingKnowledgeBase(false)
     }
+  }
+
+  // Helper function to check if knowledge base data has meaningful content
+  const hasMeaningfulData = (data: any): boolean => {
+    if (!data) return false
+    
+    // Check brand identity fields
+    const hasBusinessInfo = data.brandIdentity?.businessNameTagline?.name?.trim() ||
+                           data.brandIdentity?.businessNameTagline?.tagline?.trim() ||
+                           data.brandIdentity?.founderNameBackstory?.founders?.trim() ||
+                           data.brandIdentity?.founderNameBackstory?.backstory?.trim() ||
+                           data.brandIdentity?.missionStatement?.whyWeExist?.trim() ||
+                           data.brandIdentity?.missionStatement?.principles?.trim() ||
+                           data.brandIdentity?.businessModelType?.trim() ||
+                           data.brandIdentity?.uniqueSellingProposition?.trim()
+    
+    // Check target audience fields
+    const hasAudienceInfo = data.targetAudience?.idealCustomerProfile?.description?.some((desc: string) => desc?.trim()) ||
+                           data.targetAudience?.primaryPainPoints?.trim() ||
+                           data.targetAudience?.primaryDesiresGoals?.some((goal: string) => goal?.trim()) ||
+                           data.targetAudience?.commonObjections?.some((obj: string) => obj?.trim())
+    
+    // Check offers
+    const hasOffers = data.offers?.some((offer: any) => 
+      offer?.name?.trim() || offer?.price?.trim() || offer?.description?.trim()
+    )
+    
+    // Check client assets
+    const hasClientAssets = data.clientAssets?.socialMediaProfiles?.instagram?.trim() ||
+                           data.clientAssets?.socialMediaProfiles?.youtube?.trim() ||
+                           data.clientAssets?.socialMediaProfiles?.facebook?.trim() ||
+                           data.clientAssets?.testimonialsCaseStudies?.some((testimonial: string) => testimonial?.trim())
+    
+    // Check other information
+    const hasOtherInfo = data.otherInformation?.trim() ||
+                        data.productName?.trim() ||
+                        data.productDescription?.trim()
+    
+    return !!(hasBusinessInfo || hasAudienceInfo || hasOffers || hasClientAssets || hasOtherInfo)
   }
 
   // Auto-populate knowledge base data on component mount
@@ -511,6 +562,15 @@ export default function KnowledgeBasePage() {
       console.log('📝 Parsing webhook data...')
       const parsedData = KnowledgeBaseWebhookParser.parseWebhookData(webhookResponse.data)
       
+      // Check if the parsed data has meaningful content
+      const hasData = hasMeaningfulData(parsedData)
+      
+      if (!hasData) {
+        console.log('⚠️ Parsed knowledge base data is empty or has no meaningful content')
+        // Don't show success toast if there's no meaningful data
+        return
+      }
+      
       // Store the parsed data globally so the form can access it
       // The form will check for this data and populate itself
       ;(window as any).pendingKnowledgeBaseData = parsedData
@@ -521,6 +581,8 @@ export default function KnowledgeBasePage() {
       console.log('✅ Knowledge base data prepared for form population')
       console.log('📊 Stored data keys:', Object.keys(parsedData))
       console.log('📊 Testimonials data:', parsedData.clientAssets?.testimonialsCaseStudies)
+      
+      // Only show success toast if there's meaningful data
       showToastMessage("Knowledge base data loaded !", 'success')
       
     } catch (error: any) {
@@ -594,6 +656,7 @@ export default function KnowledgeBasePage() {
               <div className="w-full">
                 <motion.div variants={itemVariants}>
                   <BrandFormClean 
+                    key={formResetKey}
                     onSuccess={handleFormSuccess} 
                   />
                 </motion.div>
