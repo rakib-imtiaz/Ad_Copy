@@ -73,6 +73,18 @@ export class URLScrapingService {
           }
         }
 
+        // Check for credit error in response text
+        if (responseText.includes("Don't have enough credit")) {
+          console.log('❌ Credit limit reached in webhook response')
+          return {
+            success: false,
+            error: {
+              code: "CREDIT_ERROR",
+              message: "Don't have enough credit"
+            }
+          }
+        }
+
         // Parse response
         let data
         try {

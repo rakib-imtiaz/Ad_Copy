@@ -87,7 +87,13 @@ export function BrandVoiceLinkExtractor({
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}))
         console.log('❌ API error:', errorData)
-        setCurrentError(errorData.error?.message || `Failed to extract patterns (${response.status})`)
+        
+        // Handle specific credit error
+        if (errorData.message === "Don't have enough credit") {
+          setCurrentError("You don't have enough credits to extract communication patterns. Please upgrade your plan or contact support to get more credits.")
+        } else {
+          setCurrentError(errorData.error?.message || `Failed to extract patterns (${response.status})`)
+        }
         return
       }
 
@@ -96,7 +102,13 @@ export function BrandVoiceLinkExtractor({
 
       if (!extractionResult.success) {
         console.log('❌ Pattern extraction failed:', extractionResult.error)
-        setCurrentError(extractionResult.error?.message || "Failed to extract brand voice patterns")
+        
+        // Handle specific credit error in response
+        if (extractionResult.message === "Don't have enough credit") {
+          setCurrentError("You don't have enough credits to extract communication patterns. Please upgrade your plan or contact support to get more credits.")
+        } else {
+          setCurrentError(extractionResult.error?.message || "Failed to extract brand voice patterns")
+        }
         return
       }
 
@@ -186,6 +198,25 @@ export function BrandVoiceLinkExtractor({
               </>
             )}
           </Button>
+        </div>
+        
+        {/* YouTube-only message */}
+        <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
+          <div className="flex items-start gap-3">
+            <div className="w-6 h-6 flex items-center justify-center flex-shrink-0 mt-0.5">
+              <svg className="h-6 w-6" viewBox="0 0 24 24" fill="none">
+                <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814z" fill="#FF0000"/>
+                <path d="M9.545 15.568V8.432L15.818 12l-6.273 3.568z" fill="#FFFFFF"/>
+              </svg>
+            </div>
+            <div className="text-sm text-amber-800">
+              <p className="font-medium mb-1 flex items-center gap-2">
+                <span className="text-red-600 font-bold">YouTube</span>
+                <span>Links Only</span>
+              </p>
+              <p className="text-amber-700">Currently, communication pattern extraction is only available for YouTube video links. Please paste a YouTube URL to analyze the video's communication style and tone.</p>
+            </div>
+          </div>
         </div>
         
         {currentError && (

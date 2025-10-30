@@ -92,6 +92,18 @@ export class BrandPatternExtractionService {
 
         if (!scrapeResponse.ok || !scrapeData.success) {
           console.error('❌ Scraping failed:', scrapeData.error)
+          
+          // Handle specific credit error from scraping
+          if (scrapeData.error?.message === "Don't have enough credit") {
+            return {
+              success: false,
+              error: {
+                code: "CREDIT_ERROR",
+                message: "Don't have enough credit"
+              }
+            }
+          }
+          
           return {
             success: false,
             error: {
