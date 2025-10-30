@@ -12,7 +12,7 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
-import { ChevronLeft, ChevronRight, Check, Save, Plus, Trash2, ArrowLeft } from "lucide-react"
+import { ChevronLeft, ChevronRight, Check, Save, Plus, Trash2, ArrowLeft, ArrowRight } from "lucide-react"
 import { URLScrapingSection } from "@/components/url-scraping-section"
 import { PopulateDataButton } from "@/components/populate-data-button"
 import { KnowledgeBaseSidebarNav } from "@/components/knowledge-base-sidebar-nav"
@@ -1936,6 +1936,15 @@ export function BrandFormClean({ onSuccess }: BrandFormProps) {
                           align: "start",
                           loop: false,
                         }}
+                        onKeyDown={(e) => {
+                          if (e.key === 'ArrowLeft') {
+                            e.preventDefault()
+                            productsCarouselApi?.scrollPrev()
+                          } else if (e.key === 'ArrowRight') {
+                            e.preventDefault()
+                            productsCarouselApi?.scrollNext()
+                          }
+                        }}
                       >
                         <div className="relative">
                           <CarouselContent className="-ml-2 md:-ml-4">
@@ -2005,35 +2014,78 @@ export function BrandFormClean({ onSuccess }: BrandFormProps) {
                             ))}
                           </CarouselContent>
                           
-                          {/* Navigation Arrows - Only show if more than 1 item */}
-                          {formData.offers.length > 1 && (
-                            <>
-                              <CarouselPrevious />
-                              <CarouselNext />
-                            </>
-                          )}
                         </div>
                       </Carousel>
                       
-                      {/* Dots Navigation */}
+                      {/* Enhanced Navigation */}
                       {formData.offers.length > 1 && (
-                        <div className="flex justify-center items-center gap-2 mt-4">
-                          {formData.offers.map((_, index) => (
-                            <button
-                              key={index}
-                              className={`w-2 h-2 rounded-full transition-all duration-200 ${
-                                currentProductsIndex === index
-                                  ? 'bg-blue-500 scale-125'
-                                  : 'bg-slate-300 hover:bg-slate-400'
-                              }`}
+                        <div className="flex flex-col items-center gap-4 mt-6">
+                          {/* Counter Display */}
+                          <div className="flex flex-col items-center gap-2">
+                            <div className="flex items-center gap-2 text-sm text-slate-600 bg-slate-50 px-3 py-1.5 rounded-full">
+                              <span className="font-medium">Offer {currentProductsIndex + 1} of {formData.offers.length}</span>
+                            </div>
+                            <p className="text-xs text-slate-500 text-center">
+                              Use arrow buttons, dots, or keyboard arrows to navigate
+                            </p>
+                          </div>
+                          
+                          {/* Navigation Controls */}
+                          <div className="flex items-center gap-4">
+                            {/* Previous Button */}
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
                               onClick={(e) => {
                                 e.preventDefault()
                                 e.stopPropagation()
-                                productsCarouselApi?.scrollTo(index)
+                                productsCarouselApi?.scrollPrev()
                               }}
-                              aria-label={`Go to offer ${index + 1}`}
-                            />
-                          ))}
+                              disabled={!productsCarouselApi?.canScrollPrev()}
+                              className="h-8 w-8 p-0 rounded-full border-slate-300 hover:border-blue-400 hover:bg-blue-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                              title="Previous offer"
+                            >
+                              <ArrowLeft className="h-4 w-4" />
+                            </Button>
+                            
+                            {/* Dots Navigation */}
+                            <div className="flex items-center gap-2">
+                              {formData.offers.map((_, index) => (
+                                <button
+                                  key={index}
+                                  className={`w-3 h-3 rounded-full transition-all duration-200 ${
+                                    currentProductsIndex === index
+                                      ? 'bg-blue-500 scale-110 shadow-sm'
+                                      : 'bg-slate-300 hover:bg-slate-400 hover:scale-105'
+                                  }`}
+                                  onClick={(e) => {
+                                    e.preventDefault()
+                                    e.stopPropagation()
+                                    productsCarouselApi?.scrollTo(index)
+                                  }}
+                                  aria-label={`Go to offer ${index + 1}`}
+                                />
+                              ))}
+                            </div>
+                            
+                            {/* Next Button */}
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              onClick={(e) => {
+                                e.preventDefault()
+                                e.stopPropagation()
+                                productsCarouselApi?.scrollNext()
+                              }}
+                              disabled={!productsCarouselApi?.canScrollNext()}
+                              className="h-8 w-8 p-0 rounded-full border-slate-300 hover:border-blue-400 hover:bg-blue-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                              title="Next offer"
+                            >
+                              <ArrowRight className="h-4 w-4" />
+                            </Button>
+                          </div>
                         </div>
                       )}
                     </div>
