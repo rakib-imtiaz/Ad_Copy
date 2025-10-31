@@ -644,10 +644,10 @@ export default function KnowledgeBasePage() {
           }}
           onClearKnowledgeBase={clearKnowledgeBase}
         />
-        <SidebarInset className="overflow-y-auto">
+        <SidebarInset>
           <main className="flex-1 overflow-y-auto">
             <motion.div 
-              className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100"
+              className="min-h-full bg-gradient-to-br from-slate-50 via-white to-slate-100"
               initial="hidden"
               animate="visible"
               variants={containerVariants}
