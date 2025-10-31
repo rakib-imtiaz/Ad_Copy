@@ -30,7 +30,7 @@ export default function KnowledgeBasePage() {
 
   const handleFormSuccess = () => {
     setIsFormCompleted(true)
-    setIsKnowledgeViewerOpen(true)
+    // Removed auto-trigger for knowledge base viewer - user must manually click the button
   }
 
   // Show toast helper

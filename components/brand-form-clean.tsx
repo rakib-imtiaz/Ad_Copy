@@ -1936,15 +1936,6 @@ export function BrandFormClean({ onSuccess }: BrandFormProps) {
                           align: "start",
                           loop: false,
                         }}
-                        onKeyDown={(e) => {
-                          if (e.key === 'ArrowLeft') {
-                            e.preventDefault()
-                            productsCarouselApi?.scrollPrev()
-                          } else if (e.key === 'ArrowRight') {
-                            e.preventDefault()
-                            productsCarouselApi?.scrollNext()
-                          }
-                        }}
                       >
                         <div className="relative">
                           <CarouselContent className="-ml-2 md:-ml-4">
@@ -2026,7 +2017,7 @@ export function BrandFormClean({ onSuccess }: BrandFormProps) {
                               <span className="font-medium">Offer {currentProductsIndex + 1} of {formData.offers.length}</span>
                             </div>
                             <p className="text-xs text-slate-500 text-center">
-                              Use arrow buttons, dots, or keyboard arrows to navigate
+                              Use arrow buttons or dots to navigate
                             </p>
                           </div>
                           

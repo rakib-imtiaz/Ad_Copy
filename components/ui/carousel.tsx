@@ -87,6 +87,19 @@ const Carousel = React.forwardRef<
 
     const handleKeyDown = React.useCallback(
       (event: React.KeyboardEvent<HTMLDivElement>) => {
+        // Don't intercept arrow keys if user is editing text in an input/textarea
+        const activeElement = document.activeElement
+        const isEditableElement = activeElement && (
+          activeElement.tagName === 'INPUT' ||
+          activeElement.tagName === 'TEXTAREA' ||
+          activeElement.getAttribute('contenteditable') === 'true'
+        )
+        
+        // If user is editing text, let arrow keys work normally for cursor navigation
+        if (isEditableElement) {
+          return
+        }
+        
         if (event.key === "ArrowLeft") {
           event.preventDefault()
           scrollPrev()
