@@ -50,6 +50,7 @@ import { useKnowledgeBase } from "@/hooks/use-cache"
 import { cacheHelpers } from "@/lib/cache-manager"
 import { useKnowledgeBaseSafety } from "@/hooks/use-knowledge-base-safety"
 import { KnowledgeBaseWarningModal } from "@/components/ui/knowledge-base-warning-modal"
+import { ChatSessionErrorDialog } from "@/components/ui/chat-session-error-dialog"
 
   // Helper function to format time ago
 function formatTimeAgo(date: Date): string {
@@ -346,6 +347,10 @@ export default function Dashboard() {
   const [sessionId, setSessionId] = React.useState<string>('')
   const [showCreditPopup, setShowCreditPopup] = React.useState(false)
   const [showKnowledgeBaseWarning, setShowKnowledgeBaseWarning] = React.useState(false)
+  const [showSessionErrorDialog, setShowSessionErrorDialog] = React.useState(false)
+  const [sessionError, setSessionError] = React.useState<string>('')
+  const [sessionErrorType, setSessionErrorType] = React.useState<'session_creation' | 'network' | 'authentication' | 'server' | 'unknown'>('unknown')
+  const [isRetryingSession, setIsRetryingSession] = React.useState(false)
   const [mediaItems, setMediaItems] = React.useState<any[]>([])
   const [isRefreshing, setIsRefreshing] = React.useState(false)
   const [isLoadingMedia, setIsLoadingMedia] = React.useState(false)
@@ -1544,19 +1549,45 @@ export default function Dashboard() {
 
       if (!response.ok) {
         console.error('Failed to initiate new chat. Status:', response.status)
-        const errorData = await response.json().catch(() => ({}))
-        console.error('Error details:', errorData)
         
-        // If webhook is not registered (404), create a fallback session ID
+        // Determine error type and show user-friendly error message
+        let errorType: 'session_creation' | 'network' | 'authentication' | 'server' | 'unknown' = 'unknown'
+        let errorMessage = 'Unable to start conversation'
+        
         if (response.status === 404) {
-          console.log('⚠️ Webhook not registered, creating fallback session ID')
-          const fallbackSessionId = Math.floor(Date.now() / 1000) // Use numeric timestamp
-          setSessionId(fallbackSessionId.toString())
-          console.log('🎯 FALLBACK SESSION ID STORED:', fallbackSessionId)
-          return true
+          errorType = 'session_creation'
+          errorMessage = 'The chat service is not available. Please check if the service is running or contact support.'
+        } else if (response.status === 401 || response.status === 403) {
+          errorType = 'authentication'
+          errorMessage = 'Your session has expired. Please sign in again.'
+        } else if (response.status === 500 || response.status >= 502) {
+          errorType = 'server'
+          errorMessage = 'The server is experiencing issues. Please try again later.'
+        } else if (response.status === 408 || response.status === 504) {
+          errorType = 'network'
+          errorMessage = 'The request timed out. Please check your connection and try again.'
+        } else {
+          errorType = 'session_creation'
+          errorMessage = `Unable to start conversation (Error ${response.status}). Please try again.`
         }
         
-        return false
+        // Try to get more details from error response
+        try {
+          const errorData = await response.json().catch(() => ({}))
+          console.error('Error details:', errorData)
+          if (errorData.error && typeof errorData.error === 'string') {
+            errorMessage = errorData.error
+          }
+        } catch {
+          // Use default error message if parsing fails
+        }
+        
+        setSessionError(errorMessage)
+        setSessionErrorType(errorType)
+        setShowSessionErrorDialog(true)
+        
+        console.error('❌ Failed to initiate new chat. Status:', response.status)
+        return null
       }
 
       const data = await response.json()
@@ -1587,14 +1618,13 @@ export default function Dashboard() {
       } else {
         console.warn('⚠️ No session_id in webhook response')
         console.log('📋 Full webhook response:', data)
-        // Create a fallback session ID
-        const fallbackSessionId = Math.floor(Date.now() / 1000) // Use numeric timestamp
-        setSessionId(fallbackSessionId.toString())
-        if (typeof window !== 'undefined') {
-          localStorage.setItem('chat_session_id', fallbackSessionId.toString())
-        }
-        console.log('🎯 FALLBACK SESSION ID STORED:', fallbackSessionId)
-        finalSessionId = fallbackSessionId.toString()
+        
+        // This is a critical error - no session ID means we cannot proceed
+        setSessionError('The server did not provide a valid session ID. Please try again or contact support if the issue persists.')
+        setSessionErrorType('session_creation')
+        setShowSessionErrorDialog(true)
+        
+        return null
       }
       
       // Fetch chat history when new chat is initiated
@@ -1606,7 +1636,32 @@ export default function Dashboard() {
     } catch (error) {
       console.error('Error initiating new chat:', error)
       console.log('🎯 ===== INITIATE NEW CHAT END (ERROR) =====')
-      return false
+      
+      // Determine error type from the error
+      let errorType: 'session_creation' | 'network' | 'authentication' | 'server' | 'unknown' = 'unknown'
+      let errorMessage = 'Unable to start conversation'
+      
+      if (error instanceof Error) {
+        if (error.name === 'AbortError' || error.message.includes('timeout')) {
+          errorType = 'network'
+          errorMessage = 'The request timed out. Please check your connection and try again.'
+        } else if (error.message.includes('401') || error.message.includes('Unauthorized')) {
+          errorType = 'authentication'
+          errorMessage = 'Your session has expired. Please sign in again.'
+        } else if (error.message.includes('fetch') || error.message.includes('network')) {
+          errorType = 'network'
+          errorMessage = 'Network connection failed. Please check your internet connection and try again.'
+        } else {
+          errorType = 'session_creation'
+          errorMessage = `Unable to start conversation: ${error.message}`
+        }
+      }
+      
+      setSessionError(errorMessage)
+      setSessionErrorType(errorType)
+      setShowSessionErrorDialog(true)
+      
+      return null
     }
   }
 
@@ -1936,8 +1991,13 @@ export default function Dashboard() {
       }
 
       const currentSessionId = sessionIdParam || sessionId
-      if (!currentSessionId) {
-        console.error("No session ID available")
+      if (!currentSessionId || currentSessionId.trim() === '') {
+        console.error("❌ CRITICAL: No session ID available - chat-window webhook cannot be called")
+        // This should never happen if validation is working correctly
+        // But if it does, show error dialog
+        setSessionError('Chat session is missing. Please start a new conversation.')
+        setSessionErrorType('session_creation')
+        setShowSessionErrorDialog(true)
         return null
       }
 
@@ -2315,14 +2375,51 @@ export default function Dashboard() {
             currentSessionId = newSessionId
             console.log('🎯 New session ID obtained:', newSessionId)
           } else {
-            console.warn('New chat webhook failed, but continuing with conversation')
+            // Critical: No session ID means we cannot proceed
+            console.error('❌ CRITICAL: New chat webhook failed - cannot proceed without session ID')
+            setIsLoading(false)
+            
+            // Remove the user message that was added optimistically since we can't proceed
+            setMessages(prev => {
+              const lastMessage = prev[prev.length - 1]
+              const newMessages = lastMessage && lastMessage.role === 'user' 
+                ? prev.slice(0, -1) 
+                : prev
+              if (typeof window !== 'undefined') {
+                localStorage.setItem('chat_messages', JSON.stringify(newMessages))
+              }
+              return newMessages
+            })
+            
+            // Error dialog is already shown by initiateNewChat
+            return // Stop execution - do not call chat-window webhook
           }
         } else {
           console.log('🎯 Using existing session ID for new conversation:', sessionId)
         }
       }
       
-      // Now process the AI response
+      // STRICT VALIDATION: Ensure we have a valid session ID before proceeding
+      if (!currentSessionId || currentSessionId.trim() === '') {
+        console.error('❌ CRITICAL: No valid session ID available - cannot call chat-window webhook')
+        setIsLoading(false)
+        
+        // Remove the user message that was added optimistically since we can't proceed
+        setMessages(prev => {
+          const newMessages = prev.filter(msg => msg.id !== prev[prev.length - 1]?.id || prev[prev.length - 1]?.role !== 'user')
+          if (typeof window !== 'undefined') {
+            localStorage.setItem('chat_messages', JSON.stringify(newMessages))
+          }
+          return newMessages
+        })
+        
+        setSessionError('No valid chat session available. Please start a new conversation.')
+        setSessionErrorType('session_creation')
+        setShowSessionErrorDialog(true)
+        return // Stop execution - do not call chat-window webhook
+      }
+      
+      // Now process the AI response (only if we have a valid session ID)
       await processAIResponse(content.trim(), currentSessionId)
       
     } catch (error) {
@@ -3875,6 +3972,49 @@ export default function Dashboard() {
         onRetryValidation={refreshValidation}
         isLoading={isValidatingKB}
         error={kbSafetyError}
+      />
+
+      {/* Chat Session Error Dialog */}
+      <ChatSessionErrorDialog
+        isOpen={showSessionErrorDialog}
+        onClose={() => {
+          setShowSessionErrorDialog(false)
+          setSessionError('')
+          setIsLoading(false)
+        }}
+        onRetry={async () => {
+          setIsRetryingSession(true)
+          setShowSessionErrorDialog(false)
+          try {
+            // Clear existing session
+            setSessionId('')
+            setChatStarted(false)
+            if (typeof window !== 'undefined') {
+              localStorage.removeItem('chat_session_id')
+              localStorage.removeItem('chat_started')
+            }
+            // Retry creating new session
+            const newSessionId = await initiateNewChat(true)
+            if (newSessionId && typeof newSessionId === 'string') {
+              setSessionId(newSessionId)
+              setChatStarted(true)
+              toast.success('Chat session created successfully!')
+            } else {
+              // Error will be shown by initiateNewChat
+              setShowSessionErrorDialog(true)
+            }
+          } catch (error) {
+            console.error('Error retrying session creation:', error)
+            setSessionError('Failed to retry. Please refresh the page.')
+            setSessionErrorType('unknown')
+            setShowSessionErrorDialog(true)
+          } finally {
+            setIsRetryingSession(false)
+          }
+        }}
+        error={sessionError}
+        errorType={sessionErrorType}
+        isLoading={isRetryingSession}
       />
         </motion.div>
       )}
