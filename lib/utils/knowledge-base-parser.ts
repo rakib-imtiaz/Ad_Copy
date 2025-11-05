@@ -217,17 +217,43 @@ export class KnowledgeBaseParser {
     if (offersMatch) {
       const offersText = offersMatch[1].replace(/\\n/g, '\n').replace(/\\"/g, '"')
       
-      // Parse the offers text
-      const offerNameMatch = offersText.match(/Offer Name:\s*(.+?)(?:\n|$)/i)
-      const priceMatch = offersText.match(/Price:\s*(.+?)(?:\n|$)/i)
-      const descriptionMatch = offersText.match(/Description:\s*(.+?)$/i)
+      // Split by "Offer Name:" to get individual offers
+      const offerSections = offersText.split(/Offer Name:/i).filter(section => section.trim())
       
-      if (offerNameMatch || priceMatch || descriptionMatch) {
-        data.offers = [{
-          name: offerNameMatch?.[1]?.trim() || '',
-          price: priceMatch?.[1]?.trim() || '',
-          description: descriptionMatch?.[1]?.trim() || ''
-        }]
+      if (offerSections.length > 0) {
+        data.offers = offerSections.map(section => {
+          const sectionText = section
+          const lines = section.split('\n').map(line => line.trim()).filter(line => line)
+          
+          const name = lines[0]?.trim() || ''
+          let price = ''
+          let description = ''
+          
+          // Find price line
+          const priceLine = lines.find(line => line.toLowerCase().startsWith('price:'))
+          if (priceLine) {
+            price = priceLine.replace(/^price:\s*/i, '').trim()
+          }
+          
+          // Find description - extract everything from "Description:" to the end of the section
+          // This handles multi-line descriptions
+          const descMatch = sectionText.match(/Description:\s*(.+)$/is)
+          if (descMatch) {
+            // Get everything after "Description:" and clean it up
+            description = descMatch[1]
+              .split('\n')
+              .map(line => line.trim())
+              .filter(line => line && !line.toLowerCase().startsWith('offer name:')) // Remove any accidental next offer
+              .join('\n')
+              .trim()
+          }
+          
+          return {
+            name,
+            price,
+            description
+          }
+        }).filter(offer => offer.name) // Only include offers with a name
       }
     } else {
       // Fallback to original parsing for other formats
@@ -240,13 +266,38 @@ export class KnowledgeBaseParser {
         
         if (offerStrings.length > 0) {
           data.offers = offerStrings.slice(1).map(offerText => {
+            const sectionText = offerText
             const lines = offerText.split('\n').map(l => l.trim()).filter(l => l)
-            return {
-              name: lines[0]?.trim() || '',
-              price: lines[1]?.replace(/Price:\s*/, '') || '',
-              description: lines.slice(2).join('\n') || ''
+            
+            const name = lines[0]?.trim() || ''
+            let price = ''
+            let description = ''
+            
+            // Find price line
+            const priceLine = lines.find(line => line.toLowerCase().startsWith('price:'))
+            if (priceLine) {
+              price = priceLine.replace(/^price:\s*/i, '').trim()
             }
-          })
+            
+            // Find description - extract everything from "Description:" to the end of the section
+            // This handles multi-line descriptions
+            const descMatch = sectionText.match(/Description:\s*(.+)$/is)
+            if (descMatch) {
+              // Get everything after "Description:" and clean it up
+              description = descMatch[1]
+                .split('\n')
+                .map(line => line.trim())
+                .filter(line => line && !line.toLowerCase().startsWith('offer name:')) // Remove any accidental next offer
+                .join('\n')
+                .trim()
+            }
+            
+            return {
+              name,
+              price,
+              description
+            }
+          }).filter(offer => offer.name) // Only include offers with a name
         }
       }
     }

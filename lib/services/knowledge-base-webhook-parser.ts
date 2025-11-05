@@ -135,6 +135,8 @@ export class KnowledgeBaseWebhookParser {
     const offerSections = offersData.split(/Offer Name:/i).filter(section => section.trim())
     
     offerSections.forEach(section => {
+      // Preserve the original section text for description extraction
+      const sectionText = section
       const lines = section.split('\n').map(line => line.trim()).filter(line => line)
       
       if (lines.length > 0) {
@@ -148,10 +150,17 @@ export class KnowledgeBaseWebhookParser {
           price = priceLine.replace(/^price:\s*/i, '').trim()
         }
         
-        // Find description line
-        const descLine = lines.find(line => line.toLowerCase().startsWith('description:'))
-        if (descLine) {
-          description = descLine.replace(/^description:\s*/i, '').trim()
+        // Find description - extract everything from "Description:" to the end of the section
+        // This handles multi-line descriptions
+        const descMatch = sectionText.match(/Description:\s*(.+)$/is)
+        if (descMatch) {
+          // Get everything after "Description:" and clean it up
+          description = descMatch[1]
+            .split('\n')
+            .map(line => line.trim())
+            .filter(line => line && !line.toLowerCase().startsWith('offer name:')) // Remove any accidental next offer
+            .join('\n')
+            .trim()
         }
         
         if (name) {
