@@ -150,7 +150,7 @@ export function KnowledgeBaseSidebar({
       collapsible="icon" 
       className="border-r border-gray-200 bg-white"
       style={{
-        '--sidebar-width': '14rem',
+        '--sidebar-width': '16rem',
         '--sidebar-width-icon': '3rem'
       } as React.CSSProperties}
     >
@@ -214,7 +214,7 @@ export function KnowledgeBaseSidebar({
                   </div>
                 </div>
                 <SidebarGroupContent className="flex-1 overflow-hidden">
-                  <div className="px-1 w-full h-full overflow-hidden">
+                  <div className="px-2 w-full h-full overflow-hidden">
                     <div className="space-y-2 h-full overflow-y-auto overflow-x-hidden">
                       {/* Media Library Tabs */}
                       <div className="space-y-1">

@@ -236,12 +236,12 @@ export function FilesTab({ mediaItems, onUpload, onDelete, isDeleting, deletingI
   return (
     <div className="space-y-2">
       {/* Search Input */}
-      <div className="space-y-1">
+      <div className="space-y-1 mt-2">
         <Input
           placeholder="Search files..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          className="w-full h-6 text-xs"
+          className="w-full h-6 text-xs focus-visible:ring-1 focus-visible:ring-offset-0 focus-visible:ring-blue-500/50"
         />
       </div>
 
@@ -700,14 +700,14 @@ export function LinksTab({ mediaItems, onDelete, onRefresh, setMediaItems, isDel
     <div className="space-y-2">
       {/* URL Input Form */}
       <form onSubmit={(e) => { e.preventDefault(); handleScrapeUrl(); }} className="space-y-2">
-        <div className="space-y-1">
+        <div className="space-y-1 mt-2">
           <label className="text-xs font-medium text-gray-700">Add Web Link</label>
           <div className="flex space-x-1">
             <Input
               value={urlInput}
               onChange={(e) => setUrlInput(e.target.value)}
               placeholder="https://example.com"
-              className="flex-1 h-6 text-xs"
+              className="flex-1 h-6 text-xs focus-visible:ring-1 focus-visible:ring-offset-0 focus-visible:ring-blue-500/50"
               disabled={isScraping}
             />
             <Button 
@@ -1007,14 +1007,14 @@ export function YouTubeTab({ mediaItems, onDelete, onRefresh, setMediaItems, isD
     <div className="space-y-2">
       {/* YouTube URL Input Form */}
       <form onSubmit={handleSubmitUrl} className="space-y-2">
-        <div className="space-y-1">
+        <div className="space-y-1 mt-2">
           <label className="text-xs font-medium text-gray-700">Scrape youtube transcript</label>
           <div className="flex space-x-1">
             <Input
               value={urlInput}
               onChange={(e) => setUrlInput(e.target.value)}
               placeholder="https://youtube.com/watch?v=..."
-              className="flex-1 h-6 text-xs"
+              className="flex-1 h-6 text-xs focus-visible:ring-1 focus-visible:ring-offset-0 focus-visible:ring-blue-500/50"
               disabled={isScraping}
             />
             <Button 
@@ -1486,12 +1486,12 @@ export function ImageAnalyzerTab({ mediaItems, onUpload, onDelete, isDeleting, d
   return (
     <div className="space-y-2">
       {/* Search Input */}
-      <div className="space-y-1">
+      <div className="space-y-1 mt-2">
         <Input
           placeholder="Search images..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          className="w-full h-6 text-xs"
+          className="w-full h-6 text-xs focus-visible:ring-1 focus-visible:ring-offset-0 focus-visible:ring-blue-500/50"
         />
       </div>
 
