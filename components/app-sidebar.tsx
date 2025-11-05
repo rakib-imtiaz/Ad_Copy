@@ -407,7 +407,7 @@ export function AppSidebar() {
         <SidebarGroup className="flex-1 min-h-0">
             {state === 'expanded' ? (
               <>
-                <div className="flex items-center justify-between px-1 mb-4">
+                <div className="flex items-center justify-between px-1 mb-2">
                   <SidebarGroupLabel className="text-white font-medium text-xs flex items-center gap-1">
                     <MessageSquare className="h-3 w-3 text-white" />
                     Chat History
@@ -434,7 +434,7 @@ export function AppSidebar() {
                 <SidebarGroupContent className="flex-1 overflow-hidden">
                   <div className="px-1 w-full h-full overflow-hidden">
                     <div 
-                      className="space-y-2 h-full overflow-y-auto overflow-x-hidden pr-1 chat-scroll" 
+                      className="space-y-2 h-full overflow-y-auto overflow-x-hidden pr-1 chat-scroll pt-2" 
                       style={{ 
                         maxHeight: 'calc(100vh - 300px)',
                         scrollbarWidth: 'thin',
