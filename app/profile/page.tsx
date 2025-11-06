@@ -27,8 +27,6 @@ export default function ProfilePage() {
   const { user, isAuthenticated } = useAuth()
   const [userProfile, setUserProfile] = React.useState<any>(null)
   const [isLoadingProfile, setIsLoadingProfile] = React.useState(false)
-  const [referralCode, setReferralCode] = React.useState('')
-  const [isApplyingReferral, setIsApplyingReferral] = React.useState(false)
   
   // Change password state
   const [currentPassword, setCurrentPassword] = React.useState('')
@@ -149,114 +147,6 @@ export default function ProfilePage() {
     } finally {
       setIsLoadingProfile(false)
       console.log('=== FETCH USER PROFILE CLIENT END ===')
-    }
-  }
-
-  // Function to apply referral code
-  const handleApplyReferralCode = async () => {
-    if (!referralCode.trim()) {
-      alert('Please enter a referral code')
-      return
-    }
-
-    setIsApplyingReferral(true)
-    try {
-      console.log('=== APPLY REFERRAL CODE CLIENT START ===')
-      console.log('Timestamp:', new Date().toISOString())
-      
-      // Get access token
-      const accessToken = authService.getAuthToken()
-      if (!accessToken) {
-        console.log('❌ No access token available')
-        alert('Authentication required. Please log in again.')
-        return
-      }
-
-      console.log('🔍 STEP 1: Preparing request data...')
-      const requestData = {
-        referralCode: referralCode.trim(),
-        accessToken
-      }
-      console.log('Request data:', JSON.stringify({
-        ...requestData,
-        accessToken: `${accessToken.substring(0, 20)}...`
-      }, null, 2))
-
-      console.log('🌐 STEP 2: Making API request...')
-      console.log('URL: /api/referral/apply')
-      console.log('Method: POST')
-
-      const response = await fetch('/api/referral/apply', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(requestData)
-      })
-
-      console.log('📡 STEP 3: Response received...')
-      console.log('Response status:', response.status)
-      console.log('Response status text:', response.statusText)
-      console.log('Response ok:', response.ok)
-
-      if (response.ok) {
-        try {
-          const result = await response.json()
-          console.log('✅ STEP 4: Referral code applied successfully!')
-          console.log('Response data:', JSON.stringify(result, null, 2))
-          
-          if (result.success || result.message === "credit has been added" || result.message === "Workflow was started") {
-            alert('Referral code applied successfully! Credits will be added to your account shortly.')
-            setReferralCode('') // Clear the input
-            // Refresh user profile to show updated credits with a small delay
-            setTimeout(() => {
-              console.log('🔄 Refreshing user profile after referral code application...')
-              fetchUserProfile()
-            }, 2000) // Wait 2 seconds for the credit to be updated in the database
-          } else {
-            const errorMessage = result.error?.message || 'Unknown error'
-            alert(`Failed to apply referral code: ${errorMessage}`)
-          }
-        } catch (jsonError) {
-          console.error('Failed to parse JSON response:', jsonError)
-          try {
-            const errorText = await response.text()
-            console.error('Response text:', errorText)
-          } catch (textError) {
-            console.error('Could not read response text:', textError)
-          }
-          alert('Failed to apply referral code - invalid response format')
-        }
-      } else {
-        const errorText = await response.text()
-        console.log('❌ STEP 4: HTTP error response')
-        console.log('Error details:', errorText)
-        
-        // Try to parse the error response for better error messages
-        let errorMessage = `Failed to apply referral code: ${response.status} ${response.statusText}`
-        
-        try {
-          const errorData = JSON.parse(errorText)
-          if (errorData.error && errorData.error.message) {
-            errorMessage = errorData.error.message
-          } else if (errorData.message) {
-            errorMessage = errorData.message
-          }
-        } catch (parseError) {
-          // If we can't parse JSON, use the raw text if it's meaningful
-          if (errorText.trim() && errorText.length < 200) {
-            errorMessage = errorText
-          }
-        }
-        
-        alert(errorMessage)
-      }
-    } catch (error) {
-      console.error('❌ Exception during referral code application:', error)
-      alert('An error occurred while applying the referral code. Please try again.')
-    } finally {
-      setIsApplyingReferral(false)
-      console.log('=== APPLY REFERRAL CODE CLIENT END ===')
     }
   }
 
@@ -474,26 +364,6 @@ export default function ProfilePage() {
                       </div>
                     </div>
 
-                    <Separator />
-
-                    <div>
-                      <h3 className="text-lg font-semibold mb-2">Apply Referral Code</h3>
-                      <div className="flex items-center gap-2 max-w-sm">
-                        <Input 
-                          type="text" 
-                          value={referralCode}
-                          onChange={(e) => setReferralCode(e.target.value)}
-                          placeholder="Enter referral code"
-                          disabled={isApplyingReferral}
-                        />
-                        <Button 
-                          onClick={handleApplyReferralCode}
-                          disabled={isApplyingReferral || !referralCode.trim()}
-                        >
-                          {isApplyingReferral ? 'Applying...' : 'Apply'}
-                        </Button>
-                      </div>
-                    </div>
                 </CardContent>
               </Card>
 

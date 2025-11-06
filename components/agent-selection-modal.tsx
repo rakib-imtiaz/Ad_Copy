@@ -111,10 +111,10 @@ export function AgentSelectionModal({
               </div>
               <div>
                 <DialogTitle className="text-2xl font-bold text-gray-900">
-                  What can I help with?
+                  Select Your AI Agent
                 </DialogTitle>
                 <p className="text-sm text-gray-600 mt-1">
-                  Choose an AI agent and start creating high-converting ad copy that drives results.
+                  Choose the perfect assistant for your copywriting needs.
                 </p>
               </div>
             </div>
@@ -134,11 +134,7 @@ export function AgentSelectionModal({
         <div className="space-y-6 overflow-y-auto max-h-[calc(90vh-200px)]">
           {/* Agent Selection Section */}
           <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="text-lg font-semibold text-gray-900">Select Your AI Agent</h3>
-                <p className="text-sm text-gray-600">Choose the perfect assistant for your copywriting needs.</p>
-              </div>
+            <div className="flex items-center justify-end">
               <div className="flex items-center space-x-2">
                 <Badge variant="secondary" className="bg-yellow-100 text-yellow-800">
                   {agents.length} agents available
@@ -165,8 +161,8 @@ export function AgentSelectionModal({
             </div>
 
             {/* Search Input */}
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+            <div className="relative px-1">
+              <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
               <Input
                 placeholder="Search agents..."
                 value={searchQuery}
@@ -176,15 +172,15 @@ export function AgentSelectionModal({
             </div>
 
             {/* Agents Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 items-stretch">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 items-stretch">
               {isLoadingAgents ? (
                 // Loading skeletons
                 Array.from({ length: 6 }).map((_, index) => (
                   <Card key={index} className="border-gray-200 h-full flex flex-col">
-                    <CardContent className="p-4 h-full flex flex-col">
-                      <div className="flex items-start space-x-3 flex-1">
-                        <Skeleton className="h-10 w-10 rounded-xl flex-shrink-0" />
-                        <div className="flex-1 min-w-0 space-y-2">
+                    <CardContent className="p-3 h-full flex flex-col">
+                      <div className="flex items-start space-x-2 flex-1">
+                        <Skeleton className="h-8 w-8 rounded-lg flex-shrink-0" />
+                        <div className="flex-1 min-w-0 space-y-1.5">
                           <Skeleton className="h-4 w-3/4" />
                           <Skeleton className="h-3 w-full" />
                           <Skeleton className="h-3 w-2/3" />
@@ -212,17 +208,17 @@ export function AgentSelectionModal({
                         }`}
                         onClick={() => handleAgentSelect(agent.name)}
                       >
-                        <CardContent className="p-4 h-full flex flex-col">
-                          <div className="flex items-start space-x-3 flex-1 min-h-0">
-                            <div className={`flex-shrink-0 w-10 h-10 rounded-xl flex items-center justify-center ${
+                        <CardContent className="p-3 h-full flex flex-col">
+                          <div className="flex items-start space-x-2 flex-1 min-h-0">
+                            <div className={`flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center ${
                               isSelected 
                                 ? 'bg-gradient-to-br from-yellow-400 to-yellow-600' 
                                 : 'bg-gradient-to-br from-gray-600 to-gray-700'
                             }`}>
-                              <Bot className={`h-5 w-5 ${isSelected ? 'text-black' : 'text-white'}`} />
+                              <Bot className={`h-4 w-4 ${isSelected ? 'text-black' : 'text-white'}`} />
                             </div>
                             <div className="flex-1 min-w-0 flex flex-col">
-                              <div className="flex items-start justify-between gap-2 mb-1">
+                              <div className="flex items-start justify-between gap-2 mb-0.5">
                                 <h4 className={`font-semibold text-sm text-gray-900 break-words line-clamp-2 flex-1 min-w-0 ${
                                   isSelected ? 'text-gray-900' : 'text-gray-900'
                                 }`}>
@@ -235,15 +231,15 @@ export function AgentSelectionModal({
                                     transition={{ duration: 0.2 }}
                                     className="flex-shrink-0 mt-0.5"
                                   >
-                                    <Check className="h-4 w-4 text-yellow-600" />
+                                    <Check className="h-3.5 w-3.5 text-yellow-600" />
                                   </motion.div>
                                 )}
                               </div>
-                              <p className="text-xs text-gray-600 line-clamp-2 break-words">
+                              <p className="text-xs text-gray-600 line-clamp-2 break-words leading-tight">
                                 {agent.description}
                               </p>
                               {agent.is_active === false && (
-                                <Badge variant="secondary" className="mt-2 text-xs w-fit">
+                                <Badge variant="secondary" className="mt-1.5 text-xs w-fit">
                                   Inactive
                                 </Badge>
                               )}
@@ -271,12 +267,7 @@ export function AgentSelectionModal({
 
         {/* Action Buttons */}
         {!isStartingChat && (
-          <div className="flex items-center justify-between pt-6 border-t border-gray-200">
-            <div className="text-sm text-gray-600">
-              {selectedAgentData && (
-                <span>Selected: <span className="font-medium text-gray-900">{selectedAgentData.name}</span></span>
-              )}
-            </div>
+          <div className="flex items-center justify-end pt-6 border-t border-gray-200">
             <div className="flex items-center space-x-3">
               <Button
                 variant="outline"

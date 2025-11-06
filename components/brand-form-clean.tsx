@@ -1117,6 +1117,44 @@ export function BrandFormClean({ onSuccess }: BrandFormProps) {
 
   return (
     <div className="min-h-screen bg-white flex">
+      <style dangerouslySetInnerHTML={{__html: `
+        .rounded-scrollbar::-webkit-scrollbar {
+          width: 12px;
+        }
+        .rounded-scrollbar::-webkit-scrollbar-track {
+          background: #f1f5f9;
+          border-radius: 6px;
+        }
+        .rounded-scrollbar::-webkit-scrollbar-thumb {
+          background: #cbd5e1;
+          border-radius: 6px;
+        }
+        .rounded-scrollbar::-webkit-scrollbar-thumb:hover {
+          background: #94a3b8;
+        }
+        .rounded-scrollbar::-webkit-scrollbar-button {
+          height: 12px;
+          border-radius: 6px;
+          background: #f1f5f9;
+        }
+        .rounded-scrollbar::-webkit-scrollbar-button:start:decrement {
+          border-radius: 6px 6px 0 0;
+        }
+        .rounded-scrollbar::-webkit-scrollbar-button:end:increment {
+          border-radius: 0 0 6px 6px;
+        }
+        .rounded-scrollbar::-webkit-scrollbar-corner {
+          background: #f1f5f9;
+          border-radius: 6px;
+        }
+        /* Ensure focus rings are rounded */
+        textarea:focus-visible,
+        textarea:focus,
+        input:focus-visible,
+        input:focus {
+          border-radius: 0.375rem;
+        }
+      `}} />
       {/* Sidebar Navigation */}
       <KnowledgeBaseSidebarNav
         currentStep={currentStep}
@@ -1306,7 +1344,7 @@ export function BrandFormClean({ onSuccess }: BrandFormProps) {
                     onChange={(e) => updateNestedField(['brandIdentity', 'missionStatement', 'whyWeExist'], e.target.value)}
                     rows={4}
                     placeholder="Why does your company exist? What's your purpose..."
-                    className="resize-y min-h-[100px] max-h-[200px] overflow-y-auto"
+                    className="resize-y min-h-[100px] max-h-[200px] overflow-y-auto rounded-scrollbar"
                   />
                 </div>
 
@@ -1317,7 +1355,7 @@ export function BrandFormClean({ onSuccess }: BrandFormProps) {
                     onChange={(e) => updateNestedField(['brandIdentity', 'missionStatement', 'principles'], e.target.value)}
                     rows={4}
                     placeholder="What principles guide your business..."
-                    className="resize-y min-h-[100px] max-h-[200px] overflow-y-auto"
+                    className="resize-y min-h-[100px] max-h-[200px] overflow-y-auto rounded-scrollbar"
                   />
                 </div>
 
@@ -1328,7 +1366,7 @@ export function BrandFormClean({ onSuccess }: BrandFormProps) {
                     onChange={(e) => updateNestedField(['brandIdentity', 'uniqueSellingProposition'], e.target.value)}
                     rows={4}
                     placeholder="What sets you apart from competitors..."
-                    className="resize-y min-h-[100px] max-h-[200px] overflow-y-auto"
+                    className="resize-y min-h-[100px] max-h-[200px] overflow-y-auto rounded-scrollbar"
                   />
                 </div>
               </CardContent>
@@ -1470,7 +1508,7 @@ export function BrandFormClean({ onSuccess }: BrandFormProps) {
                                     onChange={(e) => updateArrayField(['targetAudience', 'idealCustomerProfile', 'description'], index, e.target.value)}
                                     rows={4}
                                     placeholder="Describe one type of ideal customer: demographics, job roles, company size, etc..."
-                                    className="border-0 bg-transparent focus:ring-0 text-sm placeholder:text-slate-400 font-medium text-slate-700 resize-y min-h-[100px] max-h-[200px] overflow-y-auto"
+                                    className="border-0 bg-transparent focus:ring-0 text-sm placeholder:text-slate-400 font-medium text-slate-700 resize-y min-h-[100px] max-h-[200px] overflow-y-auto rounded-scrollbar"
                                   />
                                 </div>
                               </CarouselItem>
@@ -1592,7 +1630,7 @@ export function BrandFormClean({ onSuccess }: BrandFormProps) {
                                     value={word}
                                     onChange={(e) => updateArrayField(['targetAudience', 'audienceVocabulary'], index, e.target.value)}
                                     placeholder="e.g., ROI, scalability, efficiency, KPIs"
-                                    className="border-0 bg-transparent focus:ring-0 text-sm placeholder:text-slate-400 font-medium text-slate-700 resize-y min-h-[100px] max-h-[200px] overflow-y-auto"
+                                    className="border-0 bg-transparent focus:ring-0 text-sm placeholder:text-slate-400 font-medium text-slate-700 resize-y min-h-[100px] max-h-[200px] overflow-y-auto rounded-scrollbar"
                                     rows={4}
                                   />
                                 </div>
@@ -1996,7 +2034,7 @@ export function BrandFormClean({ onSuccess }: BrandFormProps) {
                                         onChange={(e) => updateOfferField(index, 'description', e.target.value)}
                                         rows={4}
                                         placeholder="Describe what this product/service includes and its key benefits..."
-                                        className="text-sm resize-y min-h-[100px] max-h-[200px] overflow-y-auto"
+                                        className="text-sm resize-y min-h-[100px] max-h-[200px] overflow-y-auto rounded-scrollbar"
                                       />
                                     </div>
                                   </div>
@@ -2110,7 +2148,7 @@ export function BrandFormClean({ onSuccess }: BrandFormProps) {
                       value={formData.productName}
                       onChange={(e) => updateField('productName', e.target.value)}
                       placeholder="e.g., Premium Business Consulting"
-                      className="h-12 focus:ring-purple-500 focus:border-purple-500"
+                      className="h-12 rounded-md focus:ring-2 focus:ring-black focus:ring-offset-0 focus:border-black"
                     />
                   </div>
 
@@ -2121,7 +2159,7 @@ export function BrandFormClean({ onSuccess }: BrandFormProps) {
                       value={formData.productPrice}
                       onChange={(e) => updateField('productPrice', e.target.value)}
                       placeholder="e.g., $2,999, Starting at $99/month"
-                      className="h-12 focus:ring-purple-500 focus:border-purple-500"
+                      className="h-12 rounded-md focus:ring-2 focus:ring-black focus:ring-offset-0 focus:border-black"
                     />
                   </div>
 
@@ -2132,7 +2170,7 @@ export function BrandFormClean({ onSuccess }: BrandFormProps) {
                       onChange={(e) => updateField('productDescription', e.target.value)}
                       rows={5}
                       placeholder="Describe what this product/service includes and its key benefits..."
-                      className="focus:ring-purple-500 focus:border-purple-500 resize-y min-h-[120px] max-h-[250px] overflow-y-auto"
+                      className="rounded-md focus:ring-2 focus:ring-black focus:ring-offset-0 focus:border-black resize-y min-h-[120px] max-h-[250px] overflow-y-auto rounded-scrollbar"
                     />
                   </div>
                 </div>
@@ -2166,7 +2204,7 @@ export function BrandFormClean({ onSuccess }: BrandFormProps) {
                     value={formData.socialInstagram}
                     onChange={(e) => updateField('socialInstagram', e.target.value)}
                     placeholder="https://instagram.com/yourbusiness"
-                    className="h-12 focus:ring-purple-500 focus:border-purple-500"
+                    className="h-12 rounded-md focus:ring-2 focus:ring-black focus:ring-offset-0 focus:border-black"
                   />
                 </div>
 
@@ -2177,7 +2215,7 @@ export function BrandFormClean({ onSuccess }: BrandFormProps) {
                     value={formData.clientAssets.socialMediaProfiles.youtube}
                     onChange={(e) => updateNestedField(['clientAssets', 'socialMediaProfiles', 'youtube'], e.target.value)}
                     placeholder="https://youtube.com/@yourbusiness"
-                    className="h-12 focus:ring-purple-500 focus:border-purple-500"
+                    className="h-12 rounded-md focus:ring-2 focus:ring-black focus:ring-offset-0 focus:border-black"
                   />
                 </div>
 
@@ -2188,7 +2226,7 @@ export function BrandFormClean({ onSuccess }: BrandFormProps) {
                     value={formData.clientAssets.socialMediaProfiles.facebook}
                     onChange={(e) => updateNestedField(['clientAssets', 'socialMediaProfiles', 'facebook'], e.target.value)}
                     placeholder="https://facebook.com/yourbusiness"
-                    className="h-12 focus:ring-purple-500 focus:border-purple-500"
+                    className="h-12 rounded-md focus:ring-2 focus:ring-black focus:ring-offset-0 focus:border-black"
                   />
                 </div>
 
@@ -2199,7 +2237,7 @@ export function BrandFormClean({ onSuccess }: BrandFormProps) {
                     value={formData.clientAssets.socialMediaProfiles.tiktok}
                     onChange={(e) => updateNestedField(['clientAssets', 'socialMediaProfiles', 'tiktok'], e.target.value)}
                     placeholder="https://tiktok.com/@yourbusiness"
-                    className="h-12 focus:ring-purple-500 focus:border-purple-500"
+                    className="h-12 rounded-md focus:ring-2 focus:ring-black focus:ring-offset-0 focus:border-black"
                   />
                 </div>
 
@@ -2210,7 +2248,7 @@ export function BrandFormClean({ onSuccess }: BrandFormProps) {
                     value={formData.socialLinkedIn}
                     onChange={(e) => updateField('socialLinkedIn', e.target.value)}
                     placeholder="https://linkedin.com/company/yourbusiness"
-                    className="h-12 focus:ring-purple-500 focus:border-purple-500"
+                    className="h-12 rounded-md focus:ring-2 focus:ring-black focus:ring-offset-0 focus:border-black"
                   />
                 </div>
               </CardContent>
@@ -2296,7 +2334,7 @@ export function BrandFormClean({ onSuccess }: BrandFormProps) {
                                     onChange={(e) => updateArrayField(['clientAssets', 'testimonialsCaseStudies'], index, e.target.value)}
                                     rows={5}
                                     placeholder="Share testimonials and case studies from your customers..."
-                                    className="border-0 bg-transparent focus:ring-0 text-sm placeholder:text-slate-400 font-medium text-slate-700 resize-y min-h-[120px] max-h-[250px] overflow-y-auto"
+                                    className="border-0 bg-transparent focus:ring-0 text-sm placeholder:text-slate-400 font-medium text-slate-700 resize-y min-h-[120px] max-h-[250px] overflow-y-auto rounded-scrollbar"
                                   />
                                 </div>
                               </CarouselItem>
@@ -2369,7 +2407,7 @@ export function BrandFormClean({ onSuccess }: BrandFormProps) {
                       onChange={(e) => updateField('testimonial', e.target.value)}
                       rows={4}
                       placeholder="Share a positive review or testimonial from a happy customer..."
-                      className="focus:ring-purple-500 focus:border-purple-500"
+                      className="rounded-md focus:ring-2 focus:ring-black focus:ring-offset-0 focus:border-black"
                     />
                   </div>
                 </div>
@@ -2403,7 +2441,7 @@ export function BrandFormClean({ onSuccess }: BrandFormProps) {
                     value={formData.brandIdentity.founderNameBackstory.founders}
                     onChange={(e) => updateNestedField(['brandIdentity', 'founderNameBackstory', 'founders'], e.target.value)}
                     placeholder="e.g., John Smith & Jane Doe"
-                    className="h-12 focus:ring-purple-500 focus:border-purple-500"
+                    className="h-12 rounded-md focus:ring-2 focus:ring-black focus:ring-offset-0 focus:border-black"
                   />
                 </div>
 
@@ -2414,7 +2452,7 @@ export function BrandFormClean({ onSuccess }: BrandFormProps) {
                     onChange={(e) => updateNestedField(['brandIdentity', 'founderNameBackstory', 'backstory'], e.target.value)}
                     rows={6}
                     placeholder="Share the story of how your company started, the challenges you faced, and what drives you..."
-                    className="focus:ring-purple-500 focus:border-purple-500 resize-y min-h-[150px] max-h-[300px] overflow-y-auto"
+                    className="border-slate-200 rounded-md focus:ring-2 focus:ring-black focus:ring-offset-0 focus:border-black resize-y min-h-[150px] max-h-[300px] overflow-y-auto rounded-scrollbar"
                   />
                 </div>
               </CardContent>
@@ -2447,7 +2485,7 @@ export function BrandFormClean({ onSuccess }: BrandFormProps) {
                     onChange={(e) => updateField('otherInformation', e.target.value)}
                     rows={6}
                     placeholder="Share any other relevant information about your business, industry insights, special considerations, or anything else that might help create better ad copy..."
-                    className="focus:ring-purple-500 focus:border-purple-500 resize-y min-h-[150px] max-h-[300px] overflow-y-auto"
+                    className="rounded-md focus:ring-2 focus:ring-black focus:ring-offset-0 focus:border-black resize-y min-h-[150px] max-h-[300px] overflow-y-auto rounded-scrollbar"
                   />
                 </div>
               </CardContent>
