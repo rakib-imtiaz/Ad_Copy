@@ -3811,8 +3811,8 @@ export default function Dashboard() {
           <div className="pointer-events-auto px-3 sm:px-6 lg:px-8 pb-4 sm:pb-6 flex justify-center">
             <div className="w-full max-w-2xl bg-white rounded-3xl shadow-xl border-2 border-gray-300 overflow-hidden">
               <div className="flex items-end gap-2 sm:gap-3 p-2 sm:p-3">
-                {/* Media Attachment Button */}
-                <button
+                {/* Media Attachment Button - TEMPORARILY HIDDEN */}
+                {/* <button
                   onClick={() => {
                   setIsMediaSelectorOpen(true)
                     if (mediaItems.length === 0) fetchMediaLibrary()
@@ -3827,7 +3827,7 @@ export default function Dashboard() {
                       {selectedMediaItems.size}
                     </span>
                   )}
-                </button>
+                </button> */}
 
                 {/* Text Input */}
                 <div className="flex-1 min-w-0">
@@ -3849,7 +3849,7 @@ export default function Dashboard() {
                     }}
                     placeholder={!selectedAgent ? "Select an agent to start..." : "Type your message..."}
                     disabled={!selectedAgent || isLoading}
-                    className="w-full border-0 bg-transparent text-sm sm:text-base resize-none min-h-[36px] max-h-[120px] focus:outline-none disabled:cursor-not-allowed placeholder:text-gray-400 py-2"
+                    className="w-full border-0 bg-transparent text-sm sm:text-base resize-none min-h-[36px] max-h-[120px] focus:outline-none disabled:cursor-not-allowed placeholder:text-gray-400 py-2 pl-2 caret-blue-500"
                     rows={1}
                     style={{ overflow: 'auto' }}
                   />
