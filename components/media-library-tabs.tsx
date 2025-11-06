@@ -234,14 +234,14 @@ export function FilesTab({ mediaItems, onUpload, onDelete, isDeleting, deletingI
   }
 
   return (
-    <div className="space-y-2">
+    <div className="space-y-2 min-w-0">
       {/* Search Input */}
-      <div className="space-y-1 mt-2">
+      <div className="space-y-1 mt-2 min-w-0 w-full">
         <Input
           placeholder="Search files..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          className="w-full h-6 text-xs focus-visible:ring-1 focus-visible:ring-offset-0 focus-visible:ring-blue-500/50"
+          className="w-[calc(100%-0.25rem)] mx-auto h-6 text-xs focus-visible:ring-1 focus-visible:ring-offset-0 focus-visible:ring-blue-500/50"
         />
       </div>
 
@@ -702,7 +702,7 @@ export function LinksTab({ mediaItems, onDelete, onRefresh, setMediaItems, isDel
       <form onSubmit={(e) => { e.preventDefault(); handleScrapeUrl(); }} className="space-y-2">
         <div className="space-y-1 mt-2">
           <label className="text-xs font-medium text-gray-700">Add Web Link</label>
-          <div className="flex space-x-1">
+          <div className="flex space-x-1 px-0.5">
             <Input
               value={urlInput}
               onChange={(e) => setUrlInput(e.target.value)}
@@ -1009,7 +1009,7 @@ export function YouTubeTab({ mediaItems, onDelete, onRefresh, setMediaItems, isD
       <form onSubmit={handleSubmitUrl} className="space-y-2">
         <div className="space-y-1 mt-2">
           <label className="text-xs font-medium text-gray-700">Scrape youtube transcript</label>
-          <div className="flex space-x-1">
+          <div className="flex space-x-1 px-0.5">
             <Input
               value={urlInput}
               onChange={(e) => setUrlInput(e.target.value)}
@@ -1491,7 +1491,7 @@ export function ImageAnalyzerTab({ mediaItems, onUpload, onDelete, isDeleting, d
           placeholder="Search images..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          className="w-full h-6 text-xs focus-visible:ring-1 focus-visible:ring-offset-0 focus-visible:ring-blue-500/50"
+          className="w-[calc(100%-0.25rem)] mx-auto h-6 text-xs focus-visible:ring-1 focus-visible:ring-offset-0 focus-visible:ring-blue-500/50"
         />
       </div>
 

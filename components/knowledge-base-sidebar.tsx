@@ -214,8 +214,8 @@ export function KnowledgeBaseSidebar({
                   </div>
                 </div>
                 <SidebarGroupContent className="flex-1 overflow-hidden">
-                  <div className="px-2 w-full h-full overflow-hidden">
-                    <div className="space-y-2 h-full overflow-y-auto overflow-x-hidden">
+                  <div className="px-2 w-full h-full overflow-hidden min-w-0">
+                    <div className="space-y-2 h-full overflow-y-auto overflow-x-hidden min-w-0">
                       {/* Media Library Tabs */}
                       <div className="space-y-1">
                         <Select value={activeTab} onValueChange={(value: any) => setActiveTab(value)}>

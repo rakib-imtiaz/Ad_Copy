@@ -78,29 +78,33 @@ export const CreditDisplay = React.forwardRef<{ refresh: () => void }, CreditDis
       <TooltipProvider>
         <Tooltip>
           <TooltipTrigger asChild>
-            <div className={`flex items-center gap-1.5 px-2 py-1.5 rounded-md bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 hover:from-amber-100 hover:to-orange-100 transition-all duration-200 cursor-pointer min-w-0 ${className}`}>
-              <div className="w-5 h-5 bg-amber-500 rounded-full flex items-center justify-center flex-shrink-0">
-                <Coins className="h-3 w-3 text-white" />
+            <div className={`flex items-center justify-center w-full py-1.5 ${className}`}>
+              <div className={`relative w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 transition-all duration-200 ${
+                isLowCredit 
+                  ? 'bg-gradient-to-br from-red-500 to-red-600 shadow-sm' 
+                  : 'bg-gradient-to-br from-amber-500 to-orange-500 shadow-sm'
+              }`}>
+                {isLoading ? (
+                  <Loader2 className="h-4 w-4 animate-spin text-white" />
+                ) : error ? (
+                  <AlertCircle className="h-4 w-4 text-white" />
+                ) : (
+                  <Coins className="h-4 w-4 text-white" />
+                )}
+                {!isLoading && !error && isLowCredit && (
+                  <div className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 bg-red-600 rounded-full border-2 border-white" />
+                )}
               </div>
-              {isLoading ? (
-                <Loader2 className="h-3 w-3 animate-spin text-amber-600" />
-              ) : error ? (
-                <AlertCircle className="h-3 w-3 text-red-500" />
-              ) : (
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-1">
-                    <span className={`text-xs font-medium ${isLowCredit ? 'text-red-600' : 'text-amber-700'} whitespace-nowrap`}>
-                      {credits}
-                    </span>
-                    <span className="text-xs text-amber-600">tokens</span>
-                  </div>
-                </div>
-              )}
             </div>
           </TooltipTrigger>
-          <TooltipContent>
-            <p>Available Credits: {credits} tokens</p>
-            {isLowCredit && <p className="text-red-500 text-xs">Low credit warning</p>}
+          <TooltipContent side="right" align="center">
+            <div className="space-y-1">
+              <p className="font-semibold">Credits</p>
+              <p className="text-sm">{credits} tokens</p>
+              {isLowCredit && (
+                <p className="text-xs text-red-500 font-medium">Low credit warning</p>
+              )}
+            </div>
           </TooltipContent>
         </Tooltip>
       </TooltipProvider>
