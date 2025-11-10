@@ -68,9 +68,12 @@ export function AgentSelectionModal({
     )
   }, [agents, searchQuery])
 
-  const handleAgentSelect = (agentName: string) => {
+  const handleAgentSelect = (agentName: string, autoStart = false) => {
     setLocalSelectedAgent(agentName)
     onSelectAgent(agentName)
+    if (autoStart) {
+      onStartChatting()
+    }
   }
 
   const handleStartChatting = () => {
@@ -118,28 +121,20 @@ export function AgentSelectionModal({
                 </p>
               </div>
             </div>
-            {!isStartingChat && (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={onClose}
-                className="h-8 w-8 p-0 text-muted-foreground hover:text-foreground hover:bg-muted"
-              >
-                <X className="h-4 w-4" />
-              </Button>
-            )}
+            <div className="h-8 w-8" />
           </div>
         </DialogHeader>
 
-        <div className="space-y-6 overflow-y-auto max-h-[calc(90vh-200px)]">
+        <div className="space-y-6 overflow-y-auto max-h-[calc(90vh-160px)]">
           {/* Agent Selection Section */}
           <div className="space-y-4">
-            <div className="flex items-center justify-end">
-              <div className="flex items-center space-x-2">
-                <Badge variant="secondary" className="bg-brand-light text-black">
-                  {agents.length} agents available
-                </Badge>
-                <TooltipProvider>
+            <div className="flex flex-wrap items-center justify-start gap-3">
+              <p className="text-xs text-muted-foreground px-1">Double-click an agent to start chatting instantly.</p>
+              <TooltipProvider>
+                <div className="flex items-center space-x-2">
+                  <Badge variant="secondary" className="bg-brand-light text-black">
+                    {agents.length} agents available
+                  </Badge>
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <Button
@@ -156,8 +151,8 @@ export function AgentSelectionModal({
                       <p>Refresh agents</p>
                     </TooltipContent>
                   </Tooltip>
-                </TooltipProvider>
-              </div>
+                </div>
+              </TooltipProvider>
             </div>
 
             {/* Search Input */}
@@ -207,6 +202,7 @@ export function AgentSelectionModal({
                             : 'border-border hover:border-brand/60 hover:shadow-md'
                         }`}
                         onClick={() => handleAgentSelect(agent.name)}
+                        onDoubleClick={() => handleAgentSelect(agent.name, true)}
                       >
                         <CardContent className="p-3 h-full flex flex-col">
                           <div className="flex items-start space-x-2 flex-1 min-h-0">
@@ -263,26 +259,16 @@ export function AgentSelectionModal({
           </div>
         </div>
 
-        {/* Action Buttons */}
+        {/* Footer */}
         {!isStartingChat && (
           <div className="flex items-center justify-end pt-6 border-t border-border">
-            <div className="flex items-center space-x-3">
-              <Button
-                variant="outline"
-                onClick={onClose}
-                className="px-6 text-foreground"
-              >
-                Cancel
-              </Button>
-              <Button
-                onClick={handleStartChatting}
-                disabled={!localSelectedAgent || isStartingChat}
-                className="px-6 bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-black font-semibold"
-              >
-                Start Chatting
-                <ArrowRight className="h-4 w-4 ml-2" />
-              </Button>
-            </div>
+            <Button
+              variant="outline"
+              onClick={onClose}
+              className="px-6 text-foreground"
+            >
+              Close
+            </Button>
           </div>
         )}
       </DialogContent>
