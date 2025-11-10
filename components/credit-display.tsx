@@ -92,7 +92,7 @@ export const CreditDisplay = React.forwardRef<{ refresh: () => void }, CreditDis
                   <Coins className="h-4 w-4 text-white" />
                 )}
                 {!isLoading && !error && isLowCredit && (
-                  <div className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 bg-red-600 rounded-full border-2 border-white" />
+                  <div className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 bg-red-600 rounded-full border-2 border-background" />
                 )}
               </div>
             </div>
@@ -112,17 +112,17 @@ export const CreditDisplay = React.forwardRef<{ refresh: () => void }, CreditDis
   }
 
   return (
-    <div className={`bg-gradient-to-br from-slate-50 to-slate-100 border border-slate-200 rounded-lg p-2 shadow-sm ${className}`}>
+    <div className={`bg-background border border-border rounded-lg p-2 shadow-sm ${className}`}>
       <div className="flex items-center gap-2">
         <div className="w-6 h-6 bg-gradient-to-br from-amber-500 to-orange-500 rounded-lg flex items-center justify-center shadow-sm">
           <Coins className="h-3 w-3 text-white" />
         </div>
         <div>
-          <p className="text-xs font-semibold text-slate-600 uppercase tracking-wide">Credits</p>
+          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Credits</p>
           {isLoading ? (
             <div className="flex items-center gap-2">
               <Loader2 className="h-3 w-3 animate-spin text-amber-600" />
-              <span className="text-xs text-slate-500">Loading...</span>
+              <span className="text-xs text-muted-foreground">Loading...</span>
             </div>
           ) : error ? (
             <div className="flex items-center gap-2">
@@ -131,10 +131,10 @@ export const CreditDisplay = React.forwardRef<{ refresh: () => void }, CreditDis
             </div>
           ) : (
             <div className="flex items-center gap-1.5 min-w-0">
-              <span className={`text-xs font-medium ${isLowCredit ? 'text-red-600' : 'text-slate-900'} whitespace-nowrap`}>
+              <span className={`text-xs font-medium ${isLowCredit ? 'text-red-400' : 'text-foreground'} whitespace-nowrap`}>
                 {credits}
               </span>
-              <span className="text-xs text-slate-500 font-medium flex-shrink-0">tokens</span>
+              <span className="text-xs text-muted-foreground font-medium flex-shrink-0">tokens</span>
               {isLowCredit && (
                 <Badge variant="destructive" className="text-xs px-1.5 py-0.5 flex-shrink-0">
                   Low

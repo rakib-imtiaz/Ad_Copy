@@ -3605,7 +3605,7 @@ export default function Dashboard() {
   }
 
   return (
-      <div className="h-[calc(100vh-4rem)] bg-gradient-to-br from-slate-50 via-white to-blue-50/20 text-slate-800 font-sans">
+      <div className="h-[calc(100vh-4rem)] bg-background text-foreground font-sans">
       {!chatStarted && !currentChatSession ? (
         // Show empty state or welcome message when no chat is active
         <div className="h-full flex items-center justify-center">
@@ -3637,13 +3637,13 @@ export default function Dashboard() {
           className="h-full"
         >
       {/* Modern Chat Interface - Clean Black & White Theme */}
-      <div className="h-[calc(100vh-4rem)] flex flex-col bg-white">
+      <div className="h-[calc(100vh-4rem)] flex flex-col bg-background">
         {/* Compact Animated Header - Yellow/Black/White Theme */}
         <motion.div 
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, ease: "easeOut" }}
-          className="flex-shrink-0 bg-white border-b border-gray-200 sticky top-0 z-30 shadow-sm"
+          className="flex-shrink-0 bg-background border-b border-border sticky top-0 z-30 shadow-sm"
         >
           <div className="px-3 py-2">
             {/* First Row - Agent */}
@@ -3654,14 +3654,14 @@ export default function Dashboard() {
               className="flex items-center justify-between mb-2"
             >
               <div className="flex items-center space-x-3">
-                <div className="h-8 w-8 rounded-lg bg-black flex items-center justify-center shadow-sm">
-                  <Bot className="h-4 w-4 text-white" />
+                <div className="h-8 w-8 rounded-lg bg-foreground flex items-center justify-center shadow-sm">
+                  <Bot className="h-4 w-4 text-background" />
                 </div>
                 <div>
-                  <h2 className="text-sm font-medium text-black">
+                  <h2 className="text-sm font-medium text-foreground">
                     Agent
                   </h2>
-                  <p className="text-xs text-gray-600">
+                  <p className="text-xs text-muted-foreground">
                     {selectedAgent || 'Select an agent to get started'}
                   </p>
                 </div>
@@ -3691,49 +3691,49 @@ export default function Dashboard() {
                       <div className={`rounded-2xl px-3 sm:px-4 py-2.5 sm:py-3 ${
                         isUser 
                           ? 'bg-black text-white' 
-                          : 'bg-gray-100 text-gray-900'
+                          : 'bg-muted text-foreground'
                       }`}>
-                        <div className={`text-xs leading-relaxed break-words prose prose-sm max-w-none ${isUser ? 'prose-invert' : ''}`}>
+                        <div className={`text-xs leading-relaxed break-words prose prose-sm max-w-none ${isUser ? 'prose-invert' : 'text-foreground'}`}>
                           <ReactMarkdown
                             remarkPlugins={[remarkGfm]}
                             rehypePlugins={[rehypeHighlight]}
                             components={{
                               // Headings - smaller sizes
-                              h1: ({ children }) => <h1 className={`text-sm font-bold mb-2 mt-3 first:mt-0 ${isUser ? 'text-white' : 'text-gray-900'}`}>{children}</h1>,
-                              h2: ({ children }) => <h2 className={`text-xs font-bold mb-1.5 mt-2.5 first:mt-0 ${isUser ? 'text-white' : 'text-gray-900'}`}>{children}</h2>,
-                              h3: ({ children }) => <h3 className={`text-xs font-semibold mb-1 mt-2 first:mt-0 ${isUser ? 'text-white' : 'text-gray-900'}`}>{children}</h3>,
-                              h4: ({ children }) => <h4 className={`text-xs font-medium mb-1 mt-1.5 first:mt-0 ${isUser ? 'text-white' : 'text-gray-900'}`}>{children}</h4>,
+                              h1: ({ children }) => <h1 className={`text-sm font-bold mb-2 mt-3 first:mt-0 ${isUser ? 'text-white' : 'text-foreground'}`}>{children}</h1>,
+                              h2: ({ children }) => <h2 className={`text-xs font-bold mb-1.5 mt-2.5 first:mt-0 ${isUser ? 'text-white' : 'text-foreground'}`}>{children}</h2>,
+                              h3: ({ children }) => <h3 className={`text-xs font-semibold mb-1 mt-2 first:mt-0 ${isUser ? 'text-white' : 'text-foreground'}`}>{children}</h3>,
+                              h4: ({ children }) => <h4 className={`text-xs font-medium mb-1 mt-1.5 first:mt-0 ${isUser ? 'text-white' : 'text-foreground'}`}>{children}</h4>,
                               
                               // Paragraphs - smaller text with preserved line breaks
-                              p: ({ children }) => <p className={`leading-relaxed mb-1.5 last:mb-0 text-xs ${isUser ? 'text-white' : 'text-gray-900'} whitespace-pre-wrap`}>{children}</p>,
+                              p: ({ children }) => <p className={`leading-relaxed mb-1.5 last:mb-0 text-xs ${isUser ? 'text-white' : 'text-foreground'} whitespace-pre-wrap`}>{children}</p>,
                               
                               // Lists - smaller text with better spacing
-                              ul: ({ children }) => <ul className={`list-disc list-outside mb-2 space-y-1 pl-5 text-xs ${isUser ? 'text-white marker:text-white' : 'text-gray-900 marker:text-gray-900'}`}>{children}</ul>,
-                              ol: ({ children }) => <ol className={`list-decimal list-outside mb-2 space-y-1 pl-5 text-xs ${isUser ? 'text-white marker:text-white' : 'text-gray-900 marker:text-gray-900'}`}>{children}</ol>,
-                              li: ({ children }) => <li className={`leading-relaxed text-xs mb-0.5 ${isUser ? 'text-white' : 'text-gray-900'}`}>{children}</li>,
+                              ul: ({ children }) => <ul className={`list-disc list-outside mb-2 space-y-1 pl-5 text-xs ${isUser ? 'text-white marker:text-white' : 'text-foreground marker:text-foreground'}`}>{children}</ul>,
+                              ol: ({ children }) => <ol className={`list-decimal list-outside mb-2 space-y-1 pl-5 text-xs ${isUser ? 'text-white marker:text-white' : 'text-foreground marker:text-foreground'}`}>{children}</ol>,
+                              li: ({ children }) => <li className={`leading-relaxed text-xs mb-0.5 ${isUser ? 'text-white' : 'text-foreground'}`}>{children}</li>,
                               
                               // Text formatting
-                              strong: ({ children }) => <strong className={`font-bold text-xs ${isUser ? 'text-white' : 'text-gray-900'}`}>{children}</strong>,
-                              em: ({ children }) => <em className={`italic text-xs ${isUser ? 'text-white' : 'text-gray-900'}`}>{children}</em>,
+                              strong: ({ children }) => <strong className={`font-bold text-xs ${isUser ? 'text-white' : 'text-foreground'}`}>{children}</strong>,
+                              em: ({ children }) => <em className={`italic text-xs ${isUser ? 'text-white' : 'text-foreground'}`}>{children}</em>,
                               
                               // Code
                               code: ({ children, className }) => {
                                 const isInline = !className
                                 if (isInline) {
-                                  return <code className={`px-1 py-0.5 rounded text-[11px] font-mono ${isUser ? 'bg-gray-800 text-white' : 'bg-gray-200 text-gray-900'}`}>{children}</code>
+                                  return <code className={`px-1 py-0.5 rounded text-[11px] font-mono ${isUser ? 'bg-gray-800 text-white' : 'bg-muted text-foreground'}`}>{children}</code>
                                 }
                                 return <code className={className}>{children}</code>
                               },
-                              pre: ({ children }) => <pre className={`p-2 rounded-lg overflow-x-auto mb-2 whitespace-pre-wrap break-words text-[11px] ${isUser ? 'bg-gray-800 text-white' : 'bg-gray-200 text-gray-900'}`}>{children}</pre>,
+                              pre: ({ children }) => <pre className={`p-2 rounded-lg overflow-x-auto mb-2 whitespace-pre-wrap break-words text-[11px] ${isUser ? 'bg-gray-800 text-white' : 'bg-muted text-foreground'}`}>{children}</pre>,
                               
                               // Links
-                              a: ({ href, children }) => <a href={href} className={`underline text-xs ${isUser ? 'text-blue-300 hover:text-blue-200' : 'text-blue-600 hover:text-blue-800'}`} target="_blank" rel="noopener noreferrer">{children}</a>,
+                              a: ({ href, children }) => <a href={href} className={`underline text-xs ${isUser ? 'text-blue-300 hover:text-blue-200' : 'text-yellow-300 hover:text-yellow-200'}`} target="_blank" rel="noopener noreferrer">{children}</a>,
                               
                               // Blockquotes
-                              blockquote: ({ children }) => <blockquote className={`border-l-4 pl-2 italic mb-2 text-xs ${isUser ? 'border-gray-600 text-gray-200' : 'border-gray-400 text-gray-700'}`}>{children}</blockquote>,
+                              blockquote: ({ children }) => <blockquote className={`border-l-4 pl-2 italic mb-2 text-xs ${isUser ? 'border-gray-600 text-gray-200' : 'border-border text-muted-foreground'}`}>{children}</blockquote>,
                               
                               // Horizontal rule
-                              hr: () => <hr className={`my-2 ${isUser ? 'border-gray-600' : 'border-gray-300'}`} />,
+                              hr: () => <hr className={`my-2 border-border`} />,
                             }}
                           >
                             {preprocessMarkdown(msg.content)}
@@ -3742,7 +3742,7 @@ export default function Dashboard() {
             </div>
                       
                       {/* Timestamp */}
-                      <div className={`flex items-center gap-2 mt-1.5 text-xs text-gray-400 ${isUser ? 'justify-end' : 'justify-start'}`}>
+                      <div className={`flex items-center gap-2 mt-1.5 text-xs text-muted-foreground ${isUser ? 'justify-end' : 'justify-start'}`}>
                         <span>{(() => {
                           try {
                             // Handle both string and Date timestamps
@@ -3784,17 +3784,17 @@ export default function Dashboard() {
             {isLoading && (
               <div className="flex justify-start w-full">
                 <div className="flex gap-2 sm:gap-3 max-w-[90%] sm:max-w-[85%] lg:max-w-[75%]">
-                  <div className="flex-shrink-0 w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-black flex items-center justify-center">
+                  <div className="flex-shrink-0 w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-foreground flex items-center justify-center">
                     <Bot className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-yellow-400" />
                 </div>
-                  <div className="bg-gray-100 rounded-2xl px-3 sm:px-4 py-2.5 sm:py-3">
+                  <div className="bg-muted rounded-2xl px-3 sm:px-4 py-2.5 sm:py-3">
                     <div className="flex items-center gap-2">
                       <div className="flex gap-1">
-                        <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
-                        <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-                        <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                        <div className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce"></div>
+                        <div className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+                        <div className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
                       </div>
-                      <span className="text-sm text-gray-600 font-medium">AI is thinking...</span>
+                      <span className="text-sm text-muted-foreground font-medium">AI is thinking...</span>
                     </div>
                   </div>
           </div>
@@ -3807,9 +3807,9 @@ export default function Dashboard() {
         </div>
 
         {/* Floating Chat Input - Compact & Responsive */}
-        <div className="fixed bottom-0 left-0 right-0 sm:left-auto sm:right-0 sm:w-[calc(100%-16rem)] lg:w-[calc(100%-18rem)] z-40 bg-gradient-to-t from-white via-white to-transparent pointer-events-none">
+        <div className="fixed bottom-0 left-0 right-0 sm:left-auto sm:right-0 sm:w-[calc(100%-16rem)] lg:w-[calc(100%-18rem)] z-40 bg-gradient-to-t from-background via-background to-transparent pointer-events-none">
           <div className="pointer-events-auto px-3 sm:px-6 lg:px-8 pb-4 sm:pb-6 flex justify-center">
-            <div className="w-full max-w-2xl bg-white rounded-3xl shadow-xl border-2 border-gray-300 overflow-hidden">
+            <div className="w-full max-w-2xl bg-background rounded-3xl shadow-xl border-2 border-border overflow-hidden">
               <div className="flex items-end gap-2 sm:gap-3 p-2 sm:p-3">
                 {/* Media Attachment Button - TEMPORARILY HIDDEN */}
                 {/* <button
@@ -3849,7 +3849,7 @@ export default function Dashboard() {
                     }}
                     placeholder={!selectedAgent ? "Select an agent to start..." : "Type your message..."}
                     disabled={!selectedAgent || isLoading}
-                    className="w-full border-0 bg-transparent text-sm sm:text-base resize-none min-h-[36px] max-h-[120px] focus:outline-none disabled:cursor-not-allowed placeholder:text-gray-400 py-2 pl-2 caret-blue-500"
+                    className="w-full border-0 bg-transparent text-sm sm:text-base resize-none min-h-[36px] max-h-[120px] focus:outline-none disabled:cursor-not-allowed placeholder:text-muted-foreground py-2 pl-2 caret-yellow-400 text-foreground"
                     rows={1}
                     style={{ overflow: 'auto' }}
                   />

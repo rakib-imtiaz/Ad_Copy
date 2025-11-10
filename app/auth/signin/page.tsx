@@ -111,6 +111,18 @@ export default function SignInPage() {
   };
 
   return (
+    <>
+    <style jsx global>{`
+      input:-webkit-autofill,
+      input:-webkit-autofill:hover,
+      input:-webkit-autofill:focus,
+      input:-webkit-autofill:active {
+        -webkit-text-fill-color: #111111;
+        box-shadow: 0 0 0px 1000px #ffffff inset;
+        -webkit-box-shadow: 0 0 0px 1000px #ffffff inset;
+        transition: background-color 9999s ease-in-out 0s;
+      }
+    `}</style>
     <div className="rfa-theme bg-rfa-white text-rfa-black min-h-screen">
       <LandingHeader />
       <div className="relative min-h-screen bg-hero-gradient">
@@ -227,7 +239,7 @@ export default function SignInPage() {
                         onChange={(e) => setEmail(e.target.value)}
                         required
                         disabled={isLoading}
-                        className="bg-white/90 backdrop-blur-sm border-gray-300 text-gray-900 placeholder:text-gray-500 focus:border-brand focus:ring-2 focus:ring-brand/20 transition-all duration-200 focus:scale-[1.02]"
+                        className="bg-white text-gray-900 placeholder:text-gray-500 border border-white/60 shadow-inner focus:border-brand focus:ring-2 focus:ring-brand/40 transition-all duration-200 focus:scale-[1.02]"
                       />
                     </motion.div>
                     
@@ -255,7 +267,7 @@ export default function SignInPage() {
                         onChange={(e) => setPassword(e.target.value)}
                         required
                         disabled={isLoading}
-                        className="bg-white/90 backdrop-blur-sm border-gray-300 text-gray-900 placeholder:text-gray-500 focus:border-brand focus:ring-2 focus:ring-brand/20 transition-all duration-200 focus:scale-[1.02]"
+                        className="bg-white text-gray-900 placeholder:text-gray-500 border border-white/60 shadow-inner focus:border-brand focus:ring-2 focus:ring-brand/40 transition-all duration-200 focus:scale-[1.02]"
                       />
                     </motion.div>
                     
@@ -325,6 +337,7 @@ export default function SignInPage() {
         </div>
       </div>
     </div>
+  </>
   );
 }
 

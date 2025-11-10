@@ -623,7 +623,7 @@ export default function KnowledgeBasePage() {
   
   return (
     <ProtectedRoute>
-      <SidebarProvider>
+      <SidebarProvider className="knowledge-base-surface">
         <KnowledgeBaseSidebar
           mediaItems={mediaItems}
           setMediaItems={setMediaItems}
@@ -644,10 +644,10 @@ export default function KnowledgeBasePage() {
           }}
           onClearKnowledgeBase={clearKnowledgeBase}
         />
-        <SidebarInset>
-          <main className="flex-1 overflow-y-auto">
+        <SidebarInset className="bg-background text-foreground">
+          <main className="flex-1 overflow-y-auto bg-background text-foreground">
             <motion.div 
-              className="min-h-full bg-gradient-to-br from-slate-50 via-white to-slate-100"
+              className="min-h-full bg-background knowledge-base-surface"
               initial="hidden"
               animate="visible"
               variants={containerVariants}

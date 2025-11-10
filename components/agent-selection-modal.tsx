@@ -83,17 +83,17 @@ export function AgentSelectionModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={isStartingChat ? undefined : onClose}>
-      <DialogContent className="max-w-4xl w-full max-h-[90vh] overflow-hidden bg-white border-0 shadow-2xl">
+      <DialogContent className="max-w-4xl w-full max-h-[90vh] overflow-hidden bg-background text-foreground border border-border shadow-2xl">
         {/* Loading Overlay */}
         {isStartingChat && (
-          <div className="absolute inset-0 bg-white/95 backdrop-blur-sm z-50 flex items-center justify-center">
+          <div className="absolute inset-0 bg-background/95 backdrop-blur-sm z-50 flex items-center justify-center">
             <div className="text-center space-y-6">
               <div className="w-16 h-16 mx-auto bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-2xl flex items-center justify-center shadow-lg">
                 <RefreshCw className="h-8 w-8 text-black animate-spin" />
               </div>
               <div className="space-y-2">
-                <h3 className="text-xl font-semibold text-gray-900">Starting Your Chat</h3>
-                <p className="text-gray-600">Setting up your AI agent and preparing the conversation...</p>
+                <h3 className="text-xl font-semibold text-foreground">Starting Your Chat</h3>
+                <p className="text-muted-foreground">Setting up your AI agent and preparing the conversation...</p>
               </div>
               <div className="flex items-center justify-center space-x-2">
                 <div className="w-2 h-2 bg-yellow-500 rounded-full animate-bounce"></div>
@@ -110,10 +110,10 @@ export function AgentSelectionModal({
                 <Sparkles className="h-5 w-5 text-black" />
               </div>
               <div>
-                <DialogTitle className="text-2xl font-bold text-gray-900">
+                <DialogTitle className="text-2xl font-bold text-foreground">
                   Select Your AI Agent
                 </DialogTitle>
-                <p className="text-sm text-gray-600 mt-1">
+                <p className="text-sm text-muted-foreground mt-1">
                   Choose the perfect assistant for your copywriting needs.
                 </p>
               </div>
@@ -123,7 +123,7 @@ export function AgentSelectionModal({
                 variant="ghost"
                 size="sm"
                 onClick={onClose}
-                className="h-8 w-8 p-0 text-gray-500 hover:text-gray-700 hover:bg-gray-100"
+                className="h-8 w-8 p-0 text-muted-foreground hover:text-foreground hover:bg-muted"
               >
                 <X className="h-4 w-4" />
               </Button>
@@ -136,7 +136,7 @@ export function AgentSelectionModal({
           <div className="space-y-4">
             <div className="flex items-center justify-end">
               <div className="flex items-center space-x-2">
-                <Badge variant="secondary" className="bg-yellow-100 text-yellow-800">
+                <Badge variant="secondary" className="bg-brand-light text-black">
                   {agents.length} agents available
                 </Badge>
                 <TooltipProvider>
@@ -147,7 +147,7 @@ export function AgentSelectionModal({
                         size="sm"
                         onClick={onRefreshAgents}
                         disabled={isLoadingAgents}
-                        className="h-8 w-8 p-0 text-gray-600 hover:text-yellow-600 hover:bg-yellow-100"
+                        className="h-8 w-8 p-0 text-muted-foreground hover:text-brand hover:bg-brand/10"
                       >
                         <RefreshCw className={`h-4 w-4 ${isLoadingAgents ? 'animate-spin' : ''}`} />
                       </Button>
@@ -162,12 +162,12 @@ export function AgentSelectionModal({
 
             {/* Search Input */}
             <div className="relative px-1">
-              <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
                 placeholder="Search agents..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10 h-10 border-gray-300 focus:border-yellow-500 focus:ring-yellow-500"
+                className="pl-10 h-10 bg-background border border-border text-foreground focus:border-brand focus:ring-brand"
               />
             </div>
 
@@ -176,7 +176,7 @@ export function AgentSelectionModal({
               {isLoadingAgents ? (
                 // Loading skeletons
                 Array.from({ length: 6 }).map((_, index) => (
-                  <Card key={index} className="border-gray-200 h-full flex flex-col">
+                  <Card key={index} className="border-border h-full flex flex-col bg-background">
                     <CardContent className="p-3 h-full flex flex-col">
                       <div className="flex items-start space-x-2 flex-1">
                         <Skeleton className="h-8 w-8 rounded-lg flex-shrink-0" />
@@ -201,10 +201,10 @@ export function AgentSelectionModal({
                       transition={{ duration: 0.3 }}
                     >
                       <Card 
-                        className={`cursor-pointer transition-all duration-200 border-2 h-full flex flex-col ${
+                        className={`cursor-pointer transition-all duration-200 border-2 h-full flex flex-col bg-background ${
                           isSelected 
-                            ? 'border-yellow-500 bg-yellow-50 shadow-lg' 
-                            : 'border-gray-200 hover:border-yellow-300 hover:shadow-md'
+                            ? 'border-brand bg-brand/20 shadow-lg' 
+                            : 'border-border hover:border-brand/60 hover:shadow-md'
                         }`}
                         onClick={() => handleAgentSelect(agent.name)}
                       >
@@ -213,15 +213,13 @@ export function AgentSelectionModal({
                             <div className={`flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center ${
                               isSelected 
                                 ? 'bg-gradient-to-br from-yellow-400 to-yellow-600' 
-                                : 'bg-gradient-to-br from-gray-600 to-gray-700'
+                                : 'bg-muted'
                             }`}>
-                              <Bot className={`h-4 w-4 ${isSelected ? 'text-black' : 'text-white'}`} />
+                              <Bot className={`h-4 w-4 ${isSelected ? 'text-black' : 'text-foreground'}`} />
                             </div>
                             <div className="flex-1 min-w-0 flex flex-col">
                               <div className="flex items-start justify-between gap-2 mb-0.5">
-                                <h4 className={`font-semibold text-sm text-gray-900 break-words line-clamp-2 flex-1 min-w-0 ${
-                                  isSelected ? 'text-gray-900' : 'text-gray-900'
-                                }`}>
+                                <h4 className="font-semibold text-sm text-foreground break-words line-clamp-2 flex-1 min-w-0">
                                   {agent.name}
                                 </h4>
                                 {isSelected && (
@@ -235,7 +233,7 @@ export function AgentSelectionModal({
                                   </motion.div>
                                 )}
                               </div>
-                              <p className="text-xs text-gray-600 line-clamp-2 break-words leading-tight">
+                              <p className="text-xs text-muted-foreground line-clamp-2 break-words leading-tight">
                                 {agent.description}
                               </p>
                               {agent.is_active === false && (
@@ -252,11 +250,11 @@ export function AgentSelectionModal({
                 })
               ) : (
                 <div className="col-span-full text-center py-8">
-                  <div className="w-16 h-16 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center">
-                    <Bot className="h-8 w-8 text-gray-400" />
+                  <div className="w-16 h-16 mx-auto mb-4 bg-muted rounded-full flex items-center justify-center">
+                    <Bot className="h-8 w-8 text-muted-foreground" />
                   </div>
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">No agents found</h3>
-                  <p className="text-gray-600">
+                  <h3 className="text-lg font-medium text-foreground mb-2">No agents found</h3>
+                  <p className="text-muted-foreground">
                     {searchQuery ? 'Try adjusting your search terms.' : 'No agents are currently available.'}
                   </p>
                 </div>
@@ -267,12 +265,12 @@ export function AgentSelectionModal({
 
         {/* Action Buttons */}
         {!isStartingChat && (
-          <div className="flex items-center justify-end pt-6 border-t border-gray-200">
+          <div className="flex items-center justify-end pt-6 border-t border-border">
             <div className="flex items-center space-x-3">
               <Button
                 variant="outline"
                 onClick={onClose}
-                className="px-6"
+                className="px-6 text-foreground"
               >
                 Cancel
               </Button>

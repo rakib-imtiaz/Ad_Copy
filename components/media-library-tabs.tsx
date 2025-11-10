@@ -99,16 +99,16 @@ function ThreeDotsMenu({ onDelete, onDownload, onView, item }: any) {
       <Button 
         variant="ghost" 
         size="sm" 
-        className="h-5 w-5 p-0 text-gray-500 hover:text-gray-700 hover:bg-gray-100"
+        className="h-5 w-5 p-0 text-muted-foreground hover:text-foreground hover:bg-muted"
         onClick={() => setIsOpen(!isOpen)}
       >
         <MoreHorizontal className="h-2.5 w-2.5" />
       </Button>
       
       {isOpen && (
-        <div className="absolute right-0 top-5 z-50 bg-white border border-gray-200 rounded-md shadow-lg py-1 min-w-[100px]">
+        <div className="absolute right-0 top-5 z-50 bg-background border border-border rounded-md shadow-lg py-1 min-w-[100px]">
           <button
-            className="w-full px-2 py-1.5 text-left text-xs text-red-600 hover:bg-red-50 flex items-center space-x-1.5"
+            className="w-full px-2 py-1.5 text-left text-xs text-destructive hover:bg-destructive/10 flex items-center space-x-1.5"
             onClick={handleDelete}
           >
             <Trash2 className="h-2.5 w-2.5" />
@@ -241,7 +241,7 @@ export function FilesTab({ mediaItems, onUpload, onDelete, isDeleting, deletingI
           placeholder="Search files..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          className="w-[calc(100%-0.25rem)] mx-auto h-6 text-xs focus-visible:ring-1 focus-visible:ring-offset-0 focus-visible:ring-blue-500/50"
+          className="w-[calc(100%-0.25rem)] mx-auto h-6 text-xs focus-visible:ring-1 focus-visible:ring-offset-0 focus-visible:ring-brand/40 bg-background text-foreground"
         />
       </div>
 
@@ -249,8 +249,8 @@ export function FilesTab({ mediaItems, onUpload, onDelete, isDeleting, deletingI
       <div 
         className={`border-2 border-dashed rounded-lg p-4 text-center transition-all duration-200 cursor-pointer ${
           dragActive 
-            ? 'border-[#1ABC9C] bg-[#1ABC9C]/10 scale-[1.01] shadow-md' 
-            : 'border-gray-200 hover:border-[#1ABC9C] hover:bg-[#1ABC9C]/5 hover:shadow-sm'
+            ? 'border-brand bg-brand/10 scale-[1.01] shadow-md' 
+            : 'border-border hover:border-brand hover:bg-brand/5 hover:shadow-sm'
         }`}
         onDragEnter={handleDrag}
         onDragLeave={handleDrag}
@@ -261,23 +261,23 @@ export function FilesTab({ mediaItems, onUpload, onDelete, isDeleting, deletingI
         <div className="flex flex-col items-center space-y-2">
           <div className={`p-2 rounded-full transition-all duration-200 ${
             dragActive 
-              ? 'bg-gradient-to-br from-[#1ABC9C] to-[#16A085] shadow-md' 
-              : 'bg-gradient-to-br from-gray-100 to-gray-200'
+              ? 'bg-gradient-to-br from-brand to-brand-dark shadow-md' 
+              : 'bg-muted'
           }`}>
             <Upload className={`h-4 w-4 transition-all duration-200 ${isUploading ? 'animate-pulse' : ''} ${
-              dragActive ? 'text-white' : 'text-gray-700'
+              dragActive ? 'text-black' : 'text-muted-foreground'
             }`} />
           </div>
           <div className="space-y-1">
             <FadeInText 
               text={isUploading ? "Uploading files..." : "Drop files here or click to browse"} 
               className={`text-xs font-medium text-center transition-colors duration-200 ${
-                isUploading ? 'text-[#1ABC9C]' : dragActive ? 'text-[#1ABC9C]' : 'text-gray-700'
+                isUploading ? 'text-brand' : dragActive ? 'text-brand' : 'text-foreground'
               }`} 
             />
             <FadeInText 
               text={isUploading ? "Please wait..." : "Supports pdf, doc and text files only"} 
-              className="text-xs text-gray-500 text-center" 
+              className="text-xs text-muted-foreground text-center" 
               delay={0.1} 
             />
           </div>
@@ -295,7 +295,7 @@ export function FilesTab({ mediaItems, onUpload, onDelete, isDeleting, deletingI
       {/* File count and list */}
       <div className="space-y-1">
         {fileItems.length > 0 && (
-          <div className="text-xs text-gray-500 mb-1">
+          <div className="text-xs text-muted-foreground mb-1">
             {fileItems.length} file{fileItems.length !== 1 ? 's' : ''} found
             {searchQuery && ` matching "${searchQuery}"`}
           </div>
@@ -389,7 +389,7 @@ export function FilesTab({ mediaItems, onUpload, onDelete, isDeleting, deletingI
             </div>
             {searchQuery ? (
               <>
-                <p className="text-xs text-gray-500 mb-1">No files found</p>
+                <p className="text-xs text-muted-foreground mb-1">No files found</p>
                 <p className="text-xs text-gray-400">Try adjusting your search terms</p>
               </>
             ) : (

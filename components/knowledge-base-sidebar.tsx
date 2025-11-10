@@ -417,7 +417,7 @@ export function KnowledgeBaseSidebar({
         </div>
       </SidebarContent>
 
-      <SidebarFooter className={`border-t border-gray-200 bg-white py-1 ${state === 'expanded' ? 'px-2' : 'px-0'}`}>
+      <SidebarFooter className={`border-t border-border bg-background py-1 ${state === 'expanded' ? 'px-2' : 'px-0'}`}>
         <SidebarMenu className={`space-y-0.5 ${state === 'expanded' ? '' : 'flex flex-col items-center'}`}>
           {/* View Knowledge Base Button */}
           {onViewKnowledgeBase && (
@@ -428,7 +428,7 @@ export function KnowledgeBaseSidebar({
               >
                 <Button
                   variant="ghost"
-                  className={`w-full h-6 rounded-lg bg-green-50 text-green-700 hover:text-green-800 hover:bg-green-100 overflow-hidden ${
+                  className={`w-full h-6 rounded-lg bg-brand/20 text-foreground hover:bg-brand/30 hover:text-foreground overflow-hidden ${
                     state === 'expanded'
                       ? 'justify-start px-2'
                       : 'justify-center p-0'
@@ -454,7 +454,7 @@ export function KnowledgeBaseSidebar({
                   >
                     <Button
                       variant="ghost"
-                      className={`w-full h-6 rounded-lg bg-red-50 text-red-700 hover:text-red-800 hover:bg-red-100 overflow-hidden ${
+                      className={`w-full h-6 rounded-lg bg-red-500/15 text-red-300 hover:text-red-200 hover:bg-red-500/25 overflow-hidden ${
                         state === 'expanded'
                           ? 'justify-start px-2'
                           : 'justify-center p-0'

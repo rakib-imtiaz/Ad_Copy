@@ -150,19 +150,19 @@ export function BrandVoiceLinkExtractor({
   }
 
   return (
-    <Card className="border-slate-200 bg-gradient-to-br from-slate-50 to-blue-50 shadow-sm">
+    <Card className="border-border bg-background shadow-sm knowledge-base-surface">
       <CardHeader className="pb-4">
-        <CardTitle className="flex items-center text-slate-800 text-base font-semibold">
-          <div className="w-8 h-8 bg-slate-100 rounded-lg flex items-center justify-center mr-3">
+        <CardTitle className="flex items-center text-foreground text-base font-semibold">
+          <div className="w-8 h-8 bg-muted rounded-lg flex items-center justify-center mr-3">
             {isYouTubeUrl ? (
-              <Play className="h-4 w-4 text-red-600" />
+              <Play className="h-4 w-4 text-red-400" />
             ) : (
-              <Sparkles className="h-4 w-4 text-blue-600" />
+              <Sparkles className="h-4 w-4 text-brand" />
             )}
           </div>
           {isYouTubeUrl ? 'Extract Communication Patterns from YouTube Video' : 'Extract Communication Patterns'}
         </CardTitle>
-        <CardDescription className="text-slate-600 text-sm">
+        <CardDescription className="text-muted-foreground text-sm">
           {isYouTubeUrl 
             ? 'Analyze YouTube video subtitles to extract communication tone and voice patterns'
             : 'Insert links to extract communication patterns and tone of voice from content'
@@ -216,7 +216,7 @@ export function BrandVoiceLinkExtractor({
         </div>
         
         {/* YouTube-only message */}
-        <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
+        <div className="bg-amber-500/10 border border-amber-400/30 rounded-lg p-3">
           <div className="flex items-start gap-3">
             <div className="w-6 h-6 flex items-center justify-center flex-shrink-0 mt-0.5">
               <svg className="h-6 w-6" viewBox="0 0 24 24" fill="none">
@@ -224,29 +224,29 @@ export function BrandVoiceLinkExtractor({
                 <path d="M9.545 15.568V8.432L15.818 12l-6.273 3.568z" fill="#FFFFFF"/>
               </svg>
             </div>
-            <div className="text-sm text-amber-800">
+            <div className="text-sm text-foreground">
               <p className="font-medium mb-1 flex items-center gap-2">
-                <span className="text-red-600 font-bold">YouTube</span>
+                <span className="text-red-400 font-bold">YouTube</span>
                 <span>Links Only</span>
               </p>
-              <p className="text-amber-700">Currently, communication pattern extraction is only available for YouTube video links. Please paste a YouTube URL to analyze the video's communication style and tone.</p>
+              <p className="text-muted-foreground">Currently, communication pattern extraction is only available for YouTube video links. Please paste a YouTube URL to analyze the video's communication style and tone.</p>
             </div>
           </div>
         </div>
         
         {/* Credit Warning */}
         {!hasCredits && !isCheckingCredits && (
-          <div className="bg-red-50 border border-red-200 rounded-lg p-3">
+          <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-3">
             <div className="flex items-start gap-3">
               <div className="w-6 h-6 bg-red-500 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
                 <Coins className="h-3 w-3 text-white" />
               </div>
-              <div className="text-sm text-red-800">
+              <div className="text-sm text-red-300">
                 <p className="font-medium mb-1 flex items-center gap-2">
-                  <span className="text-red-600 font-bold">No Credits</span>
+                  <span className="text-red-300 font-bold">No Credits</span>
                   <span>Available</span>
                 </p>
-                <p className="text-red-700">You need credits to extract communication patterns. Please add credits to your account to continue.</p>
+                <p className="text-red-200">You need credits to extract communication patterns. Please add credits to your account to continue.</p>
               </div>
             </div>
           </div>
@@ -261,7 +261,7 @@ export function BrandVoiceLinkExtractor({
         
         
         {extractedPatterns.length > 0 && (
-          <div className="text-green-600 text-sm bg-green-50 p-2 rounded border border-slate-200">
+          <div className="text-emerald-300 text-sm bg-emerald-500/10 p-2 rounded border border-emerald-400/30">
             ✅ {isYouTubeUrl 
               ? `Successfully analyzed ${extractedPatterns.length} tone patterns from YouTube video`
               : `Successfully extracted ${extractedPatterns.length} patterns from ${url}`

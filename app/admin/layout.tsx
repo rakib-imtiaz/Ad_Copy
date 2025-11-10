@@ -73,16 +73,16 @@ export default function AdminLayout({
     <SidebarProvider>
       <LeftSidebar />
       <SidebarInset>
-        <header className="flex h-16 shrink-0 items-center gap-2 px-4 transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12">
+        <header className="flex h-16 shrink-0 items-center gap-2 px-4 transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12 bg-background text-foreground border-b border-border">
           <div className="flex items-center gap-2">
             <SidebarTrigger className="-ml-1" />
             <Separator orientation="vertical" className="mr-2 h-4" />
           </div>
           <div className="flex flex-1 items-center gap-2 px-3" />
         </header>
-        <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
+        <div className="flex flex-1 flex-col gap-4 p-4 pt-0 bg-background text-foreground admin-surface">
           <motion.main 
-            className="flex-1 rounded-xl bg-white md:min-h-min p-6"
+            className="flex-1 rounded-xl bg-background border border-border md:min-h-min p-6 text-foreground admin-surface"
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4, delay: 0.1 }}
