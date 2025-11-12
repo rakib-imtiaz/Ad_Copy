@@ -129,7 +129,7 @@ export function URLScrapingSection({
           Extract Information from Web
         </CardTitle>
         <CardDescription className="text-blue-600 text-sm">
-          Enter a website URL to automatically extract and fill your knowledge base
+          Enter a website URL to automatically extract and fill your Business Info
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">

@@ -353,7 +353,7 @@ Authorization: Bearer <jwt_token>
 ```json
 {
   "success": true,
-  "message": "Knowledge base item deleted successfully"
+  "message": "Business Info item deleted successfully"
 }
 ```
 

@@ -417,6 +417,14 @@ export default function ProfilePage() {
         <header className="sticky top-0 z-30 border-b bg-white/80 dark:bg-gray-950/80 backdrop-blur-md border-gray-200 dark:border-gray-800">
           <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
             <div className="flex items-center gap-3">
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={() => window.history.back()} 
+                className="mr-2 text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100 h-8 w-8 p-0"
+              >
+                <ArrowLeft className="h-4 w-4" />
+              </Button>
               <div className="flex h-10 w-10 items-center justify-center rounded-full bg-black dark:bg-white text-white dark:text-black shadow-sm">
                 <Settings size={18} />
               </div>
@@ -711,7 +719,7 @@ export default function ProfilePage() {
               <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
               <AlertDialogDescription>
                 This action cannot be undone. This will permanently delete your account
-                and remove your data from our servers, including knowledge base, chat history, and credits.
+                and remove your data from our servers, including Business Info, chat history, and credits.
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>

@@ -60,7 +60,7 @@ export async function POST(request: NextRequest) {
             success: false, 
             error: { 
               code: 'INVALID_RESPONSE',
-              message: 'Invalid response from knowledge base service' 
+              message: 'Invalid response from Business Info service' 
             } 
           },
           { status: 500 }
@@ -75,7 +75,7 @@ export async function POST(request: NextRequest) {
           success: false, 
           error: { 
             code: 'CLEAR_FAILED',
-            message: data.message || 'Failed to clear knowledge base' 
+            message: data.message || 'Failed to clear Business Info' 
           } 
         },
         { status: n8nResponse.status }
@@ -85,7 +85,7 @@ export async function POST(request: NextRequest) {
     // Success response
     const responseData = {
       success: true,
-      message: 'Knowledge base cleared successfully',
+      message: 'Business Info cleared successfully',
       data: data
     };
     
@@ -104,7 +104,7 @@ export async function POST(request: NextRequest) {
         success: false, 
         error: { 
           code: 'SERVER_ERROR',
-          message: 'Failed to process clear knowledge base request' 
+          message: 'Failed to process clear Business Info request' 
         } 
       },
       { status: 500 }

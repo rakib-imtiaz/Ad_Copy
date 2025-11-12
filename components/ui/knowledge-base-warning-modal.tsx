@@ -47,7 +47,7 @@ export function KnowledgeBaseWarningModal({
             </div>
             <div>
               <DialogTitle className="text-xl font-semibold text-gray-900">
-                Knowledge Base Required
+                Business Info Required
               </DialogTitle>
               <DialogDescription className="text-gray-600 mt-1">
                 Your AI agent needs training data to provide helpful responses
@@ -69,9 +69,9 @@ export function KnowledgeBaseWarningModal({
           <Alert className="border-amber-200 bg-amber-50">
             <AlertTriangle className="h-4 w-4 text-amber-600" />
             <AlertDescription className="text-amber-800">
-              <strong>Empty Knowledge Base Detected</strong>
+              <strong>Empty Business Info Detected</strong>
               <br />
-              Your current knowledge base is empty or contains insufficient training data. 
+              Your current Business Info is empty or contains insufficient training data. 
               The AI agent needs content to learn from in order to provide relevant responses.
             </AlertDescription>
           </Alert>
@@ -83,13 +83,13 @@ export function KnowledgeBaseWarningModal({
             </div>
             
             <div className="space-y-2">
-              {/* Go to Knowledge Base button */}
+              {/* Go to Business Info button */}
               <Button
                 onClick={() => window.location.href = '/knowledge-base'}
                 className="w-full justify-start gap-3 h-12 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white"
               >
                 <Upload className="w-4 h-4" />
-                <span>Go to Knowledge Base and setup the data</span>
+                <span>Go to Business Info and setup the data</span>
                 <ArrowRight className="w-4 h-4 ml-auto" />
               </Button>
 

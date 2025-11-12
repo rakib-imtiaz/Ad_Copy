@@ -149,7 +149,7 @@ export async function POST(request: NextRequest) {
           console.log('Empty response from webhook, providing default success response')
           data = { 
             success: true,
-            message: 'URL scraped and knowledge base updated successfully',
+            message: 'URL scraped and Business Info updated successfully',
             data: {
               url: url,
               processed_at: new Date().toISOString(),

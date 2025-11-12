@@ -2117,7 +2117,7 @@ export default function Dashboard() {
         // Transform cached KB into the expected format
         knowledgeBaseForMessage = [{
           id: 'cached-kb',
-          filename: 'Knowledge Base',
+          filename: 'Business Info',
           type: 'document',
           content: cachedKnowledgeBase,
           transcript: '',
@@ -3882,9 +3882,9 @@ export default function Dashboard() {
                     isLoading
                       ? "Stop AI processing"
                       : isKnowledgeBaseEmpty 
-                      ? "Knowledge base is empty - upload content first"
+                      ? "Business Info is empty - upload content first"
                       : isValidatingKB 
-                      ? "Validating knowledge base..."
+                      ? "Validating Business Info..."
                       : "Send message"
                   }
                 >

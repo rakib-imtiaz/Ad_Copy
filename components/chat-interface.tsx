@@ -553,9 +553,9 @@ export function ChatInterface({
                     }`}
                     title={
                       isKnowledgeBaseEmpty 
-                        ? "Knowledge base is empty - upload content first"
+                        ? "Business Info is empty - upload content first"
                         : isValidating 
-                        ? "Validating knowledge base..."
+                        ? "Validating Business Info..."
                         : "Send message (Enter)"
                     }
                   >

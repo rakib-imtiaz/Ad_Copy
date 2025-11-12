@@ -162,7 +162,7 @@ export function KnowledgeBaseSidebar({
             </div>
             <div className="flex-1 min-w-0">
               <h1 className="text-xs font-bold text-gray-900 truncate">Copy Ready</h1>
-              <p className="text-xs text-gray-600 truncate">Knowledge Base</p>
+              <p className="text-xs text-gray-600 truncate">Business Info</p>
             </div>
             <SidebarTrigger className="h-5 w-5 rounded-md hover:bg-gray-100 transition-colors text-gray-600 hover:text-gray-900 [&>svg]:text-gray-600 [&>svg]:hover:text-gray-900 [&[data-sidebar=trigger]]:text-gray-600 [&[data-sidebar=trigger]]:hover:text-gray-900" />
           </div>
@@ -419,12 +419,12 @@ export function KnowledgeBaseSidebar({
 
       <SidebarFooter className={`border-t border-border bg-background py-1 ${state === 'expanded' ? 'px-2' : 'px-0'}`}>
         <SidebarMenu className={`space-y-0.5 ${state === 'expanded' ? '' : 'flex flex-col items-center'}`}>
-          {/* View Knowledge Base Button */}
+          {/* View Business Info Button */}
           {onViewKnowledgeBase && (
             <SidebarMenuItem>
               <SidebarMenuButton
                 asChild
-                tooltip="View Knowledge Base"
+                tooltip="View Business Info"
               >
                 <Button
                   variant="ghost"
@@ -437,20 +437,20 @@ export function KnowledgeBaseSidebar({
                   onClick={onViewKnowledgeBase}
                 >
                   <Eye className="h-2.5 w-2.5 flex-shrink-0" />
-                  {state === 'expanded' && <span className="font-medium text-xs truncate ml-1">View Knowledge Base</span>}
+                  {state === 'expanded' && <span className="font-medium text-xs truncate ml-1">View Business Info</span>}
                 </Button>
               </SidebarMenuButton>
             </SidebarMenuItem>
           )}
           
-          {/* Clear Knowledge Base Button */}
+          {/* Clear Business Info Button */}
           {onClearKnowledgeBase && (
             <SidebarMenuItem>
               <AlertDialog open={showClearConfirm} onOpenChange={setShowClearConfirm}>
                 <AlertDialogTrigger asChild>
                   <SidebarMenuButton
                     asChild
-                    tooltip="Clear Knowledge Base"
+                    tooltip="Clear Business Info"
                   >
                     <Button
                       variant="ghost"
@@ -462,15 +462,15 @@ export function KnowledgeBaseSidebar({
                       size="sm"
                     >
                       <Trash className="h-2.5 w-2.5 flex-shrink-0" />
-                      {state === 'expanded' && <span className="font-medium text-xs truncate ml-1">Clear Knowledge Base</span>}
+                      {state === 'expanded' && <span className="font-medium text-xs truncate ml-1">Clear Business Info</span>}
                     </Button>
                   </SidebarMenuButton>
                 </AlertDialogTrigger>
                 <AlertDialogContent>
                   <AlertDialogHeader>
-                    <AlertDialogTitle>Clear Knowledge Base</AlertDialogTitle>
+                    <AlertDialogTitle>Clear Business Info</AlertDialogTitle>
                     <AlertDialogDescription>
-                      Are you sure you want to clear the entire knowledge base? This action cannot be undone and will remove all uploaded files, scraped content, and processed data.
+                      Are you sure you want to clear the entire Business Info? This action cannot be undone and will remove all uploaded files, scraped content, and processed data.
                     </AlertDialogDescription>
                   </AlertDialogHeader>
                   <AlertDialogFooter>
@@ -479,7 +479,7 @@ export function KnowledgeBaseSidebar({
                       onClick={handleClearKnowledgeBase}
                       className="bg-red-600 hover:bg-red-700"
                     >
-                      Clear Knowledge Base
+                      Clear Business Info
                     </AlertDialogAction>
                   </AlertDialogFooter>
                 </AlertDialogContent>

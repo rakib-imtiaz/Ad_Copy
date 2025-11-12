@@ -62,7 +62,7 @@ export async function GET(request: NextRequest) {
           success: false, 
           error: { 
             code: 'KB_FETCH_FAILED',
-            message: 'Failed to fetch knowledge base' 
+            message: 'Failed to fetch Business Info' 
           } 
         },
         { status: n8nResponse.status }

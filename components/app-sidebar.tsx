@@ -652,15 +652,15 @@ export function AppSidebar() {
             )}
         </SidebarGroup>
 
-        {/* Knowledge Base & Settings Section - Fixed at bottom */}
+        {/* Business info & Settings Section - Fixed at bottom */}
         <div className="mt-auto space-y-2 pt-2">
            <Separator className={`${state === 'expanded' ? 'mx-3' : 'mx-0'} border-gray-800`} />
           <SidebarMenu className={state === 'expanded' ? 'space-y-1' : 'flex flex-col items-center space-y-1'}>
-            {/* Knowledge Base Button */}
+            {/* Business info Button */}
             <SidebarMenuItem>
               <SidebarMenuButton
                 asChild
-                tooltip="Knowledge Base"
+                tooltip="Business info"
               >
                   <Button
                     variant="ghost"
@@ -675,7 +675,7 @@ export function AppSidebar() {
                     <Database className="h-3 w-3 flex-shrink-0 transition-all duration-200 group-hover:scale-110" />
                     {state === 'expanded' && (
                       <span className="font-normal text-xs truncate ml-2">
-                        Knowledge Base
+                        Business info
                       </span>
                     )}
                   </Button>
