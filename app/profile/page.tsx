@@ -29,6 +29,8 @@ export default function ProfilePage() {
   const [isLoadingProfile, setIsLoadingProfile] = React.useState(false)
   const [referralCode, setReferralCode] = React.useState('')
   const [isApplyingReferral, setIsApplyingReferral] = React.useState(false)
+  const [isReadOnly, setIsReadOnly] = React.useState(true)
+  const referralInputRef = React.useRef<HTMLInputElement>(null)
   
   // Change password state
   const [currentPassword, setCurrentPassword] = React.useState('')
@@ -372,6 +374,24 @@ export default function ProfilePage() {
     fetchUserProfile()
   }, [])
 
+  // Ensure referral code field is empty on mount and clear any browser autofill
+  React.useEffect(() => {
+    setReferralCode('')
+    setIsReadOnly(true)
+    // Clear the input value directly in case browser autofilled it
+    if (referralInputRef.current) {
+      referralInputRef.current.value = ''
+    }
+    // Also clear after a short delay to catch late autofill
+    const timeout = setTimeout(() => {
+      setReferralCode('')
+      if (referralInputRef.current) {
+        referralInputRef.current.value = ''
+      }
+    }, 100)
+    return () => clearTimeout(timeout)
+  }, [])
+
   return (
     <ProtectedRoute>
       <div className="min-h-screen bg-gray-50 dark:bg-gray-950 text-gray-900 dark:text-gray-100">
@@ -424,14 +444,13 @@ export default function ProfilePage() {
               <Card>
                 <CardHeader>
                     <CardTitle>Credits & Usage</CardTitle>
-                    <CardDescription>Your current balance, storage, and options to add more.</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-6">
                     <div>
                         <Label>Available Credit</Label>
                         <p className="text-3xl font-bold text-purple-600">{parseFloat(userProfile?.total_credit || "0.00").toFixed(2)} <span className="text-sm font-normal text-gray-500 dark:text-gray-400">tokens</span></p>
                     </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {/* <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div className="space-y-2">
                             <div className="flex justify-between">
                               <Label className="text-sm font-medium">Knowledge Base Storage</Label>
@@ -446,7 +465,7 @@ export default function ProfilePage() {
                             </div>
                             <Progress value={Math.min(100, ((userProfile?.media_storage || 0) / (userProfile?.max_media_storage_mb || 1000)) * 100)} className="h-2" />
                         </div>
-                    </div>
+                    </div> */}
 
                     <Separator />
 
@@ -475,11 +494,34 @@ export default function ProfilePage() {
                       <h3 className="text-lg font-semibold mb-2">Apply Referral Code</h3>
                       <div className="flex items-center gap-2 max-w-sm">
                         <Input
+                          ref={referralInputRef}
                           type="text"
                           value={referralCode}
                           onChange={(e) => setReferralCode(e.target.value)}
+                          onFocus={(e) => {
+                            // Remove readonly to allow typing, and clear if browser autofilled with email
+                            setIsReadOnly(false)
+                            const input = e.target as HTMLInputElement
+                            if (input.value && input.value.includes('@')) {
+                              setReferralCode('')
+                              input.value = ''
+                            }
+                          }}
+                          onBlur={() => {
+                            // Keep readonly off after first interaction
+                          }}
+                          readOnly={isReadOnly}
                           placeholder="Enter referral code"
                           disabled={isApplyingReferral}
+                          autoComplete="off"
+                          autoCapitalize="off"
+                          autoCorrect="off"
+                          spellCheck="false"
+                          name="referral-code"
+                          id="referral-code-input"
+                          data-form-type="other"
+                          data-lpignore="true"
+                          data-1p-ignore="true"
                         />
                         <Button
                           onClick={handleApplyReferralCode}
@@ -546,7 +588,7 @@ export default function ProfilePage() {
                 </CardContent>
               </Card>
 
-              <Card className="border-red-500/50 dark:border-red-500/30 bg-red-50/50 dark:bg-red-950/20">
+              {/* <Card className="border-red-500/50 dark:border-red-500/30 bg-red-50/50 dark:bg-red-950/20">
                 <CardHeader>
                   <CardTitle className="text-red-600 dark:text-red-500">Danger Zone</CardTitle>
                 </CardHeader>
@@ -567,7 +609,7 @@ export default function ProfilePage() {
                     </Button>
                   </div>
                 </CardContent>
-              </Card>
+              </Card> */}
             </div>
           )}
         </div>
