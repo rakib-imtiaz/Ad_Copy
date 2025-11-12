@@ -454,7 +454,7 @@ export function KnowledgeBaseSidebar({
                   >
                     <Button
                       variant="ghost"
-                      className={`w-full h-6 rounded-lg bg-red-500/15 text-red-300 hover:text-red-200 hover:bg-red-500/25 overflow-hidden ${
+                      className={`w-full h-6 rounded-lg bg-red-500/15 text-red-300 hover:text-red-400 hover:bg-red-500/35 overflow-hidden ${
                         state === 'expanded'
                           ? 'justify-start px-2'
                           : 'justify-center p-0'
