@@ -4,7 +4,7 @@ import * as React from "react"
 import { authService } from "@/lib/auth-service"
 import { useAuth } from "@/lib/auth-context"
 import { ProtectedRoute } from "@/components/protected-route"
-import { ArrowLeft } from "lucide-react"
+import { ArrowLeft, User, CreditCard, Shield, Gift, Mail, Calendar, Settings, LogOut, CheckCircle2, Copy, Eye, EyeOff } from "lucide-react"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -38,6 +38,10 @@ export default function ProfilePage() {
   const [isChangingPassword, setIsChangingPassword] = React.useState(false)
   const [passwordError, setPasswordError] = React.useState('')
   const [passwordSuccess, setPasswordSuccess] = React.useState('')
+  const [showCurrentPassword, setShowCurrentPassword] = React.useState(false)
+  const [showNewPassword, setShowNewPassword] = React.useState(false)
+  const [copied, setCopied] = React.useState(false)
+  const [selectedPlan, setSelectedPlan] = React.useState<number | null>(null)
 
   // Delete user state
   const [isDeletingUser, setIsDeletingUser] = React.useState(false)
@@ -392,114 +396,194 @@ export default function ProfilePage() {
     return () => clearTimeout(timeout)
   }, [])
 
+  const copyEmail = async () => {
+    try {
+      await navigator.clipboard.writeText(userProfile?.email || '')
+      setCopied(true)
+      setTimeout(() => setCopied(false), 1500)
+    } catch (e) {
+      console.error(e)
+    }
+  }
+
+  const formatNumber = (n: number): string => {
+    return n.toLocaleString("en-US")
+  }
+
   return (
     <ProtectedRoute>
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-950 text-gray-900 dark:text-gray-100">
-        <div className="container mx-auto py-10 px-4 sm:px-6 lg:px-8 max-w-4xl">
-          <div className="flex items-center space-x-4 mb-8">
-            <Button variant="outline" size="icon" onClick={() => window.history.back()} className="h-10 w-10 flex-shrink-0">
-              <ArrowLeft className="h-5 w-5" />
-            </Button>
-            <div>
-              <h1 className="text-3xl font-bold tracking-tight">User Profile</h1>
-              <p className="text-gray-500 dark:text-gray-400">Manage your account information and settings</p>
+      <div className="min-h-screen bg-white dark:bg-gray-950">
+        {/* Sticky Header */}
+        <header className="sticky top-0 z-30 border-b bg-white/80 dark:bg-gray-950/80 backdrop-blur-md border-gray-200 dark:border-gray-800">
+          <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-black dark:bg-white text-white dark:text-black shadow-sm">
+                <Settings size={18} />
+              </div>
+              <div>
+                <h1 className="text-lg font-semibold text-gray-900 dark:text-white">Account Settings</h1>
+                <p className="text-xs text-gray-500 dark:text-gray-400">Manage your profile, billing, and security</p>
+              </div>
             </div>
+            <span className="inline-flex items-center rounded-full border px-3 py-1 text-xs font-medium text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-700">Admin</span>
           </div>
+        </header>
+
+        <main className="w-full px-6 py-8">
+          <div className="mx-auto max-w-6xl space-y-10">
 
           {isLoadingProfile ? (
-            <div className="flex items-center justify-center py-20">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600"></div>
+            <div className="flex items-center justify-center py-32">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-black dark:border-white"></div>
             </div>
           ) : (
-            <div className="space-y-8">
-              <Card>
-                <CardHeader>
-                    <CardTitle>Profile Details</CardTitle>
-                    <CardDescription>Your personal information.</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-6">
-                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
-                        <Label htmlFor="email" className="text-sm font-medium mb-2 sm:mb-0">User Email</Label>
-                        <p id="email" className="text-sm text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-gray-800 px-3 py-2 rounded-md w-full sm:w-auto">
-                          {userProfile?.email || "Not available"}
-                        </p>
-                    </div>
-                    <Separator/>
-                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
-                        <Label className="text-sm font-medium mb-2 sm:mb-0">Signup Date</Label>
-                        <p className="text-sm text-gray-600 dark:text-gray-300">
-                            {userProfile?.created_at 
-                              ? new Date(userProfile.created_at).toLocaleDateString('en-US', {
-                                  year: 'numeric',
-                                  month: 'long',
-                                  day: 'numeric'
-                                })
-                              : "Not available"
-                            }
-                        </p>
-                    </div>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader>
-                    <CardTitle>Credits & Usage</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-6">
-                    <div>
-                        <Label>Available Credit</Label>
-                        <p className="text-3xl font-bold text-purple-600">{parseFloat(userProfile?.total_credit || "0.00").toFixed(2)} <span className="text-sm font-normal text-gray-500 dark:text-gray-400">tokens</span></p>
-                    </div>
-                    {/* <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div className="space-y-2">
-                            <div className="flex justify-between">
-                              <Label className="text-sm font-medium">Knowledge Base Storage</Label>
-                              <span className="text-sm text-gray-500 dark:text-gray-400">{userProfile?.kb_storage || "0"} MB / {userProfile?.max_kb_storage_mb || "500"} MB</span>
-                            </div>
-                            <Progress value={Math.min(100, ((userProfile?.kb_storage || 0) / (userProfile?.max_kb_storage_mb || 500)) * 100)} className="h-2 [&>div]:bg-green-500" />
+            <>
+              {/* Profile Section */}
+              <section id="profile" className="scroll-mt-24">
+                <div className="mb-4 flex items-center gap-3">
+                  <h2 className="text-xl font-semibold tracking-tight text-gray-900 dark:text-white">Profile</h2>
+                  <p className="text-sm text-muted-foreground dark:text-gray-400">Your account details</p>
+                </div>
+                <div className="rounded-2xl border bg-white/60 dark:bg-gray-900/60 backdrop-blur-sm shadow-sm border-gray-200 dark:border-gray-800">
+                  <div className="flex flex-col gap-6 p-6 md:flex-row md:items-center md:justify-between">
+                    <div className="flex items-center gap-4">
+                      <div className="h-14 w-14 rounded-full bg-black dark:bg-white text-white dark:text-black grid place-content-center font-semibold">
+                        {userProfile?.email ? userProfile.email.charAt(0).toUpperCase() : 'U'}
+                      </div>
+                      <div>
+                        <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+                          <span>EMAIL</span>
+                          <button onClick={copyEmail} className="rounded-md p-1 hover:bg-gray-100 dark:hover:bg-gray-800" aria-label="Copy email">
+                            <Copy size={16} className="text-gray-600 dark:text-gray-400" />
+                          </button>
+                          {copied && (
+                            <span className="text-xs text-gray-700 dark:text-gray-300 inline-flex items-center gap-1">
+                              <CheckCircle2 size={14}/> Copied
+                            </span>
+                          )}
                         </div>
-                        <div className="space-y-2">
-                            <div className="flex justify-between">
-                              <Label className="text-sm font-medium">Media Storage</Label>
-                              <span className="text-sm text-gray-500 dark:text-gray-400">{userProfile?.media_storage || "0"} MB / {userProfile?.max_media_storage_mb || "1000"} MB</span>
-                            </div>
-                            <Progress value={Math.min(100, ((userProfile?.media_storage || 0) / (userProfile?.max_media_storage_mb || 1000)) * 100)} className="h-2" />
-                        </div>
-                    </div> */}
-
-                    <Separator />
-
-                    <div>
-                      <h3 className="text-lg font-semibold mb-4">Purchase Credit</h3>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                        {[
-                          { price: 10, tokens: "10,000" },
-                          { price: 25, tokens: "30,000" },
-                          { price: 50, tokens: "75,000" },
-                        ].map(plan => (
-                          <div key={plan.price} className="text-center p-6 bg-gray-100 dark:bg-gray-900 rounded-lg flex flex-col justify-between space-y-4">
-                            <div>
-                              <p className="text-3xl font-bold text-purple-600">${plan.price}</p>
-                              <p className="text-sm text-gray-500 dark:text-gray-400">{plan.tokens} tokens</p>
-                            </div>
-                            <Button className="w-full">Purchase</Button>
-                          </div>
-                        ))}
+                        <p className="text-base font-medium text-gray-900 dark:text-white">{userProfile?.email || "Not available"}</p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">
+                          Member since {userProfile?.created_at 
+                            ? new Date(userProfile.created_at).toLocaleDateString('en-US', {
+                                year: 'numeric',
+                                month: 'long',
+                                day: 'numeric'
+                              })
+                            : "Not available"}
+                        </p>
                       </div>
                     </div>
+                    <div className="flex gap-2">
+                      <Button 
+                        variant="outline" 
+                        onClick={() => {
+                          if (confirm('Sign out of all devices?')) {
+                            authService.signOut()
+                          }
+                        }}
+                        className="bg-gray-200 dark:bg-gray-800 text-gray-900 dark:text-white hover:bg-gray-300 dark:hover:bg-gray-700 rounded-xl px-4 py-2.5 text-sm font-medium shadow-sm border-gray-300 dark:border-gray-700"
+                      >
+                        Sign out <LogOut className="ml-2 inline" size={16}/>
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              </section>
 
-                    <Separator />
-
+              {/* Credits & Billing Section */}
+              <section id="billing" className="scroll-mt-24">
+                <div className="mb-4 flex items-center gap-3">
+                  <h2 className="text-xl font-semibold tracking-tight text-gray-900 dark:text-white">Credits & Billing</h2>
+                  <p className="text-sm text-muted-foreground dark:text-gray-400">Manage your credits and purchases</p>
+                </div>
+                <div className="rounded-2xl border bg-white/60 dark:bg-gray-900/60 backdrop-blur-sm shadow-sm border-gray-200 dark:border-gray-800">
+                  {/* Balance */}
+                  <div className="flex flex-col gap-6 p-6 md:flex-row md:items-end md:justify-between">
                     <div>
-                      <h3 className="text-lg font-semibold mb-2">Apply Referral Code</h3>
-                      <div className="flex items-center gap-2 max-w-sm">
+                      <p className="text-xs text-gray-500 dark:text-gray-400">Available Balance</p>
+                      <div className="mt-1 text-4xl font-semibold tracking-tight text-gray-900 dark:text-white">
+                        {parseFloat(userProfile?.total_credit || "0.00").toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} 
+                        <span className="text-base font-normal text-gray-500 dark:text-gray-400"> tokens</span>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <Button 
+                        variant="outline" 
+                        onClick={() => alert("View invoices")}
+                        className="rounded-xl px-4 py-2.5 text-sm font-medium shadow-sm border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-900 dark:text-white"
+                      >
+                        View invoices
+                      </Button>
+                      <Button 
+                        onClick={() => alert("Add payment method")}
+                        className="bg-black dark:bg-white text-white dark:text-black hover:bg-black/90 dark:hover:bg-white/90 rounded-xl px-4 py-2.5 text-sm font-medium shadow-sm"
+                      >
+                        Add payment method
+                      </Button>
+                    </div>
+                  </div>
+                  <div className="h-px w-full bg-gray-100 dark:bg-gray-800" />
+                  
+                   {/* Purchase credits */}
+                   <div className="grid gap-6 p-6 sm:grid-cols-2 lg:grid-cols-3 auto-rows-fr">
+                     {[
+                       { price: 10, tokens: 10000 },
+                       { price: 25, tokens: 30000 },
+                       { price: 50, tokens: 75000 },
+                     ].map((plan, i) => {
+                       const isSelected = selectedPlan === plan.price
+                       return (
+                         <div 
+                           key={plan.price} 
+                           onClick={() => setSelectedPlan(plan.price)}
+                           className={`mx-auto w-full max-w-[320px] flex h-full flex-col rounded-2xl shadow-sm transition hover:shadow-md cursor-pointer bg-white dark:bg-gray-800 ${isSelected ? "border-2 border-black dark:border-white" : "border border-gray-200 dark:border-gray-700"}`}
+                         >
+                           <div className="p-5 text-center">
+                             <div className="mb-1 text-2xl font-semibold text-gray-900 dark:text-white">${plan.price}</div>
+                             <div className="text-sm text-gray-500 dark:text-gray-400">{formatNumber(plan.tokens)} tokens</div>
+                           </div>
+                           <div className="h-px w-full bg-gray-100 dark:bg-gray-700" />
+                           <div className="p-5 pt-4 mt-auto">
+                             <button 
+                               onClick={(e) => {
+                                 e.preventDefault()
+                                 e.stopPropagation()
+                                 setSelectedPlan(plan.price)
+                                 // TODO: Implement purchase functionality
+                                 alert(`Purchasing $${plan.price} - ${formatNumber(plan.tokens)} tokens`)
+                               }}
+                               className="w-40 md:w-48 block mx-auto bg-black dark:bg-white text-white dark:text-black hover:bg-black/90 dark:hover:bg-white/90 rounded-xl px-4 py-2.5 text-sm font-medium shadow-sm cursor-pointer transition"
+                               type="button"
+                             >
+                               Purchase
+                             </button>
+                           </div>
+                         </div>
+                       )
+                     })}
+                   </div>
+                </div>
+              </section>
+
+              {/* Referral Section */}
+              <section id="referral" className="scroll-mt-24">
+                <div className="mb-4 flex items-center gap-3">
+                  <h2 className="text-xl font-semibold tracking-tight text-gray-900 dark:text-white">Apply Referral Code</h2>
+                  <p className="text-sm text-muted-foreground dark:text-gray-400">Have a code? Add it here for perks.</p>
+                </div>
+                <div className="rounded-2xl border bg-white/60 dark:bg-gray-900/60 backdrop-blur-sm shadow-sm border-gray-200 dark:border-gray-800">
+                  <div className="flex flex-col gap-6 p-6 md:flex-row md:items-center md:justify-between">
+                    <div className="w-full">
+                      <label htmlFor="referral-code-input" className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">Referral code</label>
+                      <div className="flex items-center gap-2 md:max-w-xl">
                         <Input
                           ref={referralInputRef}
+                          id="referral-code-input"
                           type="text"
                           value={referralCode}
                           onChange={(e) => setReferralCode(e.target.value)}
                           onFocus={(e) => {
-                            // Remove readonly to allow typing, and clear if browser autofilled with email
                             setIsReadOnly(false)
                             const input = e.target as HTMLInputElement
                             if (input.value && input.value.includes('@')) {
@@ -507,9 +591,7 @@ export default function ProfilePage() {
                               input.value = ''
                             }
                           }}
-                          onBlur={() => {
-                            // Keep readonly off after first interaction
-                          }}
+                          onBlur={() => {}}
                           readOnly={isReadOnly}
                           placeholder="Enter referral code"
                           disabled={isApplyingReferral}
@@ -518,101 +600,110 @@ export default function ProfilePage() {
                           autoCorrect="off"
                           spellCheck="false"
                           name="referral-code"
-                          id="referral-code-input"
                           data-form-type="other"
                           data-lpignore="true"
                           data-1p-ignore="true"
+                          className="h-11 rounded-xl border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white px-3 py-2.5 text-sm outline-none transition focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-700"
                         />
                         <Button
                           onClick={handleApplyReferralCode}
                           disabled={isApplyingReferral || !referralCode.trim()}
+                          className="h-11 px-5 shrink-0 bg-black dark:bg-white text-white dark:text-black hover:bg-black/90 dark:hover:bg-white/90 rounded-xl text-sm font-medium shadow-sm disabled:opacity-50"
                         >
                           {isApplyingReferral ? 'Applying...' : 'Apply'}
                         </Button>
                       </div>
                     </div>
-
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader>
-                  <CardTitle>Security</CardTitle>
-                  <CardDescription>Manage your password.</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-6">
-                  {passwordSuccess && (
-                    <Alert variant="default" className="bg-green-50 border-green-200 dark:bg-green-950 dark:border-green-800">
-                       <AlertTitle>Success</AlertTitle>
-                      <AlertDescription className="text-green-800 dark:text-green-300">{passwordSuccess}</AlertDescription>
-                    </Alert>
-                  )}
-                  {passwordError && (
-                    <Alert variant="destructive">
-                      <AlertTitle>Error updating password</AlertTitle>
-                      <AlertDescription>{passwordError}</AlertDescription>
-                    </Alert>
-                  )}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="current-password">Current Password</Label>
-                      <Input 
-                        id="current-password" 
-                        type="password" 
-                        value={currentPassword}
-                        onChange={(e) => setCurrentPassword(e.target.value)}
-                        placeholder="••••••••"
-                        disabled={isChangingPassword}
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="new-password">New Password</Label>
-                      <Input 
-                        id="new-password" 
-                        type="password" 
-                        value={newPassword}
-                        onChange={(e) => setNewPassword(e.target.value)}
-                        placeholder="••••••••"
-                        disabled={isChangingPassword}
-                      />
+                    <div className="md:w-1/3">
+                      <p className="text-sm text-gray-600 dark:text-gray-400">Share with friends and both of you get bonus tokens when they make their first purchase.</p>
                     </div>
                   </div>
-                   <div className="flex justify-end">
-                     <Button 
-                        onClick={handleChangePassword}
-                        disabled={isChangingPassword || (!currentPassword || !newPassword)}
-                      >
-                        {isChangingPassword ? 'Updating...' : 'Update Password'}
-                      </Button>
-                   </div>
-                </CardContent>
-              </Card>
+                </div>
+              </section>
 
-              {/* <Card className="border-red-500/50 dark:border-red-500/30 bg-red-50/50 dark:bg-red-950/20">
-                <CardHeader>
-                  <CardTitle className="text-red-600 dark:text-red-500">Danger Zone</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  {deleteError && (
-                     <Alert variant="destructive" className="mb-4">
-                      <AlertTitle>Error deleting account</AlertTitle>
-                      <AlertDescription>{deleteError}</AlertDescription>
-                    </Alert>
-                  )}
-                  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center">
-                    <div className="mb-4 sm:mb-0">
-                      <h4 className="font-semibold">Delete Account</h4>
-                      <p className="text-sm text-gray-500 dark:text-gray-400">Permanently delete your account and all associated data.</p>
+              {/* Security Section */}
+              <section id="security" className="scroll-mt-24">
+                <div className="mb-4 flex items-center gap-3">
+                  <h2 className="text-xl font-semibold tracking-tight text-gray-900 dark:text-white">Security</h2>
+                  <p className="text-sm text-muted-foreground dark:text-gray-400">Protect your account with strong credentials</p>
+                </div>
+                <div className="rounded-2xl border bg-white/60 dark:bg-gray-900/60 backdrop-blur-sm shadow-sm border-gray-200 dark:border-gray-800">
+                  <div className="space-y-6 p-6">
+                    {passwordSuccess && (
+                      <Alert variant="default" className="bg-green-50 dark:bg-green-950 border-green-200 dark:border-green-800 py-2">
+                        <AlertTitle className="text-sm text-green-900 dark:text-green-100">Success</AlertTitle>
+                        <AlertDescription className="text-xs text-green-800 dark:text-green-300">{passwordSuccess}</AlertDescription>
+                      </Alert>
+                    )}
+                    {passwordError && (
+                      <Alert variant="destructive" className="py-2">
+                        <AlertTitle className="text-sm">Error updating password</AlertTitle>
+                        <AlertDescription className="text-xs">{passwordError}</AlertDescription>
+                      </Alert>
+                    )}
+                    <div className="grid gap-6 md:grid-cols-2">
+                      <div className="w-full">
+                        <label htmlFor="current-password" className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">Current password</label>
+                        <div className="relative">
+                          <Input 
+                            id="current-password" 
+                            type={showCurrentPassword ? "text" : "password"}
+                            value={currentPassword}
+                            onChange={(e) => setCurrentPassword(e.target.value)}
+                            placeholder="Enter current password"
+                            disabled={isChangingPassword}
+                            className="h-11 rounded-xl border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white px-3 py-2.5 text-sm outline-none transition focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-700 pr-10"
+                          />
+                          <button 
+                            type="button" 
+                            onClick={() => setShowCurrentPassword(v => !v)} 
+                            className="absolute right-3 top-1/2 -translate-y-1/2 rounded-md p-1 hover:bg-gray-100 dark:hover:bg-gray-700" 
+                            aria-label="Toggle password visibility"
+                          >
+                            {showCurrentPassword ? <EyeOff size={18} className="text-gray-600 dark:text-gray-400"/> : <Eye size={18} className="text-gray-600 dark:text-gray-400"/>}
+                          </button>
+                        </div>
+                      </div>
+                      <div className="w-full">
+                        <label htmlFor="new-password" className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">New password</label>
+                        <div className="relative">
+                          <Input 
+                            id="new-password" 
+                            type={showNewPassword ? "text" : "password"}
+                            value={newPassword}
+                            onChange={(e) => setNewPassword(e.target.value)}
+                            placeholder="Enter new password"
+                            disabled={isChangingPassword}
+                            className="h-11 rounded-xl border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white px-3 py-2.5 text-sm outline-none transition focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-700 pr-10"
+                          />
+                          <button 
+                            type="button" 
+                            onClick={() => setShowNewPassword(v => !v)} 
+                            className="absolute right-3 top-1/2 -translate-y-1/2 rounded-md p-1 hover:bg-gray-100 dark:hover:bg-gray-700" 
+                            aria-label="Toggle password visibility"
+                          >
+                            {showNewPassword ? <EyeOff size={18} className="text-gray-600 dark:text-gray-400"/> : <Eye size={18} className="text-gray-600 dark:text-gray-400"/>}
+                          </button>
+                        </div>
+                        <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">Use 12+ characters with a mix of letters, numbers, and symbols.</p>
+                      </div>
+                      <div className="md:col-span-2 flex justify-end">
+                        <Button 
+                          onClick={handleChangePassword}
+                          disabled={isChangingPassword || (!currentPassword || !newPassword)}
+                          className="px-5 bg-black dark:bg-white text-white dark:text-black hover:bg-black/90 dark:hover:bg-white/90 rounded-xl text-sm font-medium shadow-sm disabled:opacity-50"
+                        >
+                          Update Password
+                        </Button>
+                      </div>
                     </div>
-                    <Button variant="destructive" onClick={() => setShowDeleteConfirm(true)} disabled={isDeletingUser}>
-                      Delete My Account
-                    </Button>
                   </div>
-                </CardContent>
-              </Card> */}
-            </div>
+                </div>
+              </section>
+            </>
           )}
-        </div>
+          </div>
+        </main>
 
         <AlertDialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
           <AlertDialogContent>
