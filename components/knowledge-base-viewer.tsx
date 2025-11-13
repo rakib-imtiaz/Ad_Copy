@@ -127,8 +127,8 @@ export function KnowledgeBaseViewer({ isOpen, onClose }: KnowledgeBaseViewerProp
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-gray-200">
           <div>
-            <h2 className="text-xl font-semibold text-gray-900">Business Info Viewer</h2>
-            <p className="text-sm text-gray-600">View your Business Info content</p>
+            <h2 className="text-xl font-semibold text-gray-900">Business Information Viewer</h2>
+            <p className="text-sm text-gray-600">View your Business Information content</p>
           </div>
           <button
             onClick={onClose}
@@ -145,7 +145,7 @@ export function KnowledgeBaseViewer({ isOpen, onClose }: KnowledgeBaseViewerProp
            {isLoading ? (
              <div className="flex flex-col items-center justify-center h-full">
                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
-               <span className="ml-3 text-gray-600 mt-4">Loading Business Info content...</span>
+               <span className="ml-3 text-gray-600 mt-4">Loading Business Information content...</span>
                <span className="text-xs text-gray-500 mt-2">This may take a moment for large content</span>
              </div>
            ) : (
@@ -163,7 +163,7 @@ export function KnowledgeBaseViewer({ isOpen, onClose }: KnowledgeBaseViewerProp
                <div className="flex-1 flex flex-col">
                  <div className="flex items-center justify-between mb-2">
                    <label className="block text-sm font-medium text-gray-700">
-                     Business Info Content
+                     Business Information Content
                    </label>
                    <span className="text-xs text-gray-500">
                      {content.length.toLocaleString()} characters
@@ -171,7 +171,7 @@ export function KnowledgeBaseViewer({ isOpen, onClose }: KnowledgeBaseViewerProp
                  </div>
                                    <textarea
                     value={content}
-                    placeholder="Business Info content will appear here..."
+                    placeholder="Business Information content will appear here..."
                     className="flex-1 p-4 border border-gray-300 rounded-lg resize-none text-sm font-mono leading-relaxed overflow-y-auto text-black bg-gray-50"
                     readOnly
                     style={{ minHeight: '400px' }}

@@ -64,7 +64,7 @@ export function KnowledgeBaseSidebarNav({
     try {
       await loadKnowledgeBase()
     } catch (err: any) {
-      alert(`❌ Error loading Business Info:\n\n${err.message}`)
+      alert(`❌ Error loading Business Information:\n\n${err.message}`)
     }
   }
 

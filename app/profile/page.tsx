@@ -534,7 +534,7 @@ export default function ProfilePage() {
                   <div className="h-px w-full bg-gray-100 dark:bg-gray-800" />
                   
                    {/* Purchase credits */}
-                   <div className="grid gap-6 p-6 sm:grid-cols-2 lg:grid-cols-3 auto-rows-fr">
+                   {/* <div className="grid gap-6 p-6 sm:grid-cols-2 lg:grid-cols-3 auto-rows-fr">
                      {[
                        { price: 10, tokens: 10000 },
                        { price: 25, tokens: 30000 },
@@ -570,7 +570,7 @@ export default function ProfilePage() {
                          </div>
                        )
                      })}
-                   </div>
+                   </div> */}
                 </div>
               </section>
 
@@ -719,7 +719,7 @@ export default function ProfilePage() {
               <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
               <AlertDialogDescription>
                 This action cannot be undone. This will permanently delete your account
-                and remove your data from our servers, including Business Info, chat history, and credits.
+                and remove your data from our servers, including Business Information, chat history, and credits.
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>

@@ -326,7 +326,7 @@ export default function KnowledgeBasePage() {
       
       // Show loading toast
       loadingToast = toast.loading("Deleting item...", {
-        description: "Please wait while we remove the item from your Business Info."
+        description: "Please wait while we remove the item from your Business Information."
       })
 
       const accessToken = authService.getAuthToken()
@@ -463,13 +463,13 @@ export default function KnowledgeBasePage() {
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}))
         console.error('Clear failed:', response.status, errorData)
-        showToastMessage(`Failed to clear Business Info: ${errorData.error?.message || 'Unknown error'}`, 'error')
+        showToastMessage(`Failed to clear Business Information: ${errorData.error?.message || 'Unknown error'}`, 'error')
         return
       }
 
       const result = await response.json()
       console.log('✅ Knowledge base cleared successfully:', result)
-      showToastMessage("Business Info cleared successfully!", 'success')
+      showToastMessage("Business Information cleared successfully!", 'success')
       
       // Clear pending knowledge base data from window
       if (typeof window !== 'undefined') {
@@ -490,7 +490,7 @@ export default function KnowledgeBasePage() {
       
     } catch (error) {
       console.error('❌ Error clearing knowledge base:', error)
-      showToastMessage("Failed to clear Business Info", 'error')
+      showToastMessage("Failed to clear Business Information", 'error')
     } finally {
       setIsClearingKnowledgeBase(false)
     }
@@ -583,7 +583,7 @@ export default function KnowledgeBasePage() {
       console.log('📊 Testimonials data:', parsedData.clientAssets?.testimonialsCaseStudies)
       
       // Only show success toast if there's meaningful data
-      showToastMessage("Business Info data loaded !", 'success')
+      showToastMessage("Business Information data loaded !", 'success')
       
     } catch (error: any) {
       console.error('❌ Error auto-populating knowledge base data:', error)

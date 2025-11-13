@@ -36,7 +36,7 @@ export function PopulateDataButton({
         onSuccess?.()
       } else {
         console.log('❌ Failed to populate knowledge base data')
-        onError?.('No Business Info data found to populate')
+        onError?.('No Business Information data found to populate')
       }
       
     } catch (error: any) {

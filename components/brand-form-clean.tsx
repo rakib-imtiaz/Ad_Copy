@@ -335,7 +335,7 @@ export function BrandFormClean({ onSuccess }: BrandFormProps) {
     setFormData(data)
     
     // Show success message
-    showToastMessage("Business Info data loaded successfully! You can now edit each step.", 'success')
+    showToastMessage("Business Information data loaded successfully! You can now edit each step.", 'success')
     
     // Navigate to first step to show the data
     setCurrentStep(1)
@@ -1091,7 +1091,7 @@ export function BrandFormClean({ onSuccess }: BrandFormProps) {
           <PopulateDataButton 
             size="sm"
             onSuccess={() => {
-              showToastMessage("Business Info data loaded successfully! You can now edit each step.", 'success')
+              showToastMessage("Business Information data loaded successfully! You can now edit each step.", 'success')
             }}
             onError={(message) => {
               showToastMessage(`Failed to populate data: ${message}`, 'error')
@@ -1166,7 +1166,7 @@ export function BrandFormClean({ onSuccess }: BrandFormProps) {
           console.log('🔄 Populating form with knowledge base data:', data)
           const transformedData = transformParsedDataToFormData(data)
           setFormData(transformedData)
-          showToastMessage("Business Info data loaded successfully!", 'success')
+          showToastMessage("Business Information data loaded successfully!", 'success')
         }}
       />
       
