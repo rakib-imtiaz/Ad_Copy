@@ -503,32 +503,56 @@ export default function ProfilePage() {
               <section id="billing" className="scroll-mt-24">
                 <div className="mb-4 flex items-center gap-3">
                   <h2 className="text-xl font-semibold tracking-tight text-gray-900 dark:text-white">Credits & Billing</h2>
-                  <p className="text-sm text-muted-foreground dark:text-gray-400">Manage your credits and purchases</p>
                 </div>
                 <div className="rounded-2xl border bg-white/60 dark:bg-gray-900/60 backdrop-blur-sm shadow-sm border-gray-200 dark:border-gray-800">
-                  {/* Balance */}
+                  {/* Balance and Referral Code */}
                   <div className="flex flex-col gap-6 p-6 md:flex-row md:items-end md:justify-between">
-                    <div>
+                    <div className="flex-1">
                       <p className="text-xs text-gray-500 dark:text-gray-400">Available Balance</p>
                       <div className="mt-1 text-4xl font-semibold tracking-tight text-gray-900 dark:text-white">
                         {parseFloat(userProfile?.total_credit || "0.00").toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} 
                         <span className="text-base font-normal text-gray-500 dark:text-gray-400"> tokens</span>
                       </div>
                     </div>
-                    <div className="flex items-center gap-3">
-                      <Button 
-                        variant="outline" 
-                        onClick={() => alert("View invoices")}
-                        className="rounded-xl px-4 py-2.5 text-sm font-medium shadow-sm border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-900 dark:text-white"
-                      >
-                        View invoices
-                      </Button>
-                      <Button 
-                        onClick={() => alert("Add payment method")}
-                        className="bg-black dark:bg-white text-white dark:text-black hover:bg-black/90 dark:hover:bg-white/90 rounded-xl px-4 py-2.5 text-sm font-medium shadow-sm"
-                      >
-                        Add payment method
-                      </Button>
+                    <div className="flex-1 md:max-w-xl">
+                      <label htmlFor="referral-code-input" className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">Apply Referral Code</label>
+                      <div className="flex items-center gap-2">
+                        <Input
+                          ref={referralInputRef}
+                          id="referral-code-input"
+                          type="text"
+                          value={referralCode}
+                          onChange={(e) => setReferralCode(e.target.value)}
+                          onFocus={(e) => {
+                            setIsReadOnly(false)
+                            const input = e.target as HTMLInputElement
+                            if (input.value && input.value.includes('@')) {
+                              setReferralCode('')
+                              input.value = ''
+                            }
+                          }}
+                          onBlur={() => {}}
+                          readOnly={isReadOnly}
+                          placeholder="Enter referral code"
+                          disabled={isApplyingReferral}
+                          autoComplete="off"
+                          autoCapitalize="off"
+                          autoCorrect="off"
+                          spellCheck="false"
+                          name="referral-code"
+                          data-form-type="other"
+                          data-lpignore="true"
+                          data-1p-ignore="true"
+                          className="h-11 rounded-xl border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white px-3 py-2.5 text-sm outline-none transition focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-700"
+                        />
+                        <Button
+                          onClick={handleApplyReferralCode}
+                          disabled={isApplyingReferral || !referralCode.trim()}
+                          className="h-11 px-5 shrink-0 bg-black dark:bg-white text-white dark:text-black hover:bg-black/90 dark:hover:bg-white/90 rounded-xl text-sm font-medium shadow-sm disabled:opacity-50"
+                        >
+                          {isApplyingReferral ? 'Applying...' : 'Apply'}
+                        </Button>
+                      </div>
                     </div>
                   </div>
                   <div className="h-px w-full bg-gray-100 dark:bg-gray-800" />
@@ -574,66 +598,11 @@ export default function ProfilePage() {
                 </div>
               </section>
 
-              {/* Referral Section */}
-              <section id="referral" className="scroll-mt-24">
-                <div className="mb-4 flex items-center gap-3">
-                  <h2 className="text-xl font-semibold tracking-tight text-gray-900 dark:text-white">Apply Referral Code</h2>
-                  <p className="text-sm text-muted-foreground dark:text-gray-400">Have a code? Add it here for perks.</p>
-                </div>
-                <div className="rounded-2xl border bg-white/60 dark:bg-gray-900/60 backdrop-blur-sm shadow-sm border-gray-200 dark:border-gray-800">
-                  <div className="flex flex-col gap-6 p-6 md:flex-row md:items-center md:justify-between">
-                    <div className="w-full">
-                      <label htmlFor="referral-code-input" className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">Referral code</label>
-                      <div className="flex items-center gap-2 md:max-w-xl">
-                        <Input
-                          ref={referralInputRef}
-                          id="referral-code-input"
-                          type="text"
-                          value={referralCode}
-                          onChange={(e) => setReferralCode(e.target.value)}
-                          onFocus={(e) => {
-                            setIsReadOnly(false)
-                            const input = e.target as HTMLInputElement
-                            if (input.value && input.value.includes('@')) {
-                              setReferralCode('')
-                              input.value = ''
-                            }
-                          }}
-                          onBlur={() => {}}
-                          readOnly={isReadOnly}
-                          placeholder="Enter referral code"
-                          disabled={isApplyingReferral}
-                          autoComplete="off"
-                          autoCapitalize="off"
-                          autoCorrect="off"
-                          spellCheck="false"
-                          name="referral-code"
-                          data-form-type="other"
-                          data-lpignore="true"
-                          data-1p-ignore="true"
-                          className="h-11 rounded-xl border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white px-3 py-2.5 text-sm outline-none transition focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-700"
-                        />
-                        <Button
-                          onClick={handleApplyReferralCode}
-                          disabled={isApplyingReferral || !referralCode.trim()}
-                          className="h-11 px-5 shrink-0 bg-black dark:bg-white text-white dark:text-black hover:bg-black/90 dark:hover:bg-white/90 rounded-xl text-sm font-medium shadow-sm disabled:opacity-50"
-                        >
-                          {isApplyingReferral ? 'Applying...' : 'Apply'}
-                        </Button>
-                      </div>
-                    </div>
-                    <div className="md:w-1/3">
-                      <p className="text-sm text-gray-600 dark:text-gray-400">Share with friends and both of you get bonus tokens when they make their first purchase.</p>
-                    </div>
-                  </div>
-                </div>
-              </section>
 
               {/* Security Section */}
               <section id="security" className="scroll-mt-24">
                 <div className="mb-4 flex items-center gap-3">
                   <h2 className="text-xl font-semibold tracking-tight text-gray-900 dark:text-white">Security</h2>
-                  <p className="text-sm text-muted-foreground dark:text-gray-400">Protect your account with strong credentials</p>
                 </div>
                 <div className="rounded-2xl border bg-white/60 dark:bg-gray-900/60 backdrop-blur-sm shadow-sm border-gray-200 dark:border-gray-800">
                   <div className="space-y-6 p-6">
