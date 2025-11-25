@@ -39,7 +39,7 @@ export function UserSwitchDialog({ isOpen, onClose, userEmail, userId }: UserSwi
     console.log('🎯 [USER SWITCH DIALOG] User email:', userEmail);
     console.log('🎯 [USER SWITCH DIALOG] User ID:', userId);
     console.log('🎯 [USER SWITCH DIALOG] Current user:', currentUser);
-    
+
     setIsLoading(true);
     setStep('loading');
     setError('');
@@ -61,7 +61,7 @@ export function UserSwitchDialog({ isOpen, onClose, userEmail, userId }: UserSwi
       if (result.success) {
         console.log('✅ [USER SWITCH DIALOG] Switch successful, setting success step');
         setStep('success');
-        
+
         // Redirect to user dashboard after a short delay
         setTimeout(() => {
           console.log('🚀 [USER SWITCH DIALOG] Redirecting to dashboard...');
@@ -78,7 +78,7 @@ export function UserSwitchDialog({ isOpen, onClose, userEmail, userId }: UserSwi
       console.error('💥 [USER SWITCH DIALOG] Unexpected error:', error);
       console.error('💥 [USER SWITCH DIALOG] Error message:', error.message);
       console.error('💥 [USER SWITCH DIALOG] Error stack:', error.stack);
-      
+
       setError(error.message || 'An unexpected error occurred');
       setStep('error');
     } finally {
@@ -115,7 +115,7 @@ export function UserSwitchDialog({ isOpen, onClose, userEmail, userId }: UserSwi
             <Alert>
               <AlertTriangle className="h-4 w-4" />
               <AlertDescription>
-                <strong>Important:</strong> This action will log you out of your admin account and log you in as the selected user. 
+                <strong>Important:</strong> This action will log you out of your admin account and log you in as the selected user.
                 You can return to your admin account later using the "Return to Admin" option.
               </AlertDescription>
             </Alert>
@@ -248,8 +248,8 @@ export function UserSwitchDialog({ isOpen, onClose, userEmail, userId }: UserSwi
               <Button variant="outline" onClick={handleClose} className="w-full sm:w-auto">
                 Cancel
               </Button>
-              <Button 
-                onClick={handleSwitchToUser} 
+              <Button
+                onClick={handleSwitchToUser}
                 className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700"
                 disabled={isLoading}
               >
@@ -258,14 +258,14 @@ export function UserSwitchDialog({ isOpen, onClose, userEmail, userId }: UserSwi
               </Button>
             </>
           )}
-          
+
           {step === 'error' && (
             <>
               <Button variant="outline" onClick={handleClose} className="w-full sm:w-auto">
                 Close
               </Button>
-              <Button 
-                onClick={handleSwitchToUser} 
+              <Button
+                onClick={handleSwitchToUser}
                 className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700"
                 disabled={isLoading}
               >

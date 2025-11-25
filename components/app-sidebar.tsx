@@ -68,12 +68,12 @@ const mainNav = [
 ]
 
 // Custom looping typewriter component
-function LoopingTypewriter({ 
-  texts, 
-  className, 
-  typingSpeed = 100, 
-  pauseDuration = 2000 
-}: { 
+function LoopingTypewriter({
+  texts,
+  className,
+  typingSpeed = 100,
+  pauseDuration = 2000
+}: {
   texts: string[]
   className?: string
   typingSpeed?: number
@@ -86,7 +86,7 @@ function LoopingTypewriter({
 
   React.useEffect(() => {
     const currentText = texts[currentTextIndex]
-    
+
     if (isTyping) {
       // Typing phase
       if (displayedText.length < currentText.length) {
@@ -143,16 +143,16 @@ export function AppSidebar() {
   const [isAdminSwitchSession, setIsAdminSwitchSession] = React.useState(false)
   const { user, logout, restoreOriginalUserRole } = useAuth()
   const { state } = useSidebar()
-  
+
   // Knowledge base safety check
-  const { 
-    isKnowledgeBaseEmpty, 
-    isValidating: isValidatingKB, 
-    error: kbSafetyError, 
-    canStartChat, 
-    refreshValidation 
+  const {
+    isKnowledgeBaseEmpty,
+    isValidating: isValidatingKB,
+    error: kbSafetyError,
+    canStartChat,
+    refreshValidation
   } = useKnowledgeBaseSafety()
-  
+
   // Get sidebar state data
   const {
     agents,
@@ -178,13 +178,13 @@ export function AppSidebar() {
   const handleReturnToAdmin = async () => {
     try {
       console.log('🔄 User - Returning to admin dashboard...');
-      
+
       // Check if there's an admin context stored
       const adminContext = adminService.getAdminContext();
       if (adminContext) {
         // Restore original admin role
         restoreOriginalUserRole();
-        
+
         // Redirect to admin dashboard
         window.location.href = '/admin';
       } else {
@@ -207,7 +207,7 @@ export function AppSidebar() {
       setShowKnowledgeBaseWarning(true)
       return
     }
-    
+
     console.log('✅ Knowledge base validated - opening agent selection modal')
     setIsAgentModalOpen(true)
   }
@@ -246,23 +246,23 @@ export function AppSidebar() {
       console.log('🔄 Starting optimistic chat rename...')
       console.log('🔄 Session ID:', sessionId)
       console.log('🔄 New Title:', newTitle)
-      
+
       // Optimistic update: Update the chat history immediately
       console.log('🔄 Updating chat history optimistically...')
       // Update the local chat history state immediately
       const currentHistory = chatHistory || []
-      const updatedHistory = currentHistory.map((chat: any) => 
-        chat.session_id === sessionId 
+      const updatedHistory = currentHistory.map((chat: any) =>
+        chat.session_id === sessionId
           ? { ...chat, title: newTitle }
           : chat
       )
       updateChatHistory(updatedHistory)
       console.log('✅ Chat history updated optimistically')
-      
+
       // Run API call in background
       console.log('🔄 Starting background API call...')
       const accessToken = authService.getAuthToken()
-      
+
       if (!accessToken) {
         throw new Error('No access token available')
       }
@@ -290,7 +290,7 @@ export function AppSidebar() {
 
       const result = await response.json()
       console.log('✅ Background rename API response:', result)
-      
+
     } catch (error) {
       console.error('❌ Error in background rename:', error)
       // Don't throw error to prevent UI from showing error state
@@ -309,12 +309,12 @@ export function AppSidebar() {
   const formatTimeAgo = (date: Date): string => {
     const now = new Date()
     const diffInHours = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60))
-    
+
     if (diffInHours < 1) return 'Just now'
     if (diffInHours < 24) return `${diffInHours}h ago`
     if (diffInHours < 48) return '1d ago'
     if (diffInHours < 168) return `${Math.floor(diffInHours / 24)}d ago`
-    
+
     return new Intl.DateTimeFormat('en-US', {
       month: 'short',
       day: 'numeric'
@@ -328,7 +328,7 @@ export function AppSidebar() {
       setIsAdminSwitchSession(!!adminContext);
       console.log('🔍 User Dashboard - Admin switch session detected:', !!adminContext);
     };
-    
+
     checkAdminSwitch();
   }, []);
 
@@ -341,13 +341,13 @@ export function AppSidebar() {
         setUrlChatId(chatId)
         console.log('🔄 URL chatid changed:', chatId)
       }
-      
+
       // Initial load
       updateUrlChatId()
-      
+
       // Listen for URL changes (back/forward buttons, programmatic navigation)
       window.addEventListener('popstate', updateUrlChatId)
-      
+
       return () => {
         window.removeEventListener('popstate', updateUrlChatId)
       }
@@ -357,54 +357,53 @@ export function AppSidebar() {
 
   return (
     <>
-    <Sidebar variant="inset" collapsible="icon" className="border-r border-gray-800 bg-black">
-      <SidebarHeader className="border-b border-gray-800 bg-black px-2 py-2">
-        {state === 'expanded' ? (
-          <div className="flex items-center gap-1">
-            <div className="flex h-6 w-6 items-center justify-center rounded-md bg-gradient-to-br from-yellow-400 to-yellow-600 shadow-sm">
-              <span className="text-xs font-black text-black">C</span>
+      <Sidebar variant="inset" collapsible="icon" className="border-r border-gray-800 bg-black">
+        <SidebarHeader className="border-b border-gray-800 bg-black px-2 py-2">
+          {state === 'expanded' ? (
+            <div className="flex items-center gap-1">
+              <div className="flex h-6 w-6 items-center justify-center rounded-md bg-gradient-to-br from-yellow-400 to-yellow-600 shadow-sm">
+                <span className="text-xs font-black text-black">C</span>
+              </div>
+              <div className="flex-1 min-w-0">
+                <LoopingTypewriter
+                  texts={["Copy Ready", "AI Ad Copy Platform"]}
+                  className="text-xs font-medium text-white truncate"
+                  typingSpeed={80}
+                  pauseDuration={1500}
+                />
+              </div>
+              <SidebarTrigger className="h-5 w-5 rounded-md hover:bg-gray-800 transition-colors text-white hover:text-white [&>svg]:text-white [&>svg]:hover:text-white [&[data-sidebar=trigger]]:text-white [&[data-sidebar=trigger]]:hover:text-white" />
             </div>
-             <div className="flex-1 min-w-0">
-               <LoopingTypewriter 
-                 texts={["Copy Ready", "AI Ad Copy Platform"]}
-                 className="text-xs font-medium text-white truncate"
-                 typingSpeed={80}
-                 pauseDuration={1500}
-               />
-             </div>
-            <SidebarTrigger className="h-5 w-5 rounded-md hover:bg-gray-800 transition-colors text-white hover:text-white [&>svg]:text-white [&>svg]:hover:text-white [&[data-sidebar=trigger]]:text-white [&[data-sidebar=trigger]]:hover:text-white" />
-          </div>
-        ) : (
-          <div className="flex flex-col items-center gap-1">
-            <div className="flex h-5 w-5 items-center justify-center rounded-md bg-gradient-to-br from-yellow-400 to-yellow-600 shadow-sm">
-              <span className="text-xs font-black text-black">C</span>
+          ) : (
+            <div className="flex flex-col items-center gap-1">
+              <div className="flex h-5 w-5 items-center justify-center rounded-md bg-gradient-to-br from-yellow-400 to-yellow-600 shadow-sm">
+                <span className="text-xs font-black text-black">C</span>
+              </div>
+              <SidebarTrigger className="h-4 w-4 rounded-md hover:bg-gray-800 transition-colors text-white hover:text-white [&>svg]:text-white [&>svg]:hover:text-white [&[data-sidebar=trigger]]:text-white [&[data-sidebar=trigger]]:hover:text-white" />
             </div>
-            <SidebarTrigger className="h-4 w-4 rounded-md hover:bg-gray-800 transition-colors text-white hover:text-white [&>svg]:text-white [&>svg]:hover:text-white [&[data-sidebar=trigger]]:text-white [&[data-sidebar=trigger]]:hover:text-white" />
+          )}
+        </SidebarHeader>
+
+        <SidebarContent className={`flex flex-col bg-black h-full overflow-hidden ${state === 'expanded' ? 'px-3 py-4' : 'px-0 py-4'}`}>
+          {/* New Chat Button - Top Section */}
+          <div className={`mb-3 px-1`}>
+            <Button
+              variant="ghost"
+              onClick={handleNewChatClick}
+              className={`bg-black text-white hover:bg-gray-800 hover:text-white transition-all duration-200 group ${state === 'expanded'
+                  ? 'w-full h-7 px-2 flex items-center gap-1'
+                  : 'w-7 h-7 p-0'
+                }`}
+            >
+              <Plus className={`${state === 'expanded' ? 'h-2.5 w-2.5 transition-colors duration-200' : 'h-2.5 w-2.5 transition-colors duration-200'}`} />
+              {state === 'expanded' && (
+                <span className="text-xs font-medium group-hover:font-bold transition-all duration-200">New chat</span>
+              )}
+            </Button>
           </div>
-        )}
-      </SidebarHeader>
 
-      <SidebarContent className={`flex flex-col bg-black h-full overflow-hidden ${state === 'expanded' ? 'px-3 py-4' : 'px-0 py-4'}`}>
-        {/* New Chat Button - Top Section */}
-        <div className={`mb-3 px-1`}>
-          <Button
-            variant="ghost"
-            onClick={handleNewChatClick}
-            className={`bg-black text-white hover:bg-gray-800 hover:text-white transition-all duration-200 group ${
-              state === 'expanded'
-                ? 'w-full h-7 px-2 flex items-center gap-1'
-                : 'w-7 h-7 p-0'
-            }`}
-          >
-            <Plus className={`${state === 'expanded' ? 'h-2.5 w-2.5 transition-colors duration-200' : 'h-2.5 w-2.5 transition-colors duration-200'}`} />
-            {state === 'expanded' && (
-              <span className="text-xs font-medium group-hover:font-bold transition-all duration-200">New chat</span>
-            )}
-          </Button>
-        </div>
-
-        {/* Chat History Section - Fixed height with scroll */}
-        <SidebarGroup className="flex-1 min-h-0">
+          {/* Chat History Section - Fixed height with scroll */}
+          <SidebarGroup className="flex-1 min-h-0">
             {state === 'expanded' ? (
               <>
                 <div className="flex items-center justify-between px-1 mb-2">
@@ -424,18 +423,18 @@ export function AppSidebar() {
                         >
                           <RefreshCw className={`h-3 w-3 ${isLoadingChatHistory ? 'animate-spin' : ''}`} />
                         </Button>
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          <p>Refresh chat history</p>
-                        </TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>Refresh chat history</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
                 </div>
                 <SidebarGroupContent className="flex-1 overflow-hidden">
                   <div className="px-1 w-full h-full overflow-hidden">
-                    <div 
-                      className="space-y-2 h-full overflow-y-auto overflow-x-hidden pr-1 chat-scroll pt-2" 
-                      style={{ 
+                    <div
+                      className="space-y-2 h-full overflow-y-auto overflow-x-hidden pr-1 chat-scroll pt-2"
+                      style={{
                         maxHeight: 'calc(100vh - 300px)',
                         scrollbarWidth: 'thin',
                         scrollbarColor: '#ffffff #000000'
@@ -450,25 +449,24 @@ export function AppSidebar() {
                         chatHistory.map((chat: any) => {
                           // Match URL chatid with session_id (ensure both are strings)
                           const isActive = String(urlChatId) === String(chat.session_id)
-                          
+
                           // Debug the comparison
                           if (urlChatId) {
                             console.log(`🔍 Chat "${chat.title}" (ID: ${chat.session_id}): urlChatId="${urlChatId}" sessionId="${chat.session_id}" isActive=${isActive}`)
                           }
-                          
+
                           const chatDate = new Date(chat.created_at)
                           const timeAgo = formatTimeAgo(chatDate)
                           const isDeleting = deletingChatId === chat.session_id
 
-                          
+
                           return (
                             <div
                               key={chat.session_id}
-                              className={`chat-bubble-hover chat-history-item group relative p-1.5 rounded-md transition-all duration-200 cursor-pointer ${
-                                isActive
+                              className={`chat-bubble-hover chat-history-item group relative p-1.5 rounded-md transition-all duration-200 cursor-pointer ${isActive
                                   ? 'bg-gray-800 shadow-sm border border-white text-white'
                                   : 'bg-gray-800 hover:bg-gray-700 hover:shadow-sm border border-gray-800 hover:border-white text-white'
-                              } ${isDeleting ? 'opacity-50 pointer-events-none' : ''}`}
+                                } ${isDeleting ? 'opacity-50 pointer-events-none' : ''}`}
                               onClick={() => !isDeleting && onLoadChatSession?.(chat.session_id)}
                             >
                               <div className="flex items-center justify-between gap-1">
@@ -482,9 +480,8 @@ export function AppSidebar() {
                                       className="w-full"
                                     />
                                   ) : (
-                                    <h4 className={`chat-bubble-text font-normal text-xs truncate transition-colors duration-200 ${
-                                      isActive ? 'text-white' : 'text-white'
-                                    }`}>
+                                    <h4 className={`chat-bubble-text font-normal text-xs truncate transition-colors duration-200 ${isActive ? 'text-white' : 'text-white'
+                                      }`}>
                                       {chat.title || `Chat ${chat.session_id}`}
                                     </h4>
                                   )}
@@ -495,9 +492,8 @@ export function AppSidebar() {
                                       <Button
                                         variant="ghost"
                                         size="sm"
-                                        className={`h-6 w-6 p-0 hover:text-black hover:bg-yellow-400/90 opacity-0 group-hover:opacity-100 transition-all duration-200 ${
-                                          isActive ? 'text-gray-300' : 'text-gray-400'
-                                        }`}
+                                        className={`h-6 w-6 p-0 hover:text-black hover:bg-yellow-400/90 opacity-0 group-hover:opacity-100 transition-all duration-200 ${isActive ? 'text-gray-300' : 'text-gray-400'
+                                          }`}
                                         onClick={(e) => e.stopPropagation()}
                                       >
                                         <MoreHorizontal className="h-3 w-3" />
@@ -556,15 +552,15 @@ export function AppSidebar() {
                   {chatHistory.slice(0, 3).map((chat: any) => {
                     // Match URL chatid with session_id (ensure both are strings)
                     const isActive = String(urlChatId) === String(chat.session_id)
-                    
+
                     // Debug the comparison (collapsed sidebar)
                     if (urlChatId) {
                       console.log(`🔍 Collapsed Chat "${chat.title}" (ID: ${chat.session_id}): urlChatId="${urlChatId}" sessionId="${chat.session_id}" isActive=${isActive}`)
                     }
-                    
+
                     const chatDate = new Date(chat.created_at)
                     const timeAgo = formatTimeAgo(chatDate)
-                    
+
                     return (
                       <SidebarMenuItem key={chat.session_id}>
                         <TooltipProvider>
@@ -577,11 +573,10 @@ export function AppSidebar() {
                                 <Button
                                   variant="ghost"
                                   size="sm"
-                                  className={`w-full h-8 p-0 rounded-lg transition-all justify-center ${
-                                    isActive
+                                  className={`w-full h-8 p-0 rounded-lg transition-all justify-center ${isActive
                                       ? 'bg-gray-800 hover:bg-gray-700 text-white border border-white'
                                       : 'hover:bg-gray-700 text-white'
-                                  }`}
+                                    }`}
                                   onClick={() => onLoadChatSession?.(chat.session_id)}
                                 >
                                   <MessageSquare className="h-3 w-3" />
@@ -603,33 +598,33 @@ export function AppSidebar() {
                       </SidebarMenuItem>
                     )
                   })}
-                  
+
                   {/* New Chat Button */}
                   <SidebarMenuItem>
-                      <TooltipProvider>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <SidebarMenuButton
-                              asChild
-                              className="w-full h-8 p-0"
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <SidebarMenuButton
+                            asChild
+                            className="w-full h-8 p-0"
+                          >
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="w-full h-8 p-0 hover:bg-gray-700 rounded-lg justify-center text-white"
+                              onClick={handleNewChatClick}
                             >
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                className="w-full h-8 p-0 hover:bg-gray-700 rounded-lg justify-center text-white"
-                                onClick={handleNewChatClick}
-                              >
-                                <Plus className="h-3 w-3" />
-                              </Button>
-                            </SidebarMenuButton>
-                          </TooltipTrigger>
+                              <Plus className="h-3 w-3" />
+                            </Button>
+                          </SidebarMenuButton>
+                        </TooltipTrigger>
                         <TooltipContent side="right">
                           <p>New Chat</p>
                         </TooltipContent>
                       </Tooltip>
                     </TooltipProvider>
                   </SidebarMenuItem>
-                  
+
                   {/* Show empty state if no chats */}
                   {chatHistory.length === 0 && !isLoadingChatHistory && (
                     <SidebarMenuItem>
@@ -650,25 +645,24 @@ export function AppSidebar() {
                 </SidebarMenu>
               </SidebarGroupContent>
             )}
-        </SidebarGroup>
+          </SidebarGroup>
 
-        {/* Business Information & Settings Section - Fixed at bottom */}
-        <div className="mt-auto space-y-2 pt-2">
-           <Separator className={`${state === 'expanded' ? 'mx-3' : 'mx-0'} border-gray-800`} />
-          <SidebarMenu className={state === 'expanded' ? 'space-y-1' : 'flex flex-col items-center space-y-1'}>
-            {/* Business Information Button */}
-            <SidebarMenuItem>
-              <SidebarMenuButton
-                asChild
-                tooltip="Business Information"
-              >
+          {/* Business Information & Settings Section - Fixed at bottom */}
+          <div className="mt-auto space-y-2 pt-2">
+            <Separator className={`${state === 'expanded' ? 'mx-3' : 'mx-0'} border-gray-800`} />
+            <SidebarMenu className={state === 'expanded' ? 'space-y-1' : 'flex flex-col items-center space-y-1'}>
+              {/* Business Information Button */}
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  asChild
+                  tooltip="Business Information"
+                >
                   <Button
                     variant="ghost"
-                    className={`w-full h-8 rounded-lg transition-all duration-200 overflow-hidden group border border-transparent hover:border-white hover:border-2 hover:bg-gray-800 ${
-                      state === 'expanded'
-                       ? `justify-start px-2 text-white hover:text-white`
-                       : `justify-center p-0 text-white hover:text-white`
-                    }`}
+                    className={`w-full h-8 rounded-lg transition-all duration-200 overflow-hidden group border border-transparent hover:border-white hover:border-2 hover:bg-gray-800 ${state === 'expanded'
+                        ? `justify-start px-2 text-white hover:text-white`
+                        : `justify-center p-0 text-white hover:text-white`
+                      }`}
                     size="sm"
                     onClick={() => handleNavigation('/knowledge-base')}
                   >
@@ -679,144 +673,141 @@ export function AppSidebar() {
                       </span>
                     )}
                   </Button>
-              </SidebarMenuButton>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+
+              {/* Settings Button */}
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  asChild
+                  tooltip="Settings"
+                >
+                  <Button
+                    variant="ghost"
+                    className={`w-full h-8 rounded-lg border border-transparent hover:border-white hover:border-2 hover:bg-gray-800 text-white hover:text-white overflow-hidden ${state === 'expanded'
+                        ? 'justify-start px-2'
+                        : 'justify-center p-0'
+                      }`}
+                    size="sm"
+                    onClick={() => handleNavigation('/profile')}
+                  >
+                    <Settings className="h-3 w-3 flex-shrink-0" />
+                    {state === 'expanded' && <span className="font-normal text-xs truncate ml-2">Settings</span>}
+                  </Button>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            </SidebarMenu>
+          </div>
+        </SidebarContent>
+
+        <SidebarFooter className={`border-t border-gray-800 bg-black py-2 ${state === 'expanded' ? 'px-2' : 'px-0'}`}>
+          <SidebarMenu className={`space-y-0.5 ${state === 'expanded' ? '' : 'flex flex-col items-center'}`}>
+            <SidebarMenuItem>
+              {state === 'expanded' ? (
+                <div className="flex items-center gap-1 min-w-0">
+                  <Avatar className="h-5 w-5">
+                    <AvatarFallback className="bg-white text-black font-black text-xs">
+                      {user?.name ? user.name.charAt(0).toUpperCase() : 'U'}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="overflow-hidden min-w-0 flex-1">
+                    <p className="text-xs font-medium text-white truncate">
+                      {user?.name || 'User'}
+                    </p>
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <p className="text-xs text-gray-300 truncate cursor-help">
+                            {user?.email || 'Loading...'}
+                          </p>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>{user?.email || 'Loading...'}</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex justify-center">
+                  <Avatar className="h-5 w-5">
+                    <AvatarFallback className="bg-white text-black font-black text-xs">
+                      {user?.name ? user.name.charAt(0).toUpperCase() : 'U'}
+                    </AvatarFallback>
+                  </Avatar>
+                </div>
+              )}
             </SidebarMenuItem>
-            
-            {/* Settings Button */}
+
+            {/* Return to Admin Button - Only show if this is an admin switch session */}
+            {isAdminSwitchSession && (
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  asChild
+                  tooltip="Return to Admin Dashboard"
+                >
+                  <Button
+                    variant="ghost"
+                    className={`w-full h-8 rounded-lg text-yellow-400 hover:text-yellow-300 hover:bg-yellow-900/50 overflow-hidden ${state === 'expanded'
+                        ? 'justify-start px-2'
+                        : 'justify-center p-0'
+                      }`}
+                    size="sm"
+                    onClick={handleReturnToAdmin}
+                  >
+                    <Shield className="h-3 w-3 flex-shrink-0" />
+                    {state === 'expanded' && <span className="font-normal text-xs truncate ml-2">Return to Admin</span>}
+                  </Button>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            )}
+
             <SidebarMenuItem>
               <SidebarMenuButton
                 asChild
-                tooltip="Settings"
+                tooltip="Logout"
               >
                 <Button
                   variant="ghost"
-                  className={`w-full h-8 rounded-lg border border-transparent hover:border-white hover:border-2 hover:bg-gray-800 text-white hover:text-white overflow-hidden ${
-                    state === 'expanded'
+                  className={`w-full h-8 rounded-lg text-red-400 hover:text-red-300 hover:bg-red-900/50 overflow-hidden ${state === 'expanded'
                       ? 'justify-start px-2'
                       : 'justify-center p-0'
-                  }`}
+                    }`}
                   size="sm"
-                  onClick={() => handleNavigation('/profile')}
+                  onClick={handleLogout}
                 >
-                  <Settings className="h-3 w-3 flex-shrink-0" />
-                  {state === 'expanded' && <span className="font-normal text-xs truncate ml-2">Settings</span>}
+                  <LogOut className="h-3 w-3 flex-shrink-0" />
+                  {state === 'expanded' && <span className="font-normal text-xs truncate ml-2">Logout</span>}
                 </Button>
               </SidebarMenuButton>
             </SidebarMenuItem>
           </SidebarMenu>
-        </div>
-      </SidebarContent>
+        </SidebarFooter>
+        <SidebarRail />
+      </Sidebar>
 
-      <SidebarFooter className={`border-t border-gray-800 bg-black py-2 ${state === 'expanded' ? 'px-2' : 'px-0'}`}>
-        <SidebarMenu className={`space-y-0.5 ${state === 'expanded' ? '' : 'flex flex-col items-center'}`}>
-          <SidebarMenuItem>
-            {state === 'expanded' ? (
-              <div className="flex items-center gap-1 min-w-0">
-                <Avatar className="h-5 w-5">
-                  <AvatarFallback className="bg-white text-black font-black text-xs">
-                    {user?.name ? user.name.charAt(0).toUpperCase() : 'U'}
-                  </AvatarFallback>
-                </Avatar>
-                <div className="overflow-hidden min-w-0 flex-1">
-                  <p className="text-xs font-medium text-white truncate">
-                    {user?.name || 'User'}
-                  </p>
-                  <TooltipProvider>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <p className="text-xs text-gray-300 truncate cursor-help">
-                          {user?.email || 'Loading...'}
-                        </p>
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        <p>{user?.email || 'Loading...'}</p>
-                      </TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
-                </div>
-              </div>
-            ) : (
-              <div className="flex justify-center">
-                <Avatar className="h-5 w-5">
-                  <AvatarFallback className="bg-white text-black font-black text-xs">
-                    {user?.name ? user.name.charAt(0).toUpperCase() : 'U'}
-                  </AvatarFallback>
-                </Avatar>
-              </div>
-            )}
-          </SidebarMenuItem>
-          
-          {/* Return to Admin Button - Only show if this is an admin switch session */}
-          {isAdminSwitchSession && (
-            <SidebarMenuItem>
-              <SidebarMenuButton
-                asChild
-                tooltip="Return to Admin Dashboard"
-              >
-                <Button
-                  variant="ghost"
-                  className={`w-full h-8 rounded-lg text-yellow-400 hover:text-yellow-300 hover:bg-yellow-900/50 overflow-hidden ${
-                    state === 'expanded'
-                      ? 'justify-start px-2'
-                      : 'justify-center p-0'
-                  }`}
-                  size="sm"
-                  onClick={handleReturnToAdmin}
-                >
-                  <Shield className="h-3 w-3 flex-shrink-0" />
-                  {state === 'expanded' && <span className="font-normal text-xs truncate ml-2">Return to Admin</span>}
-                </Button>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-          )}
-          
-          <SidebarMenuItem>
-            <SidebarMenuButton
-              asChild
-              tooltip="Logout"
-            >
-              <Button
-                variant="ghost"
-                className={`w-full h-8 rounded-lg text-red-400 hover:text-red-300 hover:bg-red-900/50 overflow-hidden ${
-                  state === 'expanded'
-                    ? 'justify-start px-2'
-                    : 'justify-center p-0'
-                }`}
-                size="sm"
-                onClick={handleLogout}
-              >
-                <LogOut className="h-3 w-3 flex-shrink-0" />
-                {state === 'expanded' && <span className="font-normal text-xs truncate ml-2">Logout</span>}
-              </Button>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-        </SidebarMenu>
-      </SidebarFooter>
-      <SidebarRail />
-    </Sidebar>
+      {/* Agent Selection Modal */}
+      <AgentSelectionModal
+        isOpen={isAgentModalOpen}
+        onClose={handleCloseModal}
+        agents={agents}
+        selectedAgent={selectedAgent}
+        onSelectAgent={onSelectAgent || (() => { })}
+        onStartChatting={handleStartChatting}
+        onRefreshAgents={onRefreshAgents || (() => { })}
+        isLoadingAgents={isLoadingAgents}
+        isStartingChat={isStartingChat}
+      />
 
-    {/* Agent Selection Modal */}
-    <AgentSelectionModal
-      isOpen={isAgentModalOpen}
-      onClose={handleCloseModal}
-      agents={agents}
-      selectedAgent={selectedAgent}
-      onSelectAgent={onSelectAgent || (() => {})}
-      onStartChatting={handleStartChatting}
-      onRefreshAgents={onRefreshAgents || (() => {})}
-      isLoadingAgents={isLoadingAgents}
-      isStartingChat={isStartingChat}
-    />
-
-    {/* Knowledge Base Warning Modal */}
-    <KnowledgeBaseWarningModal
-      isOpen={showKnowledgeBaseWarning}
-      onClose={() => setShowKnowledgeBaseWarning(false)}
-      onUploadContent={() => { window.location.href = '/knowledge-base' }}
-      onRetryValidation={refreshValidation}
-      isLoading={isValidatingKB}
-      error={kbSafetyError}
-    />
+      {/* Knowledge Base Warning Modal */}
+      <KnowledgeBaseWarningModal
+        isOpen={showKnowledgeBaseWarning}
+        onClose={() => setShowKnowledgeBaseWarning(false)}
+        onUploadContent={() => { window.location.href = '/knowledge-base' }}
+        onRetryValidation={refreshValidation}
+        isLoading={isValidatingKB}
+        error={kbSafetyError}
+      />
     </>
   )
 } 

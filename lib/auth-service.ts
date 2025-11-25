@@ -55,7 +55,7 @@ class AuthService {
 
   constructor() {
     this.baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || '/api';
-    
+
     // Define API endpoints to use
     // Use proxied API endpoints instead of directly accessing n8n webhooks
     // This approach allows for better error handling and security
@@ -87,7 +87,7 @@ class AuthService {
       });
 
       const data = await response.json();
-      
+
       // Check if registration failed due to user already existing
       if (!response.ok) {
         if (response.status === 409) {
@@ -101,7 +101,7 @@ class AuthService {
             };
           }
         }
-        
+
         return {
           success: false,
           error: {
@@ -192,12 +192,12 @@ class AuthService {
       }
 
       const data = await response.json();
-      
+
       // Store JWT token if successful
       if (data.success && data.data?.accessToken) {
         console.log('🔐 Storing access token from successful login')
         this.storeAuthToken(data.data.accessToken);
-        
+
         // The refresh token is in the cookies, handled by the browser
         // We don't need to manually extract it
       } else if (data.success && data.data?.token) {
@@ -248,7 +248,7 @@ class AuthService {
       };
     }
   }
-  
+
   /**
    * Refresh Access Token
    */
@@ -258,14 +258,14 @@ class AuthService {
     try {
       // Get current access token to send with refresh request
       const currentAccessToken = this.getAuthToken();
-      
+
       const response = await fetch(this.apiEndpoints.refreshToken, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           ...(currentAccessToken && { 'Authorization': `Bearer ${currentAccessToken}` })
         },
-        body: JSON.stringify({ 
+        body: JSON.stringify({
           refreshToken,
           accessToken: currentAccessToken // Send access token to n8n
         }),
@@ -282,7 +282,7 @@ class AuthService {
             }
           };
         }
-        
+
         return {
           success: false,
           error: {
@@ -293,7 +293,7 @@ class AuthService {
       }
 
       const data = await response.json();
-      
+
       if (data.success && data.data?.accessToken) {
         this.storeAuthToken(data.data.accessToken);
       }
@@ -329,7 +329,7 @@ class AuthService {
 
     try {
       const accessToken = this.getAuthToken();
-      
+
       if (!accessToken) {
         return {
           success: false,
@@ -365,7 +365,7 @@ class AuthService {
               return this.sendChatMessage(chatData);
             }
           }
-          
+
           return {
             success: false,
             error: {
@@ -374,7 +374,7 @@ class AuthService {
             }
           };
         }
-        
+
         return {
           success: false,
           error: {
@@ -413,7 +413,7 @@ class AuthService {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ 
+        body: JSON.stringify({
           email,
           verification_code: code
         }),
@@ -423,7 +423,7 @@ class AuthService {
       console.log('Response Status:', response.status);
       console.log('Response OK:', response.ok);
       console.log('Response Headers:', Object.fromEntries(response.headers.entries()));
-      
+
       if (!response.ok) {
         console.log('Response not OK, handling error...');
         // Try to get the specific error from the response
@@ -432,7 +432,7 @@ class AuthService {
           console.log('Error Data:', JSON.stringify(errorData, null, 2));
           console.log('Error Code:', errorData.error?.code);
           console.log('Error Message:', errorData.error?.message);
-          
+
           const result = {
             success: false,
             error: {
@@ -460,7 +460,7 @@ class AuthService {
       console.log('Response OK, parsing success data...');
       const data = await response.json();
       console.log('Success Data:', JSON.stringify(data, null, 2));
-      
+
       // If verification is successful, data should contain user info and tokens
       if (data.success) {
         console.log('Verification successful, storing token...');
@@ -468,7 +468,7 @@ class AuthService {
           this.storeAuthToken(data.token);
           console.log('Token stored successfully');
         }
-        
+
         const result = {
           success: true,
           data: {
@@ -484,7 +484,7 @@ class AuthService {
         console.log('Returning success result:', JSON.stringify(result, null, 2));
         return result;
       }
-      
+
       console.log('Verification failed - invalid code');
       const result = {
         success: false,
@@ -500,7 +500,7 @@ class AuthService {
       console.error('Error:', error);
       console.error('Error message:', error.message);
       console.error('Error stack:', error.stack);
-      
+
       const result = {
         success: false,
         error: {
@@ -562,10 +562,10 @@ class AuthService {
         // Store in a closure variable or React state
         this._accessToken = token;
       }
-      
+
       // Option 2: HTTP-only cookies (requires server-side implementation)
       // This would be set by the server in the response headers
-      
+
       // Option 3: sessionStorage (cleared when tab closes)
       sessionStorage.setItem(`${tokenType}_token`, token);
     }
@@ -591,23 +591,23 @@ class AuthService {
         this.clearTokens();
         return false;
       }
-      
+
       // Decode payload
       const payload = JSON.parse(atob(tokenParts[1]));
       console.log('🔍 isAuthenticated check - JWT payload:', payload);
-      
+
       // Required fields validation
       if (!payload.email || !payload.role) {
         console.log('🔍 Token missing required fields (email/role)');
         this.clearTokens();
         return false;
       }
-      
+
       // Check if token has expiration time (optional)
       if (payload.exp) {
         const currentTime = Date.now() / 1000;
         console.log('🔍 isAuthenticated check - exp:', payload.exp, 'current:', currentTime);
-        
+
         // Validate expiration with buffer period (30 seconds) to avoid edge cases
         if (payload.exp <= (currentTime + 30)) {
           console.log('🔍 Token expired or about to expire, clearing tokens');
@@ -618,18 +618,18 @@ class AuthService {
         // No expiration time - acceptable for some JWT implementations
         console.log('🔍 Token has no expiration field - allowing for compatibility');
       }
-      
+
       // Check explicit login flag for additional validation (but don't block if missing)
-      const explicitLogin = typeof window !== 'undefined' ? 
+      const explicitLogin = typeof window !== 'undefined' ?
         sessionStorage.getItem('explicit_login') : null;
-        
+
       if (!explicitLogin && typeof window !== 'undefined' && window.location.pathname.includes('/auth/signin')) {
         // Only clear tokens on signin page specifically, not all auth pages
         console.log('🔍 No explicit login detected on signin page - clearing tokens');
         this.clearTokens();
         return false;
       }
-      
+
       // Token passed basic validation
       console.log('🔍 Token is valid');
       return true;
@@ -666,6 +666,12 @@ class AuthService {
    */
   signOut(): void {
     this.clearTokens();
+
+    // Clear admin context if it exists (fixes "Return to admin" persistence bug)
+    if (typeof window !== 'undefined') {
+      sessionStorage.removeItem('admin_context');
+    }
+
     // Redirect to sign in page
     if (typeof window !== 'undefined') {
       window.location.href = '/auth/signin';

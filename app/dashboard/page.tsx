@@ -3847,8 +3847,14 @@ export default function Dashboard() {
                         }
                       }
                     }}
-                    placeholder={!selectedAgent ? "Select an agent to start..." : "Type your message..."}
-                    disabled={!selectedAgent || isLoading}
+                    placeholder={
+                      isLoadingChatHistory 
+                        ? "Loading chat history..." 
+                        : !selectedAgent 
+                          ? "Select an agent to start..." 
+                          : "Type your message..."
+                    }
+                    disabled={!selectedAgent || isLoading || isLoadingChatHistory || isLoadingChat}
                     className="w-full border-0 bg-transparent text-sm sm:text-base resize-none min-h-[36px] max-h-[120px] focus:outline-none disabled:cursor-not-allowed placeholder:text-muted-foreground py-2 pl-2 caret-yellow-400 text-foreground"
                     rows={1}
                     style={{ overflow: 'auto' }}
@@ -3870,7 +3876,7 @@ export default function Dashboard() {
                       }
                     }
                   }}
-                  disabled={!isLoading && (!messageInput.trim() || !selectedAgent || isValidatingKB)}
+                  disabled={!isLoading && (!messageInput.trim() || !selectedAgent || isValidatingKB || isLoadingChatHistory || isLoadingChat)}
                   className={`flex-shrink-0 px-4 py-2 h-9 sm:h-10 rounded-xl flex items-center justify-center gap-2 transition-colors duration-200 ${
                     isLoading
                       ? 'bg-red-500 hover:bg-red-600 text-white shadow-md font-semibold'
