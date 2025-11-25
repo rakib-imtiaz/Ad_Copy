@@ -391,8 +391,8 @@ export function AppSidebar() {
               variant="ghost"
               onClick={handleNewChatClick}
               className={`bg-black text-white hover:bg-gray-800 hover:text-white transition-all duration-200 group ${state === 'expanded'
-                  ? 'w-full h-7 px-2 flex items-center gap-1'
-                  : 'w-7 h-7 p-0'
+                ? 'w-full h-7 px-2 flex items-center gap-1'
+                : 'w-7 h-7 p-0'
                 }`}
             >
               <Plus className={`${state === 'expanded' ? 'h-2.5 w-2.5 transition-colors duration-200' : 'h-2.5 w-2.5 transition-colors duration-200'}`} />
@@ -464,8 +464,8 @@ export function AppSidebar() {
                             <div
                               key={chat.session_id}
                               className={`chat-bubble-hover chat-history-item group relative p-1.5 rounded-md transition-all duration-200 cursor-pointer ${isActive
-                                  ? 'bg-gray-800 shadow-sm border border-white text-white'
-                                  : 'bg-gray-800 hover:bg-gray-700 hover:shadow-sm border border-gray-800 hover:border-white text-white'
+                                ? 'bg-gray-800 shadow-sm border border-white text-white'
+                                : 'bg-gray-800 hover:bg-gray-700 hover:shadow-sm border border-gray-800 hover:border-white text-white'
                                 } ${isDeleting ? 'opacity-50 pointer-events-none' : ''}`}
                               onClick={() => !isDeleting && onLoadChatSession?.(chat.session_id)}
                             >
@@ -574,8 +574,8 @@ export function AppSidebar() {
                                   variant="ghost"
                                   size="sm"
                                   className={`w-full h-8 p-0 rounded-lg transition-all justify-center ${isActive
-                                      ? 'bg-gray-800 hover:bg-gray-700 text-white border border-white'
-                                      : 'hover:bg-gray-700 text-white'
+                                    ? 'bg-gray-800 hover:bg-gray-700 text-white border border-white'
+                                    : 'hover:bg-gray-700 text-white'
                                     }`}
                                   onClick={() => onLoadChatSession?.(chat.session_id)}
                                 >
@@ -660,8 +660,8 @@ export function AppSidebar() {
                   <Button
                     variant="ghost"
                     className={`w-full h-8 rounded-lg transition-all duration-200 overflow-hidden group border border-transparent hover:border-white hover:border-2 hover:bg-gray-800 ${state === 'expanded'
-                        ? `justify-start px-2 text-white hover:text-white`
-                        : `justify-center p-0 text-white hover:text-white`
+                      ? `justify-start px-2 text-white hover:text-white`
+                      : `justify-center p-0 text-white hover:text-white`
                       }`}
                     size="sm"
                     onClick={() => handleNavigation('/knowledge-base')}
@@ -685,8 +685,8 @@ export function AppSidebar() {
                   <Button
                     variant="ghost"
                     className={`w-full h-8 rounded-lg border border-transparent hover:border-white hover:border-2 hover:bg-gray-800 text-white hover:text-white overflow-hidden ${state === 'expanded'
-                        ? 'justify-start px-2'
-                        : 'justify-center p-0'
+                      ? 'justify-start px-2'
+                      : 'justify-center p-0'
                       }`}
                     size="sm"
                     onClick={() => handleNavigation('/profile')}
@@ -740,27 +740,8 @@ export function AppSidebar() {
             </SidebarMenuItem>
 
             {/* Return to Admin Button - Only show if this is an admin switch session */}
-            {isAdminSwitchSession && (
-              <SidebarMenuItem>
-                <SidebarMenuButton
-                  asChild
-                  tooltip="Return to Admin Dashboard"
-                >
-                  <Button
-                    variant="ghost"
-                    className={`w-full h-8 rounded-lg text-yellow-400 hover:text-yellow-300 hover:bg-yellow-900/50 overflow-hidden ${state === 'expanded'
-                        ? 'justify-start px-2'
-                        : 'justify-center p-0'
-                      }`}
-                    size="sm"
-                    onClick={handleReturnToAdmin}
-                  >
-                    <Shield className="h-3 w-3 flex-shrink-0" />
-                    {state === 'expanded' && <span className="font-normal text-xs truncate ml-2">Return to Admin</span>}
-                  </Button>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            )}
+            {/* REMOVED - Duplicate button, only keeping the top banner version */}
+
 
             <SidebarMenuItem>
               <SidebarMenuButton
@@ -770,8 +751,8 @@ export function AppSidebar() {
                 <Button
                   variant="ghost"
                   className={`w-full h-8 rounded-lg text-red-400 hover:text-red-300 hover:bg-red-900/50 overflow-hidden ${state === 'expanded'
-                      ? 'justify-start px-2'
-                      : 'justify-center p-0'
+                    ? 'justify-start px-2'
+                    : 'justify-center p-0'
                     }`}
                   size="sm"
                   onClick={handleLogout}

@@ -4,11 +4,11 @@ import { API_ENDPOINTS } from '@/lib/api-config'
 export async function DELETE(request: NextRequest) {
   try {
     console.log('🗑️ DELETE /api/scraped-contents - Starting delete request')
-    
+
     const accessToken = request.headers.get('authorization')?.replace('Bearer ', '')
     const body = await request.json()
     const { file_name, resource_id } = body
-    
+
     console.log('📋 Delete request body:', { file_name, resource_id })
     console.log('🔑 Access token present:', !!accessToken)
     console.log('🔍 Resource ID type:', typeof resource_id)
@@ -25,12 +25,12 @@ export async function DELETE(request: NextRequest) {
     }
 
     // Use resource_id if available, otherwise fall back to file_name
-    const deletePayload = resource_id ? { 
+    const deletePayload = resource_id ? {
       access_token: accessToken,
-      resource_id: resource_id 
-    } : { 
+      resource_id: resource_id
+    } : {
       access_token: accessToken,
-      file_name: file_name 
+      file_name: file_name
     }
     console.log('📤 Delete payload:', deletePayload)
     console.log('🔗 Webhook URL:', API_ENDPOINTS.N8N_WEBHOOKS.DELETE_SCRAPED_CONTENT)
@@ -52,9 +52,9 @@ export async function DELETE(request: NextRequest) {
       const errorText = await response.text().catch(() => 'Unable to read error response')
       console.error('❌ Webhook delete failed:', response.status, response.statusText)
       console.error('❌ Error response text:', errorText)
-      
+
       return NextResponse.json(
-        { 
+        {
           error: `Failed to delete scraped content: ${response.status} ${response.statusText}`,
           details: errorText
         },
@@ -64,7 +64,7 @@ export async function DELETE(request: NextRequest) {
 
     const data = await response.json()
     console.log('✅ Webhook delete successful, response data:', data)
-    
+
     return NextResponse.json({
       success: true,
       message: 'Scraped content deleted successfully',
@@ -83,7 +83,7 @@ export async function DELETE(request: NextRequest) {
 export async function GET(request: NextRequest) {
   try {
     const accessToken = request.headers.get('authorization')?.replace('Bearer ', '')
-    
+
 
     if (!accessToken) {
       return NextResponse.json({ error: 'Access token required' }, { status: 401 })
@@ -101,7 +101,7 @@ export async function GET(request: NextRequest) {
 
     if (!response.ok) {
       const errorText = await response.text().catch(() => 'Unable to read error response')
-      
+
       // Handle 404 errors gracefully - return empty scraped contents
       if (response.status === 404) {
         return NextResponse.json({
@@ -109,7 +109,7 @@ export async function GET(request: NextRequest) {
           data: []
         })
       }
-      
+
       // Handle 500 workflow errors gracefully
       if (response.status === 500) {
         return NextResponse.json({
@@ -117,7 +117,7 @@ export async function GET(request: NextRequest) {
           data: []
         })
       }
-      
+
       return NextResponse.json(
         { error: `n8n webhook failed: ${response.status} ${response.statusText}` },
         { status: response.status }
@@ -147,7 +147,7 @@ export async function GET(request: NextRequest) {
 
     // Extract the actual scraped content items from the n8n response
     let scrapedItems = []
-    
+
     if (Array.isArray(data) && data.length > 0 && data[0] && data[0].all_records && Array.isArray(data[0].all_records)) {
       // Handle case where data is an array with objects containing all_records
       scrapedItems = data[0].all_records
@@ -158,12 +158,12 @@ export async function GET(request: NextRequest) {
       // Fallback: try to use the data directly if it's an array
       scrapedItems = data
     }
-    
+
     // Debug: Log available resource_ids
-    console.log('📊 Available scraped items with resource_ids:')
-    scrapedItems.forEach((item: any, index: number) => {
-      console.log(`  ${index + 1}. resource_id: ${item.resource_id}, resource_name: ${item.resource_name}`)
-    })
+    // console.log('📊 Available scraped items with resource_ids:')
+    // scrapedItems.forEach((item: any, index: number) => {
+    //   console.log(`  ${index + 1}. resource_id: ${item.resource_id}, resource_name: ${item.resource_name}`)
+    // })
     return NextResponse.json({
       success: true,
       data: scrapedItems
