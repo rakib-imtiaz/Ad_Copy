@@ -893,17 +893,19 @@ export default function Dashboard() {
       const conversation = chatHistory.find(chat => chat.session_id === sessionId)
 
       // Set the session ID and current chat session immediately
-      setSessionId(sessionId)
-      setCurrentChatSession(sessionId)
+      // 🚀 FIX: Convert sessionId to string to prevent .trim() errors when loading from history
+      const sessionIdString = String(sessionId)
+      setSessionId(sessionIdString)
+      setCurrentChatSession(sessionIdString)
 
       // Also update the sidebar context state
-      updateCurrentChatSession(sessionId)
+      updateCurrentChatSession(sessionIdString)
 
       // Ensure sidebar context has the latest chat history (use setTimeout to avoid batching issues)
       setTimeout(() => {
         updateChatHistory(chatHistory)
         // Force a re-render by updating currentChatSession again
-        updateCurrentChatSession(sessionId)
+        updateCurrentChatSession(sessionIdString)
       }, 0)
 
       // Set the agent if conversation has agent_id
@@ -1476,7 +1478,18 @@ export default function Dashboard() {
 
       // Find the selected agent's ID from the agents array
       const selectedAgentData = agents.find((agent: any) => agent.name === selectedAgent)
-      const agentId = selectedAgentData?.id || selectedAgent
+      const agentId = selectedAgentData?.id
+
+      // 🚀 FIX: Validate agent selection before initiating chat
+      if (!agentId) {
+        console.error('❌ CRITICAL: No valid agent ID found for new chat')
+        console.error('  - Selected agent name:', selectedAgent)
+        console.error('  - Available agents:', agents.map(a => ({ name: a.name, id: a.id })))
+        setSessionError('Please select a valid agent before starting a chat.')
+        setSessionErrorType('unknown')
+        setShowSessionErrorDialog(true)
+        return false
+      }
 
       console.log('🎯 Initiating new chat to get session ID...')
       console.log('Request URL:', '/api/webhook/new-chat')
@@ -1596,14 +1609,16 @@ export default function Dashboard() {
       // Store session ID from webhook response
       let finalSessionId = sessionId
       if (data.session_id) {
-        setSessionId(data.session_id)
+        // 🚀 FIX: Convert session_id to string to prevent .trim() errors
+        const sessionIdString = String(data.session_id)
+        setSessionId(sessionIdString)
         // Save to localStorage
         if (typeof window !== 'undefined') {
-          localStorage.setItem('chat_session_id', data.session_id)
+          localStorage.setItem('chat_session_id', sessionIdString)
         }
-        console.log('🎯 SESSION ID STORED:', data.session_id)
+        console.log('🎯 SESSION ID STORED:', sessionIdString)
         console.log('📋 Full webhook response:', data)
-        finalSessionId = data.session_id
+        finalSessionId = sessionIdString
 
         // Update URL with the new chat ID
         if (typeof window !== 'undefined') {
@@ -1990,7 +2005,8 @@ export default function Dashboard() {
         return null
       }
 
-      const currentSessionId = sessionIdParam || sessionId
+      // 🚀 FIX: Convert sessionId to string before using .trim() to prevent TypeError
+      const currentSessionId = String(sessionIdParam || sessionId)
       if (!currentSessionId || currentSessionId.trim() === '') {
         console.error("❌ CRITICAL: No session ID available - chat-window webhook cannot be called")
         // This should never happen if validation is working correctly
@@ -2003,7 +2019,18 @@ export default function Dashboard() {
 
       // Find the selected agent's ID from the agents array
       const selectedAgentData = agents.find((agent: any) => agent.name === selectedAgent)
-      const agentId = selectedAgentData?.id || selectedAgent
+      const agentId = selectedAgentData?.id
+
+      // 🚀 FIX: Validate agent selection before sending message
+      if (!agentId) {
+        console.error('❌ CRITICAL: No valid agent ID found for message')
+        console.error('  - Selected agent name:', selectedAgent)
+        console.error('  - Available agents:', agents.map(a => ({ name: a.name, id: a.id })))
+        setSessionError('Please select an agent before sending a message.')
+        setSessionErrorType('unknown')
+        setShowSessionErrorDialog(true)
+        return null
+      }
 
       console.log('💬 Sending message to chat window...')
       console.log('Request URL:', '/api/webhook/chat-window')
@@ -3689,8 +3716,8 @@ export default function Dashboard() {
                         <div className="flex-1 min-w-0">
                           {/* Message Bubble */}
                           <div className={`rounded-2xl px-3 sm:px-4 py-2.5 sm:py-3 ${isUser
-                              ? 'bg-black text-white'
-                              : 'bg-muted text-foreground'
+                            ? 'bg-black text-white'
+                            : 'bg-muted text-foreground'
                             }`}>
                             <div className={`text-xs leading-relaxed break-words prose prose-sm max-w-none ${isUser ? 'prose-invert' : 'text-foreground'}`}>
                               <ReactMarkdown
@@ -3877,10 +3904,10 @@ export default function Dashboard() {
                       }}
                       disabled={!isLoading && (!messageInput.trim() || !selectedAgent || isValidatingKB || isLoadingChatHistory || isLoadingChat)}
                       className={`flex-shrink-0 px-4 py-2 h-9 sm:h-10 rounded-xl flex items-center justify-center gap-2 transition-colors duration-200 ${isLoading
-                          ? 'bg-red-500 hover:bg-red-600 text-white shadow-md font-semibold'
-                          : messageInput.trim() && selectedAgent && !isValidatingKB
-                            ? 'bg-gradient-to-r from-yellow-300 via-yellow-400 to-yellow-500 hover:from-yellow-400 hover:via-yellow-500 hover:to-yellow-600 text-black shadow-md font-semibold'
-                            : 'bg-white text-gray-400 opacity-60 cursor-not-allowed shadow-md border border-gray-200'
+                        ? 'bg-red-500 hover:bg-red-600 text-white shadow-md font-semibold'
+                        : messageInput.trim() && selectedAgent && !isValidatingKB
+                          ? 'bg-gradient-to-r from-yellow-300 via-yellow-400 to-yellow-500 hover:from-yellow-400 hover:via-yellow-500 hover:to-yellow-600 text-black shadow-md font-semibold'
+                          : 'bg-white text-gray-400 opacity-60 cursor-not-allowed shadow-md border border-gray-200'
                         }`}
                       title={
                         isLoading
@@ -4146,8 +4173,8 @@ function MediaSelector({
                           <div
                             key={item.id}
                             className={`p-3 rounded-lg border transition-all duration-200 cursor-pointer hover:shadow-sm ${isSelected
-                                ? 'border-blue-500 bg-blue-50'
-                                : 'border-gray-200 hover:border-blue-300'
+                              ? 'border-blue-500 bg-blue-50'
+                              : 'border-gray-200 hover:border-blue-300'
                               }`}
                             onClick={() => onMediaSelection(item.id, !isSelected)}
                           >
@@ -4170,8 +4197,8 @@ function MediaSelector({
                                   </h4>
                                   <div className="flex items-center space-x-2 mt-1">
                                     <span className={`text-xs px-2 py-1 rounded-full ${isLink ? 'bg-blue-100 text-blue-800' :
-                                        isTranscript ? 'bg-indigo-100 text-indigo-800' :
-                                          'bg-gray-100 text-gray-800'
+                                      isTranscript ? 'bg-indigo-100 text-indigo-800' :
+                                        'bg-gray-100 text-gray-800'
                                       }`}>
                                       {isLink ? 'Link' :
                                         isTranscript ? 'Transcript' :
@@ -4195,8 +4222,8 @@ function MediaSelector({
 
                               <div className="flex items-center space-x-2">
                                 <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${isSelected
-                                    ? 'border-blue-500 bg-blue-500'
-                                    : 'border-gray-300'
+                                  ? 'border-blue-500 bg-blue-500'
+                                  : 'border-gray-300'
                                   }`}>
                                   {isSelected && (
                                     <svg className="w-2.5 h-2.5 text-white" fill="currentColor" viewBox="0 0 20 20">
@@ -4475,8 +4502,8 @@ function LeftSidebar({
                   <div
                     key={chat.session_id}
                     className={`chat-history-item group p-1.5 rounded-lg border transition-all duration-150 ${isSelected
-                        ? 'bg-white border-gray-300 shadow-lg'
-                        : 'bg-black border-gray-700 hover:border-gray-600'
+                      ? 'bg-white border-gray-300 shadow-lg'
+                      : 'bg-black border-gray-700 hover:border-gray-600'
                       } ${isLoading ? 'opacity-50 cursor-not-allowed pointer-events-none' : ''}`}
                   >
                     <div className="flex items-center justify-between">
@@ -4753,8 +4780,8 @@ function FilesTab({ mediaItems, onUpload, onDelete, isDeleting, deletingItemId, 
       {/* Enhanced Dropzone */}
       <div
         className={`border-2 border-dashed rounded-xl p-12 text-center transition-all duration-200 cursor-pointer ${dragActive
-            ? 'border-[#1ABC9C] bg-[#1ABC9C]/10 scale-[1.02] shadow-lg'
-            : 'border-[#EEEEEE] hover:border-[#1ABC9C] hover:bg-[#1ABC9C]/5 hover:shadow-md'
+          ? 'border-[#1ABC9C] bg-[#1ABC9C]/10 scale-[1.02] shadow-lg'
+          : 'border-[#EEEEEE] hover:border-[#1ABC9C] hover:bg-[#1ABC9C]/5 hover:shadow-md'
           }`}
         onDragEnter={handleDrag}
         onDragLeave={handleDrag}
@@ -4764,8 +4791,8 @@ function FilesTab({ mediaItems, onUpload, onDelete, isDeleting, deletingItemId, 
       >
         <div className="flex flex-col items-center space-y-4">
           <div className={`p-4 rounded-full transition-all duration-200 ${dragActive
-              ? 'bg-gradient-to-br from-[#1ABC9C] to-[#16A085] shadow-lg'
-              : 'bg-gradient-to-br from-[#EEEEEE] to-[#F5F5F5]'
+            ? 'bg-gradient-to-br from-[#1ABC9C] to-[#16A085] shadow-lg'
+            : 'bg-gradient-to-br from-[#EEEEEE] to-[#F5F5F5]'
             }`}>
             <Upload className={`h-8 w-8 transition-all duration-200 ${isUploading ? 'animate-bounce' : ''} ${dragActive ? 'text-white' : 'text-black'
               }`} />
@@ -5698,8 +5725,8 @@ function ImageAnalyzerTab({ mediaItems, onUpload, onDelete, isDeleting, deleting
       {/* Dropzone */}
       <div
         className={`relative border-2 border-dashed rounded-xl p-8 text-center transition-all duration-200 cursor-pointer group ${dragActive
-            ? 'border-[#1ABC9C] bg-[#1ABC9C]/10 scale-[1.02]'
-            : 'border-gray-300 hover:border-[#1ABC9C] hover:bg-gray-50'
+          ? 'border-[#1ABC9C] bg-[#1ABC9C]/10 scale-[1.02]'
+          : 'border-gray-300 hover:border-[#1ABC9C] hover:bg-gray-50'
           } ${isUploading ? 'pointer-events-none' : ''}`}
         onDragEnter={handleDrag}
         onDragLeave={handleDrag}
@@ -5711,7 +5738,7 @@ function ImageAnalyzerTab({ mediaItems, onUpload, onDelete, isDeleting, deleting
           <div className={`p-3 rounded-full mb-4 transition-colors ${dragActive ? 'bg-[#1ABC9C]/20' : 'bg-gray-100 group-hover:bg-[#1ABC9C]/10'
             }`}>
             <Image className={`h-8 w-8 ${isUploading ? 'animate-pulse text-[#1ABC9C]' :
-                dragActive ? 'text-[#1ABC9C]' : 'text-gray-400 group-hover:text-[#1ABC9C]'
+              dragActive ? 'text-[#1ABC9C]' : 'text-gray-400 group-hover:text-[#1ABC9C]'
               }`} />
           </div>
 
