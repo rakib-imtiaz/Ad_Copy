@@ -335,6 +335,7 @@ export default function Dashboard() {
   const [hasInitializedChat, setHasInitializedChat] = React.useState(false)
   const [previousAgent, setPreviousAgent] = React.useState<string | null>(null)
   const [isInitialLoad, setIsInitialLoad] = React.useState(true)
+  const [isLoadingChatFromHistory, setIsLoadingChatFromHistory] = React.useState(false)
   const [messages, setMessages] = React.useState<Array<{
     id: string
     role: 'user' | 'assistant'
@@ -567,6 +568,27 @@ export default function Dashboard() {
       return
     }
 
+    // Skip when loading an existing chat to prevent clearing state
+    if (isLoadingChat) {
+      console.log('⏭️ Skipping agent change check while loading chat session')
+      return
+    }
+
+    // Skip when loading chat from history (prevents clearing after load completes)
+    if (isLoadingChatFromHistory) {
+      console.log('⏭️ Skipping agent change check - loading chat from history')
+      return
+    }
+
+    // Skip when we have an active chat session with messages loaded
+    // This prevents clearing when switching between existing chats
+    if (sessionId && messages.length > 0 && chatStarted) {
+      console.log('⏭️ Skipping agent change - active chat session exists with messages')
+      // Just update previous agent without clearing
+      setPreviousAgent(selectedAgent)
+      return
+    }
+
     if (selectedAgent && agents.length > 0 && previousAgent && previousAgent !== selectedAgent) {
       console.log('🔄 Agent changed from', previousAgent, 'to:', selectedAgent)
 
@@ -588,7 +610,7 @@ export default function Dashboard() {
 
     // Update previous agent
     setPreviousAgent(selectedAgent)
-  }, [selectedAgent, agents, isInitialLoad])
+  }, [selectedAgent, agents, isInitialLoad, isLoadingChat, isLoadingChatFromHistory, sessionId, messages.length, chatStarted])
 
   // Fetch agents from n8n webhook
   const fetchAgents = async () => {
@@ -887,6 +909,7 @@ export default function Dashboard() {
     }
 
     setIsLoadingChat(true)
+    setIsLoadingChatFromHistory(true) // Prevent agent change from clearing state
 
     try {
       // Find the conversation in chat history to get agent_id
@@ -936,18 +959,25 @@ export default function Dashboard() {
         localStorage.setItem('chat_session_id', sessionId)
       }
 
-      // Mark chat as started
+      // Load messages for this specific session FIRST
+      await loadMessagesForSession(sessionId)
+
+      // Mark chat as started AFTER messages are loaded successfully
+      // This ensures chatStarted is true when user sends a message to existing chat
       setChatStarted(true)
       if (typeof window !== 'undefined') {
         localStorage.setItem('chat_started', 'true')
       }
 
-      // Load messages for this specific session
-      await loadMessagesForSession(sessionId)
+      console.log('✅ Chat session loaded successfully. Chat started: true')
     } catch (error) {
       console.error('❌ Error loading chat session:', error)
     } finally {
       setIsLoadingChat(false)
+      // Reset flag after a small delay to ensure agent change effect has run
+      setTimeout(() => {
+        setIsLoadingChatFromHistory(false)
+      }, 100)
     }
   }
 
